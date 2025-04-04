@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -43,11 +42,10 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     if (e.button !== 0) return; // Only left-click
     e.stopPropagation();
     
-    // Important: Don't prevent dragging for image elements
-    // The check was too restrictive before, now we only check if we're clicking on
-    // the upload placeholder text but allow dragging on the image element itself
+    // Only prevent dragging on the upload placeholder text, not the entire image element
+    // Fixed: Now allows dragging the image element container even before an image is uploaded
     if (element.type === 'image' && 
-        (e.target as HTMLElement).classList.contains('text-gray-400')) {
+        (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
       return;
     }
     

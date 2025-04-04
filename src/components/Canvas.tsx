@@ -254,7 +254,7 @@ const Canvas = () => {
                     }}
                   />
                 ) : (
-                  <div className="text-sm text-gray-400 select-none w-full h-full flex items-center justify-center">
+                  <div className="text-sm upload-placeholder-text text-gray-400 select-none w-full h-full flex items-center justify-center">
                     Click to upload image
                   </div>
                 )}
