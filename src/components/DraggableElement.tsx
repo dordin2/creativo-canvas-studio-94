@@ -105,98 +105,49 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       else if (isResizing && resizeDirection) {
         const deltaX = e.clientX - startPos.x;
         const deltaY = e.clientY - startPos.y;
-        let newWidth = startSize.width;
-        let newHeight = startSize.height;
         
-        const shouldMaintainAspectRatio = element.type === 'image' && originalAspectRatio !== null;
+        const isImage = element.type === 'image';
+        const maintainAspectRatio = isImage || originalAspectRatio !== null;
         
-        if (shouldMaintainAspectRatio) {
-          if (resizeDirection.includes("e") || resizeDirection.includes("w")) {
-            if (resizeDirection.includes("e")) {
-              newWidth = Math.max(20, startSize.width + deltaX);
-              newHeight = newWidth / originalAspectRatio;
-            } else {
-              newWidth = Math.max(20, startSize.width - deltaX);
-              newHeight = newWidth / originalAspectRatio;
-              
-              if (newWidth !== startSize.width) {
-                updateElement(element.id, {
-                  position: {
-                    x: element.position.x + (startSize.width - newWidth),
-                    y: element.position.y
-                  }
-                });
-              }
-            }
-          } else if (resizeDirection.includes("s") || resizeDirection.includes("n")) {
-            if (resizeDirection.includes("s")) {
-              newHeight = Math.max(20, startSize.height + deltaY);
-              newWidth = newHeight * originalAspectRatio;
-            } else {
-              newHeight = Math.max(20, startSize.height - deltaY);
-              newWidth = newHeight * originalAspectRatio;
-              
-              if (newHeight !== startSize.height) {
-                updateElement(element.id, {
-                  position: {
-                    x: element.position.x,
-                    y: element.position.y + (startSize.height - newHeight)
-                  }
-                });
-              }
-            }
-          }
-          
-          if (resizeDirection === "se" || resizeDirection === "ne") {
-            newWidth = Math.max(20, startSize.width + deltaX);
-            newHeight = newWidth / originalAspectRatio;
-            if (resizeDirection === "ne") {
-              updateElement(element.id, {
-                position: {
-                  x: element.position.x,
-                  y: element.position.y + (startSize.height - newHeight)
-                }
-              });
-            }
-          } else if (resizeDirection === "sw" || resizeDirection === "nw") {
-            newWidth = Math.max(20, startSize.width - deltaX);
-            newHeight = newWidth / originalAspectRatio;
-            updateElement(element.id, {
-              position: {
-                x: element.position.x + (startSize.width - newWidth),
-                y: element.position.y + (resizeDirection === "nw" ? (startSize.height - newHeight) : 0)
-              }
-            });
-          }
+        let mainDelta = 0;
+        if (resizeDirection.includes('e') || resizeDirection.includes('w')) {
+          mainDelta = deltaX;
+        } else if (resizeDirection.includes('s') || resizeDirection.includes('n')) {
+          mainDelta = deltaY;
+        } else if (Math.abs(deltaX) > Math.abs(deltaY)) {
+          mainDelta = deltaX;
         } else {
-          if (resizeDirection.includes("e")) {
-            newWidth = Math.max(20, startSize.width + deltaX);
-          }
-          if (resizeDirection.includes("w")) {
-            newWidth = Math.max(20, startSize.width - deltaX);
-            if (newWidth !== startSize.width) {
-              updateElement(element.id, {
-                position: {
-                  x: element.position.x + (startSize.width - newWidth),
-                  y: element.position.y
-                }
-              });
+          mainDelta = deltaY;
+        }
+        
+        let scaleFactor = 1;
+        
+        if (resizeDirection.includes('w') || resizeDirection.includes('n')) {
+          scaleFactor = -1;
+        }
+        
+        const scaleChange = (Math.abs(mainDelta) / 100) * (mainDelta > 0 ? 1 : -1) * scaleFactor;
+        const scale = 1 + scaleChange;
+        
+        let newWidth = Math.max(20, startSize.width * scale);
+        let newHeight;
+        
+        if (maintainAspectRatio && originalAspectRatio) {
+          newHeight = newWidth / originalAspectRatio;
+        } else {
+          newHeight = Math.max(20, startSize.height * scale);
+        }
+        
+        if (resizeDirection.includes('w') || resizeDirection.includes('n')) {
+          const posX = element.position.x - (newWidth - startSize.width);
+          const posY = element.position.y - (newHeight - startSize.height);
+          
+          updateElement(element.id, {
+            position: {
+              x: posX,
+              y: posY
             }
-          }
-          if (resizeDirection.includes("s")) {
-            newHeight = Math.max(20, startSize.height + deltaY);
-          }
-          if (resizeDirection.includes("n")) {
-            newHeight = Math.max(20, startSize.height - deltaY);
-            if (newHeight !== startSize.height) {
-              updateElement(element.id, {
-                position: {
-                  x: element.position.x,
-                  y: element.position.y + (startSize.height - newHeight)
-                }
-              });
-            }
-          }
+          });
         }
         
         updateElement(element.id, {
@@ -319,42 +270,42 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
             {showResizeHandles && (
               <>
                 <div 
-                  className="resize-handle cursor-nw-resize"
+                  className="resize-handle resize-handle-visible cursor-nw-resize"
                   style={{ top: -6, left: -6 }}
                   onMouseDown={(e) => handleResizeStart(e, "nw")}
                 />
                 <div 
-                  className="resize-handle cursor-n-resize"
+                  className="resize-handle resize-handle-visible cursor-n-resize"
                   style={{ top: -6, left: '50%', transform: 'translateX(-50%)' }}
                   onMouseDown={(e) => handleResizeStart(e, "n")}
                 />
                 <div 
-                  className="resize-handle cursor-ne-resize"
+                  className="resize-handle resize-handle-visible cursor-ne-resize"
                   style={{ top: -6, right: -6 }}
                   onMouseDown={(e) => handleResizeStart(e, "ne")}
                 />
                 <div 
-                  className="resize-handle cursor-e-resize"
+                  className="resize-handle resize-handle-visible cursor-e-resize"
                   style={{ top: '50%', right: -6, transform: 'translateY(-50%)' }}
                   onMouseDown={(e) => handleResizeStart(e, "e")}
                 />
                 <div 
-                  className="resize-handle cursor-se-resize"
+                  className="resize-handle resize-handle-visible cursor-se-resize"
                   style={{ bottom: -6, right: -6 }}
                   onMouseDown={(e) => handleResizeStart(e, "se")}
                 />
                 <div 
-                  className="resize-handle cursor-s-resize"
+                  className="resize-handle resize-handle-visible cursor-s-resize"
                   style={{ bottom: -6, left: '50%', transform: 'translateX(-50%)' }}
                   onMouseDown={(e) => handleResizeStart(e, "s")}
                 />
                 <div 
-                  className="resize-handle cursor-sw-resize"
+                  className="resize-handle resize-handle-visible cursor-sw-resize"
                   style={{ bottom: -6, left: -6 }}
                   onMouseDown={(e) => handleResizeStart(e, "sw")}
                 />
                 <div 
-                  className="resize-handle cursor-w-resize"
+                  className="resize-handle resize-handle-visible cursor-w-resize"
                   style={{ top: '50%', left: -6, transform: 'translateY(-50%)' }}
                   onMouseDown={(e) => handleResizeStart(e, "w")}
                 />
@@ -363,7 +314,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
             
             {showRotationHandle && (
               <div 
-                className="rotation-handle"
+                className="rotation-handle rotation-handle-visible"
                 style={{ top: -40, left: '50%', transform: 'translateX(-50%)' }}
                 onMouseDown={handleRotateStart}
               >
