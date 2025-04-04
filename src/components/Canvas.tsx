@@ -108,18 +108,12 @@ const Canvas = () => {
     return sortedElements.map((element) => {
       const isActive = activeElement?.id === element.id;
       
-      const handleElementClick = (e: React.MouseEvent) => {
-        e.stopPropagation();
-        setActiveElement(element);
-      };
-      
       switch (element.type) {
         case 'rectangle':
           return (
             <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="h-full w-full"
-                onClick={handleElementClick}
                 style={{
                   backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
                   borderRadius: element.style?.borderRadius || '4px'
@@ -133,7 +127,6 @@ const Canvas = () => {
             <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="h-full w-full rounded-full"
-                onClick={handleElementClick}
                 style={{
                   backgroundColor: element.style?.backgroundColor as string || '#8B5CF6'
                 }}
@@ -146,7 +139,6 @@ const Canvas = () => {
             <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="absolute"
-                onClick={handleElementClick}
                 style={{
                   width: 0,
                   height: 0,
@@ -164,7 +156,6 @@ const Canvas = () => {
             <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="h-full w-full"
-                onClick={handleElementClick}
                 style={{
                   backgroundColor: element.style?.backgroundColor as string || '#8B5CF6'
                 }}
@@ -183,9 +174,8 @@ const Canvas = () => {
                   margin: 0,
                   width: '100%',
                   height: '100%',
-                  cursor: isActive ? 'text' : 'grab'
+                  cursor: 'text'
                 }}
-                onClick={handleElementClick}
               >
                 {element.content || 'Add a heading'}
               </h2>
@@ -203,9 +193,8 @@ const Canvas = () => {
                   margin: 0,
                   width: '100%',
                   height: '100%',
-                  cursor: isActive ? 'text' : 'grab'
+                  cursor: 'text'
                 }}
-                onClick={handleElementClick}
               >
                 {element.content || 'Add a subheading'}
               </h3>
@@ -222,10 +211,9 @@ const Canvas = () => {
                   margin: 0,
                   width: '100%',
                   height: '100%',
-                  cursor: isActive ? 'text' : 'grab',
+                  cursor: 'text',
                   overflowWrap: 'break-word'
                 }}
-                onClick={handleElementClick}
               >
                 {element.content || 'Add your text here. Click to edit this text.'}
               </p>
@@ -237,7 +225,6 @@ const Canvas = () => {
             <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="h-full w-full flex items-center justify-center overflow-hidden"
-                onClick={handleElementClick}
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.stopPropagation();

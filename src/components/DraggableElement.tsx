@@ -10,7 +10,7 @@ interface DraggableElementProps {
 }
 
 const DraggableElement = ({ element, isActive, children }: DraggableElementProps) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, setActiveElement } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook, currentElement } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -113,6 +113,9 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
       e.preventDefault();
     }
+    
+    // Always set this element as active when clicking on it, regardless of type
+    setActiveElement(element);
     
     if (isEditing) return;
     
@@ -378,7 +381,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     };
     
     childContent = (
-      <div style={divStyle}>
+      <div 
+        style={divStyle}
+        onClick={(e) => {
+          e.stopPropagation();
+          setActiveElement(element);
+        }}
+      >
         {element.content}
       </div>
     );
