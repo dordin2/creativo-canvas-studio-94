@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -24,7 +23,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [originalAspectRatio, setOriginalAspectRatio] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Array of text element types
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
 
   useEffect(() => {
@@ -41,6 +39,27 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     return match ? parseInt(match[1], 10) : 0;
   };
 
+  const getTextStyle = () => {
+    return {
+      fontSize: element.style?.fontSize || (
+        element.type === 'heading' ? '28px' : 
+        element.type === 'subheading' ? '20px' : '16px'
+      ),
+      fontWeight: element.style?.fontWeight || (
+        element.type === 'heading' ? 'bold' : 
+        element.type === 'subheading' ? '600' : 'normal'
+      ),
+      color: element.style?.color as string || '#1F2937',
+      fontStyle: element.style?.fontStyle || 'normal',
+      textDecoration: element.style?.textDecoration || 'none',
+      padding: '0',
+      margin: '0',
+      fontFamily: 'inherit',
+      lineHeight: 'inherit',
+      overflow: 'hidden'
+    };
+  };
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
@@ -50,7 +69,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       e.preventDefault();
     }
     
-    // Don't start dragging if we're editing text
     if (isEditing) return;
     
     startDrag(e, element.position);
@@ -100,7 +118,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     if (textElementTypes.includes(element.type)) {
       e.stopPropagation();
       setIsEditing(true);
-      // Focus the text input after re-render
       setTimeout(() => {
         if (textInputRef.current) {
           textInputRef.current.focus();
@@ -145,66 +162,49 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         const isImage = element.type === 'image';
         const maintainAspectRatio = isImage || originalAspectRatio !== null;
         
-        // Use direct calculations based on direction instead of scale factor
         let newWidth = startSize.width;
         let newHeight = startSize.height;
         let newX = element.position.x;
         let newY = element.position.y;
         
-        // Handle each direction with direct calculations
         if (resizeDirection.includes('e')) {
-          // East/right edge - only width changes
           newWidth = Math.max(20, startSize.width + deltaX);
         }
         
         if (resizeDirection.includes('w')) {
-          // West/left edge - width and x position change
           const widthChange = deltaX;
           newWidth = Math.max(20, startSize.width - widthChange);
           newX = element.position.x + (startSize.width - newWidth);
         }
         
         if (resizeDirection.includes('s')) {
-          // South/bottom edge - only height changes
           newHeight = Math.max(20, startSize.height + deltaY);
         }
         
         if (resizeDirection.includes('n')) {
-          // North/top edge - height and y position change
           const heightChange = deltaY;
           newHeight = Math.max(20, startSize.height - heightChange);
           newY = element.position.y + (startSize.height - newHeight);
         }
         
-        // Maintain aspect ratio if needed
         if (maintainAspectRatio && originalAspectRatio) {
           if (resizeDirection.includes('e') || resizeDirection.includes('w')) {
-            // Width was primary change, adjust height accordingly
             newHeight = newWidth / originalAspectRatio;
-            
-            // If north direction, adjust y position
             if (resizeDirection.includes('n')) {
               newY = element.position.y + (startSize.height - newHeight);
             }
           } else {
-            // Height was primary change, adjust width accordingly
             newWidth = newHeight * originalAspectRatio;
-            
-            // If west direction, adjust x position
             if (resizeDirection.includes('w')) {
               newX = element.position.x + (startSize.width - newWidth);
             }
           }
         }
         
-        // Update position if it changed
-        if (newX !== element.position.x || newY !== element.position.y) {
-          updateElement(element.id, {
-            position: { x: newX, y: newY }
-          });
-        }
+        updateElement(element.id, {
+          position: { x: newX, y: newY }
+        });
         
-        // Update size
         updateElement(element.id, {
           size: { width: newWidth, height: newHeight }
         });
@@ -265,7 +265,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     zIndex: element.layer,
   };
 
-  // Show resize handles for all element types now
   const showResizeHandles = isActive && element.type !== 'background';
 
   const showRotationHandle = isActive && element.type !== 'background';
@@ -277,7 +276,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
 
   const frameTransform = element.style?.transform || 'rotate(0deg)';
 
-  // Render different content for text elements when editing
+  const textStyle = getTextStyle();
+
   let childContent = children;
   if (isEditing && textElementTypes.includes(element.type)) {
     if (element.type === 'paragraph') {
@@ -295,14 +295,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
             background: 'transparent',
             border: 'none',
             outline: 'none',
-            fontSize: element.type === 'paragraph' ? '16px' : element.type === 'heading' ? '28px' : '20px',
-            fontWeight: element.type === 'paragraph' ? 'normal' : element.type === 'heading' ? 'bold' : '600',
-            color: element.style?.color as string,
-            padding: '0',
-            margin: '0',
-            fontFamily: 'inherit',
-            lineHeight: 'inherit',
-            overflow: 'hidden'
+            ...textStyle
           }}
           autoFocus
         />
@@ -321,17 +314,24 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
             background: 'transparent',
             border: 'none',
             outline: 'none',
-            fontSize: element.type === 'heading' ? '28px' : '20px',
-            fontWeight: element.type === 'heading' ? 'bold' : '600',
-            color: element.style?.color as string,
-            padding: '0',
-            margin: '0',
-            fontFamily: 'inherit'
+            ...textStyle
           }}
           autoFocus
         />
       );
     }
+  } else if (textElementTypes.includes(element.type)) {
+    childContent = (
+      <div style={{
+        ...textStyle,
+        width: '100%',
+        height: '100%',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word'
+      }}>
+        {element.content}
+      </div>
+    );
   }
 
   return (

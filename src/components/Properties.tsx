@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { HexColorPicker } from "react-colorful";
@@ -7,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Upload, ZoomIn, ZoomOut } from "lucide-react";
+import { Trash2, Upload, ZoomIn, ZoomOut, Bold, Italic, Underline } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import LayersList from "./LayersList";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 const Properties = () => {
   const { activeElement, updateElement, removeElement, handleImageUpload } = useDesignState();
@@ -94,6 +96,49 @@ const Properties = () => {
     updateElement(activeElement.id, {
       size: { width: newWidth, height: newHeight }
     });
+  };
+
+  // Handle text formatting functions
+  const handleFontSizeChange = (value: number[]) => {
+    if (!activeElement || !['heading', 'subheading', 'paragraph'].includes(activeElement.type)) return;
+    
+    updateElement(activeElement.id, {
+      style: { 
+        ...activeElement.style, 
+        fontSize: `${value[0]}px` 
+      }
+    });
+  };
+
+  const getFontSize = (): number => {
+    if (!activeElement?.style?.fontSize) {
+      // Default font sizes based on element type
+      if (activeElement?.type === 'heading') return 28;
+      if (activeElement?.type === 'subheading') return 20;
+      if (activeElement?.type === 'paragraph') return 16;
+      return 16;
+    }
+    
+    const fontSizeStr = activeElement.style.fontSize.toString();
+    const match = fontSizeStr.match(/(\d+)px/);
+    return match ? parseInt(match[1], 10) : 16;
+  };
+
+  const toggleTextStyle = (style: 'fontWeight' | 'textDecoration' | 'fontStyle', value: string) => {
+    if (!activeElement || !['heading', 'subheading', 'paragraph'].includes(activeElement.type)) return;
+    
+    // Check if the style is already applied to toggle it
+    const currentStyle = activeElement.style?.[style];
+    const newValue = currentStyle === value ? 'normal' : value;
+    
+    updateElement(activeElement.id, {
+      style: { ...activeElement.style, [style]: newValue }
+    });
+  };
+  
+  const isStyleActive = (style: 'fontWeight' | 'textDecoration' | 'fontStyle', value: string): boolean => {
+    if (!activeElement?.style) return false;
+    return activeElement.style[style] === value;
   };
   
   if (!activeElement) {
@@ -191,6 +236,54 @@ const Properties = () => {
                   value={activeElement.style?.color as string || '#1F2937'} 
                   onChange={(e) => handleColorChange(e.target.value)}
                 />
+              </div>
+
+              {/* Text Formatting Controls */}
+              <div className="space-y-2">
+                <Label>Font Size</Label>
+                <div className="flex items-center justify-between mb-2">
+                  <Slider
+                    value={[getFontSize()]}
+                    min={8}
+                    max={72}
+                    step={1}
+                    onValueChange={handleFontSizeChange}
+                    className="w-full"
+                  />
+                  <span className="text-sm font-medium ml-2 min-w-16 text-right">
+                    {getFontSize()}px
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Text Style</Label>
+                <ToggleGroup type="multiple" className="mt-2 justify-start">
+                  <ToggleGroupItem 
+                    value="bold" 
+                    aria-label="Toggle bold"
+                    data-state={isStyleActive('fontWeight', 'bold') ? 'on' : 'off'}
+                    onClick={() => toggleTextStyle('fontWeight', 'bold')}
+                  >
+                    <Bold className="h-4 w-4" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem 
+                    value="italic" 
+                    aria-label="Toggle italic"
+                    data-state={isStyleActive('fontStyle', 'italic') ? 'on' : 'off'}
+                    onClick={() => toggleTextStyle('fontStyle', 'italic')}
+                  >
+                    <Italic className="h-4 w-4" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem 
+                    value="underline" 
+                    aria-label="Toggle underline"
+                    data-state={isStyleActive('textDecoration', 'underline') ? 'on' : 'off'}
+                    onClick={() => toggleTextStyle('textDecoration', 'underline')}
+                  >
+                    <Underline className="h-4 w-4" />
+                  </ToggleGroupItem>
+                </ToggleGroup>
               </div>
             </div>
           )}
