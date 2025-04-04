@@ -8,7 +8,7 @@ import {
   Circle, 
   Triangle, 
   Lock, 
-  Numbers
+  Hash
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -122,7 +122,7 @@ const Sidebar = () => {
                     className="justify-start"
                     onClick={handleNumberPuzzleClick}
                   >
-                    <Numbers className="h-4 w-4 mr-2" />
+                    <Hash className="h-4 w-4 mr-2" />
                     Number Lock
                   </Button>
                 </div>
@@ -182,3 +182,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+

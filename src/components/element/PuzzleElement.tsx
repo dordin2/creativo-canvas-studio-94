@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { DesignElement } from "@/types/designTypes";
-import { Lock, Numbers } from "lucide-react";
+import { Lock, Hash } from "lucide-react";
 import PuzzleModal from "./PuzzleModal";
 
 interface PuzzleElementProps {
@@ -35,7 +35,7 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
         {puzzleType === 'image' ? (
           <Lock className="w-8 h-8 text-gray-700 mb-2" />
         ) : (
-          <Numbers className="w-8 h-8 text-gray-700 mb-2" />
+          <Hash className="w-8 h-8 text-gray-700 mb-2" />
         )}
         <p className="text-sm font-medium text-center text-gray-700 line-clamp-2">
           {element.puzzleConfig?.name || "Puzzle"}
@@ -55,3 +55,4 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
 };
 
 export default PuzzleElement;
+

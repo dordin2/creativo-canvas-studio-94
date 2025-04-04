@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
-import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Numbers } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
@@ -239,7 +239,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="number" id="number-puzzle" />
             <Label htmlFor="number-puzzle" className="flex items-center">
-              <Numbers className="h-4 w-4 mr-1" />
+              <Hash className="h-4 w-4 mr-1" />
               Number Lock
             </Label>
           </div>
@@ -420,3 +420,4 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
 };
 
 export default PuzzleProperties;
+
