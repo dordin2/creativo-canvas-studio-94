@@ -61,7 +61,7 @@ const Properties = () => {
   
   if (!activeElement) {
     return (
-      <div className="w-80 border-l h-full p-6 bg-sidebar-background text-sidebar-foreground flex flex-col">
+      <div className="properties-panel border-l p-6 flex flex-col">
         <h3 className="text-lg font-medium mb-4">Properties</h3>
         <p className="text-sm text-muted-foreground">
           Select an element to edit its properties
@@ -74,7 +74,7 @@ const Properties = () => {
   }
   
   return (
-    <div className="w-80 border-l h-full p-6 bg-sidebar-background text-sidebar-foreground flex flex-col">
+    <div className="properties-panel border-l p-6 flex flex-col">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-lg font-medium">Properties</h3>
         <Button 

@@ -36,9 +36,15 @@ const Index = () => {
       <div className="flex flex-col h-screen overflow-hidden">
         <Header />
         <div className="flex flex-1 overflow-hidden">
-          <Sidebar />
-          <Canvas />
-          <Properties />
+          <div className="flex-shrink-0 w-64">
+            <Sidebar />
+          </div>
+          <div className="flex-1 overflow-hidden">
+            <Canvas />
+          </div>
+          <div className="flex-shrink-0 w-80">
+            <Properties />
+          </div>
         </div>
       </div>
     </DesignProvider>

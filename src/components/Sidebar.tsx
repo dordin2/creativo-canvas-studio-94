@@ -24,7 +24,7 @@ const Sidebar = () => {
   ];
 
   return (
-    <div className="w-64 h-full border-r bg-white flex flex-col">
+    <div className="sidebar-panel border-r flex flex-col">
       <Tabs defaultValue="elements" className="flex-1 flex flex-col">
         <TabsList className="grid grid-cols-3 mx-2 mt-2">
           <TabsTrigger value="elements">Elements</TabsTrigger>

@@ -125,3 +125,18 @@
 .cursor-s-resize { cursor: s-resize; }
 .cursor-sw-resize { cursor: sw-resize; }
 .cursor-w-resize { cursor: w-resize; }
+
+/* Fix for side panels */
+.sidebar-panel {
+  @apply h-full bg-white overflow-y-auto;
+  min-width: 16rem;
+  width: 16rem;
+  flex: 0 0 auto;
+}
+
+.properties-panel {
+  @apply h-full bg-sidebar-background text-sidebar-foreground overflow-y-auto;
+  min-width: 20rem;
+  width: 20rem;
+  flex: 0 0 auto;
+}
