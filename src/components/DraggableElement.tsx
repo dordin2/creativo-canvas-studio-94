@@ -13,6 +13,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const { updateElement } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook, currentElement } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
+  const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
@@ -21,6 +22,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [startRotation, setStartRotation] = useState(0);
   const [originalAspectRatio, setOriginalAspectRatio] = useState<number | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (element.style && typeof element.style.transform === 'undefined') {
@@ -44,6 +46,9 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
       e.preventDefault();
     }
+    
+    // Don't start dragging if we're editing text
+    if (isEditing) return;
     
     startDrag(e, element.position);
     setIsDragging(true);
@@ -85,6 +90,33 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       setStartPos({ x: centerX, y: centerY });
+    }
+  };
+
+  const handleTextDoubleClick = (e: React.MouseEvent) => {
+    if (['heading', 'subheading', 'paragraph'].includes(element.type)) {
+      e.stopPropagation();
+      setIsEditing(true);
+      // Focus the text input after re-render
+      setTimeout(() => {
+        if (textInputRef.current) {
+          textInputRef.current.focus();
+        }
+      }, 10);
+    }
+  };
+  
+  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    updateElement(element.id, { content: e.target.value });
+  };
+  
+  const handleTextBlur = () => {
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      setIsEditing(false);
     }
   };
 
@@ -230,9 +262,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     zIndex: element.layer,
   };
 
-  const showResizeHandles = isActive && 
-    !['heading', 'subheading', 'paragraph'].includes(element.type) &&
-    element.type !== 'background';
+  // Show resize handles for all element types now
+  const showResizeHandles = isActive && element.type !== 'background';
 
   const showRotationHandle = isActive && element.type !== 'background';
 
@@ -243,6 +274,63 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
 
   const frameTransform = element.style?.transform || 'rotate(0deg)';
 
+  // Render different content for text elements when editing
+  let childContent = children;
+  if (isEditing && ['heading', 'subheading', 'paragraph'].includes(element.type)) {
+    if (element.type === 'paragraph') {
+      childContent = (
+        <textarea
+          ref={textInputRef as React.RefObject<HTMLTextAreaElement>}
+          value={element.content || ''}
+          onChange={handleTextChange}
+          onBlur={handleTextBlur}
+          onKeyDown={handleKeyDown}
+          style={{
+            width: '100%',
+            height: '100%',
+            resize: 'none',
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            fontSize: element.type === 'heading' ? '28px' : element.type === 'subheading' ? '20px' : '16px',
+            fontWeight: element.type === 'heading' ? 'bold' : element.type === 'subheading' ? '600' : 'normal',
+            color: element.style?.color as string,
+            padding: '0',
+            margin: '0',
+            fontFamily: 'inherit',
+            lineHeight: 'inherit',
+            overflow: 'hidden'
+          }}
+          autoFocus
+        />
+      );
+    } else {
+      childContent = (
+        <input
+          ref={textInputRef as React.RefObject<HTMLInputElement>}
+          type="text" 
+          value={element.content || ''}
+          onChange={handleTextChange}
+          onBlur={handleTextBlur}
+          onKeyDown={handleKeyDown}
+          style={{
+            width: '100%',
+            background: 'transparent',
+            border: 'none',
+            outline: 'none',
+            fontSize: element.type === 'heading' ? '28px' : '20px',
+            fontWeight: element.type === 'heading' ? 'bold' : '600',
+            color: element.style?.color as string,
+            padding: '0',
+            margin: '0',
+            fontFamily: 'inherit'
+          }}
+          autoFocus
+        />
+      );
+    }
+  }
+
   return (
     <>
       <div
@@ -250,6 +338,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         className="canvas-element"
         style={elementStyle}
         onMouseDown={handleMouseDown}
+        onDoubleClick={handleTextDoubleClick}
         onDragOver={(e) => {
           if (element.type === 'image') {
             e.preventDefault();
@@ -257,7 +346,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
           }
         }}
       >
-        {children}
+        {childContent}
       </div>
 
       {isActive && (

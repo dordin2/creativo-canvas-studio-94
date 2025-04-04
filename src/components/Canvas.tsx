@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -181,7 +180,10 @@ const Canvas = () => {
                   fontSize: '28px', 
                   fontWeight: 'bold',
                   color: element.style?.color as string || '#1F2937',
-                  margin: 0
+                  margin: 0,
+                  width: '100%',
+                  height: '100%',
+                  cursor: isActive ? 'text' : 'grab'
                 }}
                 onClick={handleElementClick}
               >
@@ -198,7 +200,10 @@ const Canvas = () => {
                   fontSize: '20px', 
                   fontWeight: '600',
                   color: element.style?.color as string || '#1F2937',
-                  margin: 0
+                  margin: 0,
+                  width: '100%',
+                  height: '100%',
+                  cursor: isActive ? 'text' : 'grab'
                 }}
                 onClick={handleElementClick}
               >
@@ -215,7 +220,10 @@ const Canvas = () => {
                   fontSize: '16px',
                   color: element.style?.color as string || '#1F2937',
                   margin: 0,
-                  maxWidth: '300px'
+                  width: '100%',
+                  height: '100%',
+                  cursor: isActive ? 'text' : 'grab',
+                  overflowWrap: 'break-word'
                 }}
                 onClick={handleElementClick}
               >
@@ -316,7 +324,6 @@ const Canvas = () => {
           {renderElements()}
         </div>
         
-        {/* Separate layer for element controls that extends beyond canvas */}
         <div 
           className="element-controls-wrapper"
           style={{
@@ -325,7 +332,7 @@ const Canvas = () => {
             left: 0,
             width: canvasDimensions.width,
             height: canvasDimensions.height,
-            overflow: 'visible', // Allow controls to be visible outside the canvas
+            overflow: 'visible',
             pointerEvents: 'none',
             zIndex: 1000,
           }}

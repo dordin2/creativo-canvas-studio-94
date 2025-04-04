@@ -211,6 +211,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           content: 'Add a heading',
+          size: { width: 300, height: 50 },
           style: { color: '#1F2937', transform: 'rotate(0deg)' },
           layer: newLayer
         };
@@ -222,6 +223,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           content: 'Add a subheading',
+          size: { width: 250, height: 40 },
           style: { color: '#1F2937', transform: 'rotate(0deg)' },
           layer: newLayer
         };
@@ -233,6 +235,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           content: 'Add your text here. Click to edit this text.',
+          size: { width: 300, height: 100 },
           style: { color: '#1F2937', transform: 'rotate(0deg)' },
           layer: newLayer
         };
