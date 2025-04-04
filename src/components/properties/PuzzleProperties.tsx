@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
-import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash, AlphabetLatin } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash, Languages } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
@@ -250,7 +250,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="alphabet" id="alphabet-puzzle" />
             <Label htmlFor="alphabet-puzzle" className="flex items-center">
-              <AlphabetLatin className="h-4 w-4 mr-1" />
+              <Languages className="h-4 w-4 mr-1" />
               Alphabet Lock
             </Label>
           </div>

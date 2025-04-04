@@ -9,7 +9,7 @@ import {
   Triangle, 
   Lock, 
   Hash,
-  AlphabetLatin
+  Languages
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -144,7 +144,7 @@ const Sidebar = () => {
                     className="justify-start"
                     onClick={handleAlphabetPuzzleClick}
                   >
-                    <AlphabetLatin className="h-4 w-4 mr-2" />
+                    <Languages className="h-4 w-4 mr-2" />
                     Alphabet Lock
                   </Button>
                 </div>
