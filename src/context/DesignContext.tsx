@@ -98,14 +98,33 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           const naturalWidth = img.naturalWidth;
           const naturalHeight = img.naturalHeight;
           
-          // Update the element with both the file data and correct dimensions
+          // Calculate scaled dimensions to make the image start at a reasonable size
+          // Max dimension (width or height) will be 300px
+          const MAX_DIMENSION = 300;
+          let scaledWidth = naturalWidth;
+          let scaledHeight = naturalHeight;
+          
+          // Scale down only if the image is larger than our target size
+          if (naturalWidth > MAX_DIMENSION || naturalHeight > MAX_DIMENSION) {
+            if (naturalWidth > naturalHeight) {
+              // Landscape orientation
+              scaledWidth = MAX_DIMENSION;
+              scaledHeight = (naturalHeight / naturalWidth) * MAX_DIMENSION;
+            } else {
+              // Portrait or square orientation
+              scaledHeight = MAX_DIMENSION;
+              scaledWidth = (naturalWidth / naturalHeight) * MAX_DIMENSION;
+            }
+          }
+          
+          // Update the element with both the file data and scaled dimensions
           updateElement(id, { 
             file, 
             dataUrl, 
             src: undefined, // Clear the external URL when using a local file
             size: {
-              width: naturalWidth,
-              height: naturalHeight
+              width: scaledWidth,
+              height: scaledHeight
             }
           });
           toast.success("Image uploaded successfully");
