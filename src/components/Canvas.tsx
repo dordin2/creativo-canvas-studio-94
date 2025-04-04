@@ -15,7 +15,7 @@ const Canvas = () => {
     handleImageUpload 
   } = useDesignState();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
+  const [canvasDimensions, setCanvasDimensions] = useState({ width: 1200, height: 900 }); // Larger default size
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -33,20 +33,20 @@ const Canvas = () => {
         const parentWidth = parentRef.current.clientWidth;
         const parentHeight = parentRef.current.clientHeight;
         
-        // Set minimum dimensions to prevent canvas from getting too small
-        const minWidth = 800;
-        const minHeight = 600;
+        // Set minimum dimensions - increase these for larger default canvas
+        const minWidth = 1200;
+        const minHeight = 900;
         
-        // Calculate available space (with some padding)
-        const maxWidth = Math.max(minWidth, parentWidth - 40);
-        const maxHeight = Math.max(minHeight, parentHeight - 80);
+        // Calculate available space with minimal padding
+        const maxWidth = Math.max(minWidth, parentWidth - 20);
+        const maxHeight = Math.max(minHeight, parentHeight - 40);
         
-        // Maintain 4:3 aspect ratio
+        // Maintain aspect ratio (4:3)
         const aspectRatio = 4/3;
         let width = maxWidth;
         let height = width / aspectRatio;
         
-        // Adjust if height exceeds available space
+        // If height would exceed available space, adjust width based on height
         if (height > maxHeight) {
           height = maxHeight;
           width = height * aspectRatio;
@@ -57,6 +57,7 @@ const Canvas = () => {
       }
     };
     
+    // Run the resize handler immediately and on window resize
     handleResize();
     
     // Create ResizeObserver to watch for parent element size changes
@@ -309,7 +310,7 @@ const Canvas = () => {
   } : { backgroundColor: 'white' };
   
   return (
-    <div ref={parentRef} className="flex-1 flex items-center justify-center p-8 canvas-workspace relative">
+    <div ref={parentRef} className="flex-1 flex items-center justify-center p-4 canvas-workspace relative">
       <div className="canvas-container" style={{ 
         transform: `scale(${zoomLevel})`, 
         transformOrigin: 'center center', 
