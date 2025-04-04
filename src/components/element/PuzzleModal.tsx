@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { DesignElement } from "@/types/designTypes";
 
@@ -54,16 +54,13 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
     }
   }, [currentStates, puzzleConfig.solution, solved, isOpen, onClose]);
   
-  const cyclePlaceholder = (index: number, direction: 'next' | 'prev') => {
+  const cyclePlaceholder = (index: number) => {
     if (puzzleConfig.images.length === 0) return;
     
     setCurrentStates(prev => {
       const newStates = [...prev];
-      if (direction === 'next') {
-        newStates[index] = (newStates[index] + 1) % puzzleConfig.images.length;
-      } else {
-        newStates[index] = (newStates[index] - 1 + puzzleConfig.images.length) % puzzleConfig.images.length;
-      }
+      // Only cycle forward, looping back to the first image
+      newStates[index] = (newStates[index] + 1) % puzzleConfig.images.length;
       return newStates;
     });
   };
@@ -72,7 +69,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-2xl">
+      <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-xl">{puzzleConfig.name}</DialogTitle>
           <DialogClose asChild>
@@ -85,37 +82,19 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
         
         <div className="py-6">
           {puzzleConfig.images.length > 0 ? (
-            <div className="flex flex-wrap justify-center gap-8">
+            <div className="flex flex-row justify-center gap-4 flex-wrap">
               {Array.from({ length: puzzleConfig.placeholders }).map((_, idx) => (
-                <div key={idx} className="relative flex items-center justify-center">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute left-0 z-10"
-                    onClick={() => cyclePlaceholder(idx, 'prev')}
+                <div key={idx} className="relative">
+                  <div 
+                    className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border rounded overflow-hidden cursor-pointer transition-all hover:brightness-90 active:scale-95"
+                    onClick={() => cyclePlaceholder(idx)}
                   >
-                    <ChevronLeft className="h-5 w-5" />
-                  </Button>
-                  
-                  <div className="relative w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 border rounded overflow-hidden">
                     <img 
                       src={puzzleConfig.images[currentStates[idx]]} 
-                      alt={`Placeholder ${idx + 1}`}
+                      alt={`Puzzle piece ${idx + 1}`}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-1">
-                      Placeholder {idx + 1}
-                    </div>
                   </div>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    className="absolute right-0 z-10"
-                    onClick={() => cyclePlaceholder(idx, 'next')}
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
                 </div>
               ))}
             </div>
