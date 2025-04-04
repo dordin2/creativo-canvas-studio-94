@@ -8,7 +8,8 @@ import {
   Circle, 
   Triangle, 
   Lock, 
-  Hash
+  Hash,
+  ABC
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -54,6 +55,30 @@ const Sidebar = () => {
         images: [],
         solution: [0, 0, 0],
         maxNumber: 9
+      }
+    });
+  };
+
+  const handleEnglishPuzzleClick = () => {
+    addElement('puzzle', {
+      puzzleConfig: {
+        name: 'English Letters',
+        type: 'english',
+        placeholders: 3,
+        images: [],
+        solution: [0, 0, 0]
+      }
+    });
+  };
+
+  const handleHebrewPuzzleClick = () => {
+    addElement('puzzle', {
+      puzzleConfig: {
+        name: 'Hebrew Letters',
+        type: 'hebrew',
+        placeholders: 3,
+        images: [],
+        solution: [0, 0, 0]
       }
     });
   };
@@ -125,6 +150,22 @@ const Sidebar = () => {
                     <Hash className="h-4 w-4 mr-2" />
                     Number Lock
                   </Button>
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleEnglishPuzzleClick}
+                  >
+                    <ABC className="h-4 w-4 mr-2" />
+                    English Letters
+                  </Button>
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleHebrewPuzzleClick}
+                  >
+                    <ABC className="h-4 w-4 mr-2" />
+                    Hebrew Letters
+                  </Button>
                 </div>
               </PopoverContent>
             </Popover>
@@ -182,4 +223,3 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
-

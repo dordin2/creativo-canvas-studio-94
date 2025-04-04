@@ -12,6 +12,12 @@ interface PuzzleModalProps {
   element: DesignElement;
 }
 
+// English alphabet letters
+const ENGLISH_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+// Hebrew alphabet letters
+const HEBREW_LETTERS = "אבגדהוזחטיכלמנסעפצקרשת".split("");
+
 const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) => {
   const [currentStates, setCurrentStates] = useState<number[]>([]);
   const [solved, setSolved] = useState(false);
@@ -27,10 +33,19 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
   
   const puzzleType = puzzleConfig.type || 'image';
   
+  // Get letters based on puzzle type
+  const getLetters = () => {
+    switch(puzzleType) {
+      case 'english': return ENGLISH_LETTERS;
+      case 'hebrew': return HEBREW_LETTERS;
+      default: return [];
+    }
+  };
+  
   // Initialize current states when modal opens or puzzle changes
   useEffect(() => {
     if (isOpen) {
-      // Reset to initial state (all placeholders at image 0 or number 0)
+      // Reset to initial state (all placeholders at image 0 or number/letter 0)
       setCurrentStates(Array(puzzleConfig.placeholders).fill(0));
       setSolved(false);
     }
@@ -66,13 +81,53 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
       if (puzzleType === 'image') {
         // Only cycle forward, looping back to the first image
         newStates[index] = (newStates[index] + 1) % puzzleConfig.images.length;
-      } else {
+      } else if (puzzleType === 'number') {
         // For number puzzles, cycle through numbers 0-9 or up to maxNumber
         const maxNum = puzzleConfig.maxNumber || 9;
         newStates[index] = (newStates[index] + 1) % (maxNum + 1);
+      } else if (puzzleType === 'english' || puzzleType === 'hebrew') {
+        // For letter puzzles, cycle through the appropriate alphabet
+        const letters = getLetters();
+        newStates[index] = (newStates[index] + 1) % letters.length;
       }
       return newStates;
     });
+  };
+  
+  // Render placeholder content based on puzzle type
+  const renderPlaceholderContent = (idx: number) => {
+    const currentState = currentStates[idx];
+    
+    switch(puzzleType) {
+      case 'image':
+        return (
+          <img 
+            src={puzzleConfig.images[currentState]} 
+            alt={`Puzzle piece ${idx + 1}`}
+            className="w-full h-full object-cover"
+          />
+        );
+      case 'number':
+        return (
+          <span className="text-3xl sm:text-4xl md:text-5xl font-bold">
+            {currentState}
+          </span>
+        );
+      case 'english':
+        return (
+          <span className="text-3xl sm:text-4xl md:text-5xl font-bold">
+            {ENGLISH_LETTERS[currentState]}
+          </span>
+        );
+      case 'hebrew':
+        return (
+          <span className="text-3xl sm:text-4xl md:text-5xl font-bold">
+            {HEBREW_LETTERS[currentState]}
+          </span>
+        );
+      default:
+        return null;
+    }
   };
   
   return (
@@ -108,11 +163,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
                       className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border rounded overflow-hidden cursor-pointer transition-all hover:brightness-90 active:scale-95"
                       onClick={() => cyclePlaceholder(idx)}
                     >
-                      <img 
-                        src={puzzleConfig.images[currentStates[idx]]} 
-                        alt={`Puzzle piece ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
+                      {renderPlaceholderContent(idx)}
                     </div>
                   </div>
                 ))}
@@ -124,7 +175,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
               </div>
             )
           ) : (
-            // Number puzzle UI
+            // Number/Letter puzzle UI
             <div className="flex flex-row justify-center gap-4 flex-wrap">
               {Array.from({ length: puzzleConfig.placeholders }).map((_, idx) => (
                 <div key={idx} className="relative">
@@ -132,9 +183,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
                     className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 border-2 border-gray-300 rounded-md flex items-center justify-center cursor-pointer transition-all hover:border-primary active:scale-95 bg-white"
                     onClick={() => cyclePlaceholder(idx)}
                   >
-                    <span className="text-3xl sm:text-4xl md:text-5xl font-bold">
-                      {currentStates[idx]}
-                    </span>
+                    {renderPlaceholderContent(idx)}
                   </div>
                 </div>
               ))}

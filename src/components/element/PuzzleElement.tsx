@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { DesignElement } from "@/types/designTypes";
-import { Lock, Hash } from "lucide-react";
+import { Lock, Hash, ABC } from "lucide-react";
 import PuzzleModal from "./PuzzleModal";
 
 interface PuzzleElementProps {
@@ -26,22 +26,44 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
   
   const puzzleType = element.puzzleConfig?.type || 'image';
   
+  // Function to get the appropriate icon based on puzzle type
+  const getPuzzleIcon = () => {
+    switch(puzzleType) {
+      case 'image':
+        return <Lock className="w-8 h-8 text-gray-700 mb-2" />;
+      case 'number':
+        return <Hash className="w-8 h-8 text-gray-700 mb-2" />;
+      case 'english':
+      case 'hebrew':
+        return <ABC className="w-8 h-8 text-gray-700 mb-2" />;
+      default:
+        return <Lock className="w-8 h-8 text-gray-700 mb-2" />;
+    }
+  };
+  
+  // Function to get the puzzle type display name
+  const getPuzzleTypeName = () => {
+    switch(puzzleType) {
+      case 'image': return 'Image Puzzle';
+      case 'number': return 'Number Lock';
+      case 'english': return 'English Letters';
+      case 'hebrew': return 'Hebrew Letters';
+      default: return 'Puzzle';
+    }
+  };
+  
   return (
     <>
       <div 
         className="flex flex-col items-center justify-center w-full h-full p-3 cursor-pointer"
         onClick={handleClick}
       >
-        {puzzleType === 'image' ? (
-          <Lock className="w-8 h-8 text-gray-700 mb-2" />
-        ) : (
-          <Hash className="w-8 h-8 text-gray-700 mb-2" />
-        )}
+        {getPuzzleIcon()}
         <p className="text-sm font-medium text-center text-gray-700 line-clamp-2">
           {element.puzzleConfig?.name || "Puzzle"}
         </p>
         <div className="text-xs text-gray-500 mt-1">
-          {puzzleType === 'image' ? 'Image Puzzle' : 'Number Lock'}: {element.puzzleConfig?.placeholders || 3} {puzzleType === 'image' ? 'placeholders' : 'digits'}
+          {getPuzzleTypeName()}: {element.puzzleConfig?.placeholders || 3} {puzzleType === 'image' ? 'placeholders' : 'characters'}
         </div>
       </div>
       
@@ -55,4 +77,3 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
 };
 
 export default PuzzleElement;
-

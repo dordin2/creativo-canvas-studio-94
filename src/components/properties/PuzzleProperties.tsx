@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { DesignElement, PuzzleType } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
-import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck, Lock, Hash, ABC } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
@@ -24,6 +23,9 @@ const PLACEHOLDER_IMAGES = [
   "https://source.unsplash.com/random/300x200?sig=4",
   "https://source.unsplash.com/random/300x200?sig=5"
 ];
+
+const ENGLISH_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const HEBREW_LETTERS = "אבגדהוזחטיכלמנסעפצקרשת".split("");
 
 const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => {
   const { updateElement, addElement } = useDesignState();
@@ -40,6 +42,14 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
   
+  const getLettersForType = (type: PuzzleType): string[] => {
+    switch(type) {
+      case 'english': return ENGLISH_LETTERS;
+      case 'hebrew': return HEBREW_LETTERS;
+      default: return [];
+    }
+  };
+  
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setLocalPuzzleConfig(prev => ({
       ...prev,
@@ -51,7 +61,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     setLocalPuzzleConfig(prev => ({
       ...prev,
       type,
-      // Reset solution when changing types
       solution: Array(prev.placeholders).fill(0)
     }));
   };
@@ -60,14 +69,11 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     const numPlaceholders = parseInt(value);
     let newSolution = [...localPuzzleConfig.solution];
     
-    // Adjust solution array to match new placeholder count
     if (numPlaceholders > localPuzzleConfig.solution.length) {
-      // Add default values for new placeholders
       for (let i = localPuzzleConfig.solution.length; i < numPlaceholders; i++) {
         newSolution.push(0);
       }
     } else if (numPlaceholders < localPuzzleConfig.solution.length) {
-      // Trim solution array if reducing placeholders
       newSolution = newSolution.slice(0, numPlaceholders);
     }
     
@@ -81,7 +87,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
   const handleMaxNumberChange = (value: string) => {
     const maxNumber = parseInt(value);
     
-    // Adjust solution if any values are higher than new max
     const newSolution = localPuzzleConfig.solution.map(val => 
       val > maxNumber ? 0 : val
     );
@@ -107,10 +112,9 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     const newImages = [...localPuzzleConfig.images];
     newImages.splice(index, 1);
     
-    // Update solution indices if necessary
     const newSolution = localPuzzleConfig.solution.map(solIndex => {
-      if (solIndex === index) return 0; // Reset to first image if removed
-      if (solIndex > index) return solIndex - 1; // Adjust higher indices
+      if (solIndex === index) return 0;
+      if (solIndex > index) return solIndex - 1;
       return solIndex;
     });
     
@@ -157,7 +161,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     };
     reader.readAsDataURL(file);
     
-    // Reset the file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -168,7 +171,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
   };
   
   const handleApplyChanges = () => {
-    // Validate the puzzle configuration
     if (localPuzzleConfig.name.trim() === '') {
       toast.error("Puzzle name cannot be empty");
       return;
@@ -184,7 +186,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       return;
     }
     
-    // Apply changes to the element
     updateElement(element.id, {
       puzzleConfig: localPuzzleConfig
     });
@@ -193,7 +194,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
   };
   
   const createPuzzleElement = () => {
-    // Final validation before creating the element
     if (localPuzzleConfig.name.trim() === '') {
       toast.error("Puzzle name cannot be empty");
       return;
@@ -204,9 +204,18 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       return;
     }
     
-    // Create the puzzle element
     addElement('puzzle', { puzzleConfig: localPuzzleConfig });
     toast.success("Puzzle added to canvas");
+  };
+  
+  const getPuzzleTypeLabel = (type: PuzzleType): string => {
+    switch(type) {
+      case 'image': return 'Image Puzzle';
+      case 'number': return 'Number Lock';
+      case 'english': return 'English Letters';
+      case 'hebrew': return 'Hebrew Letters';
+      default: return 'Puzzle';
+    }
   };
   
   return (
@@ -227,7 +236,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           id="puzzle-type"
           value={localPuzzleConfig.type}
           onValueChange={(value) => handleTypeChange(value as PuzzleType)}
-          className="flex space-x-4"
+          className="flex flex-wrap gap-4"
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="image" id="image-puzzle" />
@@ -243,12 +252,26 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
               Number Lock
             </Label>
           </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="english" id="english-puzzle" />
+            <Label htmlFor="english-puzzle" className="flex items-center">
+              <ABC className="h-4 w-4 mr-1" />
+              English Letters
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="hebrew" id="hebrew-puzzle" />
+            <Label htmlFor="hebrew-puzzle" className="flex items-center">
+              <ABC className="h-4 w-4 mr-1" />
+              Hebrew Letters
+            </Label>
+          </div>
         </RadioGroup>
       </div>
       
       <div>
         <Label htmlFor="placeholders">
-          {localPuzzleConfig.type === 'image' ? 'Number of Placeholders' : 'Number of Digits'}
+          {localPuzzleConfig.type === 'image' ? 'Number of Placeholders' : 'Number of Characters'}
         </Label>
         <Select 
           value={localPuzzleConfig.placeholders.toString()} 
@@ -260,7 +283,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           <SelectContent>
             {[2, 3, 4, 5, 6].map(num => (
               <SelectItem key={num} value={num.toString()}>
-                {num} {localPuzzleConfig.type === 'image' ? 'placeholders' : 'digits'}
+                {num} {localPuzzleConfig.type === 'image' ? 'placeholders' : 'characters'}
               </SelectItem>
             ))}
           </SelectContent>
@@ -361,21 +384,21 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
         </div>
       )}
       
-      {/* Solution Configuration section - now handles both puzzle types */}
       <div>
         <Label>Solution Configuration</Label>
         <div className="space-y-2 mt-2">
           {Array.from({ length: localPuzzleConfig.placeholders }).map((_, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <span className="text-sm font-medium w-24">
-                {localPuzzleConfig.type === 'image' ? `Placeholder ${idx + 1}:` : `Digit ${idx + 1}:`}
+                {localPuzzleConfig.type === 'image' ? `Placeholder ${idx + 1}:` : `Character ${idx + 1}:`}
               </span>
               <Select 
                 value={localPuzzleConfig.solution[idx]?.toString() || "0"} 
                 onValueChange={(val) => handleSolutionChange(idx, val)}
               >
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder={`Select correct ${localPuzzleConfig.type === 'image' ? 'image' : 'number'}`} />
+                  <SelectValue placeholder={`Select correct ${localPuzzleConfig.type === 'image' ? 'image' : 
+                    localPuzzleConfig.type === 'number' ? 'number' : 'letter'}`} />
                 </SelectTrigger>
                 <SelectContent>
                   {localPuzzleConfig.type === 'image'
@@ -384,11 +407,17 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
                           Image {imgIdx + 1}
                         </SelectItem>
                       ))
-                    : Array.from({ length: (localPuzzleConfig.maxNumber || 9) + 1 }).map((_, numIdx) => (
-                        <SelectItem key={numIdx} value={numIdx.toString()}>
-                          {numIdx}
-                        </SelectItem>
-                      ))
+                    : localPuzzleConfig.type === 'number'
+                      ? Array.from({ length: (localPuzzleConfig.maxNumber || 9) + 1 }).map((_, numIdx) => (
+                          <SelectItem key={numIdx} value={numIdx.toString()}>
+                            {numIdx}
+                          </SelectItem>
+                        ))
+                      : getLettersForType(localPuzzleConfig.type).map((letter, letterIdx) => (
+                          <SelectItem key={letterIdx} value={letterIdx.toString()}>
+                            {letter}
+                          </SelectItem>
+                        ))
                   }
                 </SelectContent>
               </Select>
@@ -420,4 +449,3 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
 };
 
 export default PuzzleProperties;
-
