@@ -24,6 +24,9 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [originalAspectRatio, setOriginalAspectRatio] = useState<number | null>(null);
   const [isEditing, setIsEditing] = useState(false);
 
+  // Array of text element types
+  const textElementTypes = ['heading', 'subheading', 'paragraph'];
+
   useEffect(() => {
     if (element.style && typeof element.style.transform === 'undefined') {
       updateElement(element.id, {
@@ -94,7 +97,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
-    if (['heading', 'subheading', 'paragraph'].includes(element.type)) {
+    if (textElementTypes.includes(element.type)) {
       e.stopPropagation();
       setIsEditing(true);
       // Focus the text input after re-render
@@ -276,7 +279,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
 
   // Render different content for text elements when editing
   let childContent = children;
-  if (isEditing && ['heading', 'subheading', 'paragraph'].includes(element.type)) {
+  if (isEditing && textElementTypes.includes(element.type)) {
     if (element.type === 'paragraph') {
       childContent = (
         <textarea
@@ -292,8 +295,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
             background: 'transparent',
             border: 'none',
             outline: 'none',
-            fontSize: element.type === 'heading' ? '28px' : element.type === 'subheading' ? '20px' : '16px',
-            fontWeight: element.type === 'heading' ? 'bold' : element.type === 'subheading' ? '600' : 'normal',
+            fontSize: element.type === 'paragraph' ? '16px' : element.type === 'heading' ? '28px' : '20px',
+            fontWeight: element.type === 'paragraph' ? 'normal' : element.type === 'heading' ? 'bold' : '600',
             color: element.style?.color as string,
             padding: '0',
             margin: '0',
