@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { HexColorPicker } from "react-colorful";
@@ -7,10 +8,17 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Upload, ZoomIn, ZoomOut, Bold, Italic, Underline } from "lucide-react";
+import { Trash2, Upload, Bold, Italic, Underline } from "lucide-react";
 import { Slider } from "@/components/ui/slider";
 import LayersList from "./LayersList";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Properties = () => {
   const { activeElement, updateElement, removeElement, handleImageUpload } = useDesignState();
@@ -95,6 +103,29 @@ const Properties = () => {
     updateElement(activeElement.id, {
       size: { width: newWidth, height: newHeight }
     });
+  };
+
+  // Handle font size change
+  const handleFontSizeChange = (value: string) => {
+    if (!activeElement || !['heading', 'subheading', 'paragraph'].includes(activeElement.type)) return;
+    
+    const fontSize = parseInt(value);
+    updateElement(activeElement.id, {
+      style: { ...activeElement.style, fontSize: `${fontSize}px` }
+    });
+  };
+
+  // Get current font size
+  const getCurrentFontSize = (): string => {
+    if (!activeElement?.style?.fontSize) {
+      if (activeElement?.type === 'heading') return '24';
+      if (activeElement?.type === 'subheading') return '18';
+      return '16';
+    }
+    
+    const fontSize = activeElement.style.fontSize.toString();
+    const match = fontSize.match(/(\d+)px/);
+    return match ? match[1] : '16';
   };
 
   // Handle text formatting functions
@@ -214,10 +245,40 @@ const Properties = () => {
 
               {/* Text Formatting Controls */}
               <div className="space-y-2">
+                <Label>Font Size</Label>
+                <Select 
+                  value={getCurrentFontSize()} 
+                  onValueChange={handleFontSizeChange}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select font size" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="8">8</SelectItem>
+                    <SelectItem value="9">9</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="11">11</SelectItem>
+                    <SelectItem value="12">12</SelectItem>
+                    <SelectItem value="14">14</SelectItem>
+                    <SelectItem value="16">16</SelectItem>
+                    <SelectItem value="18">18</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="22">22</SelectItem>
+                    <SelectItem value="24">24</SelectItem>
+                    <SelectItem value="28">28</SelectItem>
+                    <SelectItem value="32">32</SelectItem>
+                    <SelectItem value="36">36</SelectItem>
+                    <SelectItem value="42">42</SelectItem>
+                    <SelectItem value="48">48</SelectItem>
+                    <SelectItem value="56">56</SelectItem>
+                    <SelectItem value="64">64</SelectItem>
+                    <SelectItem value="72">72</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label>Text Style</Label>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Text size scales automatically with the element size
-                </p>
                 <ToggleGroup type="multiple" className="mt-2 justify-start">
                   <ToggleGroupItem 
                     value="bold" 

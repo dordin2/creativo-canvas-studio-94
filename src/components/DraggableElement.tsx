@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect, CSSProperties } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -40,48 +39,27 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     return match ? parseInt(match[1], 10) : 0;
   };
 
-  // Calculate font size based on element dimensions
-  const calculateFontSize = (): string => {
-    if (!element.size) return '16px';
+  const getFontSize = (): string => {
+    if (element.style?.fontSize) {
+      return element.style.fontSize as string;
+    }
     
-    // Calculate font size proportionally to the element width
-    // Different base sizes depending on element type
-    let baseSize = 16;
-    if (element.type === 'heading') baseSize = 28;
-    if (element.type === 'subheading') baseSize = 20;
-    
-    // Base width reference
-    const baseWidth = element.type === 'heading' ? 300 : 
-                     element.type === 'subheading' ? 250 : 200;
-    
-    // Calculate proportional font size
-    const calculatedSize = (element.size.width / baseWidth) * baseSize;
-    
-    // Apply min/max constraints 
-    const minSize = 8;  // Minimum readable size
-    const maxSize = element.type === 'heading' ? 72 : 
-                   element.type === 'subheading' ? 48 : 36;
-    
-    const finalSize = Math.max(minSize, Math.min(calculatedSize, maxSize));
-    return `${Math.round(finalSize)}px`;
-  }
+    if (element.type === 'heading') return '24px';
+    if (element.type === 'subheading') return '18px';
+    return '16px';
+  };
 
   const getTextStyle = (): CSSProperties => {
-    // Calculate font size based on element dimensions
-    const fontSize = textElementTypes.includes(element.type) ? 
-      calculateFontSize() : 
-      (element.style?.fontSize as string || '16px');
+    const fontSize = getFontSize();
     
     const fontWeight = element.style?.fontWeight || (
       element.type === 'heading' ? 'bold' : 
       element.type === 'subheading' ? '600' : 'normal'
     );
     
-    // Ensure fontStyle is a valid CSS FontStyle value
-    const fontStyle = element.style?.fontStyle as string || 'normal';
+    const fontStyle = (element.style?.fontStyle as string) || 'normal';
     
-    // Ensure textDecoration is a valid CSS TextDecoration value
-    const textDecoration = element.style?.textDecoration as string || 'none';
+    const textDecoration = (element.style?.textDecoration as string) || 'none';
     
     return {
       fontSize,
@@ -97,9 +75,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     };
   };
 
-  // Update both element size and adjust text properties
   const updateElementSize = (newWidth: number, newHeight: number) => {
-    // Update element size
     updateElement(element.id, {
       size: { width: newWidth, height: newHeight }
     });
@@ -114,7 +90,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       e.preventDefault();
     }
     
-    // Always set this element as active when clicking on it, regardless of type
     setActiveElement(element);
     
     if (isEditing) return;
@@ -253,7 +228,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
           position: { x: newX, y: newY }
         });
         
-        // Update size and font together
         updateElementSize(newWidth, newHeight);
       } 
       else if (isRotating) {
