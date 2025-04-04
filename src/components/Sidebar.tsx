@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -8,8 +9,7 @@ import {
   Triangle, 
   Lock, 
   Hash,
-  Languages,
-  Code
+  Languages
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -35,13 +35,12 @@ const Sidebar = () => {
     "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"
   ];
 
-  // Handle general puzzle options
+  // Handle puzzle options
   const handleImagePuzzleClick = () => {
     addElement('puzzle', {
       puzzleConfig: {
         name: language === 'en' ? 'Image Puzzle' : 'פאזל תמונה',
         type: 'image',
-        category: 'general',
         placeholders: 3,
         images: [],
         solution: [0, 0, 0]
@@ -54,7 +53,6 @@ const Sidebar = () => {
       puzzleConfig: {
         name: language === 'en' ? 'Number Lock' : 'מנעול מספרים',
         type: 'number',
-        category: 'general',
         placeholders: 3,
         images: [],
         solution: [0, 0, 0],
@@ -68,26 +66,10 @@ const Sidebar = () => {
       puzzleConfig: {
         name: language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות',
         type: 'alphabet',
-        category: 'general',
         placeholders: 3,
         images: [],
         solution: [0, 0, 0],
         maxLetter: 'Z'
-      }
-    });
-  };
-  
-  // Handle coding puzzle options
-  const handleCodingPuzzleClick = () => {
-    addElement('puzzle', {
-      puzzleConfig: {
-        name: language === 'en' ? 'Coding Puzzle' : 'פאזל קודנים',
-        type: 'number',
-        category: 'coding',
-        placeholders: 4,
-        images: [],
-        solution: [0, 0, 0, 0],
-        maxNumber: 9
       }
     });
   };
@@ -166,14 +148,6 @@ const Sidebar = () => {
                   >
                     <Languages className="h-4 w-4 mr-2" />
                     {t('sidebar.alphabet.lock')}
-                  </Button>
-                  <Button
-                    variant="outline" 
-                    className="justify-start bg-indigo-50 hover:bg-indigo-100 border-indigo-200"
-                    onClick={handleCodingPuzzleClick}
-                  >
-                    <Code className="h-4 w-4 mr-2 text-indigo-600" />
-                    {language === 'en' ? 'Coding Puzzle' : 'פאזל קודנים'}
                   </Button>
                 </div>
               </PopoverContent>

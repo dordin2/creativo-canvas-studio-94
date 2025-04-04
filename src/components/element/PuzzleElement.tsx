@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { DesignElement } from "@/types/designTypes";
-import { Lock, Hash, Languages, Code } from "lucide-react";
+import { Lock, Hash, Languages } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import PuzzleModal from "./PuzzleModal";
 
@@ -27,13 +27,8 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
   };
   
   const puzzleType = element.puzzleConfig?.type || 'image';
-  const puzzleCategory = element.puzzleConfig?.category || 'general';
   
   const getPuzzleIcon = () => {
-    if (puzzleCategory === 'coding') {
-      return <Code className="w-8 h-8 text-indigo-600 mb-2" />;
-    }
-    
     switch(puzzleType) {
       case 'image':
         return <Lock className="w-8 h-8 text-gray-700 mb-2" />;
@@ -47,10 +42,6 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
   };
   
   const getPuzzleLabel = () => {
-    if (puzzleCategory === 'coding') {
-      return language === 'en' ? 'Coding Puzzle' : 'פאזל קודנים';
-    }
-    
     switch(puzzleType) {
       case 'image':
         return language === 'en' ? 'Image Puzzle' : 'פאזל תמונה';
@@ -79,14 +70,14 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
   return (
     <>
       <div 
-        className={`flex flex-col items-center justify-center w-full h-full p-3 cursor-pointer ${language === 'he' ? 'rtl' : 'ltr'} ${puzzleCategory === 'coding' ? 'bg-indigo-50' : ''}`}
+        className={`flex flex-col items-center justify-center w-full h-full p-3 cursor-pointer ${language === 'he' ? 'rtl' : 'ltr'}`}
         onClick={handleClick}
       >
         {getPuzzleIcon()}
-        <p className={`text-sm font-medium text-center line-clamp-2 ${puzzleCategory === 'coding' ? 'text-indigo-700' : 'text-gray-700'}`}>
+        <p className="text-sm font-medium text-center text-gray-700 line-clamp-2">
           {element.puzzleConfig?.name || (language === 'en' ? "Puzzle" : "פאזל")}
         </p>
-        <div className={`text-xs mt-1 ${puzzleCategory === 'coding' ? 'text-indigo-500' : 'text-gray-500'}`}>
+        <div className="text-xs text-gray-500 mt-1">
           {getPuzzleLabel()}: {element.puzzleConfig?.placeholders || 3} {getPlaceholderLabel()}
         </div>
       </div>

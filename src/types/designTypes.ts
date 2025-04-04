@@ -16,13 +16,9 @@ export type ElementType =
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 
-// Added puzzle category to help classify different types of puzzles
-export type PuzzleCategory = 'coding' | 'general';
-
 export interface PuzzleConfiguration {
   name: string;
   type: PuzzleType;
-  category: PuzzleCategory; // Added category field
   placeholders: number;
   images: string[];
   solution: number[];

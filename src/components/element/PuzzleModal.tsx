@@ -1,7 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, CheckCircle, Code } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
 import { DesignElement, PuzzleType } from "@/types/designTypes";
@@ -20,7 +21,6 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
   const puzzleConfig = element.puzzleConfig || {
     name: language === 'en' ? 'Puzzle' : 'פאזל',
     type: 'image' as PuzzleType,
-    category: 'general',
     placeholders: 3,
     images: [],
     solution: [],
@@ -29,7 +29,6 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
   };
   
   const puzzleType = puzzleConfig.type || 'image';
-  const puzzleCategory = puzzleConfig.category || 'general';
   
   // Initialize current states when modal opens or puzzle changes
   useEffect(() => {
@@ -104,12 +103,9 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
         onClose();
       }
     }}>
-      <DialogContent className={`sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl ${language === 'he' ? 'rtl' : 'ltr'} ${puzzleCategory === 'coding' ? 'border-indigo-300' : ''}`}>
+      <DialogContent className={`sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <DialogHeader>
-          <DialogTitle className={`text-xl flex items-center gap-2 ${puzzleCategory === 'coding' ? 'text-indigo-700' : ''}`}>
-            {puzzleCategory === 'coding' && <Code className="h-5 w-5" />}
-            {puzzleConfig.name}
-          </DialogTitle>
+          <DialogTitle className="text-xl">{puzzleConfig.name}</DialogTitle>
           <DialogDescription className="sr-only">Interactive puzzle - click to solve</DialogDescription>
           <DialogClose asChild>
             <Button 
@@ -175,7 +171,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
         </div>
         
         {solved && (
-          <div className={`flex items-center justify-center gap-2 pb-2 ${puzzleCategory === 'coding' ? 'text-indigo-500' : 'text-green-500'}`}>
+          <div className="flex items-center justify-center text-green-500 gap-2 pb-2">
             <CheckCircle className="h-5 w-5" />
             <span>{t('puzzle.modal.solved')}</span>
           </div>
