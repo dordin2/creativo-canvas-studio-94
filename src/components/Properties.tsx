@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { HexColorPicker } from "react-colorful";
@@ -9,12 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Trash2, Upload, ZoomIn, ZoomOut } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 import LayersList from "./LayersList";
 
 const Properties = () => {
   const { activeElement, updateElement, removeElement, handleImageUpload } = useDesignState();
   const [activeTab, setActiveTab] = useState("style");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
   
   const handleColorChange = (newColor: string) => {
     if (!activeElement) return;
@@ -37,12 +38,12 @@ const Properties = () => {
   };
   
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!activeElement || activeElement.type !== 'image') return;
+    if (!activeElement) return;
     updateElement(activeElement.id, { src: e.target.value });
   };
   
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!activeElement || activeElement.type !== 'image') return;
+    if (!activeElement) return;
     updateElement(activeElement.id, { 
       src: e.target.value,
       dataUrl: undefined,
@@ -80,18 +81,16 @@ const Properties = () => {
     });
   };
   
-  // New function to handle image resizing with zoom buttons
-  const handleImageResize = (zoomIn: boolean) => {
-    if (!activeElement || !activeElement.size) return;
+  const handleImageResize = (value: number[]) => {
+    if (!activeElement || !activeElement.size || !activeElement.originalSize) return;
     
-    // Calculate the scale factor (10% increase or decrease)
-    const scaleFactor = zoomIn ? 1.1 : 0.9;
+    const scalePercentage = value[0];
+    setScaleValue(scalePercentage);
     
-    // Calculate new dimensions while preserving aspect ratio
-    const newWidth = Math.round(activeElement.size.width * scaleFactor);
-    const newHeight = Math.round(activeElement.size.height * scaleFactor);
+    const scaleFactor = scalePercentage / 100;
+    const newWidth = Math.round(activeElement.originalSize.width * scaleFactor);
+    const newHeight = Math.round(activeElement.originalSize.height * scaleFactor);
     
-    // Update the element with the new size
     updateElement(activeElement.id, {
       size: { width: newWidth, height: newHeight }
     });
@@ -218,31 +217,25 @@ const Properties = () => {
                 </p>
               </div>
               
-              {/* New image resize controls */}
               <div className="mt-4">
-                <Label className="mb-2 block">Resize Image</Label>
-                <div className="flex items-center justify-between gap-2">
-                  <div className="text-sm">
-                    {activeElement.size?.width} × {activeElement.size?.height}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleImageResize(false)}
-                      title="Decrease size by 10%"
-                    >
-                      <ZoomOut className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleImageResize(true)}
-                      title="Increase size by 10%"
-                    >
-                      <ZoomIn className="h-4 w-4" />
-                    </Button>
-                  </div>
+                <div className="flex items-center justify-between mb-2">
+                  <Label>Resize Image</Label>
+                  <span className="text-sm font-medium">{scaleValue}%</span>
+                </div>
+                <Slider
+                  value={[scaleValue]}
+                  min={10}
+                  max={200}
+                  step={1}
+                  onValueChange={handleImageResize}
+                  className="mb-2"
+                />
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>10%</span>
+                  <span>200%</span>
+                </div>
+                <div className="text-sm mt-2">
+                  {activeElement.size?.width} × {activeElement.size?.height} px
                 </div>
               </div>
               

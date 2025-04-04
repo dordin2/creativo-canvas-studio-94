@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useRef, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -23,6 +22,10 @@ export interface DesignElement {
     y: number;
   };
   size?: {
+    width: number;
+    height: number;
+  };
+  originalSize?: {  // Added for maintaining aspect ratio during resizing
     width: number;
     height: number;
   };
@@ -125,6 +128,10 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
             size: {
               width: scaledWidth,
               height: scaledHeight
+            },
+            originalSize: {  // Store original size for scaling
+              width: naturalWidth,
+              height: naturalHeight
             }
           });
           toast.success("Image uploaded successfully");
@@ -237,6 +244,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 200, height: 150 }, // Default size until image is loaded
+          originalSize: { width: 200, height: 150 }, // Default original size
           style: { transform: 'rotate(0deg)' },
           layer: newLayer
         };
