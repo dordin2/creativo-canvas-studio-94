@@ -1,4 +1,5 @@
-import { useRef, useState, useEffect } from "react";
+
+import { useRef, useState, useEffect, CSSProperties } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
 
@@ -39,19 +40,29 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     return match ? parseInt(match[1], 10) : 0;
   };
 
-  const getTextStyle = () => {
+  const getTextStyle = (): CSSProperties => {
+    const fontSize = element.style?.fontSize || (
+      element.type === 'heading' ? '28px' : 
+      element.type === 'subheading' ? '20px' : '16px'
+    );
+    
+    const fontWeight = element.style?.fontWeight || (
+      element.type === 'heading' ? 'bold' : 
+      element.type === 'subheading' ? '600' : 'normal'
+    );
+    
+    // Ensure fontStyle is a valid CSS FontStyle value
+    const fontStyle = element.style?.fontStyle as string || 'normal';
+    
+    // Ensure textDecoration is a valid CSS TextDecoration value
+    const textDecoration = element.style?.textDecoration as string || 'none';
+    
     return {
-      fontSize: element.style?.fontSize || (
-        element.type === 'heading' ? '28px' : 
-        element.type === 'subheading' ? '20px' : '16px'
-      ),
-      fontWeight: element.style?.fontWeight || (
-        element.type === 'heading' ? 'bold' : 
-        element.type === 'subheading' ? '600' : 'normal'
-      ),
+      fontSize,
+      fontWeight,
       color: element.style?.color as string || '#1F2937',
-      fontStyle: element.style?.fontStyle || 'normal',
-      textDecoration: element.style?.textDecoration || 'none',
+      fontStyle,
+      textDecoration,
       padding: '0',
       margin: '0',
       fontFamily: 'inherit',
@@ -281,6 +292,16 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   let childContent = children;
   if (isEditing && textElementTypes.includes(element.type)) {
     if (element.type === 'paragraph') {
+      const textareaStyle: CSSProperties = {
+        width: '100%',
+        height: '100%',
+        resize: 'none',
+        background: 'transparent',
+        border: 'none',
+        outline: 'none',
+        ...textStyle
+      };
+      
       childContent = (
         <textarea
           ref={textInputRef as React.RefObject<HTMLTextAreaElement>}
@@ -288,19 +309,19 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
           onChange={handleTextChange}
           onBlur={handleTextBlur}
           onKeyDown={handleKeyDown}
-          style={{
-            width: '100%',
-            height: '100%',
-            resize: 'none',
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            ...textStyle
-          }}
+          style={textareaStyle}
           autoFocus
         />
       );
     } else {
+      const inputStyle: CSSProperties = {
+        width: '100%',
+        background: 'transparent',
+        border: 'none',
+        outline: 'none',
+        ...textStyle
+      };
+      
       childContent = (
         <input
           ref={textInputRef as React.RefObject<HTMLInputElement>}
@@ -309,26 +330,22 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
           onChange={handleTextChange}
           onBlur={handleTextBlur}
           onKeyDown={handleKeyDown}
-          style={{
-            width: '100%',
-            background: 'transparent',
-            border: 'none',
-            outline: 'none',
-            ...textStyle
-          }}
+          style={inputStyle}
           autoFocus
         />
       );
     }
   } else if (textElementTypes.includes(element.type)) {
+    const divStyle: CSSProperties = {
+      width: '100%',
+      height: '100%',
+      whiteSpace: 'pre-wrap',
+      wordBreak: 'break-word',
+      ...textStyle
+    };
+    
     childContent = (
-      <div style={{
-        ...textStyle,
-        width: '100%',
-        height: '100%',
-        whiteSpace: 'pre-wrap',
-        wordBreak: 'break-word'
-      }}>
+      <div style={divStyle}>
         {element.content}
       </div>
     );
