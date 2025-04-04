@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -68,16 +68,14 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
   if (!isOpen) return null;
   
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={() => onClose()}>
       <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-xl">{puzzleConfig.name}</DialogTitle>
-          <DialogClose asChild>
-            <Button variant="ghost" size="icon" className="absolute right-4 top-4">
-              <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
-            </Button>
-          </DialogClose>
+          <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={onClose}>
+            <X className="h-4 w-4" />
+            <span className="sr-only">Close</span>
+          </Button>
         </DialogHeader>
         
         <div className="py-6">
