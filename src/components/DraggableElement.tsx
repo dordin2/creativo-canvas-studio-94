@@ -8,7 +8,6 @@ import { getElementStyle, getRotation } from "@/utils/elementStyles";
 import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
-import PuzzleModal from "./element/PuzzleModal";
 
 interface DraggableElementProps {
   element: DesignElement;
@@ -24,7 +23,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [isPuzzleModalOpen, setIsPuzzleModalOpen] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -64,7 +62,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const handlePuzzleClick = (e: React.MouseEvent) => {
     if (element.type === 'puzzle' && !isDragging) {
       e.stopPropagation();
-      setIsPuzzleModalOpen(true);
+      // The modal is now handled directly in the PuzzleElement component
+      // so we don't need to do anything here
     }
   };
 
@@ -130,14 +129,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
       />
-
-      {element.type === 'puzzle' && (
-        <PuzzleModal 
-          isOpen={isPuzzleModalOpen} 
-          onClose={() => setIsPuzzleModalOpen(false)} 
-          element={element} 
-        />
-      )}
     </>
   );
 };
