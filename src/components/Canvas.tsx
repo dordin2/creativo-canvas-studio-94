@@ -294,7 +294,16 @@ const Canvas = () => {
   
   return (
     <div className="flex-1 flex items-center justify-center p-8 canvas-workspace relative">
-      <div className="canvas-container" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center', transition: 'transform 0.2s ease-out' }}>
+      {/* Zoom wrapper - this controls the scale but maintains overflow visibility */}
+      <div className="canvas-container" style={{ 
+        transform: `scale(${zoomLevel})`, 
+        transformOrigin: 'center center', 
+        transition: 'transform 0.2s ease-out',
+        position: 'relative',
+        width: 'fit-content',
+        height: 'fit-content'
+      }}>
+        {/* Canvas with overflow:hidden to mask content */}
         <div
           ref={containerRef}
           className={`relative shadow-lg rounded-lg overflow-hidden transition-all ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
@@ -310,19 +319,19 @@ const Canvas = () => {
         >
           {renderElements()}
         </div>
+        
         {/* 
-          This invisible overlay sits outside the canvas to allow elements to render 
-          outside the canvas boundaries while keeping their controls visible 
+          This outer container handles the element controls, allowing them
+          to remain visible even when elements are partially outside the canvas
         */}
         <div 
-          className="absolute top-0 left-0 pointer-events-none" 
+          className="absolute top-0 left-0 w-full h-full pointer-events-none"
           style={{
-            width: canvasDimensions.width * 3, 
-            height: canvasDimensions.height * 3,
-            transform: `translate(-${canvasDimensions.width}px, -${canvasDimensions.height}px)`,
+            overflow: 'visible',
+            zIndex: 1000,
           }}
         >
-          {/* This is where elements that can extend beyond the canvas will be rendered */}
+          {/* Element controls are rendered here by the DraggableElement component */}
         </div>
       </div>
       

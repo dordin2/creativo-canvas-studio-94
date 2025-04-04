@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -265,71 +266,108 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
 
   const showRotationHandle = isActive && element.type !== 'background';
 
+  // Calculate element coordinates for handle positioning
+  const getElementCoordinates = () => {
+    return {
+      width: element.size?.width || 0,
+      height: element.size?.height || 0
+    };
+  };
+
+  // Get element dimensions for handle positioning
+  const elementDimensions = getElementCoordinates();
+
   return (
-    <div
-      ref={elementRef}
-      className="canvas-element"
-      style={elementStyle}
-      onMouseDown={handleMouseDown}
-      onDragOver={(e) => {
-        if (element.type === 'image') {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
-    >
-      {children}
-      
-      {showResizeHandles && (
-        <>
-          <div 
-            className="resize-handle cursor-nw-resize -top-2 -left-2"
-            onMouseDown={(e) => handleResizeStart(e, "nw")}
-          />
-          <div 
-            className="resize-handle cursor-n-resize top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
-            onMouseDown={(e) => handleResizeStart(e, "n")}
-          />
-          <div 
-            className="resize-handle cursor-ne-resize -top-2 -right-2"
-            onMouseDown={(e) => handleResizeStart(e, "ne")}
-          />
-          <div 
-            className="resize-handle cursor-e-resize top-1/2 -right-2 -translate-y-1/2"
-            onMouseDown={(e) => handleResizeStart(e, "e")}
-          />
-          <div 
-            className="resize-handle cursor-se-resize -bottom-2 -right-2"
-            onMouseDown={(e) => handleResizeStart(e, "se")}
-          />
-          <div 
-            className="resize-handle cursor-s-resize bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"
-            onMouseDown={(e) => handleResizeStart(e, "s")}
-          />
-          <div 
-            className="resize-handle cursor-sw-resize -bottom-2 -left-2"
-            onMouseDown={(e) => handleResizeStart(e, "sw")}
-          />
-          <div 
-            className="resize-handle cursor-w-resize top-1/2 -left-2 -translate-y-1/2"
-            onMouseDown={(e) => handleResizeStart(e, "w")}
-          />
-        </>
-      )}
-      
-      {showRotationHandle && (
+    <>
+      <div
+        ref={elementRef}
+        className="canvas-element"
+        style={elementStyle}
+        onMouseDown={handleMouseDown}
+        onDragOver={(e) => {
+          if (element.type === 'image') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
+      >
+        {children}
+      </div>
+
+      {/* Separate container for resize/rotation handles that aren't affected by canvas overflow */}
+      {(showResizeHandles || showRotationHandle) && (
         <div 
-          className="rotation-handle top-0 left-1/2 -translate-x-1/2 -translate-y-10"
-          onMouseDown={handleRotateStart}
+          className="absolute pointer-events-none"
+          style={{
+            left: element.position.x,
+            top: element.position.y,
+            width: elementDimensions.width,
+            height: elementDimensions.height,
+            transform: element.style?.transform || 'rotate(0deg)',
+            zIndex: 1000 + element.layer,
+          }}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M4 15C4 16.0609 4.42143 17.0783 5.17157 17.8284C5.92172 18.5786 6.93913 19 8 19H16C17.0609 19 18.0783 18.5786 18.8284 17.8284C19.5786 17.0783 20 16.0609 20 15V9C20 7.93913 19.5786 6.92172 18.8284 6.17157C18.0783 5.42143 17.0609 5 16 5H8C6.93913 5 5.92172 5.42143 5.17157 6.17157C4.42143 6.92172 4 7.93913 4 9" 
-              stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            <path d="M12 3V7M9 5L12 8L15 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-          </svg>
+          {showResizeHandles && (
+            <>
+              <div 
+                className="resize-handle cursor-nw-resize absolute -top-2 -left-2"
+                style={{ top: -6, left: -6 }}
+                onMouseDown={(e) => handleResizeStart(e, "nw")}
+              />
+              <div 
+                className="resize-handle cursor-n-resize absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
+                style={{ top: -6, left: '50%', transform: 'translateX(-50%)' }}
+                onMouseDown={(e) => handleResizeStart(e, "n")}
+              />
+              <div 
+                className="resize-handle cursor-ne-resize absolute -top-2 -right-2"
+                style={{ top: -6, right: -6 }}
+                onMouseDown={(e) => handleResizeStart(e, "ne")}
+              />
+              <div 
+                className="resize-handle cursor-e-resize absolute top-1/2 -right-2 -translate-y-1/2"
+                style={{ top: '50%', right: -6, transform: 'translateY(-50%)' }}
+                onMouseDown={(e) => handleResizeStart(e, "e")}
+              />
+              <div 
+                className="resize-handle cursor-se-resize absolute -bottom-2 -right-2"
+                style={{ bottom: -6, right: -6 }}
+                onMouseDown={(e) => handleResizeStart(e, "se")}
+              />
+              <div 
+                className="resize-handle cursor-s-resize absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"
+                style={{ bottom: -6, left: '50%', transform: 'translateX(-50%)' }}
+                onMouseDown={(e) => handleResizeStart(e, "s")}
+              />
+              <div 
+                className="resize-handle cursor-sw-resize absolute -bottom-2 -left-2"
+                style={{ bottom: -6, left: -6 }}
+                onMouseDown={(e) => handleResizeStart(e, "sw")}
+              />
+              <div 
+                className="resize-handle cursor-w-resize absolute top-1/2 -left-2 -translate-y-1/2"
+                style={{ top: '50%', left: -6, transform: 'translateY(-50%)' }}
+                onMouseDown={(e) => handleResizeStart(e, "w")}
+              />
+            </>
+          )}
+          
+          {showRotationHandle && (
+            <div 
+              className="rotation-handle absolute top-0 left-1/2 -translate-x-1/2 -translate-y-10"
+              style={{ top: -40, left: '50%', transform: 'translateX(-50%)' }}
+              onMouseDown={handleRotateStart}
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M4 15C4 16.0609 4.42143 17.0783 5.17157 17.8284C5.92172 18.5786 6.93913 19 8 19H16C17.0609 19 18.0783 18.5786 18.8284 17.8284C19.5786 17.0783 20 16.0609 20 15V9C20 7.93913 19.5786 6.92172 18.8284 6.17157C18.0783 5.42143 17.0609 5 16 5H8C6.93913 5 5.92172 5.42143 5.17157 6.17157C4.42143 6.92172 4 7.93913 4 9" 
+                  stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M12 3V7M9 5L12 8L15 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </div>
+          )}
         </div>
       )}
-    </div>
+    </>
   );
 };
 
