@@ -66,8 +66,8 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={isOpen => {
-      if (!isOpen) {
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) {
         onClose();
       }
     }}>
@@ -76,7 +76,12 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
           <DialogTitle className="text-xl">{puzzleConfig.name}</DialogTitle>
           <DialogDescription className="sr-only">Interactive puzzle - click on images to solve</DialogDescription>
           <DialogClose asChild>
-            <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="absolute right-4 top-4"
+              onClick={() => onClose()}
+            >
               <X className="h-4 w-4" />
               <span className="sr-only">Close</span>
             </Button>
