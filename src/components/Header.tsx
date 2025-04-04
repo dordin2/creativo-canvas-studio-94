@@ -3,18 +3,19 @@ import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { toast } from "sonner";
+import { useRef } from "react";
 
 const Header = () => {
   const { canvasRef } = useDesignState();
 
   const handleDownload = () => {
-    if (!canvasRef?.current) return;
+    if (!canvasRef) return;
     
     try {
       // Create a temporary canvas to draw everything
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
-      const canvasElement = canvasRef.current;
+      const canvasElement = canvasRef;
       
       // Set the canvas dimensions
       canvas.width = canvasElement.clientWidth;
@@ -27,14 +28,13 @@ const Header = () => {
         
         // Draw the HTML content
         const data = new XMLSerializer().serializeToString(canvasElement);
-        const DOMURL = window.URL || window.webkitURL || window;
         const img = new Image();
         const svgBlob = new Blob([data], { type: "image/svg+xml;charset=utf-8" });
-        const url = DOMURL.createObjectURL(svgBlob);
+        const url = URL.createObjectURL(svgBlob);
         
         img.onload = function() {
           ctx.drawImage(img, 0, 0);
-          DOMURL.revokeObjectURL(url);
+          URL.revokeObjectURL(url);
           
           const imgURI = canvas
             .toDataURL("image/png")
