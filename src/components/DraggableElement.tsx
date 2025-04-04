@@ -43,13 +43,14 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     if (e.button !== 0) return; // Only left-click
     e.stopPropagation();
     
-    // Only prevent dragging on the upload placeholder text, not the entire image element
+    // Only prevent dragging specifically on the upload placeholder text, not the whole image container
     if (element.type === 'image' && 
         (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
-      return;
+      // Don't return here, instead just prevent default behavior on the text itself
+      e.preventDefault();
     }
     
-    // Use the startDrag function from useDraggable hook
+    // Use the startDrag function from useDraggable hook for all elements, including image placeholders
     startDrag(e, element.position);
     setIsDragging(true);
     setStartPos({ x: e.clientX, y: e.clientY });
