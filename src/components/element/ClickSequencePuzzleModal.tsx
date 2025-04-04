@@ -6,7 +6,8 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { MousePointer } from "lucide-react";
+import { MousePointer, CheckCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 interface ClickSequencePuzzleModalProps {
   isOpen: boolean;
@@ -64,11 +65,15 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({
       // Check if the puzzle is solved (all steps completed)
       if (nextStep >= config.solution.length) {
         setPuzzleSolved(true);
-        toast.success(language === 'en' ? 'Great job! Puzzle solved correctly!' : 'כל הכבוד! הפאזל נפתר בהצלחה!');
+        console.log("Puzzle solved! Showing success toast.");
+        toast.success(language === 'en' ? 'Great job! Puzzle solved correctly!' : 'כל הכבוד! הפאזל נפתר בהצלחה!', {
+          duration: 3000
+        });
       }
     } else {
-      // Incorrect click - silently reset to the beginning
+      // Incorrect click - reset to the beginning
       setCurrentStep(0);
+      console.log("Incorrect click - resetting to the beginning");
     }
   };
   
@@ -110,10 +115,31 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({
                 ))}
               </div>
               
-              {puzzleSolved && (
-                <div className="p-3 bg-green-100 text-green-800 rounded-md text-center mt-4">
-                  {language === 'en' ? 'Puzzle solved! Great job!' : 'הפאזל נפתר! כל הכבוד!'}
+              {/* Progress indicator */}
+              <div className="mt-3 mb-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm text-gray-500">
+                    {language === 'en' ? 'Progress:' : 'התקדמות:'} {currentStep}/{config.solution.length}
+                  </span>
                 </div>
+                <div className="w-full h-2 bg-gray-200 rounded-full mt-1">
+                  {config.solution.length > 0 && (
+                    <div 
+                      className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                      style={{ width: `${(currentStep / config.solution.length) * 100}%` }}
+                    />
+                  )}
+                </div>
+              </div>
+              
+              {/* Success message */}
+              {puzzleSolved && (
+                <Alert className="mt-4 bg-green-50 border-green-200">
+                  <CheckCircle className="h-5 w-5 text-green-500" />
+                  <AlertDescription className="flex items-center gap-2 text-green-700 font-medium">
+                    {language === 'en' ? 'Puzzle solved! Great job!' : 'הפאזל נפתר! כל הכבוד!'}
+                  </AlertDescription>
+                </Alert>
               )}
             </>
           )}
