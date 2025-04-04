@@ -42,11 +42,15 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
     
     if (isSolved && !solved && isOpen) {
       setSolved(true);
-      // Show success message and close after delay
-      toast.success("Puzzle solved successfully!");
+      // Show success message
+      toast.success("Great job! Puzzle solved correctly!", {
+        duration: 2000 // 2 seconds duration
+      });
+      
+      // Close after delay
       setTimeout(() => {
         onClose();
-      }, 1500);
+      }, 2000);
     }
   }, [currentStates, puzzleConfig.solution, solved, isOpen, onClose]);
   

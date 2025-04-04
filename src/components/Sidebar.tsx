@@ -23,6 +23,19 @@ const Sidebar = () => {
     "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"
   ];
 
+  // Handle puzzle button click separately to avoid immediate creation
+  const handlePuzzleClick = () => {
+    // Create an empty puzzle configuration
+    addElement('puzzle', {
+      puzzleConfig: {
+        name: 'New Puzzle',
+        placeholders: 3,
+        images: [],
+        solution: [0, 0, 0]
+      }
+    });
+  };
+
   return (
     <div className="sidebar-panel border-r flex flex-col">
       <Tabs defaultValue="elements" className="flex-1 flex flex-col">
@@ -65,7 +78,7 @@ const Sidebar = () => {
               <span className="text-xs">Image</span>
             </Button>
             <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={() => addElement('puzzle')}>
+                    onClick={handlePuzzleClick}>
               <Lock className="h-5 w-5" />
               <span className="text-xs">Puzzle</span>
             </Button>
