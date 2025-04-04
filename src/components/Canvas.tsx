@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -214,7 +213,7 @@ const Canvas = () => {
           return (
             <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
-                className="h-full w-full flex items-center justify-center overflow-hidden bg-gray-100"
+                className="h-full w-full flex items-center justify-center overflow-hidden"
                 onClick={handleElementClick}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -234,28 +233,18 @@ const Canvas = () => {
                   <img 
                     src={element.dataUrl} 
                     alt="Uploaded content" 
-                    className="w-full h-full" 
+                    className="w-full h-full object-cover" 
                     draggable={false}
-                    style={{ 
-                      objectFit: 'contain', 
-                      width: '100%', 
-                      height: '100%'
-                    }}
                   />
                 ) : element.src ? (
                   <img 
                     src={element.src} 
                     alt="Uploaded content" 
-                    className="w-full h-full" 
+                    className="w-full h-full object-cover" 
                     draggable={false}
-                    style={{ 
-                      objectFit: 'contain', 
-                      width: '100%', 
-                      height: '100%'
-                    }}
                   />
                 ) : (
-                  <div className="text-sm text-gray-400 select-none">
+                  <div className="text-sm text-gray-400 select-none bg-gray-100 w-full h-full flex items-center justify-center">
                     Click to upload image
                   </div>
                 )}
