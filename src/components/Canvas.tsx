@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -315,6 +316,7 @@ const Canvas = () => {
           {renderElements()}
         </div>
         
+        {/* Separate layer for element controls that extends beyond canvas */}
         <div 
           className="element-controls-wrapper"
           style={{
@@ -323,7 +325,7 @@ const Canvas = () => {
             left: 0,
             width: canvasDimensions.width,
             height: canvasDimensions.height,
-            overflow: 'visible',
+            overflow: 'visible', // Allow controls to be visible outside the canvas
             pointerEvents: 'none',
             zIndex: 1000,
           }}
