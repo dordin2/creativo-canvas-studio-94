@@ -104,6 +104,12 @@
   .canvas-element:hover {
     @apply outline outline-2 outline-canvas-purple/30;
   }
+  
+  .canvas-element.dragging {
+    @apply outline-none;
+    transition: none !important;
+    pointer-events: none;
+  }
 }
 
 /* Canvas workspace styling */
@@ -127,4 +133,13 @@
 /* Add smoothing for draggable elements */
 .canvas-element.dragging {
   transition: none !important;
+  pointer-events: none !important; /* Allow events to pass through while dragging */
+}
+
+/* Ensure resize handles have good hit areas */
+.resize-handle {
+  touch-action: none;
+  pointer-events: auto !important;
+  transform-origin: center;
+  z-index: 20;
 }

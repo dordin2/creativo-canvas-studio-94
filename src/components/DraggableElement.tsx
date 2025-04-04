@@ -70,7 +70,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     setIsResizing(true);
     setResizeDirection(direction);
     setStartPos({ x: e.clientX, y: e.clientY });
-    setStartSize(localSize);
+    setStartSize({ ...localSize });
   };
 
   // Start rotation
@@ -99,8 +99,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         
         // Update local position for immediate visual feedback
         setLocalPosition({
-          x: element.position.x + deltaX,
-          y: element.position.y + deltaY
+          x: localPosition.x + deltaX,
+          y: localPosition.y + deltaY
         });
         
         // Set new start position for next move calculation
@@ -121,7 +121,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         if (resizeDirection.includes("w")) {
           newWidth = Math.max(20, startSize.width - deltaX);
           if (newWidth !== startSize.width) {
-            newX = element.position.x + (startSize.width - newWidth);
+            newX = localPosition.x + (startSize.width - newWidth);
           }
         }
         if (resizeDirection.includes("s")) {
@@ -130,7 +130,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         if (resizeDirection.includes("n")) {
           newHeight = Math.max(20, startSize.height - deltaY);
           if (newHeight !== startSize.height) {
-            newY = element.position.y + (startSize.height - newHeight);
+            newY = localPosition.y + (startSize.height - newHeight);
           }
         }
         
@@ -200,7 +200,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     localSize,
     localRotation,
     resizeDirection, 
-    element, 
+    element.id, 
+    element.style,
     updateElement
   ]);
 
@@ -208,10 +209,10 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const elementStyle = {
     ...element.style,
     position: 'absolute' as const,
-    left: localPosition.x,
-    top: localPosition.y,
-    width: localSize.width,
-    height: localSize.height,
+    left: `${localPosition.x}px`,
+    top: `${localPosition.y}px`,
+    width: `${localSize.width}px`,
+    height: `${localSize.height}px`,
     transform: `rotate(${localRotation}deg)`,
     cursor: isDragging ? 'grabbing' : 'grab',
     border: isActive ? '1px solid #8B5CF6' : 'none',
@@ -230,7 +231,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   return (
     <div
       ref={elementRef}
-      className="canvas-element"
+      className={`canvas-element ${isDragging ? 'dragging' : ''}`}
       style={elementStyle}
       onMouseDown={handleMouseDown}
     >
