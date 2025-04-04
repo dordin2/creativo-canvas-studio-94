@@ -150,6 +150,22 @@ export const createNewElement = (
         }
       };
       
+    case 'clickSequencePuzzle':
+      return {
+        id: generateId(),
+        type,
+        position,
+        size: { width: 350, height: 150 },
+        style: { backgroundColor: '#E8F5E9', borderRadius: '8px', transform: 'rotate(0deg)' }, // Green background to differentiate
+        layer,
+        clickSequencePuzzleConfig: props?.clickSequencePuzzleConfig || {
+          name: props?.name || 'Click Sequence Puzzle',
+          images: [],
+          solution: [],
+          clickedIndices: []
+        }
+      };
+      
     default:
       return {
         id: generateId(),

@@ -10,7 +10,8 @@ import {
   Lock, 
   Hash,
   Languages,
-  MoveHorizontal
+  MoveHorizontal,
+  MousePointerClick
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -83,6 +84,18 @@ const Sidebar = () => {
         images: [],
         solution: [],
         currentOrder: []
+      }
+    });
+  };
+  
+  const handleClickSequencePuzzleClick = () => {
+    addElement('clickSequencePuzzle', {
+      name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
+      clickSequencePuzzleConfig: {
+        name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
+        images: [],
+        solution: [],
+        clickedIndices: []
       }
     });
   };
@@ -168,11 +181,20 @@ const Sidebar = () => {
             
             <Button 
               variant="outline" 
-              className="h-14 flex flex-col gap-1 items-center justify-center col-span-2"
+              className="h-14 flex flex-col gap-1 items-center justify-center"
               onClick={handleSequencePuzzleClick}
             >
               <MoveHorizontal className="h-5 w-5 text-blue-600" />
               <span className="text-xs">{language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף'}</span>
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              className="h-14 flex flex-col gap-1 items-center justify-center"
+              onClick={handleClickSequencePuzzleClick}
+            >
+              <MousePointerClick className="h-5 w-5 text-green-600" />
+              <span className="text-xs">{language === 'en' ? 'Click Sequence' : 'רצף קליקים'}</span>
             </Button>
           </div>
         </TabsContent>
