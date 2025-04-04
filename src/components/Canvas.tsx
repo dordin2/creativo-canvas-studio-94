@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -17,6 +18,7 @@ const Canvas = () => {
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const parentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -26,30 +28,52 @@ const Canvas = () => {
   
   useEffect(() => {
     const handleResize = () => {
-      if (containerRef.current) {
-        const parent = containerRef.current.parentElement;
-        if (parent) {
-          const maxWidth = parent.clientWidth - 40;
-          const maxHeight = parent.clientHeight - 40;
-          
-          const aspectRatio = 4/3;
-          let width = maxWidth;
-          let height = width / aspectRatio;
-          
-          if (height > maxHeight) {
-            height = maxHeight;
-            width = height * aspectRatio;
-          }
-          
-          setCanvasDimensions({ width, height });
+      if (containerRef.current && parentRef.current) {
+        // Get the parent container dimensions
+        const parentWidth = parentRef.current.clientWidth;
+        const parentHeight = parentRef.current.clientHeight;
+        
+        // Set minimum dimensions to prevent canvas from getting too small
+        const minWidth = 800;
+        const minHeight = 600;
+        
+        // Calculate available space (with some padding)
+        const maxWidth = Math.max(minWidth, parentWidth - 40);
+        const maxHeight = Math.max(minHeight, parentHeight - 80);
+        
+        // Maintain 4:3 aspect ratio
+        const aspectRatio = 4/3;
+        let width = maxWidth;
+        let height = width / aspectRatio;
+        
+        // Adjust if height exceeds available space
+        if (height > maxHeight) {
+          height = maxHeight;
+          width = height * aspectRatio;
         }
+        
+        // Update canvas dimensions
+        setCanvasDimensions({ width, height });
       }
     };
     
     handleResize();
+    
+    // Create ResizeObserver to watch for parent element size changes
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+    
+    if (parentRef.current) {
+      resizeObserver.observe(parentRef.current);
+    }
+    
     window.addEventListener("resize", handleResize);
     
     return () => {
+      if (parentRef.current) {
+        resizeObserver.unobserve(parentRef.current);
+      }
       window.removeEventListener("resize", handleResize);
     };
   }, []);
@@ -285,7 +309,7 @@ const Canvas = () => {
   } : { backgroundColor: 'white' };
   
   return (
-    <div className="flex-1 flex items-center justify-center p-8 canvas-workspace relative">
+    <div ref={parentRef} className="flex-1 flex items-center justify-center p-8 canvas-workspace relative">
       <div className="canvas-container" style={{ 
         transform: `scale(${zoomLevel})`, 
         transformOrigin: 'center center', 
@@ -298,8 +322,8 @@ const Canvas = () => {
           ref={containerRef}
           className={`relative shadow-lg rounded-lg ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
           style={{
-            width: canvasDimensions.width,
-            height: canvasDimensions.height,
+            width: `${canvasDimensions.width}px`,
+            height: `${canvasDimensions.height}px`,
             ...backgroundStyle,
             overflow: 'hidden'
           }}
