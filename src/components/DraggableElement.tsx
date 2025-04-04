@@ -165,6 +165,24 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     }
     // Let Enter key create a new line naturally for all text elements,
     // especially for paragraphs without needing to press Shift+Enter
+    if (e.key === 'Enter' && !e.shiftKey && element.type === 'paragraph') {
+      e.preventDefault();
+      const start = textInputRef.current?.selectionStart || 0;
+      const end = textInputRef.current?.selectionEnd || 0;
+    
+      const currentValue = element.content || '';
+      const newValue = currentValue.substring(0, start) + '\n' + currentValue.substring(end);
+    
+      updateElement(element.id, { content: newValue });
+    
+      // Update the cursor position to be after the new line
+      setTimeout(() => {
+        if (textInputRef.current) {
+          textInputRef.current.selectionStart = start + 1;
+          textInputRef.current.selectionEnd = start + 1;
+        }
+      }, 0);
+    }
   };
 
   useEffect(() => {
