@@ -99,16 +99,23 @@
 
   .canvas-element {
     @apply cursor-move transition-all duration-150 ease-in-out relative;
+    z-index: 1;
   }
 
   .canvas-element:hover {
     @apply outline outline-2 outline-canvas-purple/30;
+    z-index: 10;
   }
   
   .canvas-element.dragging {
     @apply outline-none;
     transition: none !important;
     pointer-events: none;
+    z-index: 100;
+  }
+  
+  .canvas-element.active {
+    z-index: 50;
   }
 }
 
@@ -142,4 +149,15 @@
   pointer-events: auto !important;
   transform-origin: center;
   z-index: 20;
+}
+
+/* Ensure rotatable elements work properly */
+.rotation-handle {
+  z-index: 30;
+  cursor: grab;
+  pointer-events: auto !important;
+}
+
+.rotation-handle:active {
+  cursor: grabbing;
 }

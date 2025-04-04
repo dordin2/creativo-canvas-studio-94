@@ -49,6 +49,11 @@ export const useDraggable = (elementId: string) => {
       setIsDragging(false);
       startPosition.current = null;
       elementInitialPos.current = null;
+      
+      // Ensure that we remove any event listeners that might be lingering
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
     };
 
     if (isDragging) {
