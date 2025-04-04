@@ -1,4 +1,3 @@
-
 import { ElementType, DesignElement, generateId, PuzzleType } from "@/types/designTypes";
 
 // Default positions for new elements
@@ -129,7 +128,8 @@ export const createNewElement = (
           placeholders: 3,
           images: [],
           solution: [],
-          maxNumber: puzzleType === 'number' ? 9 : undefined
+          maxNumber: puzzleType === 'number' ? 9 : undefined,
+          maxLetter: puzzleType === 'alphabet' ? 'Z' : undefined
         }
       };
       

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { DesignElement, PuzzleType } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
-import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash, AlphabetLatin } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
@@ -35,7 +34,8 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       placeholders: 3,
       images: [],
       solution: [],
-      maxNumber: 9
+      maxNumber: 9,
+      maxLetter: 'Z'
     };
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -51,7 +51,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     setLocalPuzzleConfig(prev => ({
       ...prev,
       type,
-      // Reset solution when changing types
       solution: Array(prev.placeholders).fill(0)
     }));
   };
@@ -60,14 +59,11 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     const numPlaceholders = parseInt(value);
     let newSolution = [...localPuzzleConfig.solution];
     
-    // Adjust solution array to match new placeholder count
     if (numPlaceholders > localPuzzleConfig.solution.length) {
-      // Add default values for new placeholders
       for (let i = localPuzzleConfig.solution.length; i < numPlaceholders; i++) {
         newSolution.push(0);
       }
     } else if (numPlaceholders < localPuzzleConfig.solution.length) {
-      // Trim solution array if reducing placeholders
       newSolution = newSolution.slice(0, numPlaceholders);
     }
     
@@ -81,7 +77,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
   const handleMaxNumberChange = (value: string) => {
     const maxNumber = parseInt(value);
     
-    // Adjust solution if any values are higher than new max
     const newSolution = localPuzzleConfig.solution.map(val => 
       val > maxNumber ? 0 : val
     );
@@ -89,6 +84,21 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     setLocalPuzzleConfig(prev => ({
       ...prev,
       maxNumber,
+      solution: newSolution
+    }));
+  };
+  
+  const handleMaxLetterChange = (value: string) => {
+    const maxLetter = value;
+    const maxLetterCode = maxLetter.charCodeAt(0) - 65;
+    
+    const newSolution = localPuzzleConfig.solution.map(val => 
+      val > maxLetterCode ? 0 : val
+    );
+    
+    setLocalPuzzleConfig(prev => ({
+      ...prev,
+      maxLetter,
       solution: newSolution
     }));
   };
@@ -107,10 +117,9 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     const newImages = [...localPuzzleConfig.images];
     newImages.splice(index, 1);
     
-    // Update solution indices if necessary
     const newSolution = localPuzzleConfig.solution.map(solIndex => {
-      if (solIndex === index) return 0; // Reset to first image if removed
-      if (solIndex > index) return solIndex - 1; // Adjust higher indices
+      if (solIndex === index) return 0;
+      if (solIndex > index) return solIndex - 1;
       return solIndex;
     });
     
@@ -157,7 +166,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     };
     reader.readAsDataURL(file);
     
-    // Reset the file input
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -168,7 +176,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
   };
   
   const handleApplyChanges = () => {
-    // Validate the puzzle configuration
     if (localPuzzleConfig.name.trim() === '') {
       toast.error("Puzzle name cannot be empty");
       return;
@@ -184,7 +191,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       return;
     }
     
-    // Apply changes to the element
     updateElement(element.id, {
       puzzleConfig: localPuzzleConfig
     });
@@ -193,7 +199,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
   };
   
   const createPuzzleElement = () => {
-    // Final validation before creating the element
     if (localPuzzleConfig.name.trim() === '') {
       toast.error("Puzzle name cannot be empty");
       return;
@@ -204,7 +209,6 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       return;
     }
     
-    // Create the puzzle element
     addElement('puzzle', { puzzleConfig: localPuzzleConfig });
     toast.success("Puzzle added to canvas");
   };
@@ -227,7 +231,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           id="puzzle-type"
           value={localPuzzleConfig.type}
           onValueChange={(value) => handleTypeChange(value as PuzzleType)}
-          className="flex space-x-4"
+          className="flex flex-wrap gap-4"
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="image" id="image-puzzle" />
@@ -243,12 +247,21 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
               Number Lock
             </Label>
           </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="alphabet" id="alphabet-puzzle" />
+            <Label htmlFor="alphabet-puzzle" className="flex items-center">
+              <AlphabetLatin className="h-4 w-4 mr-1" />
+              Alphabet Lock
+            </Label>
+          </div>
         </RadioGroup>
       </div>
       
       <div>
         <Label htmlFor="placeholders">
-          {localPuzzleConfig.type === 'image' ? 'Number of Placeholders' : 'Number of Digits'}
+          {localPuzzleConfig.type === 'image' ? 'Number of Placeholders' : 
+           localPuzzleConfig.type === 'number' ? 'Number of Digits' :
+           'Number of Letters'}
         </Label>
         <Select 
           value={localPuzzleConfig.placeholders.toString()} 
@@ -260,7 +273,8 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           <SelectContent>
             {[2, 3, 4, 5, 6].map(num => (
               <SelectItem key={num} value={num.toString()}>
-                {num} {localPuzzleConfig.type === 'image' ? 'placeholders' : 'digits'}
+                {num} {localPuzzleConfig.type === 'image' ? 'placeholders' : 
+                       localPuzzleConfig.type === 'number' ? 'digits' : 'letters'}
               </SelectItem>
             ))}
           </SelectContent>
@@ -281,6 +295,27 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
               {[5, 6, 7, 8, 9].map(num => (
                 <SelectItem key={num} value={num.toString()}>
                   {num}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      
+      {localPuzzleConfig.type === 'alphabet' && (
+        <div>
+          <Label htmlFor="max-letter">Maximum Letter</Label>
+          <Select 
+            value={localPuzzleConfig.maxLetter?.toString() || "Z"} 
+            onValueChange={handleMaxLetterChange}
+          >
+            <SelectTrigger id="max-letter" className="mt-1">
+              <SelectValue placeholder="Select max letter" />
+            </SelectTrigger>
+            <SelectContent>
+              {['E', 'J', 'O', 'T', 'Z'].map(letter => (
+                <SelectItem key={letter} value={letter}>
+                  {letter}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -361,21 +396,25 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
         </div>
       )}
       
-      {/* Solution Configuration section - now handles both puzzle types */}
       <div>
         <Label>Solution Configuration</Label>
         <div className="space-y-2 mt-2">
           {Array.from({ length: localPuzzleConfig.placeholders }).map((_, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <span className="text-sm font-medium w-24">
-                {localPuzzleConfig.type === 'image' ? `Placeholder ${idx + 1}:` : `Digit ${idx + 1}:`}
+                {localPuzzleConfig.type === 'image' ? `Placeholder ${idx + 1}:` : 
+                 localPuzzleConfig.type === 'number' ? `Digit ${idx + 1}:` :
+                 `Letter ${idx + 1}:`}
               </span>
               <Select 
                 value={localPuzzleConfig.solution[idx]?.toString() || "0"} 
                 onValueChange={(val) => handleSolutionChange(idx, val)}
               >
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder={`Select correct ${localPuzzleConfig.type === 'image' ? 'image' : 'number'}`} />
+                  <SelectValue placeholder={`Select correct ${
+                    localPuzzleConfig.type === 'image' ? 'image' : 
+                    localPuzzleConfig.type === 'number' ? 'number' : 'letter'
+                  }`} />
                 </SelectTrigger>
                 <SelectContent>
                   {localPuzzleConfig.type === 'image'
@@ -384,11 +423,19 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
                           Image {imgIdx + 1}
                         </SelectItem>
                       ))
-                    : Array.from({ length: (localPuzzleConfig.maxNumber || 9) + 1 }).map((_, numIdx) => (
-                        <SelectItem key={numIdx} value={numIdx.toString()}>
-                          {numIdx}
-                        </SelectItem>
-                      ))
+                    : localPuzzleConfig.type === 'number'
+                      ? Array.from({ length: (localPuzzleConfig.maxNumber || 9) + 1 }).map((_, numIdx) => (
+                          <SelectItem key={numIdx} value={numIdx.toString()}>
+                            {numIdx}
+                          </SelectItem>
+                        ))
+                      : Array.from({ 
+                          length: (localPuzzleConfig.maxLetter?.charCodeAt(0) || 90) - 64
+                        }).map((_, letterIdx) => (
+                          <SelectItem key={letterIdx} value={letterIdx.toString()}>
+                            {String.fromCharCode(65 + letterIdx)}
+                          </SelectItem>
+                        ))
                   }
                 </SelectContent>
               </Select>
@@ -420,4 +467,3 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
 };
 
 export default PuzzleProperties;
-

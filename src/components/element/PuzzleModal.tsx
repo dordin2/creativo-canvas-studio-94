@@ -22,7 +22,8 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
     placeholders: 3,
     images: [],
     solution: [],
-    maxNumber: 9
+    maxNumber: 9,
+    maxLetter: 'Z'
   };
   
   const puzzleType = puzzleConfig.type || 'image';
@@ -66,13 +67,27 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
       if (puzzleType === 'image') {
         // Only cycle forward, looping back to the first image
         newStates[index] = (newStates[index] + 1) % puzzleConfig.images.length;
-      } else {
+      } else if (puzzleType === 'number') {
         // For number puzzles, cycle through numbers 0-9 or up to maxNumber
         const maxNum = puzzleConfig.maxNumber || 9;
         newStates[index] = (newStates[index] + 1) % (maxNum + 1);
+      } else if (puzzleType === 'alphabet') {
+        // For alphabet puzzles, cycle through A-Z or up to maxLetter
+        const maxLetterCode = (puzzleConfig.maxLetter?.charCodeAt(0) || 90) - 65; // 'Z' is 90, 'A' is 65
+        newStates[index] = (newStates[index] + 1) % (maxLetterCode + 1);
       }
       return newStates;
     });
+  };
+  
+  const getDisplayValue = (state: number, type: PuzzleType) => {
+    if (type === 'number') {
+      return state.toString();
+    } else if (type === 'alphabet') {
+      // Convert number (0-25) to letter (A-Z)
+      return String.fromCharCode(65 + state);
+    }
+    return state.toString();
   };
   
   return (
@@ -124,7 +139,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
               </div>
             )
           ) : (
-            // Number puzzle UI
+            // Number or Alphabet puzzle UI
             <div className="flex flex-row justify-center gap-4 flex-wrap">
               {Array.from({ length: puzzleConfig.placeholders }).map((_, idx) => (
                 <div key={idx} className="relative">
@@ -133,7 +148,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
                     onClick={() => cyclePlaceholder(idx)}
                   >
                     <span className="text-3xl sm:text-4xl md:text-5xl font-bold">
-                      {currentStates[idx]}
+                      {getDisplayValue(currentStates[idx], puzzleType)}
                     </span>
                   </div>
                 </div>
