@@ -158,9 +158,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    // Only exit editing mode if Escape key is pressed or if Ctrl+Enter is pressed
+    if (e.key === 'Escape' || (e.key === 'Enter' && e.ctrlKey)) {
+      e.preventDefault();
       setIsEditing(false);
     }
+    // Let Enter key create a new line naturally for all text elements,
+    // especially for paragraphs without needing to press Shift+Enter
   };
 
   useEffect(() => {
@@ -309,6 +313,10 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         background: 'transparent',
         border: 'none',
         outline: 'none',
+        wordWrap: 'break-word',
+        overflowWrap: 'break-word',
+        whiteSpace: 'pre-wrap',
+        wordBreak: 'break-word',
         ...textStyle
       };
       
@@ -351,6 +359,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       height: '100%',
       whiteSpace: 'pre-wrap',
       wordBreak: 'break-word',
+      wordWrap: 'break-word',
+      overflowWrap: 'break-word',
       ...textStyle
     };
     
