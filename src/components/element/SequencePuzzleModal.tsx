@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
@@ -21,6 +21,11 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const { t, language } = useLanguage();
   
+  // Use a ref to prevent excessive updates to the global state
+  const isInitialized = useRef(false);
+  const pendingUpdate = useRef(false);
+  const timeoutRef = useRef<number | null>(null);
+  
   const sequencePuzzleConfig = element.sequencePuzzleConfig || {
     name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
     images: [],
@@ -30,58 +35,86 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   
   // Initialize current order when modal opens or puzzle changes
   useEffect(() => {
-    if (isOpen) {
+    if (!isOpen) {
+      // Reset state when modal closes
+      setSolved(false);
+      setDraggedItem(null);
+      isInitialized.current = false;
+      return;
+    }
+    
+    // Only initialize once when the modal opens
+    if (!isInitialized.current) {
+      let initialOrder: number[];
+      
       if (sequencePuzzleConfig.currentOrder.length === sequencePuzzleConfig.images.length) {
-        setCurrentOrder([...sequencePuzzleConfig.currentOrder]);
+        initialOrder = [...sequencePuzzleConfig.currentOrder];
       } else if (sequencePuzzleConfig.images.length > 0) {
         // Create a shuffled order if there's no current order
-        const initialOrder = Array.from({ length: sequencePuzzleConfig.images.length }, (_, i) => i);
-        const shuffled = shuffleArray([...initialOrder]);
-        setCurrentOrder(shuffled);
-        
-        // Update the element with the shuffled order
-        updateElement(element.id, {
-          sequencePuzzleConfig: {
-            ...sequencePuzzleConfig,
-            currentOrder: shuffled
-          }
-        });
+        const indices = Array.from({ length: sequencePuzzleConfig.images.length }, (_, i) => i);
+        initialOrder = shuffleArray([...indices]);
       } else {
-        setCurrentOrder([]);
+        initialOrder = [];
       }
-      setSolved(false);
+      
+      setCurrentOrder(initialOrder);
+      isInitialized.current = true;
     }
-  }, [isOpen, sequencePuzzleConfig.images.length, element.id, updateElement]);
+  }, [isOpen, sequencePuzzleConfig.images.length]);
   
-  // Check if the puzzle is solved
+  // Check if the puzzle is solved, but avoid updating the global state too frequently
   useEffect(() => {
-    if (currentOrder.length === 0 || sequencePuzzleConfig.solution.length === 0) return;
+    if (!isOpen || currentOrder.length === 0 || sequencePuzzleConfig.solution.length === 0) return;
     
     const isSolved = sequencePuzzleConfig.solution.every((solutionIndex, index) => {
       return solutionIndex === currentOrder[index];
     });
     
-    if (isSolved && !solved && isOpen) {
+    if (isSolved && !solved) {
       setSolved(true);
-      // Update the element with the current order
-      updateElement(element.id, {
-        sequencePuzzleConfig: {
-          ...sequencePuzzleConfig,
-          currentOrder: [...currentOrder]
+      
+      // Update the element with the current order, but only once
+      if (!pendingUpdate.current) {
+        pendingUpdate.current = true;
+        
+        // Clear any existing timeout
+        if (timeoutRef.current !== null) {
+          window.clearTimeout(timeoutRef.current);
         }
-      });
-      
-      // Show success message
-      toast.success(t('toast.success.sequence'), {
-        duration: 2000 // 2 seconds duration
-      });
-      
-      // Close after delay
-      setTimeout(() => {
-        onClose();
-      }, 2000);
+        
+        // Use a timeout to debounce the update
+        timeoutRef.current = window.setTimeout(() => {
+          updateElement(element.id, {
+            sequencePuzzleConfig: {
+              ...sequencePuzzleConfig,
+              currentOrder: [...currentOrder]
+            }
+          });
+          pendingUpdate.current = false;
+          timeoutRef.current = null;
+          
+          // Show success message
+          toast.success(t('toast.success.sequence'), {
+            duration: 2000 // 2 seconds duration
+          });
+          
+          // Close after delay
+          setTimeout(() => {
+            onClose();
+          }, 2000);
+        }, 300);
+      }
     }
   }, [currentOrder, sequencePuzzleConfig.solution, solved, isOpen, onClose, t, element.id, updateElement]);
+  
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
   
   // Helper function to shuffle an array
   const shuffleArray = (array: number[]): number[] => {
@@ -118,17 +151,29 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     
     // Update the state
     setCurrentOrder(newOrder);
-    
-    // Update the element
-    updateElement(element.id, {
-      sequencePuzzleConfig: {
-        ...sequencePuzzleConfig,
-        currentOrder: newOrder
-      }
-    });
-    
-    // Reset dragged item
     setDraggedItem(null);
+    
+    // Only update the global state when completed, not during drag operations
+    if (!pendingUpdate.current) {
+      pendingUpdate.current = true;
+      
+      // Clear any existing timeout
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
+      
+      // Use a timeout to debounce the update
+      timeoutRef.current = window.setTimeout(() => {
+        updateElement(element.id, {
+          sequencePuzzleConfig: {
+            ...sequencePuzzleConfig,
+            currentOrder: newOrder
+          }
+        });
+        pendingUpdate.current = false;
+        timeoutRef.current = null;
+      }, 300);
+    }
   };
   
   // Handle touch-based reordering for mobile
@@ -142,13 +187,27 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     // Update the state
     setCurrentOrder(newOrder);
     
-    // Update the element
-    updateElement(element.id, {
-      sequencePuzzleConfig: {
-        ...sequencePuzzleConfig,
-        currentOrder: newOrder
+    // Only update the global state when completed, not during each swap
+    if (!pendingUpdate.current) {
+      pendingUpdate.current = true;
+      
+      // Clear any existing timeout
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
       }
-    });
+      
+      // Use a timeout to debounce the update
+      timeoutRef.current = window.setTimeout(() => {
+        updateElement(element.id, {
+          sequencePuzzleConfig: {
+            ...sequencePuzzleConfig,
+            currentOrder: newOrder
+          }
+        });
+        pendingUpdate.current = false;
+        timeoutRef.current = null;
+      }, 300);
+    }
   };
   
   // Handle moving an item left
@@ -173,14 +232,28 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     setSolved(false);
     
     // Update the element with the shuffled order
-    updateElement(element.id, {
-      sequencePuzzleConfig: {
-        ...sequencePuzzleConfig,
-        currentOrder: shuffled
+    if (!pendingUpdate.current) {
+      pendingUpdate.current = true;
+      
+      // Clear any existing timeout
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
       }
-    });
-    
-    toast.info(t('toast.info.reset'));
+      
+      // Use a timeout to debounce the update
+      timeoutRef.current = window.setTimeout(() => {
+        updateElement(element.id, {
+          sequencePuzzleConfig: {
+            ...sequencePuzzleConfig,
+            currentOrder: shuffled
+          }
+        });
+        pendingUpdate.current = false;
+        timeoutRef.current = null;
+        
+        toast.info(t('toast.info.reset'));
+      }, 300);
+    }
   };
   
   return (
