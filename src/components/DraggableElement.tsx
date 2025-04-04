@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -22,7 +21,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [startRotation, setStartRotation] = useState(0);
   const [originalAspectRatio, setOriginalAspectRatio] = useState<number | null>(null);
 
-  // Initialize rotation if it doesn't exist
   useEffect(() => {
     if (element.style && typeof element.style.transform === 'undefined') {
       updateElement(element.id, {
@@ -31,32 +29,26 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     }
   }, [element.id, element.style, updateElement]);
 
-  // Get rotation value from transform style
   const getRotation = (): number => {
     if (!element.style?.transform) return 0;
     const match = element.style.transform.toString().match(/rotate\((-?\d+)deg\)/);
     return match ? parseInt(match[1], 10) : 0;
   };
 
-  // Start dragging
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return; // Only left-click
+    if (e.button !== 0) return;
     e.stopPropagation();
     
-    // Only prevent dragging specifically on the upload placeholder text, not the whole image container
     if (element.type === 'image' && 
         (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
-      // Don't return here, instead just prevent default behavior on the text itself
       e.preventDefault();
     }
     
-    // Use the startDrag function from useDraggable hook for all elements, including image placeholders
     startDrag(e, element.position);
     setIsDragging(true);
     setStartPos({ x: e.clientX, y: e.clientY });
   };
 
-  // Start resizing
   const handleResizeStart = (e: React.MouseEvent, direction: string) => {
     e.stopPropagation();
     e.preventDefault();
@@ -73,17 +65,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       height: height
     });
     
-    // For image elements, use the natural aspect ratio if available
     if (element.type === 'image') {
-      // Calculate natural aspect ratio from the image's actual dimensions
       setOriginalAspectRatio(width / height);
     } else {
-      // For non-image elements, set to null as we don't need to maintain aspect ratio
       setOriginalAspectRatio(null);
     }
   };
 
-  // Start rotation
   const handleRotateStart = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -91,7 +79,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     setIsRotating(true);
     setStartRotation(getRotation());
     
-    // Calculate center of element
     if (elementRef.current) {
       const rect = elementRef.current.getBoundingClientRect();
       const centerX = rect.left + rect.width / 2;
@@ -100,7 +87,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     }
   };
 
-  // Handle mouse move for all operations
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isDragging) {
@@ -122,17 +108,14 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         let newWidth = startSize.width;
         let newHeight = startSize.height;
         
-        // For images, maintain aspect ratio automatically
         const shouldMaintainAspectRatio = element.type === 'image' && originalAspectRatio !== null;
         
         if (shouldMaintainAspectRatio) {
-          // Handle different resize directions
           if (resizeDirection.includes("e") || resizeDirection.includes("w")) {
-            // Horizontal resize - adjust height based on width
             if (resizeDirection.includes("e")) {
               newWidth = Math.max(20, startSize.width + deltaX);
               newHeight = newWidth / originalAspectRatio;
-            } else { // "w"
+            } else {
               newWidth = Math.max(20, startSize.width - deltaX);
               newHeight = newWidth / originalAspectRatio;
               
@@ -146,11 +129,10 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
               }
             }
           } else if (resizeDirection.includes("s") || resizeDirection.includes("n")) {
-            // Vertical resize - adjust width based on height
             if (resizeDirection.includes("s")) {
               newHeight = Math.max(20, startSize.height + deltaY);
               newWidth = newHeight * originalAspectRatio;
-            } else { // "n"
+            } else {
               newHeight = Math.max(20, startSize.height - deltaY);
               newWidth = newHeight * originalAspectRatio;
               
@@ -165,7 +147,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
             }
           }
           
-          // Handle corner cases by prioritizing the primary direction
           if (resizeDirection === "se" || resizeDirection === "ne") {
             newWidth = Math.max(20, startSize.width + deltaX);
             newHeight = newWidth / originalAspectRatio;
@@ -188,7 +169,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
             });
           }
         } else {
-          // Standard resize without aspect ratio for non-image elements
           if (resizeDirection.includes("e")) {
             newWidth = Math.max(20, startSize.width + deltaX);
           }
@@ -219,7 +199,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
           }
         }
         
-        // Update element size
         updateElement(element.id, {
           size: { width: newWidth, height: newHeight }
         });
@@ -228,11 +207,9 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         const centerX = startPos.x;
         const centerY = startPos.y;
         
-        // Math to calculate angle
         const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
-        const rotation = angle + 90; // Adjust to make it intuitive
+        const rotation = angle + 90;
         
-        // Update element rotation
         const newStyle = { 
           ...element.style, 
           transform: `rotate(${rotation}deg)` 
@@ -270,7 +247,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     originalAspectRatio
   ]);
 
-  // Build the style for the element
   const elementStyle = {
     ...element.style,
     position: 'absolute' as const,
@@ -280,16 +256,26 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     height: element.size?.height,
     cursor: isDragging ? 'grabbing' : 'grab',
     border: isActive ? '1px solid #8B5CF6' : 'none',
-    zIndex: element.layer, // Use layer property for z-index
+    zIndex: element.layer,
   };
 
-  // Don't show resize handles for text elements
   const showResizeHandles = isActive && 
     !['heading', 'subheading', 'paragraph'].includes(element.type) &&
     element.type !== 'background';
 
-  // Don't show rotation handle for background
   const showRotationHandle = isActive && element.type !== 'background';
+
+  const handleClasses = "absolute w-3 h-3 bg-canvas-purple border-2 border-white rounded-full z-[1000] shadow-md";
+  const handleStyles = {
+    nw: `${handleClasses} cursor-nw-resize -top-2 -left-2`,
+    n: `${handleClasses} cursor-n-resize top-0 left-1/2 -translate-x-1/2 -translate-y-1/2`,
+    ne: `${handleClasses} cursor-ne-resize -top-2 -right-2`,
+    e: `${handleClasses} cursor-e-resize top-1/2 -right-2 -translate-y-1/2`,
+    se: `${handleClasses} cursor-se-resize -bottom-2 -right-2`,
+    s: `${handleClasses} cursor-s-resize bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2`,
+    sw: `${handleClasses} cursor-sw-resize -bottom-2 -left-2`,
+    w: `${handleClasses} cursor-w-resize top-1/2 -left-2 -translate-y-1/2`,
+  };
 
   return (
     <div
@@ -298,7 +284,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       style={elementStyle}
       onMouseDown={handleMouseDown}
       onDragOver={(e) => {
-        // Prevent default to allow drop
         if (element.type === 'image') {
           e.preventDefault();
           e.stopPropagation();
@@ -307,48 +292,46 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     >
       {children}
       
-      {/* Resize handles */}
       {showResizeHandles && (
         <>
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-nw-resize -top-1 -left-1 z-10"
+            className={handleStyles.nw}
             onMouseDown={(e) => handleResizeStart(e, "nw")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-n-resize top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+            className={handleStyles.n}
             onMouseDown={(e) => handleResizeStart(e, "n")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-ne-resize -top-1 -right-1 z-10"
+            className={handleStyles.ne}
             onMouseDown={(e) => handleResizeStart(e, "ne")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-e-resize top-1/2 -right-1 -translate-y-1/2 z-10"
+            className={handleStyles.e}
             onMouseDown={(e) => handleResizeStart(e, "e")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-se-resize -bottom-1 -right-1 z-10"
+            className={handleStyles.se}
             onMouseDown={(e) => handleResizeStart(e, "se")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-s-resize bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-10"
+            className={handleStyles.s}
             onMouseDown={(e) => handleResizeStart(e, "s")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-sw-resize -bottom-1 -left-1 z-10"
+            className={handleStyles.sw}
             onMouseDown={(e) => handleResizeStart(e, "sw")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-w-resize top-1/2 -left-1 -translate-y-1/2 z-10"
+            className={handleStyles.w}
             onMouseDown={(e) => handleResizeStart(e, "w")}
           />
         </>
       )}
       
-      {/* Rotation handle */}
       {showRotationHandle && (
         <div 
-          className="absolute w-4 h-4 rounded-full bg-canvas-purple flex items-center justify-center cursor-move top-0 left-1/2 -translate-x-1/2 -translate-y-8"
+          className="absolute w-5 h-5 rounded-full bg-canvas-purple border-2 border-white flex items-center justify-center cursor-move top-0 left-1/2 -translate-x-1/2 -translate-y-10 z-[1000] shadow-md"
           onMouseDown={handleRotateStart}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

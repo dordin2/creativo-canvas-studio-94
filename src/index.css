@@ -101,10 +101,26 @@
     @apply cursor-move transition-transform duration-75 ease-out relative;
     will-change: transform, left, top, width, height, z-index;
     touch-action: none;
+    /* Allow elements to extend beyond their parent container */
+    pointer-events: auto !important;
   }
 
   .canvas-element:hover {
     @apply outline outline-2 outline-canvas-purple/30;
+  }
+  
+  /* Canvas container to manage overflow behavior */
+  .canvas-container {
+    position: relative;
+    /* Create the masking effect for the canvas content */
+    overflow: visible;
+  }
+  
+  /* Main canvas has overflow:hidden to mask content */
+  .canvas-container > div:first-child {
+    overflow: hidden;
+    /* Controls should still be interactive even outside the canvas */
+    pointer-events: auto;
   }
 }
 

@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -276,20 +277,36 @@ const Canvas = () => {
   
   return (
     <div className="flex-1 flex items-center justify-center p-8 canvas-workspace">
-      <div
-        ref={containerRef}
-        className={`relative shadow-lg rounded-lg overflow-hidden transition-all ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
-        style={{
-          width: canvasDimensions.width,
-          height: canvasDimensions.height,
-          ...backgroundStyle
-        }}
-        onClick={handleCanvasClick}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-      >
-        {renderElements()}
+      <div className="canvas-container relative">
+        <div
+          ref={containerRef}
+          className={`relative shadow-lg rounded-lg overflow-hidden transition-all ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
+          style={{
+            width: canvasDimensions.width,
+            height: canvasDimensions.height,
+            ...backgroundStyle
+          }}
+          onClick={handleCanvasClick}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+        >
+          {renderElements()}
+        </div>
+        {/* 
+          This invisible overlay sits outside the canvas to allow elements to render 
+          outside the canvas boundaries while keeping their controls visible 
+        */}
+        <div 
+          className="absolute top-0 left-0 pointer-events-none" 
+          style={{
+            width: canvasDimensions.width * 3, 
+            height: canvasDimensions.height * 3,
+            transform: `translate(-${canvasDimensions.width}px, -${canvasDimensions.height}px)`,
+          }}
+        >
+          {/* This is where elements that can extend beyond the canvas will be rendered */}
+        </div>
       </div>
     </div>
   );
