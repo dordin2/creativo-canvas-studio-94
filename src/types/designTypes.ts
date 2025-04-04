@@ -13,7 +13,7 @@ export type ElementType =
   | 'background'
   | 'puzzle';
 
-export type PuzzleType = 'image' | 'number' | 'english' | 'hebrew';
+export type PuzzleType = 'image' | 'number';
 
 export interface PuzzleConfiguration {
   name: string;
@@ -21,9 +21,8 @@ export interface PuzzleConfiguration {
   placeholders: number;
   images: string[];
   solution: number[];
-  // For number/letter puzzles
+  // For number puzzle
   maxNumber?: number;
-  letters?: string[];
 }
 
 export interface DesignElement {
