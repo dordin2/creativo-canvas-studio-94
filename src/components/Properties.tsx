@@ -131,7 +131,6 @@ const Properties = () => {
       >
         <TabsList className="mb-6">
           <TabsTrigger value="style">Style</TabsTrigger>
-          <TabsTrigger value="position">Position</TabsTrigger>
         </TabsList>
         
         <TabsContent value="style" className="flex-1 flex flex-col space-y-6">
@@ -287,9 +286,7 @@ const Properties = () => {
               </div>
             </div>
           )}
-        </TabsContent>
-        
-        <TabsContent value="position" className="flex-1 flex flex-col space-y-6">
+          
           {activeElement.type !== 'background' && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
