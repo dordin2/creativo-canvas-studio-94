@@ -8,12 +8,13 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElement, elements } = useDesignState();
+  const { updateElementWithoutHistory, commitToHistory, elements } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
   const rafRef = useRef<number | null>(null);
   const currentPosition = useRef<Position | null>(null);
+  const isDragStarted = useRef<boolean>(false);
 
   // Find the current element to access its properties
   const currentElement = elements.find(el => el.id === elementId);
@@ -21,6 +22,11 @@ export const useDraggable = (elementId: string) => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
+
+      // Mark that we've started dragging (for history tracking)
+      if (!isDragStarted.current) {
+        isDragStarted.current = true;
+      }
 
       // Calculate the new position
       const deltaX = e.clientX - startPosition.current.x;
@@ -37,7 +43,8 @@ export const useDraggable = (elementId: string) => {
         rafRef.current = requestAnimationFrame(() => {
           // Only update if we have a position
           if (currentPosition.current) {
-            updateElement(elementId, { 
+            // Use updateElementWithoutHistory to avoid adding every movement to history
+            updateElementWithoutHistory(elementId, { 
               position: currentPosition.current
             });
           }
@@ -49,6 +56,13 @@ export const useDraggable = (elementId: string) => {
 
     const handleMouseUp = () => {
       setIsDragging(false);
+      
+      // If we actually dragged (not just clicked), commit the final position to history
+      if (isDragStarted.current) {
+        commitToHistory();
+        isDragStarted.current = false;
+      }
+      
       startPosition.current = null;
       elementInitialPos.current = null;
       
@@ -74,13 +88,14 @@ export const useDraggable = (elementId: string) => {
         rafRef.current = null;
       }
     };
-  }, [isDragging, elementId, updateElement]);
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
     e.stopPropagation();
     setIsDragging(true);
     startPosition.current = { x: e.clientX, y: e.clientY };
     elementInitialPos.current = initialPosition;
+    isDragStarted.current = false; // Reset the drag started flag
   };
 
   return { startDrag, isDragging, currentElement };

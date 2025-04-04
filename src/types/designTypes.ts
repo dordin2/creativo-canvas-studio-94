@@ -62,6 +62,8 @@ export interface DesignContextType {
   setCanvasRef: (ref: HTMLDivElement) => void;
   addElement: (type: ElementType, props?: any) => DesignElement;
   updateElement: (id: string, updates: Partial<DesignElement>) => void;
+  updateElementWithoutHistory: (id: string, updates: Partial<DesignElement>) => void; // Added for drag operations
+  commitToHistory: () => void; // Added to record final position after drag
   removeElement: (id: string) => void;
   setActiveElement: (element: DesignElement | null) => void;
   updateElementLayer: (id: string, newLayer: number) => void; // Added for layer management

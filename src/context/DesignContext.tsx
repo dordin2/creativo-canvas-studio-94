@@ -39,6 +39,28 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setHistoryIndex(newHistoryIndex);
   }, [history, historyIndex]);
   
+  // Function to update elements without adding to history (for drag operations)
+  const updateElementWithoutHistory = useCallback((id: string, updates: Partial<DesignElement>) => {
+    const updatedElements = elements.map(element => {
+      if (element.id === id) {
+        return { ...element, ...updates };
+      }
+      return element;
+    });
+    
+    setElements(updatedElements);
+    
+    // Also update active element if it's the one being updated
+    if (activeElement && activeElement.id === id) {
+      setActiveElement({ ...activeElement, ...updates });
+    }
+  }, [elements, activeElement]);
+  
+  // Function to commit the current state to history (called at the end of operations)
+  const commitToHistory = useCallback(() => {
+    addToHistory(elements);
+  }, [elements, addToHistory]);
+  
   // Handle image file uploads
   const handleImageUpload = (id: string, file: File) => {
     processImageUpload(file, (updatedData) => {
@@ -196,6 +218,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setCanvasRef,
     addElement,
     updateElement,
+    updateElementWithoutHistory,
+    commitToHistory,
     removeElement,
     setActiveElement,
     updateElementLayer,
