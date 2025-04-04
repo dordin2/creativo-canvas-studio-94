@@ -9,7 +9,7 @@ import {
   Triangle, 
   Lock, 
   Hash,
-  ABC
+  LetterCase
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -155,7 +155,7 @@ const Sidebar = () => {
                     className="justify-start"
                     onClick={handleEnglishPuzzleClick}
                   >
-                    <ABC className="h-4 w-4 mr-2" />
+                    <LetterCase className="h-4 w-4 mr-2" />
                     English Letters
                   </Button>
                   <Button
@@ -163,7 +163,7 @@ const Sidebar = () => {
                     className="justify-start"
                     onClick={handleHebrewPuzzleClick}
                   >
-                    <ABC className="h-4 w-4 mr-2" />
+                    <LetterCase className="h-4 w-4 mr-2" />
                     Hebrew Letters
                   </Button>
                 </div>
