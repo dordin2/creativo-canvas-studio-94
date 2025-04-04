@@ -82,7 +82,12 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
     });
   };
   
-  const getDisplayValue = (state: number, type: PuzzleType) => {
+  const getDisplayValue = (state: number | undefined, type: PuzzleType) => {
+    // Handle undefined state by returning a default value
+    if (state === undefined) {
+      return type === 'alphabet' ? 'A' : '0';
+    }
+    
     if (type === 'number') {
       return state.toString();
     } else if (type === 'alphabet') {
@@ -125,11 +130,13 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
                       className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border rounded overflow-hidden cursor-pointer transition-all hover:brightness-90 active:scale-95"
                       onClick={() => cyclePlaceholder(idx)}
                     >
-                      <img 
-                        src={puzzleConfig.images[currentStates[idx]]} 
-                        alt={`Puzzle piece ${idx + 1}`}
-                        className="w-full h-full object-cover"
-                      />
+                      {currentStates[idx] !== undefined && puzzleConfig.images[currentStates[idx]] && (
+                        <img 
+                          src={puzzleConfig.images[currentStates[idx]]} 
+                          alt={`Puzzle piece ${idx + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                      )}
                     </div>
                   </div>
                 ))}
