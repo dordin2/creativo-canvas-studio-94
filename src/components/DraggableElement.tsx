@@ -18,6 +18,24 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [startRotation, setStartRotation] = useState(0);
+  
+  // Local state for smoother updates
+  const [localPosition, setLocalPosition] = useState({ x: element.position.x, y: element.position.y });
+  const [localSize, setLocalSize] = useState({ 
+    width: element.size?.width || 100, 
+    height: element.size?.height || 100 
+  });
+  const [localRotation, setLocalRotation] = useState(getRotation());
+
+  // Sync local state with element props when they change from outside
+  useEffect(() => {
+    setLocalPosition({ x: element.position.x, y: element.position.y });
+    setLocalSize({ 
+      width: element.size?.width || 100, 
+      height: element.size?.height || 100 
+    });
+    setLocalRotation(getRotation());
+  }, [element.position.x, element.position.y, element.size?.width, element.size?.height, element.style?.transform]);
 
   // Initialize rotation if it doesn't exist
   useEffect(() => {
@@ -29,7 +47,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   }, [element.id, element.style, updateElement]);
 
   // Get rotation value from transform style
-  const getRotation = (): number => {
+  function getRotation(): number {
     if (!element.style?.transform) return 0;
     const match = element.style.transform.toString().match(/rotate\((-?\d+)deg\)/);
     return match ? parseInt(match[1], 10) : 0;
@@ -52,10 +70,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     setIsResizing(true);
     setResizeDirection(direction);
     setStartPos({ x: e.clientX, y: e.clientY });
-    setStartSize({
-      width: element.size?.width || 100,
-      height: element.size?.height || 100
-    });
+    setStartSize(localSize);
   };
 
   // Start rotation
@@ -64,7 +79,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     e.preventDefault();
     
     setIsRotating(true);
-    setStartRotation(getRotation());
+    setStartRotation(localRotation);
     
     // Calculate center of element
     if (elementRef.current) {
@@ -82,13 +97,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         const deltaX = e.clientX - startPos.x;
         const deltaY = e.clientY - startPos.y;
         
-        updateElement(element.id, {
-          position: {
-            x: element.position.x + deltaX,
-            y: element.position.y + deltaY
-          }
+        // Update local position for immediate visual feedback
+        setLocalPosition({
+          x: element.position.x + deltaX,
+          y: element.position.y + deltaY
         });
         
+        // Set new start position for next move calculation
         setStartPos({ x: e.clientX, y: e.clientY });
       } 
       else if (isResizing && resizeDirection) {
@@ -96,6 +111,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         const deltaY = e.clientY - startPos.y;
         let newWidth = startSize.width;
         let newHeight = startSize.height;
+        let newX = localPosition.x;
+        let newY = localPosition.y;
         
         // Handle different resize directions
         if (resizeDirection.includes("e")) {
@@ -104,12 +121,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         if (resizeDirection.includes("w")) {
           newWidth = Math.max(20, startSize.width - deltaX);
           if (newWidth !== startSize.width) {
-            updateElement(element.id, {
-              position: {
-                x: element.position.x + (startSize.width - newWidth),
-                y: element.position.y
-              }
-            });
+            newX = element.position.x + (startSize.width - newWidth);
           }
         }
         if (resizeDirection.includes("s")) {
@@ -118,19 +130,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         if (resizeDirection.includes("n")) {
           newHeight = Math.max(20, startSize.height - deltaY);
           if (newHeight !== startSize.height) {
-            updateElement(element.id, {
-              position: {
-                x: element.position.x,
-                y: element.position.y + (startSize.height - newHeight)
-              }
-            });
+            newY = element.position.y + (startSize.height - newHeight);
           }
         }
         
-        // Update element size
-        updateElement(element.id, {
-          size: { width: newWidth, height: newHeight }
-        });
+        // Update local state for immediate visual feedback
+        setLocalSize({ width: newWidth, height: newHeight });
+        setLocalPosition({ x: newX, y: newY });
       } 
       else if (isRotating) {
         // Calculate angle between center and current mouse position
@@ -139,19 +145,36 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         
         // Math to calculate angle
         const angle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
-        const rotation = angle + 90; // Adjust to make it intuitive
+        const rotation = Math.round(angle + 90); // Adjust to make it intuitive and round to nearest integer
         
-        // Update element rotation
-        const newStyle = { 
-          ...element.style, 
-          transform: `rotate(${rotation}deg)` 
-        };
-        
-        updateElement(element.id, { style: newStyle });
+        // Update local rotation for immediate visual feedback
+        setLocalRotation(rotation);
       }
     };
 
     const handleMouseUp = () => {
+      // On mouse up, update the actual element state with our local values
+      if (isDragging) {
+        updateElement(element.id, { position: localPosition });
+      }
+      
+      if (isResizing) {
+        updateElement(element.id, {
+          size: localSize,
+          position: localPosition
+        });
+      }
+      
+      if (isRotating) {
+        updateElement(element.id, { 
+          style: { 
+            ...element.style, 
+            transform: `rotate(${localRotation}deg)` 
+          } 
+        });
+      }
+      
+      // Reset interaction states
       setIsDragging(false);
       setIsResizing(false);
       setIsRotating(false);
@@ -173,21 +196,27 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     startPos, 
     startSize,
     startRotation,
+    localPosition,
+    localSize,
+    localRotation,
     resizeDirection, 
     element, 
     updateElement
   ]);
 
-  // Build the style for the element
+  // Build the style for the element using local state for smoother updates
   const elementStyle = {
     ...element.style,
     position: 'absolute' as const,
-    left: element.position.x,
-    top: element.position.y,
-    width: element.size?.width,
-    height: element.size?.height,
+    left: localPosition.x,
+    top: localPosition.y,
+    width: localSize.width,
+    height: localSize.height,
+    transform: `rotate(${localRotation}deg)`,
     cursor: isDragging ? 'grabbing' : 'grab',
     border: isActive ? '1px solid #8B5CF6' : 'none',
+    transition: 'none', // Disable transitions for smoother manual transforms
+    willChange: (isDragging || isResizing || isRotating) ? 'transform, left, top, width, height' : 'auto',
   };
 
   // Don't show resize handles for text elements
@@ -211,35 +240,35 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       {showResizeHandles && (
         <>
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-nw-resize -top-1 -left-1 z-10"
+            className="absolute w-3 h-3 bg-canvas-purple rounded-full cursor-nw-resize -top-1.5 -left-1.5 z-10"
             onMouseDown={(e) => handleResizeStart(e, "nw")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-n-resize top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+            className="absolute w-3 h-3 bg-canvas-purple rounded-full cursor-n-resize top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
             onMouseDown={(e) => handleResizeStart(e, "n")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-ne-resize -top-1 -right-1 z-10"
+            className="absolute w-3 h-3 bg-canvas-purple rounded-full cursor-ne-resize -top-1.5 -right-1.5 z-10"
             onMouseDown={(e) => handleResizeStart(e, "ne")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-e-resize top-1/2 -right-1 -translate-y-1/2 z-10"
+            className="absolute w-3 h-3 bg-canvas-purple rounded-full cursor-e-resize top-1/2 -right-1.5 -translate-y-1/2 z-10"
             onMouseDown={(e) => handleResizeStart(e, "e")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-se-resize -bottom-1 -right-1 z-10"
+            className="absolute w-3 h-3 bg-canvas-purple rounded-full cursor-se-resize -bottom-1.5 -right-1.5 z-10"
             onMouseDown={(e) => handleResizeStart(e, "se")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-s-resize bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-10"
+            className="absolute w-3 h-3 bg-canvas-purple rounded-full cursor-s-resize bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 z-10"
             onMouseDown={(e) => handleResizeStart(e, "s")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-sw-resize -bottom-1 -left-1 z-10"
+            className="absolute w-3 h-3 bg-canvas-purple rounded-full cursor-sw-resize -bottom-1.5 -left-1.5 z-10"
             onMouseDown={(e) => handleResizeStart(e, "sw")}
           />
           <div 
-            className="absolute w-2 h-2 bg-canvas-purple rounded-full cursor-w-resize top-1/2 -left-1 -translate-y-1/2 z-10"
+            className="absolute w-3 h-3 bg-canvas-purple rounded-full cursor-w-resize top-1/2 -left-1.5 -translate-y-1/2 z-10"
             onMouseDown={(e) => handleResizeStart(e, "w")}
           />
         </>
@@ -248,10 +277,10 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       {/* Rotation handle */}
       {showRotationHandle && (
         <div 
-          className="absolute w-4 h-4 rounded-full bg-canvas-purple flex items-center justify-center cursor-move top-0 left-1/2 -translate-x-1/2 -translate-y-8"
+          className="absolute w-5 h-5 rounded-full bg-canvas-purple flex items-center justify-center cursor-move top-0 left-1/2 -translate-x-1/2 -translate-y-8"
           onMouseDown={handleRotateStart}
         >
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M4 15C4 16.0609 4.42143 17.0783 5.17157 17.8284C5.92172 18.5786 6.93913 19 8 19H16C17.0609 19 18.0783 18.5786 18.8284 17.8284C19.5786 17.0783 20 16.0609 20 15V9C20 7.93913 19.5786 6.92172 18.8284 6.17157C18.0783 5.42143 17.0609 5 16 5H8C6.93913 5 5.92172 5.42143 5.17157 6.17157C4.42143 6.92172 4 7.93913 4 9" 
               stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             <path d="M12 3V7M9 5L12 8L15 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
