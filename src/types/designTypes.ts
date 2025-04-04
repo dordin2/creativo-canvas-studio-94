@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from "uuid";
 
 // Define the types for our design elements
@@ -12,8 +13,7 @@ export type ElementType =
   | 'image'
   | 'background'
   | 'puzzle'
-  | 'sequencePuzzle'
-  | 'clickSequencePuzzle';
+  | 'sequencePuzzle';
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 
@@ -36,15 +36,6 @@ export interface SequencePuzzleConfiguration {
   solution: number[];
   // The current order of images (array of indices)
   currentOrder: number[];
-}
-
-export interface ClickSequencePuzzleConfiguration {
-  name: string;
-  images: string[];
-  // The correct sequence to click the images
-  solution: number[];
-  // Current progress in the sequence (internal state, not shown to user)
-  currentStep: number;
 }
 
 export interface DesignElement {
@@ -73,7 +64,6 @@ export interface DesignElement {
   layer: number; // Added for layer ordering
   puzzleConfig?: PuzzleConfiguration; // Added for puzzle configuration
   sequencePuzzleConfig?: SequencePuzzleConfiguration; // Added for sequence puzzle
-  clickSequencePuzzleConfig?: ClickSequencePuzzleConfiguration; // Added for click sequence puzzle
 }
 
 export interface DesignContextType {
