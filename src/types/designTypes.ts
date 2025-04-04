@@ -13,8 +13,7 @@ export type ElementType =
   | 'image'
   | 'background'
   | 'puzzle'
-  | 'sequencePuzzle'
-  | 'clickSequencePuzzle';
+  | 'sequencePuzzle';
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 
@@ -37,19 +36,6 @@ export interface SequencePuzzleConfiguration {
   solution: number[];
   // The current order of images (array of indices)
   currentOrder: number[];
-}
-
-export interface ClickSequencePuzzleConfiguration {
-  name: string;
-  images: string[];
-  // The solution is the correct sequence to click the images
-  solution: number[];
-  // Optional: maximum attempts allowed (if limited)
-  maxAttempts?: number;
-  // Track progress when solving
-  currentProgress?: number;
-  // Track attempts
-  attempts?: number;
 }
 
 export interface DesignElement {
@@ -78,7 +64,6 @@ export interface DesignElement {
   layer: number; // Added for layer ordering
   puzzleConfig?: PuzzleConfiguration; // Added for puzzle configuration
   sequencePuzzleConfig?: SequencePuzzleConfiguration; // Added for sequence puzzle
-  clickSequencePuzzleConfig?: ClickSequencePuzzleConfiguration; // Added for click sequence puzzle
 }
 
 export interface DesignContextType {

@@ -149,24 +149,6 @@ export const createNewElement = (
           currentOrder: []
         }
       };
-
-    case 'clickSequencePuzzle':
-      return {
-        id: generateId(),
-        type,
-        position,
-        size: { width: 350, height: 200 },
-        style: { backgroundColor: '#E5DEFF', borderRadius: '8px', transform: 'rotate(0deg)' },
-        layer,
-        clickSequencePuzzleConfig: props?.clickSequencePuzzleConfig || {
-          name: props?.name || 'Click Sequence Puzzle',
-          images: [],
-          solution: [],
-          maxAttempts: 3,
-          currentProgress: 0,
-          attempts: 0
-        }
-      };
       
     default:
       return {

@@ -1,5 +1,5 @@
 
-import { CSSProperties, RefObject, useEffect } from "react";
+import { CSSProperties, RefObject, useRef } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { getTextStyle } from "@/utils/elementStyles";
 
@@ -131,5 +131,3 @@ const EditableText = ({ element, isEditing, setIsEditing, textInputRef }: Editab
 };
 
 export default EditableText;
-
-export type { EditableTextProps };

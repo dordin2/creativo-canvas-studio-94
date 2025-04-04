@@ -10,30 +10,14 @@ import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 
-interface ClickProps {
-  onClick: (e: React.MouseEvent) => void;
-  onChange?: (value: any) => void;
-}
-
 interface DraggableElementProps {
   element: DesignElement;
   isActive: boolean;
-  children: ((props: ClickProps) => React.ReactNode) | null;
-  onSelect: (element: DesignElement, event: React.MouseEvent) => void;
-  onUpdateElement: (id: string, updates: Partial<DesignElement>) => void;
-  onCommitChanges: () => void;
-  canvasRef: HTMLDivElement | null;
+  children: React.ReactNode;
 }
 
-const DraggableElement = ({ 
-  element, 
-  isActive, 
-  children, 
-  onSelect, 
-  onUpdateElement, 
-  onCommitChanges, 
-  canvasRef 
-}: DraggableElementProps) => {
+const DraggableElement = ({ element, isActive, children }: DraggableElementProps) => {
+  const { updateElement, setActiveElement } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -55,7 +39,7 @@ const DraggableElement = ({
       e.preventDefault();
     }
     
-    onSelect(element, e);
+    setActiveElement(element);
     
     if (isEditing) return;
     
@@ -77,14 +61,11 @@ const DraggableElement = ({
   };
 
   const handlePuzzleClick = (e: React.MouseEvent) => {
-    if ((element.type === 'puzzle' || element.type === 'sequencePuzzle' || element.type === 'clickSequencePuzzle') && !isDragging) {
+    if ((element.type === 'puzzle' || element.type === 'sequencePuzzle') && !isDragging) {
       e.stopPropagation();
       // The modal is now handled directly in the PuzzleElement component
+      // so we don't need to do anything here
     }
-  };
-
-  const handleChange = (value: any) => {
-    onUpdateElement(element.id, { content: value });
   };
 
   useEffect(() => {
@@ -104,7 +85,7 @@ const DraggableElement = ({
   const elementStyle = getElementStyle(element, isDragging);
   const frameTransform = element.style?.transform || 'rotate(0deg)';
 
-  let childContent: React.ReactNode = null;
+  let childContent = children;
   
   if (textElementTypes.includes(element.type)) {
     childContent = (
@@ -115,11 +96,20 @@ const DraggableElement = ({
         textInputRef={textInputRef}
       />
     );
-  } else if (children) {
-    childContent = children({ 
-      onClick: handlePuzzleClick,
-      onChange: handleChange
-    });
+  } else if (element.type === 'puzzle') {
+    childContent = (
+      <PuzzleElement 
+        element={element} 
+        onClick={handlePuzzleClick} 
+      />
+    );
+  } else if (element.type === 'sequencePuzzle') {
+    childContent = (
+      <SequencePuzzleElement
+        element={element}
+        onClick={handlePuzzleClick}
+      />
+    );
   }
 
   return (
