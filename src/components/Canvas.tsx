@@ -1,22 +1,27 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
-import LayersList from "./LayersList"; // Import the new LayersList component
+import LayersList from "./LayersList";
 
 const Canvas = () => {
-  const { canvasRef, setCanvasRef, elements, activeElement, setActiveElement } = useDesignState();
+  const { 
+    canvasRef, 
+    setCanvasRef, 
+    elements, 
+    activeElement, 
+    setActiveElement,
+    handleImageUpload 
+  } = useDesignState();
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
+  const [isDraggingOver, setIsDraggingOver] = useState(false);
   
-  // Initialize with actual canvas reference
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
       setCanvasRef(containerRef.current);
     }
   }, [canvasRef, setCanvasRef]);
   
-  // Handle resize for responsive canvas
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current) {
@@ -25,7 +30,6 @@ const Canvas = () => {
           const maxWidth = parent.clientWidth - 40; // Padding
           const maxHeight = parent.clientHeight - 40;
           
-          // Maintain aspect ratio
           const aspectRatio = 4/3;
           let width = maxWidth;
           let height = width / aspectRatio;
@@ -48,15 +52,41 @@ const Canvas = () => {
     };
   }, []);
   
-  // Handle deselection when clicking on canvas background
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === containerRef.current) {
       setActiveElement(null);
     }
   };
   
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(true);
+  };
+  
+  const handleDragLeave = () => {
+    setIsDraggingOver(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingOver(false);
+    
+    const files = e.dataTransfer.files;
+    if (files.length > 0 && files[0].type.startsWith('image/')) {
+      if (activeElement && activeElement.type === 'image') {
+        handleImageUpload(activeElement.id, files[0]);
+      } else {
+        const newElement = useDesignState().addElement('image');
+        setTimeout(() => {
+          handleImageUpload(newElement.id, files[0]);
+        }, 100);
+      }
+    }
+  };
+  
   const renderElements = () => {
-    // Sort elements by layer (lower layers first, higher layers on top)
     const sortedElements = [...elements]
       .filter(element => element.type !== 'background')
       .sort((a, b) => a.layer - b.layer);
@@ -64,13 +94,11 @@ const Canvas = () => {
     return sortedElements.map((element) => {
       const isActive = activeElement?.id === element.id;
       
-      // Handle element click
       const handleElementClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         setActiveElement(element);
       };
       
-      // Render different element types
       switch (element.type) {
         case 'rectangle':
           return (
@@ -187,21 +215,36 @@ const Canvas = () => {
               <div
                 className="h-full w-full flex items-center justify-center overflow-hidden bg-gray-100"
                 onClick={handleElementClick}
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  const files = e.dataTransfer.files;
+                  if (files.length > 0 && files[0].type.startsWith('image/')) {
+                    handleImageUpload(element.id, files[0]);
+                  }
+                }}
               >
                 {element.dataUrl ? (
                   <img 
                     src={element.dataUrl} 
                     alt="Uploaded content" 
                     className="w-full h-full object-cover" 
+                    draggable={false}
                   />
                 ) : element.src ? (
                   <img 
                     src={element.src} 
                     alt="Uploaded content" 
                     className="w-full h-full object-cover" 
+                    draggable={false}
                   />
                 ) : (
-                  <div className="text-sm text-gray-400">
+                  <div className="text-sm text-gray-400 select-none">
                     Click to upload image
                   </div>
                 )}
@@ -215,7 +258,6 @@ const Canvas = () => {
     });
   };
   
-  // Find background element if it exists
   const backgroundElement = elements.find(elem => elem.type === 'background');
   const backgroundStyle = backgroundElement ? {
     backgroundColor: backgroundElement.style?.backgroundColor as string || 'white',
@@ -226,13 +268,16 @@ const Canvas = () => {
     <div className="flex-1 flex items-center justify-center p-8 canvas-workspace">
       <div
         ref={containerRef}
-        className="relative shadow-lg rounded-lg overflow-hidden transition-all"
+        className={`relative shadow-lg rounded-lg overflow-hidden transition-all ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
         style={{
           width: canvasDimensions.width,
           height: canvasDimensions.height,
           ...backgroundStyle
         }}
         onClick={handleCanvasClick}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
         {renderElements()}
       </div>

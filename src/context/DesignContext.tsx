@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useRef, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -42,7 +41,7 @@ interface DesignContextType {
   activeElement: DesignElement | null;
   canvasRef: HTMLDivElement | null;
   setCanvasRef: (ref: HTMLDivElement) => void;
-  addElement: (type: ElementType, props?: any) => void;
+  addElement: (type: ElementType, props?: any) => DesignElement;
   updateElement: (id: string, updates: Partial<DesignElement>) => void;
   removeElement: (id: string) => void;
   setActiveElement: (element: DesignElement | null) => void;
@@ -107,7 +106,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   };
   
   // Add a new element to the canvas
-  const addElement = (type: ElementType, props?: any) => {
+  const addElement = (type: ElementType, props?: any): DesignElement => {
     const position = getDefaultPosition(canvasRef);
     const newLayer = getHighestLayer();
     
@@ -222,7 +221,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           
           setElements(updatedElements);
           toast.success("Background updated");
-          return;
+          return updatedElements[0];
         }
         
         // Create new background (always bottom layer)
@@ -252,6 +251,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setActiveElement(newElement);
     
     toast.success(`Added new ${type}`);
+    return newElement;
   };
   
   // Update an existing element

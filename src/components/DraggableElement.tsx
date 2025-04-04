@@ -40,6 +40,14 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     if (e.button !== 0) return; // Only left-click
     e.stopPropagation();
     
+    // Don't start dragging if the target is an image container (allow dropping files)
+    const target = e.target as HTMLElement;
+    if (element.type === 'image' && 
+        (target.tagName === 'IMG' || 
+         target.classList.contains('text-gray-400'))) {
+      return;
+    }
+    
     setIsDragging(true);
     setStartPos({ x: e.clientX, y: e.clientY });
   };
@@ -205,6 +213,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       className="canvas-element"
       style={elementStyle}
       onMouseDown={handleMouseDown}
+      onDragOver={(e) => {
+        // Prevent default to allow drop
+        if (element.type === 'image') {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
     >
       {children}
       
