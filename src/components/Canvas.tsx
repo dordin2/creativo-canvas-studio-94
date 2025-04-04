@@ -236,6 +236,7 @@ const Canvas = () => {
                     alt="Uploaded content" 
                     className="w-full h-full object-contain" 
                     draggable={false}
+                    style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }}
                   />
                 ) : element.src ? (
                   <img 
@@ -243,6 +244,7 @@ const Canvas = () => {
                     alt="Uploaded content" 
                     className="w-full h-full object-contain" 
                     draggable={false}
+                    style={{ objectFit: 'contain', maxWidth: '100%', maxHeight: '100%' }}
                   />
                 ) : (
                   <div className="text-sm text-gray-400 select-none">
