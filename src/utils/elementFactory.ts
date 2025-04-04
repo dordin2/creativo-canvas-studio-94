@@ -1,5 +1,5 @@
 
-import { ElementType, DesignElement, generateId } from "@/types/designTypes";
+import { ElementType, DesignElement, generateId, PuzzleType } from "@/types/designTypes";
 
 // Default positions for new elements
 export const getDefaultPosition = (canvasRef: HTMLDivElement | null) => {
@@ -115,6 +115,7 @@ export const createNewElement = (
       };
 
     case 'puzzle':
+      const puzzleType = props?.puzzleConfig?.type || 'image';
       return {
         id: generateId(),
         type,
@@ -124,9 +125,11 @@ export const createNewElement = (
         layer,
         puzzleConfig: props?.puzzleConfig || {
           name: 'Puzzle',
+          type: puzzleType as PuzzleType,
           placeholders: 3,
           images: [],
-          solution: []
+          solution: [],
+          maxNumber: puzzleType === 'number' ? 9 : undefined
         }
       };
       

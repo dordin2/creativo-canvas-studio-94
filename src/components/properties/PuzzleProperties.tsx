@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from "react";
-import { DesignElement } from "@/types/designTypes";
+import { DesignElement, PuzzleType } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -11,8 +11,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
-import { Upload, Plus, Trash2, FileCheck, XCircle } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Numbers } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
@@ -30,9 +31,11 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
   const [localPuzzleConfig, setLocalPuzzleConfig] = useState(() => {
     return element.puzzleConfig || {
       name: 'Puzzle',
+      type: 'image' as PuzzleType,
       placeholders: 3,
       images: [],
-      solution: []
+      solution: [],
+      maxNumber: 9
     };
   });
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -41,6 +44,15 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     setLocalPuzzleConfig(prev => ({
       ...prev,
       name: e.target.value
+    }));
+  };
+  
+  const handleTypeChange = (type: PuzzleType) => {
+    setLocalPuzzleConfig(prev => ({
+      ...prev,
+      type,
+      // Reset solution when changing types
+      solution: Array(prev.placeholders).fill(0)
     }));
   };
   
@@ -62,6 +74,21 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     setLocalPuzzleConfig(prev => ({
       ...prev,
       placeholders: numPlaceholders,
+      solution: newSolution
+    }));
+  };
+  
+  const handleMaxNumberChange = (value: string) => {
+    const maxNumber = parseInt(value);
+    
+    // Adjust solution if any values are higher than new max
+    const newSolution = localPuzzleConfig.solution.map(val => 
+      val > maxNumber ? 0 : val
+    );
+    
+    setLocalPuzzleConfig(prev => ({
+      ...prev,
+      maxNumber,
       solution: newSolution
     }));
   };
@@ -94,9 +121,9 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     }));
   };
   
-  const handleSolutionChange = (placeholderIndex: number, imageIndex: string) => {
+  const handleSolutionChange = (placeholderIndex: number, value: string) => {
     const newSolution = [...localPuzzleConfig.solution];
-    newSolution[placeholderIndex] = parseInt(imageIndex);
+    newSolution[placeholderIndex] = parseInt(value);
     
     setLocalPuzzleConfig(prev => ({
       ...prev,
@@ -147,18 +174,14 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       return;
     }
     
-    if (localPuzzleConfig.images.length < 2) {
-      toast.error("Add at least 2 images to create a puzzle");
+    if (localPuzzleConfig.type === 'image' && localPuzzleConfig.images.length < 2) {
+      toast.error("Add at least 2 images to create an image puzzle");
       return;
     }
     
-    if (localPuzzleConfig.images.length <= 0) {
+    if (localPuzzleConfig.type === 'image' && localPuzzleConfig.images.length <= 0) {
       toast.error("Please add images to your puzzle");
       return;
-    }
-    
-    if (new Set(localPuzzleConfig.solution).size !== localPuzzleConfig.solution.length) {
-      toast.warning("Your solution has duplicate image assignments. Each placeholder should use a different image for the best puzzle experience.");
     }
     
     // Apply changes to the element
@@ -176,8 +199,8 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       return;
     }
     
-    if (localPuzzleConfig.images.length < 2) {
-      toast.error("Add at least 2 images to create a puzzle");
+    if (localPuzzleConfig.type === 'image' && localPuzzleConfig.images.length < 2) {
+      toast.error("Add at least 2 images to create an image puzzle");
       return;
     }
     
@@ -199,122 +222,180 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       </div>
       
       <div>
-        <Label htmlFor="placeholders">Number of Placeholders</Label>
+        <Label htmlFor="puzzle-type" className="mb-2 block">Puzzle Type</Label>
+        <RadioGroup 
+          id="puzzle-type"
+          value={localPuzzleConfig.type}
+          onValueChange={(value) => handleTypeChange(value as PuzzleType)}
+          className="flex space-x-4"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="image" id="image-puzzle" />
+            <Label htmlFor="image-puzzle" className="flex items-center">
+              <Lock className="h-4 w-4 mr-1" />
+              Image Puzzle
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="number" id="number-puzzle" />
+            <Label htmlFor="number-puzzle" className="flex items-center">
+              <Numbers className="h-4 w-4 mr-1" />
+              Number Lock
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+      
+      <div>
+        <Label htmlFor="placeholders">
+          {localPuzzleConfig.type === 'image' ? 'Number of Placeholders' : 'Number of Digits'}
+        </Label>
         <Select 
           value={localPuzzleConfig.placeholders.toString()} 
           onValueChange={handlePlaceholdersChange}
         >
           <SelectTrigger id="placeholders" className="mt-1">
-            <SelectValue placeholder="Select placeholders" />
+            <SelectValue placeholder="Select number" />
           </SelectTrigger>
           <SelectContent>
             {[2, 3, 4, 5, 6].map(num => (
               <SelectItem key={num} value={num.toString()}>
-                {num} placeholders
+                {num} {localPuzzleConfig.type === 'image' ? 'placeholders' : 'digits'}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
       
-      <div>
-        <Label>Image Collection</Label>
-        <div className="mt-2 space-y-3">
-          <div className="flex items-center gap-2">
-            <Select value={selectedImage} onValueChange={setSelectedImage}>
-              <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select an image" />
-              </SelectTrigger>
-              <SelectContent>
-                {PLACEHOLDER_IMAGES.map((img, idx) => (
-                  <SelectItem key={idx} value={img}>
-                    Image {idx + 1}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Button 
-              size="sm" 
-              variant="outline"
-              onClick={handleAddImage}
-              disabled={!selectedImage}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
+      {localPuzzleConfig.type === 'number' && (
+        <div>
+          <Label htmlFor="max-number">Maximum Number</Label>
+          <Select 
+            value={localPuzzleConfig.maxNumber?.toString() || "9"} 
+            onValueChange={handleMaxNumberChange}
+          >
+            <SelectTrigger id="max-number" className="mt-1">
+              <SelectValue placeholder="Select max number" />
+            </SelectTrigger>
+            <SelectContent>
+              {[5, 6, 7, 8, 9].map(num => (
+                <SelectItem key={num} value={num.toString()}>
+                  {num}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+      
+      {localPuzzleConfig.type === 'image' && (
+        <div>
+          <Label>Image Collection</Label>
+          <div className="mt-2 space-y-3">
+            <div className="flex items-center gap-2">
+              <Select value={selectedImage} onValueChange={setSelectedImage}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Select an image" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLACEHOLDER_IMAGES.map((img, idx) => (
+                    <SelectItem key={idx} value={img}>
+                      Image {idx + 1}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handleAddImage}
+                disabled={!selectedImage}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="image/*"
+                className="hidden"
+              />
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={handleBrowseClick}
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload Image
+              </Button>
+            </div>
           </div>
           
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileUpload}
-              accept="image/*"
-              className="hidden"
-            />
-            <Button 
-              variant="outline" 
-              className="w-full"
-              onClick={handleBrowseClick}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Upload Image
-            </Button>
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-2 mt-3">
-          {localPuzzleConfig.images.map((img, idx) => (
-            <div key={idx} className="relative group">
-              <img 
-                src={img} 
-                alt={`Image ${idx}`} 
-                className="h-16 w-full object-cover rounded border"
-              />
-              <button
-                onClick={() => handleRemoveImage(idx)}
-                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-              >
-                <Trash2 className="h-3 w-3" />
-              </button>
-              <div className="text-xs text-center mt-1">Image {idx + 1}</div>
-            </div>
-          ))}
-        </div>
-        
-        {localPuzzleConfig.images.length === 0 && (
-          <div className="text-sm text-gray-500 text-center py-4">
-            Add images to your puzzle collection
-          </div>
-        )}
-      </div>
-      
-      {localPuzzleConfig.images.length > 0 && (
-        <div>
-          <Label>Solution Configuration</Label>
-          <div className="space-y-2 mt-2">
-            {Array.from({ length: localPuzzleConfig.placeholders }).map((_, idx) => (
-              <div key={idx} className="flex items-center gap-2">
-                <span className="text-sm font-medium w-24">Placeholder {idx + 1}:</span>
-                <Select 
-                  value={localPuzzleConfig.solution[idx]?.toString() || "0"} 
-                  onValueChange={(val) => handleSolutionChange(idx, val)}
+          <div className="grid grid-cols-3 gap-2 mt-3">
+            {localPuzzleConfig.images.map((img, idx) => (
+              <div key={idx} className="relative group">
+                <img 
+                  src={img} 
+                  alt={`Image ${idx}`} 
+                  className="h-16 w-full object-cover rounded border"
+                />
+                <button
+                  onClick={() => handleRemoveImage(idx)}
+                  className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
                 >
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Select correct image" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {localPuzzleConfig.images.map((_, imgIdx) => (
-                      <SelectItem key={imgIdx} value={imgIdx.toString()}>
-                        Image {imgIdx + 1}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                  <Trash2 className="h-3 w-3" />
+                </button>
+                <div className="text-xs text-center mt-1">Image {idx + 1}</div>
               </div>
             ))}
           </div>
+          
+          {localPuzzleConfig.images.length === 0 && (
+            <div className="text-sm text-gray-500 text-center py-4">
+              Add images to your puzzle collection
+            </div>
+          )}
         </div>
       )}
+      
+      {/* Solution Configuration section - now handles both puzzle types */}
+      <div>
+        <Label>Solution Configuration</Label>
+        <div className="space-y-2 mt-2">
+          {Array.from({ length: localPuzzleConfig.placeholders }).map((_, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <span className="text-sm font-medium w-24">
+                {localPuzzleConfig.type === 'image' ? `Placeholder ${idx + 1}:` : `Digit ${idx + 1}:`}
+              </span>
+              <Select 
+                value={localPuzzleConfig.solution[idx]?.toString() || "0"} 
+                onValueChange={(val) => handleSolutionChange(idx, val)}
+              >
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder={`Select correct ${localPuzzleConfig.type === 'image' ? 'image' : 'number'}`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {localPuzzleConfig.type === 'image'
+                    ? localPuzzleConfig.images.map((_, imgIdx) => (
+                        <SelectItem key={imgIdx} value={imgIdx.toString()}>
+                          Image {imgIdx + 1}
+                        </SelectItem>
+                      ))
+                    : Array.from({ length: (localPuzzleConfig.maxNumber || 9) + 1 }).map((_, numIdx) => (
+                        <SelectItem key={numIdx} value={numIdx.toString()}>
+                          {numIdx}
+                        </SelectItem>
+                      ))
+                  }
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+        </div>
+      </div>
       
       <div className="flex gap-2 pt-3">
         <Button 

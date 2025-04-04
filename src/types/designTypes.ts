@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from "uuid";
 
 // Define the types for our design elements
@@ -14,11 +13,16 @@ export type ElementType =
   | 'background'
   | 'puzzle';
 
+export type PuzzleType = 'image' | 'number';
+
 export interface PuzzleConfiguration {
   name: string;
+  type: PuzzleType;
   placeholders: number;
   images: string[];
   solution: number[];
+  // For number puzzle
+  maxNumber?: number;
 }
 
 export interface DesignElement {

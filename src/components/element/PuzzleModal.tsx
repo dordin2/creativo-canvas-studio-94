@@ -4,7 +4,7 @@ import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDe
 import { Button } from "@/components/ui/button";
 import { X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
-import { DesignElement } from "@/types/designTypes";
+import { DesignElement, PuzzleType } from "@/types/designTypes";
 
 interface PuzzleModalProps {
   isOpen: boolean;
@@ -18,15 +18,19 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
   
   const puzzleConfig = element.puzzleConfig || {
     name: 'Puzzle',
+    type: 'image' as PuzzleType,
     placeholders: 3,
     images: [],
-    solution: []
+    solution: [],
+    maxNumber: 9
   };
+  
+  const puzzleType = puzzleConfig.type || 'image';
   
   // Initialize current states when modal opens or puzzle changes
   useEffect(() => {
     if (isOpen) {
-      // Reset to initial state (all placeholders at image 0)
+      // Reset to initial state (all placeholders at image 0 or number 0)
       setCurrentStates(Array(puzzleConfig.placeholders).fill(0));
       setSolved(false);
     }
@@ -34,7 +38,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
   
   // Check if the puzzle is solved
   useEffect(() => {
-    if (puzzleConfig.images.length === 0 || currentStates.length === 0) return;
+    if (currentStates.length === 0) return;
     
     const isSolved = currentStates.every((state, index) => {
       return state === puzzleConfig.solution[index];
@@ -55,12 +59,18 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
   }, [currentStates, puzzleConfig.solution, solved, isOpen, onClose]);
   
   const cyclePlaceholder = (index: number) => {
-    if (puzzleConfig.images.length === 0) return;
+    if (puzzleType === 'image' && puzzleConfig.images.length === 0) return;
     
     setCurrentStates(prev => {
       const newStates = [...prev];
-      // Only cycle forward, looping back to the first image
-      newStates[index] = (newStates[index] + 1) % puzzleConfig.images.length;
+      if (puzzleType === 'image') {
+        // Only cycle forward, looping back to the first image
+        newStates[index] = (newStates[index] + 1) % puzzleConfig.images.length;
+      } else {
+        // For number puzzles, cycle through numbers 0-9 or up to maxNumber
+        const maxNum = puzzleConfig.maxNumber || 9;
+        newStates[index] = (newStates[index] + 1) % (maxNum + 1);
+      }
       return newStates;
     });
   };
@@ -74,7 +84,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
       <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-xl">{puzzleConfig.name}</DialogTitle>
-          <DialogDescription className="sr-only">Interactive puzzle - click on images to solve</DialogDescription>
+          <DialogDescription className="sr-only">Interactive puzzle - click to solve</DialogDescription>
           <DialogClose asChild>
             <Button 
               variant="ghost" 
@@ -89,27 +99,45 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
         </DialogHeader>
         
         <div className="py-6">
-          {puzzleConfig.images.length > 0 ? (
+          {puzzleType === 'image' ? (
+            puzzleConfig.images.length > 0 ? (
+              <div className="flex flex-row justify-center gap-4 flex-wrap">
+                {Array.from({ length: puzzleConfig.placeholders }).map((_, idx) => (
+                  <div key={idx} className="relative">
+                    <div 
+                      className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border rounded overflow-hidden cursor-pointer transition-all hover:brightness-90 active:scale-95"
+                      onClick={() => cyclePlaceholder(idx)}
+                    >
+                      <img 
+                        src={puzzleConfig.images[currentStates[idx]]} 
+                        alt={`Puzzle piece ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10">
+                <p className="text-gray-500">No images available for this puzzle.</p>
+                <p className="text-sm mt-2">Please add images in the puzzle properties.</p>
+              </div>
+            )
+          ) : (
+            // Number puzzle UI
             <div className="flex flex-row justify-center gap-4 flex-wrap">
               {Array.from({ length: puzzleConfig.placeholders }).map((_, idx) => (
                 <div key={idx} className="relative">
                   <div 
-                    className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border rounded overflow-hidden cursor-pointer transition-all hover:brightness-90 active:scale-95"
+                    className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 border-2 border-gray-300 rounded-md flex items-center justify-center cursor-pointer transition-all hover:border-primary active:scale-95 bg-white"
                     onClick={() => cyclePlaceholder(idx)}
                   >
-                    <img 
-                      src={puzzleConfig.images[currentStates[idx]]} 
-                      alt={`Puzzle piece ${idx + 1}`}
-                      className="w-full h-full object-cover"
-                    />
+                    <span className="text-3xl sm:text-4xl md:text-5xl font-bold">
+                      {currentStates[idx]}
+                    </span>
                   </div>
                 </div>
               ))}
-            </div>
-          ) : (
-            <div className="text-center py-10">
-              <p className="text-gray-500">No images available for this puzzle.</p>
-              <p className="text-sm mt-2">Please add images in the puzzle properties.</p>
             </div>
           )}
         </div>

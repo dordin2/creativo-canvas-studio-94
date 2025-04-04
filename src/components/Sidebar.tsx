@@ -1,8 +1,17 @@
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Text, Image, Square, Circle, Triangle, Lock } from "lucide-react";
+import { 
+  Text, 
+  Image, 
+  Square, 
+  Circle, 
+  Triangle, 
+  Lock, 
+  Numbers
+} from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const Sidebar = () => {
   const { addElement } = useDesignState();
@@ -23,15 +32,28 @@ const Sidebar = () => {
     "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"
   ];
 
-  // Handle puzzle button click separately to avoid immediate creation
-  const handlePuzzleClick = () => {
-    // Create an empty puzzle configuration
+  // Handle puzzle options
+  const handleImagePuzzleClick = () => {
     addElement('puzzle', {
       puzzleConfig: {
-        name: 'New Puzzle',
+        name: 'Image Puzzle',
+        type: 'image',
         placeholders: 3,
         images: [],
         solution: [0, 0, 0]
+      }
+    });
+  };
+
+  const handleNumberPuzzleClick = () => {
+    addElement('puzzle', {
+      puzzleConfig: {
+        name: 'Number Lock',
+        type: 'number',
+        placeholders: 3,
+        images: [],
+        solution: [0, 0, 0],
+        maxNumber: 9
       }
     });
   };
@@ -77,11 +99,35 @@ const Sidebar = () => {
               <Image className="h-5 w-5" />
               <span className="text-xs">Image</span>
             </Button>
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={handlePuzzleClick}>
-              <Lock className="h-5 w-5" />
-              <span className="text-xs">Puzzle</span>
-            </Button>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center">
+                  <Lock className="h-5 w-5" />
+                  <span className="text-xs">Puzzle</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-2">
+                <div className="grid gap-2">
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleImagePuzzleClick}
+                  >
+                    <Lock className="h-4 w-4 mr-2" />
+                    Image Puzzle
+                  </Button>
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleNumberPuzzleClick}
+                  >
+                    <Numbers className="h-4 w-4 mr-2" />
+                    Number Lock
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </TabsContent>
         

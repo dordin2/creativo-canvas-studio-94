@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { DesignElement } from "@/types/designTypes";
-import { Lock } from "lucide-react";
+import { Lock, Numbers } from "lucide-react";
 import PuzzleModal from "./PuzzleModal";
 
 interface PuzzleElementProps {
@@ -24,18 +24,24 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
     setIsModalOpen(false);
   };
   
+  const puzzleType = element.puzzleConfig?.type || 'image';
+  
   return (
     <>
       <div 
         className="flex flex-col items-center justify-center w-full h-full p-3 cursor-pointer"
         onClick={handleClick}
       >
-        <Lock className="w-8 h-8 text-gray-700 mb-2" />
+        {puzzleType === 'image' ? (
+          <Lock className="w-8 h-8 text-gray-700 mb-2" />
+        ) : (
+          <Numbers className="w-8 h-8 text-gray-700 mb-2" />
+        )}
         <p className="text-sm font-medium text-center text-gray-700 line-clamp-2">
           {element.puzzleConfig?.name || "Puzzle"}
         </p>
         <div className="text-xs text-gray-500 mt-1">
-          {element.puzzleConfig?.placeholders || 3} placeholders
+          {puzzleType === 'image' ? 'Image Puzzle' : 'Number Lock'}: {element.puzzleConfig?.placeholders || 3} {puzzleType === 'image' ? 'placeholders' : 'digits'}
         </div>
       </div>
       
