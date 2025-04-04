@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useRef, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -28,6 +27,7 @@ export interface DesignElement {
   };
   style?: {
     [key: string]: string | number;
+    transform?: string; // Added for rotation
   };
   content?: string;
   src?: string;
@@ -79,7 +79,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 100, height: 80 },
-          style: { backgroundColor: '#8B5CF6', borderRadius: '4px' }
+          style: { backgroundColor: '#8B5CF6', borderRadius: '4px', transform: 'rotate(0deg)' }
         };
         break;
         
@@ -89,7 +89,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 100, height: 100 },
-          style: { backgroundColor: '#8B5CF6' }
+          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' }
         };
         break;
         
@@ -99,7 +99,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 50, height: 100 },
-          style: { backgroundColor: '#8B5CF6' }
+          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' }
         };
         break;
         
@@ -109,7 +109,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 100, height: 2 },
-          style: { backgroundColor: '#8B5CF6' }
+          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' }
         };
         break;
         
@@ -119,7 +119,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           content: 'Add a heading',
-          style: { color: '#1F2937' }
+          style: { color: '#1F2937', transform: 'rotate(0deg)' }
         };
         break;
         
@@ -129,7 +129,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           content: 'Add a subheading',
-          style: { color: '#1F2937' }
+          style: { color: '#1F2937', transform: 'rotate(0deg)' }
         };
         break;
         
@@ -139,7 +139,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           content: 'Add your text here. Click to edit this text.',
-          style: { color: '#1F2937' }
+          style: { color: '#1F2937', transform: 'rotate(0deg)' }
         };
         break;
         
@@ -149,6 +149,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 200, height: 150 },
+          style: { transform: 'rotate(0deg)' },
           src: 'https://source.unsplash.com/random/800x600?nature'
         };
         break;
@@ -193,7 +194,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type: 'rectangle',
           position,
           size: { width: 100, height: 80 },
-          style: { backgroundColor: '#8B5CF6' }
+          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' }
         };
     }
     

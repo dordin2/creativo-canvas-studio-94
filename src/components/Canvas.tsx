@@ -1,6 +1,7 @@
 
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
+import DraggableElement from "./DraggableElement";
 
 const Canvas = () => {
   const { canvasRef, setCanvasRef, elements, activeElement, setActiveElement } = useDesignState();
@@ -60,13 +61,7 @@ const Canvas = () => {
       
       const isActive = activeElement?.id === element.id;
       
-      const elementStyle = {
-        ...element.style,
-        position: 'absolute' as const,
-        transform: `translate(${element.position.x}px, ${element.position.y}px)`,
-        border: isActive ? '2px solid #8B5CF6' : 'none',
-      };
-      
+      // Handle element click
       const handleElementClick = (e: React.MouseEvent) => {
         e.stopPropagation();
         setActiveElement(element);
@@ -76,157 +71,133 @@ const Canvas = () => {
       switch (element.type) {
         case 'rectangle':
           return (
-            <div
-              key={element.id}
-              className="canvas-element"
-              style={{
-                ...elementStyle,
-                width: element.size?.width || 100,
-                height: element.size?.height || 80,
-                backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
-                borderRadius: element.style?.borderRadius || '4px'
-              }}
-              onClick={handleElementClick}
-            />
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <div
+                className="h-full w-full"
+                onClick={handleElementClick}
+                style={{
+                  backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
+                  borderRadius: element.style?.borderRadius || '4px'
+                }}
+              />
+            </DraggableElement>
           );
           
         case 'circle':
           return (
-            <div
-              key={element.id}
-              className="canvas-element"
-              style={{
-                ...elementStyle,
-                width: element.size?.width || 100,
-                height: element.size?.width || 100,
-                backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
-                borderRadius: '50%'
-              }}
-              onClick={handleElementClick}
-            />
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <div
+                className="h-full w-full rounded-full"
+                onClick={handleElementClick}
+                style={{
+                  backgroundColor: element.style?.backgroundColor as string || '#8B5CF6'
+                }}
+              />
+            </DraggableElement>
           );
           
         case 'triangle':
           return (
-            <div
-              key={element.id}
-              className="canvas-element"
-              style={{
-                ...elementStyle,
-                width: 0,
-                height: 0,
-                borderLeft: `${(element.size?.width || 50)}px solid transparent`,
-                borderRight: `${(element.size?.width || 50)}px solid transparent`,
-                borderBottom: `${(element.size?.height || 100)}px solid ${element.style?.backgroundColor as string || '#8B5CF6'}`,
-                backgroundColor: 'transparent'
-              }}
-              onClick={handleElementClick}
-            />
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <div
+                className="absolute"
+                onClick={handleElementClick}
+                style={{
+                  width: 0,
+                  height: 0,
+                  borderLeft: `${(element.size?.width || 50)}px solid transparent`,
+                  borderRight: `${(element.size?.width || 50)}px solid transparent`,
+                  borderBottom: `${(element.size?.height || 100)}px solid ${element.style?.backgroundColor as string || '#8B5CF6'}`,
+                  backgroundColor: 'transparent'
+                }}
+              />
+            </DraggableElement>
           );
           
         case 'line':
           return (
-            <div
-              key={element.id}
-              className="canvas-element"
-              style={{
-                ...elementStyle,
-                width: element.size?.width || 100,
-                height: '2px',
-                backgroundColor: element.style?.backgroundColor as string || '#8B5CF6'
-              }}
-              onClick={handleElementClick}
-            />
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <div
+                className="h-full w-full"
+                onClick={handleElementClick}
+                style={{
+                  backgroundColor: element.style?.backgroundColor as string || '#8B5CF6'
+                }}
+              />
+            </DraggableElement>
           );
           
         case 'heading':
           return (
-            <div
-              key={element.id}
-              className="canvas-element"
-              style={elementStyle}
-              onClick={handleElementClick}
-            >
-              <h2 style={{ 
-                fontSize: '28px', 
-                fontWeight: 'bold',
-                color: element.style?.color as string || '#1F2937',
-                margin: 0
-              }}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <h2 
+                style={{ 
+                  fontSize: '28px', 
+                  fontWeight: 'bold',
+                  color: element.style?.color as string || '#1F2937',
+                  margin: 0
+                }}
+                onClick={handleElementClick}
+              >
                 {element.content || 'Add a heading'}
               </h2>
-            </div>
+            </DraggableElement>
           );
           
         case 'subheading':
           return (
-            <div
-              key={element.id}
-              className="canvas-element"
-              style={elementStyle}
-              onClick={handleElementClick}
-            >
-              <h3 style={{ 
-                fontSize: '20px', 
-                fontWeight: '600',
-                color: element.style?.color as string || '#1F2937',
-                margin: 0
-              }}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <h3 
+                style={{ 
+                  fontSize: '20px', 
+                  fontWeight: '600',
+                  color: element.style?.color as string || '#1F2937',
+                  margin: 0
+                }}
+                onClick={handleElementClick}
+              >
                 {element.content || 'Add a subheading'}
               </h3>
-            </div>
+            </DraggableElement>
           );
           
         case 'paragraph':
           return (
-            <div
-              key={element.id}
-              className="canvas-element"
-              style={{
-                ...elementStyle,
-                maxWidth: '300px'
-              }}
-              onClick={handleElementClick}
-            >
-              <p style={{ 
-                fontSize: '16px',
-                color: element.style?.color as string || '#1F2937',
-                margin: 0
-              }}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <p 
+                style={{ 
+                  fontSize: '16px',
+                  color: element.style?.color as string || '#1F2937',
+                  margin: 0,
+                  maxWidth: '300px'
+                }}
+                onClick={handleElementClick}
+              >
                 {element.content || 'Add your text here. Click to edit this text.'}
               </p>
-            </div>
+            </DraggableElement>
           );
           
         case 'image':
           return (
-            <div
-              key={element.id}
-              className="canvas-element"
-              style={{
-                ...elementStyle,
-                width: element.size?.width || 200,
-                height: element.size?.height || 150,
-                backgroundColor: '#F3F4F6',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                overflow: 'hidden'
-              }}
-              onClick={handleElementClick}
-            >
-              {element.src ? (
-                <img 
-                  src={element.src} 
-                  alt="Uploaded content" 
-                  style={{ maxWidth: '100%', maxHeight: '100%' }} 
-                />
-              ) : (
-                <div className="text-sm text-gray-400">
-                  Click to upload image
-                </div>
-              )}
-            </div>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <div
+                className="h-full w-full flex items-center justify-center overflow-hidden bg-gray-100"
+                onClick={handleElementClick}
+              >
+                {element.src ? (
+                  <img 
+                    src={element.src} 
+                    alt="Uploaded content" 
+                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+                  />
+                ) : (
+                  <div className="text-sm text-gray-400">
+                    Click to upload image
+                  </div>
+                )}
+              </div>
+            </DraggableElement>
           );
           
         default:
