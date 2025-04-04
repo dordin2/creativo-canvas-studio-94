@@ -1,70 +1,19 @@
-import { createContext, useContext, useState, useRef, ReactNode } from "react";
-import { v4 as uuidv4 } from "uuid";
+
+import { createContext, useContext, useState, ReactNode } from "react";
 import { toast } from "sonner";
-
-// Define the types for our design elements
-export type ElementType = 
-  | 'rectangle' 
-  | 'circle' 
-  | 'triangle' 
-  | 'line' 
-  | 'heading' 
-  | 'subheading' 
-  | 'paragraph' 
-  | 'image'
-  | 'background';
-
-export interface DesignElement {
-  id: string;
-  type: ElementType;
-  position: {
-    x: number;
-    y: number;
-  };
-  size?: {
-    width: number;
-    height: number;
-  };
-  originalSize?: {  // Added for maintaining aspect ratio during resizing
-    width: number;
-    height: number;
-  };
-  style?: {
-    [key: string]: string | number;
-    transform?: string; // Added for rotation
-  };
-  content?: string;
-  src?: string;
-  file?: File; // Added for local file reference
-  dataUrl?: string; // Added for local image preview
-  layer: number; // Added for layer ordering
-}
-
-interface DesignContextType {
-  elements: DesignElement[];
-  activeElement: DesignElement | null;
-  canvasRef: HTMLDivElement | null;
-  setCanvasRef: (ref: HTMLDivElement) => void;
-  addElement: (type: ElementType, props?: any) => DesignElement;
-  updateElement: (id: string, updates: Partial<DesignElement>) => void;
-  removeElement: (id: string) => void;
-  setActiveElement: (element: DesignElement | null) => void;
-  updateElementLayer: (id: string, newLayer: number) => void; // Added for layer management
-  getHighestLayer: () => number; // Helper to get highest layer
-  handleImageUpload: (id: string, file: File) => void; // Added for file uploads
-}
+import { 
+  ElementType, 
+  DesignElement, 
+  DesignContextType 
+} from "@/types/designTypes";
+import { 
+  getDefaultPosition, 
+  createNewElement 
+} from "@/utils/elementFactory";
+import { processImageUpload } from "@/utils/imageUploader";
+import { getHighestLayer, handleBackgroundLayer } from "@/utils/layerUtils";
 
 const DesignContext = createContext<DesignContextType | undefined>(undefined);
-
-// Default positions for new elements
-const getDefaultPosition = (canvasRef: HTMLDivElement | null) => {
-  if (!canvasRef) return { x: 100, y: 100 };
-  
-  return {
-    x: canvasRef.clientWidth / 2 - 50,
-    y: canvasRef.clientHeight / 2 - 50
-  };
-};
 
 export const DesignProvider = ({ children }: { children: ReactNode }) => {
   const [elements, setElements] = useState<DesignElement[]>([]);
@@ -76,229 +25,39 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setCanvasRefState(ref);
   };
   
-  // Get highest layer to place new elements on top
-  const getHighestLayer = (): number => {
-    if (elements.length === 0) return 1;
-    return Math.max(...elements.map(elem => elem.layer)) + 1;
-  };
-  
   // Handle image file uploads
   const handleImageUpload = (id: string, file: File) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error("Please upload a valid image file");
-      return;
-    }
-    
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      if (e.target?.result) {
-        const dataUrl = e.target.result as string;
-        
-        // Create a new image element to get the natural dimensions
-        const img = new Image();
-        img.onload = () => {
-          // Get the natural dimensions of the uploaded image
-          const naturalWidth = img.naturalWidth;
-          const naturalHeight = img.naturalHeight;
-          
-          // Calculate scaled dimensions to make the image start at a reasonable size
-          // Max dimension (width or height) will be 300px
-          const MAX_DIMENSION = 300;
-          let scaledWidth = naturalWidth;
-          let scaledHeight = naturalHeight;
-          
-          // Scale down only if the image is larger than our target size
-          if (naturalWidth > MAX_DIMENSION || naturalHeight > MAX_DIMENSION) {
-            if (naturalWidth > naturalHeight) {
-              // Landscape orientation
-              scaledWidth = MAX_DIMENSION;
-              scaledHeight = (naturalHeight / naturalWidth) * MAX_DIMENSION;
-            } else {
-              // Portrait or square orientation
-              scaledHeight = MAX_DIMENSION;
-              scaledWidth = (naturalWidth / naturalHeight) * MAX_DIMENSION;
-            }
-          }
-          
-          // Update the element with both the file data and scaled dimensions
-          updateElement(id, { 
-            file, 
-            dataUrl, 
-            src: undefined, // Clear the external URL when using a local file
-            size: {
-              width: scaledWidth,
-              height: scaledHeight
-            },
-            originalSize: {  // Store original size for scaling
-              width: naturalWidth,
-              height: naturalHeight
-            }
-          });
-          toast.success("Image uploaded successfully");
-        };
-        
-        img.onerror = () => {
-          toast.error("Failed to load image dimensions");
-        };
-        
-        // Set the source to the data URL to trigger the onload event
-        img.src = dataUrl;
-      }
-    };
-    
-    reader.onerror = () => {
-      toast.error("Failed to load image");
-    };
-    
-    reader.readAsDataURL(file);
+    processImageUpload(file, (updatedData) => {
+      updateElement(id, updatedData);
+    });
   };
   
   // Add a new element to the canvas
   const addElement = (type: ElementType, props?: any): DesignElement => {
     const position = getDefaultPosition(canvasRef);
-    const newLayer = getHighestLayer();
+    const newLayer = getHighestLayer(elements);
     
-    let newElement: DesignElement;
-    
-    switch (type) {
-      case 'rectangle':
-        newElement = {
-          id: uuidv4(),
-          type,
-          position,
-          size: { width: 100, height: 80 },
-          style: { backgroundColor: '#8B5CF6', borderRadius: '4px', transform: 'rotate(0deg)' },
-          layer: newLayer
-        };
-        break;
-        
-      case 'circle':
-        newElement = {
-          id: uuidv4(),
-          type,
-          position,
-          size: { width: 100, height: 100 },
-          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
-          layer: newLayer
-        };
-        break;
-        
-      case 'triangle':
-        newElement = {
-          id: uuidv4(),
-          type,
-          position,
-          size: { width: 50, height: 100 },
-          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
-          layer: newLayer
-        };
-        break;
-        
-      case 'line':
-        newElement = {
-          id: uuidv4(),
-          type,
-          position,
-          size: { width: 100, height: 2 },
-          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
-          layer: newLayer
-        };
-        break;
-        
-      case 'heading':
-        newElement = {
-          id: uuidv4(),
-          type,
-          position,
-          content: 'Add a heading',
-          size: { width: 300, height: 50 },
-          style: { color: '#1F2937', transform: 'rotate(0deg)' },
-          layer: newLayer
-        };
-        break;
-        
-      case 'subheading':
-        newElement = {
-          id: uuidv4(),
-          type,
-          position,
-          content: 'Add a subheading',
-          size: { width: 250, height: 40 },
-          style: { color: '#1F2937', transform: 'rotate(0deg)' },
-          layer: newLayer
-        };
-        break;
-        
-      case 'paragraph':
-        newElement = {
-          id: uuidv4(),
-          type,
-          position,
-          content: 'Add your text here. Click to edit this text.',
-          size: { width: 300, height: 100 },
-          style: { color: '#1F2937', transform: 'rotate(0deg)' },
-          layer: newLayer
-        };
-        break;
-        
-      case 'image':
-        newElement = {
-          id: uuidv4(),
-          type,
-          position,
-          size: { width: 200, height: 150 }, // Default size until image is loaded
-          originalSize: { width: 200, height: 150 }, // Default original size
-          style: { transform: 'rotate(0deg)' },
-          layer: newLayer
-        };
-        break;
-        
-      case 'background':
-        // Check if background already exists
-        const bgExists = elements.some(el => el.type === 'background');
-        
-        if (bgExists) {
-          // Update existing background
-          const updatedElements = elements.map(el => {
-            if (el.type === 'background') {
-              return {
-                ...el,
-                style: props?.gradient 
-                  ? { background: props.gradient } 
-                  : { backgroundColor: props?.color || '#FFFFFF' }
-              };
-            }
-            return el;
-          });
-          
-          setElements(updatedElements);
-          toast.success("Background updated");
-          return updatedElements[0];
-        }
-        
-        // Create new background (always bottom layer)
-        newElement = {
-          id: uuidv4(),
-          type,
-          position: { x: 0, y: 0 },
-          style: props?.gradient 
-            ? { background: props.gradient } 
-            : { backgroundColor: props?.color || '#FFFFFF' },
-          layer: 0 // Background is always at layer 0
-        };
-        break;
-        
-      default:
-        newElement = {
-          id: uuidv4(),
-          type: 'rectangle',
-          position,
-          size: { width: 100, height: 80 },
-          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
-          layer: newLayer
-        };
+    // Special handling for background element
+    if (type === 'background') {
+      const { elements: updatedElements, newElement } = handleBackgroundLayer(elements, props);
+      
+      if (newElement) {
+        setElements(updatedElements);
+        setActiveElement(newElement);
+        toast.success(`Added new ${type}`);
+        return newElement;
+      }
+      
+      // If no existing background was updated, create a new one
+      const backgroundElement = createNewElement(type, position, 0, props);
+      setElements([...elements, backgroundElement]);
+      setActiveElement(backgroundElement);
+      toast.success(`Added new ${type}`);
+      return backgroundElement;
     }
     
+    // For all other element types
+    const newElement = createNewElement(type, position, newLayer, props);
     setElements([...elements, newElement]);
     setActiveElement(newElement);
     
@@ -361,7 +120,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     removeElement,
     setActiveElement,
     updateElementLayer,
-    getHighestLayer,
+    getHighestLayer: () => getHighestLayer(elements),
     handleImageUpload
   };
   
@@ -381,3 +140,5 @@ export const useDesignState = () => {
   
   return context;
 };
+
+export type { ElementType, DesignElement };
