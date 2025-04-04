@@ -195,6 +195,9 @@ const Properties = () => {
                   placeholder="Enter image URL"
                   className="mt-2"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  When using a URL, the image will initially use default dimensions. Upload local files for precise dimensions.
+                </p>
               </div>
               
               {(activeElement.dataUrl || activeElement.src) && (

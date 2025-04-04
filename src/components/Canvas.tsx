@@ -236,7 +236,7 @@ const Canvas = () => {
                     className="w-full h-full" 
                     draggable={false}
                     style={{ 
-                      objectFit: 'cover', 
+                      objectFit: 'contain', 
                       width: '100%', 
                       height: '100%'
                     }}
@@ -248,7 +248,7 @@ const Canvas = () => {
                     className="w-full h-full" 
                     draggable={false}
                     style={{ 
-                      objectFit: 'cover', 
+                      objectFit: 'contain', 
                       width: '100%', 
                       height: '100%'
                     }}

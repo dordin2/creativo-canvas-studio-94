@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useRef, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -89,12 +90,33 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     reader.onload = (e) => {
       if (e.target?.result) {
         const dataUrl = e.target.result as string;
-        updateElement(id, { 
-          file, 
-          dataUrl, 
-          src: undefined // Clear the external URL when using a local file
-        });
-        toast.success("Image uploaded successfully");
+        
+        // Create a new image element to get the natural dimensions
+        const img = new Image();
+        img.onload = () => {
+          // Get the natural dimensions of the uploaded image
+          const naturalWidth = img.naturalWidth;
+          const naturalHeight = img.naturalHeight;
+          
+          // Update the element with both the file data and correct dimensions
+          updateElement(id, { 
+            file, 
+            dataUrl, 
+            src: undefined, // Clear the external URL when using a local file
+            size: {
+              width: naturalWidth,
+              height: naturalHeight
+            }
+          });
+          toast.success("Image uploaded successfully");
+        };
+        
+        img.onerror = () => {
+          toast.error("Failed to load image dimensions");
+        };
+        
+        // Set the source to the data URL to trigger the onload event
+        img.src = dataUrl;
       }
     };
     
@@ -195,7 +217,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           id: uuidv4(),
           type,
           position,
-          size: { width: 200, height: 150 },
+          size: { width: 200, height: 150 }, // Default size until image is loaded
           style: { transform: 'rotate(0deg)' },
           layer: newLayer
         };
