@@ -1,4 +1,3 @@
-
 import { ElementType, DesignElement, generateId, PuzzleType } from "@/types/designTypes";
 
 // Default positions for new elements
@@ -147,6 +146,22 @@ export const createNewElement = (
           images: [],
           solution: [],
           currentOrder: []
+        }
+      };
+      
+    case 'clickSequencePuzzle':
+      return {
+        id: generateId(),
+        type,
+        position,
+        size: { width: 350, height: 150 },
+        style: { backgroundColor: '#F0FDF4', borderRadius: '8px', transform: 'rotate(0deg)' },
+        layer,
+        clickSequencePuzzleConfig: props?.clickSequencePuzzleConfig || {
+          name: props?.name || 'Click Sequence Puzzle',
+          images: [],
+          solution: [],
+          currentStep: 0
         }
       };
       

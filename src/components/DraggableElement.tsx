@@ -9,6 +9,7 @@ import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
+import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 
 interface DraggableElementProps {
   element: DesignElement;
@@ -61,10 +62,9 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   };
 
   const handlePuzzleClick = (e: React.MouseEvent) => {
-    if ((element.type === 'puzzle' || element.type === 'sequencePuzzle') && !isDragging) {
+    if ((element.type === 'puzzle' || element.type === 'sequencePuzzle' || element.type === 'clickSequencePuzzle') && !isDragging) {
       e.stopPropagation();
-      // The modal is now handled directly in the PuzzleElement component
-      // so we don't need to do anything here
+      // The modal is now handled directly in the respective Element component
     }
   };
 
@@ -106,6 +106,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   } else if (element.type === 'sequencePuzzle') {
     childContent = (
       <SequencePuzzleElement
+        element={element}
+        onClick={handlePuzzleClick}
+      />
+    );
+  } else if (element.type === 'clickSequencePuzzle') {
+    childContent = (
+      <ClickSequencePuzzleElement
         element={element}
         onClick={handlePuzzleClick}
       />

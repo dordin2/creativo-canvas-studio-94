@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
 // Define the available languages
@@ -107,6 +106,16 @@ const translations: Record<Language, Record<string, string>> = {
     'toast.success.puzzle': 'Great job! Puzzle solved correctly!',
     'toast.success.sequence': 'Great job! Sequence ordered correctly!',
     'toast.info.reset': 'Puzzle has been shuffled',
+    
+    // Click Sequence Puzzle
+    'click.sequence.name': 'Click Sequence Puzzle Name',
+    'click.sequence.image.collection': 'Image Collection',
+    'click.sequence.order': 'Click Sequence',
+    'click.sequence.add.images': 'Add images to your puzzle',
+    'click.sequence.apply.changes': 'Apply Changes',
+    'click.sequence.add.to.canvas': 'Add to Canvas',
+    'click.sequence.solved': 'Puzzle solved! Great job!',
+    'click.sequence.description': 'Click the images in the correct sequence',
   },
   he: {
     // Header
@@ -195,6 +204,16 @@ const translations: Record<Language, Record<string, string>> = {
     'toast.success.puzzle': 'עבודה מצוינת! הפאזל נפתר בהצלחה!',
     'toast.success.sequence': 'עבודה מצוינת! הרצף סודר בהצלחה!',
     'toast.info.reset': 'הפאזל עורבב מחדש',
+    
+    // Click Sequence Puzzle
+    'click.sequence.name': 'שם פאזל לחיצה לפי סדר',
+    'click.sequence.image.collection': 'אוסף תמונות',
+    'click.sequence.order': 'סדר לחיצות',
+    'click.sequence.add.images': 'הוסף תמונות לפאזל שלך',
+    'click.sequence.apply.changes': 'החל שינויים',
+    'click.sequence.add.to.canvas': 'הוסף לקנבס',
+    'click.sequence.solved': 'הפאזל נפתר! כל הכבוד!',
+    'click.sequence.description': 'לחץ על התמונות לפי הסדר הנכון',
   }
 };
 
