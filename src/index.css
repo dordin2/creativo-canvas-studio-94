@@ -209,3 +209,31 @@
 .zoom-controls span {
   @apply px-2 text-sm font-medium text-sidebar-foreground;
 }
+
+/* Add responsive styles */
+@media (max-width: 768px) {
+  .zoom-controls {
+    @apply bottom-20 right-4 p-1.5 scale-90;
+  }
+  
+  .zoom-controls button {
+    @apply p-1.5;
+  }
+  
+  .canvas-element:hover {
+    @apply outline outline-1 outline-canvas-purple/30;
+  }
+  
+  .resize-handle {
+    @apply w-2.5 h-2.5;
+  }
+  
+  .rotation-handle {
+    @apply w-4 h-4;
+  }
+}
+
+/* Quick fix for the sidebar in mobile view */
+.sheet-content {
+  max-width: 100vw !important;
+}

@@ -1,8 +1,8 @@
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
-import LayersList from "./LayersList";
 import { Minus, Plus, RotateCcw } from "lucide-react";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Canvas = () => {
   const { 
@@ -17,7 +17,8 @@ const Canvas = () => {
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
-
+  const isMobile = useIsMobile();
+  
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
       setCanvasRef(containerRef.current);
@@ -29,8 +30,8 @@ const Canvas = () => {
       if (containerRef.current) {
         const parent = containerRef.current.parentElement;
         if (parent) {
-          const maxWidth = parent.clientWidth - 40;
-          const maxHeight = parent.clientHeight - 40;
+          const maxWidth = parent.clientWidth - (isMobile ? 20 : 40);
+          const maxHeight = parent.clientHeight - (isMobile ? 20 : 40);
           
           const aspectRatio = 4/3;
           let width = maxWidth;
@@ -52,7 +53,7 @@ const Canvas = () => {
     return () => {
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [isMobile]);
   
   const handleZoomIn = () => {
     setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
@@ -285,7 +286,7 @@ const Canvas = () => {
   } : { backgroundColor: 'white' };
   
   return (
-    <div className="flex-1 flex items-center justify-center p-8 canvas-workspace relative">
+    <div className="flex-1 flex items-center justify-center p-4 md:p-8 canvas-workspace relative">
       <div className="canvas-container" style={{ 
         transform: `scale(${zoomLevel})`, 
         transformOrigin: 'center center', 
@@ -328,14 +329,14 @@ const Canvas = () => {
       
       <div className="zoom-controls">
         <button onClick={handleZoomOut} title="Zoom Out">
-          <Minus size={16} />
+          <Minus size={isMobile ? 14 : 16} />
         </button>
-        <span>{Math.round(zoomLevel * 100)}%</span>
+        <span className="text-xs md:text-sm">{Math.round(zoomLevel * 100)}%</span>
         <button onClick={handleZoomIn} title="Zoom In">
-          <Plus size={16} />
+          <Plus size={isMobile ? 14 : 16} />
         </button>
         <button onClick={handleResetZoom} title="Reset Zoom">
-          <RotateCcw size={16} />
+          <RotateCcw size={isMobile ? 14 : 16} />
         </button>
       </div>
     </div>
