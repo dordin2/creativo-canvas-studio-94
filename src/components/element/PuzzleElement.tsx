@@ -1,7 +1,7 @@
 
 import React, { useState } from "react";
 import { DesignElement } from "@/types/designTypes";
-import { Lock, Hash, LetterCase } from "lucide-react";
+import { Lock, Hash, AlphabetLatin, Languages } from "lucide-react";
 import PuzzleModal from "./PuzzleModal";
 
 interface PuzzleElementProps {
@@ -34,8 +34,9 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
       case 'number':
         return <Hash className="w-8 h-8 text-gray-700 mb-2" />;
       case 'english':
+        return <AlphabetLatin className="w-8 h-8 text-gray-700 mb-2" />;
       case 'hebrew':
-        return <LetterCase className="w-8 h-8 text-gray-700 mb-2" />;
+        return <Languages className="w-8 h-8 text-gray-700 mb-2" />;
       default:
         return <Lock className="w-8 h-8 text-gray-700 mb-2" />;
     }

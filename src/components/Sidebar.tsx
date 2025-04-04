@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -9,7 +8,8 @@ import {
   Triangle, 
   Lock, 
   Hash,
-  LetterCase
+  AlphabetLatin,
+  Languages
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -155,7 +155,7 @@ const Sidebar = () => {
                     className="justify-start"
                     onClick={handleEnglishPuzzleClick}
                   >
-                    <LetterCase className="h-4 w-4 mr-2" />
+                    <AlphabetLatin className="h-4 w-4 mr-2" />
                     English Letters
                   </Button>
                   <Button
@@ -163,7 +163,7 @@ const Sidebar = () => {
                     className="justify-start"
                     onClick={handleHebrewPuzzleClick}
                   >
-                    <LetterCase className="h-4 w-4 mr-2" />
+                    <Languages className="h-4 w-4 mr-2" />
                     Hebrew Letters
                   </Button>
                 </div>
