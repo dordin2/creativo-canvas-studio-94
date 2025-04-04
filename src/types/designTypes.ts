@@ -11,7 +11,15 @@ export type ElementType =
   | 'subheading' 
   | 'paragraph' 
   | 'image'
-  | 'background';
+  | 'background'
+  | 'puzzle';
+
+export interface PuzzleConfiguration {
+  name: string;
+  placeholders: number;
+  images: string[];
+  solution: number[];
+}
 
 export interface DesignElement {
   id: string;
@@ -37,6 +45,7 @@ export interface DesignElement {
   file?: File; // Added for local file reference
   dataUrl?: string; // Added for local image preview
   layer: number; // Added for layer ordering
+  puzzleConfig?: PuzzleConfiguration; // Added for puzzle configuration
 }
 
 export interface DesignContextType {

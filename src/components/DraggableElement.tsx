@@ -7,6 +7,8 @@ import { useElementRotation } from "@/hooks/useElementRotation";
 import { getElementStyle, getRotation } from "@/utils/elementStyles";
 import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
+import PuzzleElement from "./element/PuzzleElement";
+import PuzzleModal from "./element/PuzzleModal";
 
 interface DraggableElementProps {
   element: DesignElement;
@@ -22,6 +24,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [isPuzzleModalOpen, setIsPuzzleModalOpen] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -58,6 +61,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     }
   };
 
+  const handlePuzzleClick = (e: React.MouseEvent) => {
+    if (element.type === 'puzzle' && !isDragging) {
+      e.stopPropagation();
+      setIsPuzzleModalOpen(true);
+    }
+  };
+
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false);
@@ -84,6 +94,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         isEditing={isEditing}
         setIsEditing={setIsEditing}
         textInputRef={textInputRef}
+      />
+    );
+  } else if (element.type === 'puzzle') {
+    childContent = (
+      <PuzzleElement 
+        element={element} 
+        onClick={handlePuzzleClick} 
       />
     );
   }
@@ -113,6 +130,14 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
       />
+
+      {element.type === 'puzzle' && (
+        <PuzzleModal 
+          isOpen={isPuzzleModalOpen} 
+          onClose={() => setIsPuzzleModalOpen(false)} 
+          element={element} 
+        />
+      )}
     </>
   );
 };

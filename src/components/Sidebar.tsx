@@ -1,7 +1,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Text, Image, Square, Circle, Triangle } from "lucide-react";
+import { Text, Image, Square, Circle, Triangle, Lock } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 
 const Sidebar = () => {
@@ -63,6 +63,11 @@ const Sidebar = () => {
                     onClick={() => addElement('image')}>
               <Image className="h-5 w-5" />
               <span className="text-xs">Image</span>
+            </Button>
+            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
+                    onClick={() => addElement('puzzle')}>
+              <Lock className="h-5 w-5" />
+              <span className="text-xs">Puzzle</span>
             </Button>
           </div>
         </TabsContent>

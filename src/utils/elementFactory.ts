@@ -113,6 +113,22 @@ export const createNewElement = (
           : { backgroundColor: props?.color || '#FFFFFF' },
         layer: 0 // Background is always at layer 0
       };
+
+    case 'puzzle':
+      return {
+        id: generateId(),
+        type,
+        position,
+        size: { width: 150, height: 150 },
+        style: { backgroundColor: '#F3F4F6', borderRadius: '8px', transform: 'rotate(0deg)' },
+        layer,
+        puzzleConfig: props?.puzzleConfig || {
+          name: 'Puzzle',
+          placeholders: 3,
+          images: [],
+          solution: []
+        }
+      };
       
     default:
       return {
