@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useRef, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -31,6 +32,7 @@ export interface DesignElement {
   };
   content?: string;
   src?: string;
+  layer: number; // Added for layer ordering
 }
 
 interface DesignContextType {
@@ -42,6 +44,8 @@ interface DesignContextType {
   updateElement: (id: string, updates: Partial<DesignElement>) => void;
   removeElement: (id: string) => void;
   setActiveElement: (element: DesignElement | null) => void;
+  updateElementLayer: (id: string, newLayer: number) => void; // Added for layer management
+  getHighestLayer: () => number; // Helper to get highest layer
 }
 
 const DesignContext = createContext<DesignContextType | undefined>(undefined);
@@ -66,9 +70,16 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setCanvasRefState(ref);
   };
   
+  // Get highest layer to place new elements on top
+  const getHighestLayer = (): number => {
+    if (elements.length === 0) return 1;
+    return Math.max(...elements.map(elem => elem.layer)) + 1;
+  };
+  
   // Add a new element to the canvas
   const addElement = (type: ElementType, props?: any) => {
     const position = getDefaultPosition(canvasRef);
+    const newLayer = getHighestLayer();
     
     let newElement: DesignElement;
     
@@ -79,7 +90,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 100, height: 80 },
-          style: { backgroundColor: '#8B5CF6', borderRadius: '4px', transform: 'rotate(0deg)' }
+          style: { backgroundColor: '#8B5CF6', borderRadius: '4px', transform: 'rotate(0deg)' },
+          layer: newLayer
         };
         break;
         
@@ -89,7 +101,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 100, height: 100 },
-          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' }
+          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
+          layer: newLayer
         };
         break;
         
@@ -99,7 +112,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 50, height: 100 },
-          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' }
+          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
+          layer: newLayer
         };
         break;
         
@@ -109,7 +123,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           size: { width: 100, height: 2 },
-          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' }
+          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
+          layer: newLayer
         };
         break;
         
@@ -119,7 +134,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           content: 'Add a heading',
-          style: { color: '#1F2937', transform: 'rotate(0deg)' }
+          style: { color: '#1F2937', transform: 'rotate(0deg)' },
+          layer: newLayer
         };
         break;
         
@@ -129,7 +145,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           content: 'Add a subheading',
-          style: { color: '#1F2937', transform: 'rotate(0deg)' }
+          style: { color: '#1F2937', transform: 'rotate(0deg)' },
+          layer: newLayer
         };
         break;
         
@@ -139,7 +156,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type,
           position,
           content: 'Add your text here. Click to edit this text.',
-          style: { color: '#1F2937', transform: 'rotate(0deg)' }
+          style: { color: '#1F2937', transform: 'rotate(0deg)' },
+          layer: newLayer
         };
         break;
         
@@ -150,7 +168,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           position,
           size: { width: 200, height: 150 },
           style: { transform: 'rotate(0deg)' },
-          src: 'https://source.unsplash.com/random/800x600?nature'
+          src: 'https://source.unsplash.com/random/800x600?nature',
+          layer: newLayer
         };
         break;
         
@@ -177,14 +196,15 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           return;
         }
         
-        // Create new background
+        // Create new background (always bottom layer)
         newElement = {
           id: uuidv4(),
           type,
           position: { x: 0, y: 0 },
           style: props?.gradient 
             ? { background: props.gradient } 
-            : { backgroundColor: props?.color || '#FFFFFF' }
+            : { backgroundColor: props?.color || '#FFFFFF' },
+          layer: 0 // Background is always at layer 0
         };
         break;
         
@@ -194,7 +214,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           type: 'rectangle',
           position,
           size: { width: 100, height: 80 },
-          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' }
+          style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
+          layer: newLayer
         };
     }
     
@@ -221,6 +242,25 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
+  // Update element layer specifically
+  const updateElementLayer = (id: string, newLayer: number) => {
+    const updatedElements = elements.map(element => {
+      if (element.id === id) {
+        return { ...element, layer: newLayer };
+      }
+      return element;
+    });
+    
+    setElements(updatedElements);
+    
+    // Also update active element if it's the one being updated
+    if (activeElement && activeElement.id === id) {
+      setActiveElement({ ...activeElement, layer: newLayer });
+    }
+    
+    toast.success(`Updated layer to ${newLayer}`);
+  };
+  
   // Remove an element
   const removeElement = (id: string) => {
     setElements(elements.filter(element => element.id !== id));
@@ -238,7 +278,9 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     addElement,
     updateElement,
     removeElement,
-    setActiveElement
+    setActiveElement,
+    updateElementLayer,
+    getHighestLayer
   };
   
   return (

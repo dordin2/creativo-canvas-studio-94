@@ -2,6 +2,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
+import LayersList from "./LayersList"; // Import the new LayersList component
 
 const Canvas = () => {
   const { canvasRef, setCanvasRef, elements, activeElement, setActiveElement } = useDesignState();
@@ -55,10 +56,12 @@ const Canvas = () => {
   };
   
   const renderElements = () => {
-    return elements.map((element) => {
-      // Background is handled separately
-      if (element.type === 'background') return null;
-      
+    // Sort elements by layer (lower layers first, higher layers on top)
+    const sortedElements = [...elements]
+      .filter(element => element.type !== 'background')
+      .sort((a, b) => a.layer - b.layer);
+    
+    return sortedElements.map((element) => {
       const isActive = activeElement?.id === element.id;
       
       // Handle element click

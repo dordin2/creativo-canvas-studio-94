@@ -188,6 +188,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     height: element.size?.height,
     cursor: isDragging ? 'grabbing' : 'grab',
     border: isActive ? '1px solid #8B5CF6' : 'none',
+    zIndex: element.layer, // Use layer property for z-index
   };
 
   // Don't show resize handles for text elements
