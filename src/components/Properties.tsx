@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { HexColorPicker } from "react-colorful";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Trash2 } from "lucide-react";
-import LayersList from "./LayersList"; // Import the new component
+import { Trash2, Upload } from "lucide-react";
+import LayersList from "./LayersList";
 
 const Properties = () => {
-  const { activeElement, updateElement, removeElement } = useDesignState();
+  const { activeElement, updateElement, removeElement, handleImageUpload } = useDesignState();
   const [activeTab, setActiveTab] = useState("style");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleColorChange = (newColor: string) => {
     if (!activeElement) return;
@@ -38,6 +38,26 @@ const Properties = () => {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!activeElement || activeElement.type !== 'image') return;
     updateElement(activeElement.id, { src: e.target.value });
+  };
+  
+  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!activeElement || activeElement.type !== 'image') return;
+    updateElement(activeElement.id, { 
+      src: e.target.value,
+      dataUrl: undefined,
+      file: undefined
+    });
+  };
+  
+  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!activeElement || activeElement.type !== 'image' || !e.target.files || e.target.files.length === 0) return;
+    
+    const file = e.target.files[0];
+    handleImageUpload(activeElement.id, file);
+  };
+  
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
   };
   
   const handleDelete = () => {
@@ -67,7 +87,6 @@ const Properties = () => {
           Select an element to edit its properties
         </p>
         
-        {/* Display layers list even when no element is selected */}
         <LayersList />
       </div>
     );
@@ -99,7 +118,6 @@ const Properties = () => {
         </TabsList>
         
         <TabsContent value="style" className="flex-1 flex flex-col space-y-6">
-          {/* Shape Properties */}
           {['rectangle', 'circle', 'triangle', 'line'].includes(activeElement.type) && (
             <div className="space-y-4">
               <Label>Fill Color</Label>
@@ -115,7 +133,6 @@ const Properties = () => {
             </div>
           )}
           
-          {/* Text Properties */}
           {['heading', 'subheading', 'paragraph'].includes(activeElement.type) && (
             <div className="space-y-4">
               <div>
@@ -142,19 +159,48 @@ const Properties = () => {
             </div>
           )}
           
-          {/* Image Properties */}
           {activeElement.type === 'image' && (
             <div className="space-y-4">
-              <Label>Image URL</Label>
-              <Input 
-                value={activeElement.src || ''} 
-                onChange={handleImageChange}
-                placeholder="Enter image URL"
-              />
-              {activeElement.src && (
+              <div>
+                <Label>Upload Image</Label>
+                <div className="mt-2 flex flex-col gap-2">
+                  <input 
+                    type="file" 
+                    ref={fileInputRef}
+                    onChange={handleImageFileSelect} 
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <Button 
+                    variant="outline" 
+                    onClick={triggerFileInput}
+                    className="w-full flex items-center justify-center"
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {activeElement.file ? "Change Image" : "Choose Image"}
+                  </Button>
+                  {activeElement.file && (
+                    <p className="text-xs text-muted-foreground">
+                      {activeElement.file.name}
+                    </p>
+                  )}
+                </div>
+              </div>
+              
+              <div className="mt-2">
+                <Label>Or use Image URL</Label>
+                <Input 
+                  value={activeElement.src || ''} 
+                  onChange={handleImageUrlChange}
+                  placeholder="Enter image URL"
+                  className="mt-2"
+                />
+              </div>
+              
+              {(activeElement.dataUrl || activeElement.src) && (
                 <div className="mt-4 border rounded-md p-2 bg-background">
                   <img 
-                    src={activeElement.src} 
+                    src={activeElement.dataUrl || activeElement.src} 
                     alt="Preview" 
                     className="w-full h-32 object-contain"
                   />
@@ -163,7 +209,6 @@ const Properties = () => {
             </div>
           )}
           
-          {/* Rotation for all except background */}
           {activeElement.type !== 'background' && (
             <div className="space-y-2">
               <Label>Rotation</Label>
@@ -183,7 +228,6 @@ const Properties = () => {
         </TabsContent>
         
         <TabsContent value="position" className="flex-1 flex flex-col space-y-6">
-          {/* Position Properties */}
           {activeElement.type !== 'background' && (
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
@@ -211,7 +255,6 @@ const Properties = () => {
                 </div>
               </div>
               
-              {/* Size Properties */}
               {activeElement.size && (
                 <div className="grid grid-cols-2 gap-4 mt-4">
                   <div>
@@ -239,7 +282,6 @@ const Properties = () => {
                 </div>
               )}
               
-              {/* Layer Information */}
               <div className="mt-4">
                 <Label>Layer Number</Label>
                 <div className="flex items-center gap-2 mt-2">
@@ -264,7 +306,6 @@ const Properties = () => {
       
       <Separator className="my-6" />
       
-      {/* Display layer list at the bottom of properties panel */}
       <LayersList />
     </div>
   );

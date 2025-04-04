@@ -32,6 +32,8 @@ export interface DesignElement {
   };
   content?: string;
   src?: string;
+  file?: File; // Added for local file reference
+  dataUrl?: string; // Added for local image preview
   layer: number; // Added for layer ordering
 }
 
@@ -46,6 +48,7 @@ interface DesignContextType {
   setActiveElement: (element: DesignElement | null) => void;
   updateElementLayer: (id: string, newLayer: number) => void; // Added for layer management
   getHighestLayer: () => number; // Helper to get highest layer
+  handleImageUpload: (id: string, file: File) => void; // Added for file uploads
 }
 
 const DesignContext = createContext<DesignContextType | undefined>(undefined);
@@ -74,6 +77,33 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   const getHighestLayer = (): number => {
     if (elements.length === 0) return 1;
     return Math.max(...elements.map(elem => elem.layer)) + 1;
+  };
+  
+  // Handle image file uploads
+  const handleImageUpload = (id: string, file: File) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please upload a valid image file");
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      if (e.target?.result) {
+        const dataUrl = e.target.result as string;
+        updateElement(id, { 
+          file, 
+          dataUrl, 
+          src: undefined // Clear the external URL when using a local file
+        });
+        toast.success("Image uploaded successfully");
+      }
+    };
+    
+    reader.onerror = () => {
+      toast.error("Failed to load image");
+    };
+    
+    reader.readAsDataURL(file);
   };
   
   // Add a new element to the canvas
@@ -168,7 +198,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           position,
           size: { width: 200, height: 150 },
           style: { transform: 'rotate(0deg)' },
-          src: 'https://source.unsplash.com/random/800x600?nature',
           layer: newLayer
         };
         break;
@@ -280,7 +309,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     removeElement,
     setActiveElement,
     updateElementLayer,
-    getHighestLayer
+    getHighestLayer,
+    handleImageUpload
   };
   
   return (

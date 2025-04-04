@@ -188,11 +188,17 @@ const Canvas = () => {
                 className="h-full w-full flex items-center justify-center overflow-hidden bg-gray-100"
                 onClick={handleElementClick}
               >
-                {element.src ? (
+                {element.dataUrl ? (
+                  <img 
+                    src={element.dataUrl} 
+                    alt="Uploaded content" 
+                    className="w-full h-full object-cover" 
+                  />
+                ) : element.src ? (
                   <img 
                     src={element.src} 
                     alt="Uploaded content" 
-                    style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} 
+                    className="w-full h-full object-cover" 
                   />
                 ) : (
                   <div className="text-sm text-gray-400">
