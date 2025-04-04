@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -17,8 +16,8 @@ const Canvas = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1); // Adding zoom state
-  
+  const [zoomLevel, setZoomLevel] = useState(1);
+
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
       setCanvasRef(containerRef.current);
@@ -30,7 +29,7 @@ const Canvas = () => {
       if (containerRef.current) {
         const parent = containerRef.current.parentElement;
         if (parent) {
-          const maxWidth = parent.clientWidth - 40; // Padding
+          const maxWidth = parent.clientWidth - 40;
           const maxHeight = parent.clientHeight - 40;
           
           const aspectRatio = 4/3;
@@ -55,17 +54,14 @@ const Canvas = () => {
     };
   }, []);
   
-  // Function to handle zoom in
   const handleZoomIn = () => {
     setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
   };
   
-  // Function to handle zoom out
   const handleZoomOut = () => {
     setZoomLevel(prevZoom => Math.max(prevZoom - 0.1, 0.5));
   };
   
-  // Function to reset zoom
   const handleResetZoom = () => {
     setZoomLevel(1);
   };
@@ -294,7 +290,6 @@ const Canvas = () => {
   
   return (
     <div className="flex-1 flex items-center justify-center p-8 canvas-workspace relative">
-      {/* Canvas container with improved structure for visibility outside boundaries */}
       <div className="canvas-container" style={{ 
         transform: `scale(${zoomLevel})`, 
         transformOrigin: 'center center', 
@@ -303,7 +298,6 @@ const Canvas = () => {
         width: 'fit-content',
         height: 'fit-content'
       }}>
-        {/* Canvas with overflow:hidden to mask content */}
         <div
           ref={containerRef}
           className={`relative shadow-lg rounded-lg overflow-hidden transition-all ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
@@ -320,23 +314,22 @@ const Canvas = () => {
           {renderElements()}
         </div>
         
-        {/* 
-          This outer container handles the element controls, allowing them
-          to remain visible even when elements are partially outside the canvas.
-          It sits at the same level as the canvas but has overflow:visible.
-        */}
         <div 
-          className="absolute top-0 left-0 w-full h-full pointer-events-none"
+          className="element-controls-wrapper"
           style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
             overflow: 'visible',
+            pointerEvents: 'none',
             zIndex: 1000,
           }}
         >
-          {/* Element controls are rendered by the DraggableElement component */}
         </div>
       </div>
       
-      {/* Zoom controls */}
       <div className="zoom-controls">
         <button onClick={handleZoomOut} title="Zoom Out">
           <Minus size={16} />

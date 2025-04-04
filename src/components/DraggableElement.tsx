@@ -290,19 +290,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       </div>
 
       {isActive && (
-        <div 
-          className="absolute pointer-events-none"
-          style={{
-            position: 'absolute',
-            left: 0, 
-            top: 0,
-            width: '100%',
-            height: '100%',
-            overflow: 'visible',
-            zIndex: 1000 + element.layer,
-            pointerEvents: 'none',
-          }}
-        >
+        <div className="absolute top-0 left-0 w-full h-full pointer-events-none element-controls-wrapper">
           <div
             className="element-frame"
             style={{
@@ -311,9 +299,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
               width: elementDimensions.width,
               height: elementDimensions.height,
               transform: frameTransform,
-              border: '1px solid #8B5CF6',
-              boxSizing: 'border-box',
               pointerEvents: 'none',
+              zIndex: 1000 + element.layer,
             }}
           />
           

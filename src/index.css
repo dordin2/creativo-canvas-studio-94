@@ -112,13 +112,13 @@
   .canvas-container {
     position: relative;
     /* Allow controls to remain visible outside the canvas */
-    overflow: visible;
+    overflow: visible !important;
     pointer-events: auto;
   }
   
   /* Main canvas has overflow:hidden to mask content */
   .canvas-container > div:first-child {
-    overflow: hidden;
+    overflow: hidden !important;
     /* Controls should still be interactive even outside the canvas */
     pointer-events: auto;
   }
@@ -151,7 +151,7 @@
     height: 100%;
     pointer-events: none;
     z-index: 1000;
-    overflow: visible;
+    overflow: visible !important;
   }
 
   /* Frame for the selection border that extends beyond canvas */
