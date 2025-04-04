@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -235,7 +236,11 @@ const Canvas = () => {
                     alt="Uploaded content" 
                     className="w-full h-full" 
                     draggable={false}
-                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                    style={{ 
+                      objectFit: 'contain', 
+                      width: '100%', 
+                      height: '100%'
+                    }}
                   />
                 ) : element.src ? (
                   <img 
@@ -243,7 +248,11 @@ const Canvas = () => {
                     alt="Uploaded content" 
                     className="w-full h-full" 
                     draggable={false}
-                    style={{ objectFit: 'cover', width: '100%', height: '100%' }}
+                    style={{ 
+                      objectFit: 'contain', 
+                      width: '100%', 
+                      height: '100%'
+                    }}
                   />
                 ) : (
                   <div className="text-sm text-gray-400 select-none">
