@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -19,7 +20,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [startRotation, setStartRotation] = useState(0);
-  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
+  const [originalAspectRatio, setOriginalAspectRatio] = useState<number | null>(null);
 
   // Initialize rotation if it doesn't exist
   useEffect(() => {
@@ -71,13 +72,9 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       height: height
     });
     
-    // Calculate and store the aspect ratio for images
-    // We'll always maintain aspect ratio for images now (simulating Shift key always pressed)
-    if (element.type === 'image') {
-      setAspectRatio(width / height);
-    } else {
-      setAspectRatio(null);
-    }
+    // Always calculate and store the original aspect ratio for any element
+    // This will be used for image elements to maintain their aspect ratio
+    setOriginalAspectRatio(width / height);
   };
 
   // Start rotation
@@ -119,17 +116,19 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         let newWidth = startSize.width;
         let newHeight = startSize.height;
         
-        // For images, maintain aspect ratio
-        if (aspectRatio !== null) {
+        // For images, always maintain aspect ratio automatically (like holding Shift)
+        const shouldMaintainAspectRatio = element.type === 'image' && originalAspectRatio !== null;
+        
+        if (shouldMaintainAspectRatio) {
           // Handle different resize directions
           if (resizeDirection.includes("e") || resizeDirection.includes("w")) {
             // Horizontal resize - adjust height based on width
             if (resizeDirection.includes("e")) {
               newWidth = Math.max(20, startSize.width + deltaX);
-              newHeight = newWidth / aspectRatio;
+              newHeight = newWidth / originalAspectRatio;
             } else { // "w"
               newWidth = Math.max(20, startSize.width - deltaX);
-              newHeight = newWidth / aspectRatio;
+              newHeight = newWidth / originalAspectRatio;
               
               if (newWidth !== startSize.width) {
                 updateElement(element.id, {
@@ -144,10 +143,10 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
             // Vertical resize - adjust width based on height
             if (resizeDirection.includes("s")) {
               newHeight = Math.max(20, startSize.height + deltaY);
-              newWidth = newHeight * aspectRatio;
+              newWidth = newHeight * originalAspectRatio;
             } else { // "n"
               newHeight = Math.max(20, startSize.height - deltaY);
-              newWidth = newHeight * aspectRatio;
+              newWidth = newHeight * originalAspectRatio;
               
               if (newHeight !== startSize.height) {
                 updateElement(element.id, {
@@ -163,7 +162,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
           // Handle corner cases by prioritizing the primary direction
           if (resizeDirection === "se" || resizeDirection === "ne") {
             newWidth = Math.max(20, startSize.width + deltaX);
-            newHeight = newWidth / aspectRatio;
+            newHeight = newWidth / originalAspectRatio;
             if (resizeDirection === "ne") {
               updateElement(element.id, {
                 position: {
@@ -174,7 +173,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
             }
           } else if (resizeDirection === "sw" || resizeDirection === "nw") {
             newWidth = Math.max(20, startSize.width - deltaX);
-            newHeight = newWidth / aspectRatio;
+            newHeight = newWidth / originalAspectRatio;
             updateElement(element.id, {
               position: {
                 x: element.position.x + (startSize.width - newWidth),
@@ -241,7 +240,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       setIsDragging(false);
       setIsResizing(false);
       setIsRotating(false);
-      setAspectRatio(null);
     };
 
     if (isDragging || isResizing || isRotating) {
@@ -263,7 +261,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     resizeDirection, 
     element, 
     updateElement,
-    aspectRatio
+    originalAspectRatio
   ]);
 
   // Build the style for the element
