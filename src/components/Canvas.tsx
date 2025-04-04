@@ -294,7 +294,7 @@ const Canvas = () => {
   
   return (
     <div className="flex-1 flex items-center justify-center p-8 canvas-workspace relative">
-      {/* Zoom wrapper - this controls the scale but maintains overflow visibility */}
+      {/* Canvas container with improved structure for visibility outside boundaries */}
       <div className="canvas-container" style={{ 
         transform: `scale(${zoomLevel})`, 
         transformOrigin: 'center center', 
@@ -322,7 +322,8 @@ const Canvas = () => {
         
         {/* 
           This outer container handles the element controls, allowing them
-          to remain visible even when elements are partially outside the canvas
+          to remain visible even when elements are partially outside the canvas.
+          It sits at the same level as the canvas but has overflow:visible.
         */}
         <div 
           className="absolute top-0 left-0 w-full h-full pointer-events-none"
@@ -331,7 +332,7 @@ const Canvas = () => {
             zIndex: 1000,
           }}
         >
-          {/* Element controls are rendered here by the DraggableElement component */}
+          {/* Element controls are rendered by the DraggableElement component */}
         </div>
       </div>
       

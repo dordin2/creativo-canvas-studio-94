@@ -111,8 +111,9 @@
   /* Canvas container to manage overflow behavior */
   .canvas-container {
     position: relative;
-    /* Create the masking effect for the canvas content */
+    /* Allow controls to remain visible outside the canvas */
     overflow: visible;
+    pointer-events: auto;
   }
   
   /* Main canvas has overflow:hidden to mask content */
@@ -151,6 +152,15 @@
     pointer-events: none;
     z-index: 1000;
     overflow: visible;
+  }
+
+  /* Frame for the selection border that extends beyond canvas */
+  .element-frame {
+    position: absolute;
+    border: 1px solid #8B5CF6;
+    pointer-events: none;
+    z-index: 999;
+    box-sizing: border-box;
   }
 }
 
