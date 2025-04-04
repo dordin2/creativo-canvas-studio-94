@@ -1,5 +1,5 @@
 
-import LayersList from "../LayersList";
+import LayersList from "../layers/LayersList";
 
 const NoElementSelected = () => {
   return (
