@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -7,11 +7,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { X } from "lucide-react";
+import { X, Upload } from "lucide-react";
+import { processImageUpload } from "@/utils/imageUploader";
 
 const ClickSequencePuzzleProperties = ({ element }: { element: DesignElement }) => {
   const { updateElement } = useDesignState();
   const { t, language } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const config = element.clickSequencePuzzleConfig || {
     name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל לחיצה לפי סדר',
@@ -37,6 +39,37 @@ const ClickSequencePuzzleProperties = ({ element }: { element: DesignElement }) 
     if (solution.length === 0) {
       setSolution([newImages.length - 1]);
     }
+  };
+  
+  // Handle file upload
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    processImageUpload(file, (data) => {
+      if (data.dataUrl) {
+        const newImages = [...images, data.dataUrl];
+        setImages(newImages);
+        
+        // Automatically add this image to the solution if it's the first one
+        if (solution.length === 0) {
+          setSolution([newImages.length - 1]);
+        }
+        
+        toast.success(language === 'en' ? 'Image uploaded successfully' : 'התמונה הועלתה בהצלחה');
+      }
+    });
+    
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
+  // Handle trigger file input click
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
   };
   
   // Handle image removal
@@ -107,6 +140,24 @@ const ClickSequencePuzzleProperties = ({ element }: { element: DesignElement }) 
           />
           <Button type="button" onClick={handleAddImage}>
             {language === 'en' ? 'Add' : 'הוסף'}
+          </Button>
+        </div>
+        
+        <div className="flex items-center gap-2 mt-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileUpload}
+            accept="image/*"
+            className="hidden"
+          />
+          <Button 
+            variant="outline" 
+            className="w-full"
+            onClick={handleBrowseClick}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            {language === 'en' ? 'Upload Image' : 'העלה תמונה'}
           </Button>
         </div>
         
