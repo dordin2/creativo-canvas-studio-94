@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,8 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { useDesignState } from "@/context/DesignContext";
-import { Upload, Plus, Trash2 } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck, XCircle } from "lucide-react";
+import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
   "/placeholder.svg",
@@ -24,92 +25,165 @@ const PLACEHOLDER_IMAGES = [
 ];
 
 const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, addElement } = useDesignState();
   const [selectedImage, setSelectedImage] = useState<string>("");
-  
-  const puzzleConfig = element.puzzleConfig || {
-    name: 'Puzzle',
-    placeholders: 3,
-    images: [],
-    solution: []
-  };
+  const [localPuzzleConfig, setLocalPuzzleConfig] = useState(() => {
+    return element.puzzleConfig || {
+      name: 'Puzzle',
+      placeholders: 3,
+      images: [],
+      solution: []
+    };
+  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    updateElement(element.id, {
-      puzzleConfig: {
-        ...puzzleConfig,
-        name: e.target.value
-      }
-    });
+    setLocalPuzzleConfig(prev => ({
+      ...prev,
+      name: e.target.value
+    }));
   };
   
   const handlePlaceholdersChange = (value: string) => {
     const numPlaceholders = parseInt(value);
-    let newSolution = [...puzzleConfig.solution];
+    let newSolution = [...localPuzzleConfig.solution];
     
     // Adjust solution array to match new placeholder count
-    if (numPlaceholders > puzzleConfig.solution.length) {
+    if (numPlaceholders > localPuzzleConfig.solution.length) {
       // Add default values for new placeholders
-      for (let i = puzzleConfig.solution.length; i < numPlaceholders; i++) {
+      for (let i = localPuzzleConfig.solution.length; i < numPlaceholders; i++) {
         newSolution.push(0);
       }
-    } else if (numPlaceholders < puzzleConfig.solution.length) {
+    } else if (numPlaceholders < localPuzzleConfig.solution.length) {
       // Trim solution array if reducing placeholders
       newSolution = newSolution.slice(0, numPlaceholders);
     }
     
-    updateElement(element.id, {
-      puzzleConfig: {
-        ...puzzleConfig,
-        placeholders: numPlaceholders,
-        solution: newSolution
-      }
-    });
+    setLocalPuzzleConfig(prev => ({
+      ...prev,
+      placeholders: numPlaceholders,
+      solution: newSolution
+    }));
   };
   
   const handleAddImage = () => {
-    if (selectedImage && !puzzleConfig.images.includes(selectedImage)) {
-      const newImages = [...puzzleConfig.images, selectedImage];
-      updateElement(element.id, {
-        puzzleConfig: {
-          ...puzzleConfig,
-          images: newImages
-        }
-      });
+    if (selectedImage && !localPuzzleConfig.images.includes(selectedImage)) {
+      setLocalPuzzleConfig(prev => ({
+        ...prev,
+        images: [...prev.images, selectedImage]
+      }));
       setSelectedImage("");
     }
   };
   
   const handleRemoveImage = (index: number) => {
-    const newImages = [...puzzleConfig.images];
+    const newImages = [...localPuzzleConfig.images];
     newImages.splice(index, 1);
     
     // Update solution indices if necessary
-    const newSolution = puzzleConfig.solution.map(solIndex => {
+    const newSolution = localPuzzleConfig.solution.map(solIndex => {
       if (solIndex === index) return 0; // Reset to first image if removed
       if (solIndex > index) return solIndex - 1; // Adjust higher indices
       return solIndex;
     });
     
-    updateElement(element.id, {
-      puzzleConfig: {
-        ...puzzleConfig,
-        images: newImages,
-        solution: newSolution
-      }
-    });
+    setLocalPuzzleConfig(prev => ({
+      ...prev,
+      images: newImages,
+      solution: newSolution
+    }));
   };
   
   const handleSolutionChange = (placeholderIndex: number, imageIndex: string) => {
-    const newSolution = [...puzzleConfig.solution];
+    const newSolution = [...localPuzzleConfig.solution];
     newSolution[placeholderIndex] = parseInt(imageIndex);
     
-    updateElement(element.id, {
-      puzzleConfig: {
-        ...puzzleConfig,
-        solution: newSolution
+    setLocalPuzzleConfig(prev => ({
+      ...prev,
+      solution: newSolution
+    }));
+  };
+  
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    const file = files[0];
+    if (!file.type.startsWith('image/')) {
+      toast.error("Please select a valid image file");
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        const imageDataUrl = event.target.result.toString();
+        setLocalPuzzleConfig(prev => ({
+          ...prev,
+          images: [...prev.images, imageDataUrl]
+        }));
+        toast.success("Image uploaded successfully");
       }
+    };
+    reader.onerror = () => {
+      toast.error("Failed to read image file");
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset the file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
+  const handleBrowseClick = () => {
+    fileInputRef.current?.click();
+  };
+  
+  const handleApplyChanges = () => {
+    // Validate the puzzle configuration
+    if (localPuzzleConfig.name.trim() === '') {
+      toast.error("Puzzle name cannot be empty");
+      return;
+    }
+    
+    if (localPuzzleConfig.images.length < 2) {
+      toast.error("Add at least 2 images to create a puzzle");
+      return;
+    }
+    
+    if (localPuzzleConfig.images.length <= 0) {
+      toast.error("Please add images to your puzzle");
+      return;
+    }
+    
+    if (new Set(localPuzzleConfig.solution).size !== localPuzzleConfig.solution.length) {
+      toast.warning("Your solution has duplicate image assignments. Each placeholder should use a different image for the best puzzle experience.");
+    }
+    
+    // Apply changes to the element
+    updateElement(element.id, {
+      puzzleConfig: localPuzzleConfig
     });
+    
+    toast.success("Puzzle configuration saved");
+  };
+  
+  const createPuzzleElement = () => {
+    // Final validation before creating the element
+    if (localPuzzleConfig.name.trim() === '') {
+      toast.error("Puzzle name cannot be empty");
+      return;
+    }
+    
+    if (localPuzzleConfig.images.length < 2) {
+      toast.error("Add at least 2 images to create a puzzle");
+      return;
+    }
+    
+    // Create the puzzle element
+    addElement('puzzle', { puzzleConfig: localPuzzleConfig });
+    toast.success("Puzzle added to canvas");
   };
   
   return (
@@ -118,7 +192,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
         <Label htmlFor="puzzle-name">Puzzle Name</Label>
         <Input 
           id="puzzle-name" 
-          value={puzzleConfig.name} 
+          value={localPuzzleConfig.name} 
           onChange={handleNameChange}
           className="mt-1"
         />
@@ -127,7 +201,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       <div>
         <Label htmlFor="placeholders">Number of Placeholders</Label>
         <Select 
-          value={puzzleConfig.placeholders.toString()} 
+          value={localPuzzleConfig.placeholders.toString()} 
           onValueChange={handlePlaceholdersChange}
         >
           <SelectTrigger id="placeholders" className="mt-1">
@@ -145,31 +219,51 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       
       <div>
         <Label>Image Collection</Label>
-        <div className="flex items-center gap-2 mt-1">
-          <Select value={selectedImage} onValueChange={setSelectedImage}>
-            <SelectTrigger className="flex-1">
-              <SelectValue placeholder="Select an image" />
-            </SelectTrigger>
-            <SelectContent>
-              {PLACEHOLDER_IMAGES.map((img, idx) => (
-                <SelectItem key={idx} value={img}>
-                  Image {idx + 1}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button 
-            size="sm" 
-            variant="outline"
-            onClick={handleAddImage}
-            disabled={!selectedImage}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
+        <div className="mt-2 space-y-3">
+          <div className="flex items-center gap-2">
+            <Select value={selectedImage} onValueChange={setSelectedImage}>
+              <SelectTrigger className="flex-1">
+                <SelectValue placeholder="Select an image" />
+              </SelectTrigger>
+              <SelectContent>
+                {PLACEHOLDER_IMAGES.map((img, idx) => (
+                  <SelectItem key={idx} value={img}>
+                    Image {idx + 1}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button 
+              size="sm" 
+              variant="outline"
+              onClick={handleAddImage}
+              disabled={!selectedImage}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          
+          <div className="flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileUpload}
+              accept="image/*"
+              className="hidden"
+            />
+            <Button 
+              variant="outline" 
+              className="w-full"
+              onClick={handleBrowseClick}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              Upload Image
+            </Button>
+          </div>
         </div>
         
         <div className="grid grid-cols-3 gap-2 mt-3">
-          {puzzleConfig.images.map((img, idx) => (
+          {localPuzzleConfig.images.map((img, idx) => (
             <div key={idx} className="relative group">
               <img 
                 src={img} 
@@ -187,29 +281,29 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           ))}
         </div>
         
-        {puzzleConfig.images.length === 0 && (
+        {localPuzzleConfig.images.length === 0 && (
           <div className="text-sm text-gray-500 text-center py-4">
             Add images to your puzzle collection
           </div>
         )}
       </div>
       
-      {puzzleConfig.images.length > 0 && (
+      {localPuzzleConfig.images.length > 0 && (
         <div>
           <Label>Solution Configuration</Label>
           <div className="space-y-2 mt-2">
-            {Array.from({ length: puzzleConfig.placeholders }).map((_, idx) => (
+            {Array.from({ length: localPuzzleConfig.placeholders }).map((_, idx) => (
               <div key={idx} className="flex items-center gap-2">
                 <span className="text-sm font-medium w-24">Placeholder {idx + 1}:</span>
                 <Select 
-                  value={puzzleConfig.solution[idx]?.toString() || "0"} 
+                  value={localPuzzleConfig.solution[idx]?.toString() || "0"} 
                   onValueChange={(val) => handleSolutionChange(idx, val)}
                 >
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select correct image" />
                   </SelectTrigger>
                   <SelectContent>
-                    {puzzleConfig.images.map((_, imgIdx) => (
+                    {localPuzzleConfig.images.map((_, imgIdx) => (
                       <SelectItem key={imgIdx} value={imgIdx.toString()}>
                         Image {imgIdx + 1}
                       </SelectItem>
@@ -221,6 +315,25 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           </div>
         </div>
       )}
+      
+      <div className="flex gap-2 pt-3">
+        <Button 
+          variant="secondary" 
+          className="w-full"
+          onClick={handleApplyChanges}
+        >
+          <FileCheck className="h-4 w-4 mr-2" />
+          Apply Changes
+        </Button>
+        
+        <Button
+          variant="default"
+          className="w-full"
+          onClick={createPuzzleElement}
+        >
+          Add to Canvas
+        </Button>
+      </div>
     </div>
   );
 };

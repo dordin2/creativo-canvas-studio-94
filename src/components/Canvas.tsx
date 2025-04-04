@@ -1,9 +1,9 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
 import LayersList from "./LayersList";
 import { Minus, Plus, RotateCcw } from "lucide-react";
+import PuzzleElement from "./element/PuzzleElement";
 
 const Canvas = () => {
   const { 
@@ -15,7 +15,7 @@ const Canvas = () => {
     handleImageUpload 
   } = useDesignState();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [canvasDimensions, setCanvasDimensions] = useState({ width: 1200, height: 900 }); // Larger default size
+  const [canvasDimensions, setCanvasDimensions] = useState({ width: 1200, height: 900 });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -29,38 +29,30 @@ const Canvas = () => {
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current && parentRef.current) {
-        // Get the parent container dimensions
         const parentWidth = parentRef.current.clientWidth;
         const parentHeight = parentRef.current.clientHeight;
         
-        // Set minimum dimensions - increase these for larger default canvas
         const minWidth = 1200;
         const minHeight = 900;
         
-        // Calculate available space with minimal padding
         const maxWidth = Math.max(minWidth, parentWidth - 20);
         const maxHeight = Math.max(minHeight, parentHeight - 40);
         
-        // Maintain aspect ratio (4:3)
         const aspectRatio = 4/3;
         let width = maxWidth;
         let height = width / aspectRatio;
         
-        // If height would exceed available space, adjust width based on height
         if (height > maxHeight) {
           height = maxHeight;
           width = height * aspectRatio;
         }
         
-        // Update canvas dimensions
         setCanvasDimensions({ width, height });
       }
     };
     
-    // Run the resize handler immediately and on window resize
     handleResize();
     
-    // Create ResizeObserver to watch for parent element size changes
     const resizeObserver = new ResizeObserver(() => {
       handleResize();
     });
@@ -294,6 +286,16 @@ const Canvas = () => {
                   </div>
                 )}
               </div>
+            </DraggableElement>
+          );
+          
+        case 'puzzle':
+          return (
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <PuzzleElement 
+                element={element} 
+                onClick={(e) => e.stopPropagation()} 
+              />
             </DraggableElement>
           );
           
