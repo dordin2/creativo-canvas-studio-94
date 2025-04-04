@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -10,7 +11,7 @@ interface DraggableElementProps {
 
 const DraggableElement = ({ element, isActive, children }: DraggableElementProps) => {
   const { updateElement } = useDesignState();
-  const { startDrag } = useDraggable(element.id);
+  const { startDrag, isDragging: isDraggingFromHook, currentElement } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -43,12 +44,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     e.stopPropagation();
     
     // Only prevent dragging on the upload placeholder text, not the entire image element
-    // Fixed: Now allows dragging the image element container even before an image is uploaded
     if (element.type === 'image' && 
         (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
       return;
     }
     
+    // Use the startDrag function from useDraggable hook
+    startDrag(e, element.position);
     setIsDragging(true);
     setStartPos({ x: e.clientX, y: e.clientY });
   };
