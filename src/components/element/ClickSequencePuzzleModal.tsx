@@ -2,12 +2,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, CheckCircle, RotateCcw } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
 import { DesignElement } from "@/types/designTypes";
 import { useDesignState } from "@/context/DesignContext";
-import { Progress } from "@/components/ui/progress";
 
 interface ClickSequencePuzzleModalProps {
   isOpen: boolean;
@@ -165,56 +164,6 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
     }
   };
   
-  // Reset the puzzle
-  const handleReset = () => {
-    setClickedIndices([]);
-    setSolved(false);
-    
-    // Update the element with empty clicked indices
-    if (!pendingUpdate.current) {
-      pendingUpdate.current = true;
-      
-      // Clear any existing timeout
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-      }
-      
-      // Use a timeout to debounce the update
-      timeoutRef.current = window.setTimeout(() => {
-        updateElement(element.id, {
-          clickSequencePuzzleConfig: {
-            ...clickSequencePuzzleConfig,
-            clickedIndices: []
-          }
-        });
-        pendingUpdate.current = false;
-        timeoutRef.current = null;
-        
-        toast.info(language === 'en' ? 'Puzzle reset' : 'הפאזל אופס', {
-          duration: 2000
-        });
-      }, 300);
-    }
-  };
-  
-  // Calculate progress percentage
-  const calculateProgress = () => {
-    if (clickSequencePuzzleConfig.solution.length === 0) return 0;
-    
-    // Find how many clicks are correct so far
-    let correctClicks = 0;
-    for (let i = 0; i < clickedIndices.length; i++) {
-      if (i < clickSequencePuzzleConfig.solution.length && 
-          clickedIndices[i] === clickSequencePuzzleConfig.solution[i]) {
-        correctClicks++;
-      } else {
-        break; // Stop counting once we hit an incorrect click
-      }
-    }
-    
-    return (correctClicks / clickSequencePuzzleConfig.solution.length) * 100;
-  };
-  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
@@ -241,38 +190,6 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
         <div className="py-6">
           {clickSequencePuzzleConfig.images.length > 0 ? (
             <div className="space-y-6">
-              {/* Progress indicator */}
-              <div className="w-full">
-                <div className="flex justify-between text-sm text-gray-500 mb-1">
-                  <span>{language === 'en' ? 'Progress' : 'התקדמות'}</span>
-                  <span>{Math.round(calculateProgress())}%</span>
-                </div>
-                <Progress value={calculateProgress()} className="h-2" />
-              </div>
-              
-              {/* Click sequence display */}
-              {clickedIndices.length > 0 && (
-                <div className="bg-gray-50 p-3 rounded-md">
-                  <h3 className="text-sm font-medium mb-2">
-                    {language === 'en' ? 'Current Sequence' : 'רצף נוכחי'}:
-                  </h3>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    {clickedIndices.map((imageIndex, sequencePosition) => (
-                      <div key={sequencePosition} className="flex items-center gap-1 bg-white border rounded-md px-2 py-1">
-                        <span className="text-xs font-medium">{sequencePosition + 1}.</span>
-                        <div className="w-6 h-6 rounded-sm overflow-hidden">
-                          <img 
-                            src={clickSequencePuzzleConfig.images[imageIndex]} 
-                            alt={`Step ${sequencePosition + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
               {/* Images grid */}
               <div className="flex flex-row justify-center items-center gap-4 flex-wrap">
                 {clickSequencePuzzleConfig.images.map((image, index) => {
@@ -308,13 +225,6 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
                     </div>
                   );
                 })}
-              </div>
-              
-              <div className="flex justify-center mt-4">
-                <Button variant="outline" onClick={handleReset}>
-                  <RotateCcw className="h-4 w-4 mr-2" />
-                  {language === 'en' ? 'Reset Puzzle' : 'אפס פאזל'}
-                </Button>
               </div>
               
               <div className="text-center text-sm text-gray-500 mt-2">
