@@ -40,11 +40,11 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     if (e.button !== 0) return; // Only left-click
     e.stopPropagation();
     
-    // Don't start dragging if the target is an image container (allow dropping files)
-    const target = e.target as HTMLElement;
+    // Important: Don't prevent dragging for image elements
+    // The check was too restrictive before, now we only check if we're clicking on
+    // the upload placeholder text but allow dragging on the image element itself
     if (element.type === 'image' && 
-        (target.tagName === 'IMG' || 
-         target.classList.contains('text-gray-400'))) {
+        (e.target as HTMLElement).classList.contains('text-gray-400')) {
       return;
     }
     

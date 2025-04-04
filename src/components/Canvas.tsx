@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -233,14 +234,14 @@ const Canvas = () => {
                   <img 
                     src={element.dataUrl} 
                     alt="Uploaded content" 
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-contain" 
                     draggable={false}
                   />
                 ) : element.src ? (
                   <img 
                     src={element.src} 
                     alt="Uploaded content" 
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-contain" 
                     draggable={false}
                   />
                 ) : (
