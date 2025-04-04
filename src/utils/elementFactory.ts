@@ -1,3 +1,4 @@
+
 import { ElementType, DesignElement, generateId, PuzzleType } from "@/types/designTypes";
 
 // Default positions for new elements
@@ -115,16 +116,26 @@ export const createNewElement = (
 
     case 'puzzle':
       const puzzleType = props?.puzzleConfig?.type || 'image';
+      const puzzleCategory = props?.puzzleConfig?.category || 'general';
+      const backgroundColor = puzzleCategory === 'coding' ? '#EEF2FF' : '#F3F4F6'; // Indigo-50 for coding puzzles
+      
       return {
         id: generateId(),
         type,
         position,
         size: { width: 150, height: 150 },
-        style: { backgroundColor: '#F3F4F6', borderRadius: '8px', transform: 'rotate(0deg)' },
+        style: { 
+          backgroundColor, 
+          borderRadius: '8px', 
+          transform: 'rotate(0deg)',
+          borderColor: puzzleCategory === 'coding' ? '#A5B4FC' : undefined, // Optional border for coding puzzles
+          borderWidth: puzzleCategory === 'coding' ? '1px' : undefined
+        },
         layer,
         puzzleConfig: props?.puzzleConfig || {
-          name: 'Puzzle',
+          name: puzzleCategory === 'coding' ? 'Coding Puzzle' : 'Puzzle',
           type: puzzleType as PuzzleType,
+          category: puzzleCategory,
           placeholders: 3,
           images: [],
           solution: [],

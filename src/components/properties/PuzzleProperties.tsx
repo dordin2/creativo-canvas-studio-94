@@ -1,6 +1,5 @@
-
 import React, { useState, useRef } from "react";
-import { DesignElement, PuzzleType } from "@/types/designTypes";
+import { DesignElement, PuzzleType, PuzzleCategory } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -14,7 +13,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash, Languages } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash, Languages, Code } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
@@ -34,6 +33,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     return element.puzzleConfig || {
       name: language === 'en' ? 'Puzzle' : 'פאזל',
       type: 'image' as PuzzleType,
+      category: 'general' as PuzzleCategory,
       placeholders: 3,
       images: [],
       solution: [],
@@ -55,6 +55,13 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       ...prev,
       type,
       solution: Array(prev.placeholders).fill(0)
+    }));
+  };
+  
+  const handleCategoryChange = (category: PuzzleCategory) => {
+    setLocalPuzzleConfig(prev => ({
+      ...prev,
+      category
     }));
   };
   
@@ -226,6 +233,31 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           onChange={handleNameChange}
           className="mt-1"
         />
+      </div>
+      
+      <div>
+        <Label htmlFor="puzzle-category" className="mb-2 block">{t('puzzle.category') || 'Category'}</Label>
+        <RadioGroup 
+          id="puzzle-category"
+          value={localPuzzleConfig.category}
+          onValueChange={(value) => handleCategoryChange(value as PuzzleCategory)}
+          className="flex flex-wrap gap-4 mb-3"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="general" id="general-category" />
+            <Label htmlFor="general-category" className="flex items-center">
+              <Lock className="h-4 w-4 mr-1" />
+              {language === 'en' ? 'General' : 'כללי'}
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="coding" id="coding-category" />
+            <Label htmlFor="coding-category" className="flex items-center">
+              <Code className="h-4 w-4 mr-1" />
+              {language === 'en' ? 'Coding' : 'קודנים'}
+            </Label>
+          </div>
+        </RadioGroup>
       </div>
       
       <div>
