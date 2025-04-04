@@ -7,7 +7,7 @@ import { toast } from "sonner";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 const Header = () => {
-  const { canvasRef } = useDesignState();
+  const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
   const { t, language } = useLanguage();
 
   const handleDownload = () => {
@@ -63,14 +63,6 @@ const Header = () => {
     toast.info(t('toast.info.share'));
   };
 
-  const handleUndo = () => {
-    toast.info(t('toast.info.undo'));
-  };
-
-  const handleRedo = () => {
-    toast.info(t('toast.info.redo'));
-  };
-
   return (
     <header className={`flex justify-between items-center py-4 px-6 border-b ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center gap-2">
@@ -78,10 +70,22 @@ const Header = () => {
         <LanguageSwitcher />
       </div>
       <div className="flex items-center gap-4">
-        <Button variant="outline" size="icon" onClick={handleUndo} title="Undo">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={undo} 
+          title={t('app.undo')}
+          disabled={!canUndo}
+        >
           <Undo className="h-4 w-4" />
         </Button>
-        <Button variant="outline" size="icon" onClick={handleRedo} title="Redo">
+        <Button 
+          variant="outline" 
+          size="icon" 
+          onClick={redo} 
+          title={t('app.redo')}
+          disabled={!canRedo}
+        >
           <Redo className="h-4 w-4" />
         </Button>
         <Button variant="outline" className="gap-2" onClick={handleShare}>

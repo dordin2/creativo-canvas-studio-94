@@ -1,3 +1,4 @@
+
 import { v4 as uuidv4 } from "uuid";
 
 // Define the types for our design elements
@@ -66,6 +67,10 @@ export interface DesignContextType {
   updateElementLayer: (id: string, newLayer: number) => void; // Added for layer management
   getHighestLayer: () => number; // Helper to get highest layer
   handleImageUpload: (id: string, file: File) => void; // Added for file uploads
+  undo: () => void; // Added for history management
+  redo: () => void; // Added for history management
+  canUndo: boolean; // Added to check if undo is available
+  canRedo: boolean; // Added to check if redo is available
 }
 
 // Helper function to generate new unique IDs
