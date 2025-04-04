@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, CheckCircle, ArrowLeft, ArrowRight } from "lucide-react";
+import { X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
 import { DesignElement } from "@/types/designTypes";
@@ -25,6 +25,8 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   const isInitialized = useRef(false);
   const pendingUpdate = useRef(false);
   const timeoutRef = useRef<number | null>(null);
+  const dragItemRef = useRef<HTMLDivElement | null>(null);
+  const dragImageRef = useRef<HTMLImageElement | null>(null);
   
   const sequencePuzzleConfig = element.sequencePuzzleConfig || {
     name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
@@ -125,19 +127,54 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     return array;
   };
   
-  // Handle dragging start
-  const handleDragStart = (index: number) => {
+  // Handle dragging start with custom image
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    if (dragImageRef.current) {
+      // Creating a custom drag image
+      const rect = dragImageRef.current.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+      
+      // Use the actual image element as drag image for a natural feel
+      e.dataTransfer.setDragImage(dragImageRef.current, offsetX, offsetY);
+    }
+    
+    // Set drag effect to move for a more natural feel
+    e.dataTransfer.effectAllowed = 'move';
+    
+    // Store the dragged item index
     setDraggedItem(index);
+    dragItemRef.current = e.currentTarget;
+    
+    // Add a class to style during dragging
+    e.currentTarget.classList.add('dragging');
   };
   
   // Handle drag over to enable dropping
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    
+    // Add visual indication of drop target
+    e.currentTarget.classList.add('drag-over');
+  };
+  
+  // Handle drag leave to reset visual indication
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.currentTarget.classList.remove('drag-over');
   };
   
   // Handle dropping
-  const handleDrop = (targetIndex: number) => {
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
+    e.preventDefault();
+    e.currentTarget.classList.remove('drag-over');
+    
     if (draggedItem === null) return;
+    
+    // Remove the dragging class from the source element
+    if (dragItemRef.current) {
+      dragItemRef.current.classList.remove('dragging');
+    }
     
     // Make a copy of the current order
     const newOrder = [...currentOrder];
@@ -152,6 +189,7 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     // Update the state
     setCurrentOrder(newOrder);
     setDraggedItem(null);
+    dragItemRef.current = null;
     
     // Only update the global state when completed, not during drag operations
     if (!pendingUpdate.current) {
@@ -176,52 +214,14 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     }
   };
   
-  // Handle touch-based reordering for mobile
-  const handleSwap = (index1: number, index2: number) => {
-    // Make a copy of the current order
-    const newOrder = [...currentOrder];
+  // Handle end of drag operation
+  const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    // Reset any visual states
+    e.currentTarget.classList.remove('dragging');
     
-    // Swap the two items
-    [newOrder[index1], newOrder[index2]] = [newOrder[index2], newOrder[index1]];
-    
-    // Update the state
-    setCurrentOrder(newOrder);
-    
-    // Only update the global state when completed, not during each swap
-    if (!pendingUpdate.current) {
-      pendingUpdate.current = true;
-      
-      // Clear any existing timeout
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-      }
-      
-      // Use a timeout to debounce the update
-      timeoutRef.current = window.setTimeout(() => {
-        updateElement(element.id, {
-          sequencePuzzleConfig: {
-            ...sequencePuzzleConfig,
-            currentOrder: newOrder
-          }
-        });
-        pendingUpdate.current = false;
-        timeoutRef.current = null;
-      }, 300);
-    }
-  };
-  
-  // Handle moving an item left
-  const handleMoveLeft = (index: number) => {
-    if (index > 0) {
-      handleSwap(index, index - 1);
-    }
-  };
-  
-  // Handle moving an item right
-  const handleMoveRight = (index: number) => {
-    if (index < currentOrder.length - 1) {
-      handleSwap(index, index + 1);
-    }
+    // Clear references and state if drag completed without a valid drop
+    setDraggedItem(null);
+    dragItemRef.current = null;
   };
   
   // Reset the puzzle
@@ -287,15 +287,18 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                   <div 
                     key={arrayIndex}
                     draggable
-                    onDragStart={() => handleDragStart(arrayIndex)}
+                    onDragStart={(e) => handleDragStart(e, arrayIndex)}
                     onDragOver={handleDragOver}
-                    onDrop={() => handleDrop(arrayIndex)}
-                    className="relative"
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, arrayIndex)}
+                    onDragEnd={handleDragEnd}
+                    className="relative transition-transform"
                   >
                     <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-blue-300 rounded-md overflow-hidden cursor-move transition-all hover:border-blue-500 bg-white relative">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-blue-300 rounded-md overflow-hidden cursor-grab active:cursor-grabbing hover:border-blue-500 bg-white relative">
                         {sequencePuzzleConfig.images[imageIndex] && (
                           <img
+                            ref={arrayIndex === draggedItem ? dragImageRef : null}
                             src={sequencePuzzleConfig.images[imageIndex]}
                             alt={`Image ${imageIndex + 1}`}
                             className="w-full h-full object-cover"
@@ -304,26 +307,6 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                         <div className="absolute top-0 left-0 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-br">
                           {arrayIndex + 1}
                         </div>
-                      </div>
-                      <div className="flex space-x-1 mt-1">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleMoveLeft(arrayIndex)}
-                          disabled={arrayIndex === 0}
-                        >
-                          <ArrowLeft className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-7 w-7"
-                          onClick={() => handleMoveRight(arrayIndex)}
-                          disabled={arrayIndex === currentOrder.length - 1}
-                        >
-                          <ArrowRight className="h-4 w-4" />
-                        </Button>
                       </div>
                     </div>
                   </div>

@@ -209,3 +209,29 @@
 .zoom-controls span {
   @apply px-2 text-sm font-medium text-sidebar-foreground;
 }
+
+/* Sequence Puzzle Drag and Drop styles */
+.dragging {
+  opacity: 0.6;
+  transform: scale(1.05);
+  z-index: 100;
+}
+
+.drag-over {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+  transform: scale(1.03);
+}
+
+/* Custom drag ghost image */
+[draggable] {
+  user-select: none;
+  -webkit-user-drag: element;
+}
+
+/* Hide default drag image in Firefox */
+@-moz-document url-prefix() {
+  [draggable] {
+    -moz-user-select: none;
+  }
+}
