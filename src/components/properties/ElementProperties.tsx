@@ -8,6 +8,7 @@ import ImageProperties from "./ImageProperties";
 import PositionProperties from "./PositionProperties";
 import LayerProperties from "./LayerProperties";
 import PuzzleProperties from "./PuzzleProperties";
+import SequencePuzzleProperties from "./SequencePuzzleProperties";
 
 const ElementProperties = ({ element }: { element: DesignElement }) => {
   const { t, language } = useLanguage();
@@ -16,6 +17,7 @@ const ElementProperties = ({ element }: { element: DesignElement }) => {
   const isShape = ['rectangle', 'circle', 'triangle', 'line'].includes(element.type);
   const isImage = element.type === 'image';
   const isPuzzle = element.type === 'puzzle';
+  const isSequencePuzzle = element.type === 'sequencePuzzle';
   
   return (
     <div className={`p-4 ${language === 'he' ? 'rtl' : 'ltr'}`}>
@@ -33,6 +35,7 @@ const ElementProperties = ({ element }: { element: DesignElement }) => {
           {isText && <TextProperties element={element} />}
           {isImage && <ImageProperties element={element} />}
           {isPuzzle && <PuzzleProperties element={element} />}
+          {isSequencePuzzle && <SequencePuzzleProperties element={element} />}
         </TabsContent>
         
         <TabsContent value="position" className="py-4">

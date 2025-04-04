@@ -41,6 +41,7 @@ const translations: Record<Language, Record<string, string>> = {
     'sidebar.image.puzzle': 'Image Puzzle',
     'sidebar.number.lock': 'Number Lock',
     'sidebar.alphabet.lock': 'Alphabet Lock',
+    'sidebar.sequence.puzzle': 'Sequence Puzzle',
     'sidebar.text.styles': 'Text Styles',
     'sidebar.heading': 'Heading',
     'sidebar.subheading': 'Subheading',
@@ -76,6 +77,16 @@ const translations: Record<Language, Record<string, string>> = {
     'puzzle.apply.changes': 'Apply Changes',
     'puzzle.add.to.canvas': 'Add to Canvas',
     
+    // Sequence Puzzle
+    'sequence.name': 'Sequence Puzzle Name',
+    'sequence.image.collection': 'Image Collection',
+    'sequence.order': 'Sequence Order',
+    'sequence.position': 'Position',
+    'sequence.add.images': 'Add images to your sequence',
+    'sequence.apply.changes': 'Apply Changes',
+    'sequence.add.to.canvas': 'Add to Canvas',
+    'sequence.drag.help': 'Drag images to reorder them',
+    
     // Puzzle Modal
     'puzzle.modal.close': 'Close',
     'puzzle.modal.solved': 'Puzzle solved! Great job!',
@@ -94,6 +105,8 @@ const translations: Record<Language, Record<string, string>> = {
     'toast.success.upload': 'Image uploaded successfully',
     'toast.error.upload': 'Failed to read image file',
     'toast.success.puzzle': 'Great job! Puzzle solved correctly!',
+    'toast.success.sequence': 'Great job! Sequence ordered correctly!',
+    'toast.info.reset': 'Puzzle has been shuffled',
   },
   he: {
     // Header
@@ -116,6 +129,7 @@ const translations: Record<Language, Record<string, string>> = {
     'sidebar.image.puzzle': 'פאזל תמונה',
     'sidebar.number.lock': 'מנעול מספרים',
     'sidebar.alphabet.lock': 'מנעול אותיות',
+    'sidebar.sequence.puzzle': 'פאזל רצף',
     'sidebar.text.styles': 'סגנונות טקסט',
     'sidebar.heading': 'כותרת',
     'sidebar.subheading': 'כותרת משנה',
@@ -151,6 +165,16 @@ const translations: Record<Language, Record<string, string>> = {
     'puzzle.apply.changes': 'החל שינויים',
     'puzzle.add.to.canvas': 'הוסף לקנבס',
     
+    // Sequence Puzzle
+    'sequence.name': 'שם פאזל הרצף',
+    'sequence.image.collection': 'אוסף תמונות',
+    'sequence.order': 'סדר הרצף',
+    'sequence.position': 'מיקום',
+    'sequence.add.images': 'הוסף תמונות לרצף שלך',
+    'sequence.apply.changes': 'החל שינויים',
+    'sequence.add.to.canvas': 'הוסף לקנבס',
+    'sequence.drag.help': 'גרור תמונות כדי לסדר אותן מחדש',
+    
     // Puzzle Modal
     'puzzle.modal.close': 'סגור',
     'puzzle.modal.solved': 'הפאזל נפתר! כל הכבוד!',
@@ -169,6 +193,8 @@ const translations: Record<Language, Record<string, string>> = {
     'toast.success.upload': 'התמונה הועלתה בהצלחה',
     'toast.error.upload': 'כשלון בקריאת קובץ התמונה',
     'toast.success.puzzle': 'עבודה מצוינת! הפאזל נפתר בהצלחה!',
+    'toast.success.sequence': 'עבודה מצוינת! הרצף סודר בהצלחה!',
+    'toast.info.reset': 'הפאזל עורבב מחדש',
   }
 };
 

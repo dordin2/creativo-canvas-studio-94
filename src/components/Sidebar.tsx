@@ -9,7 +9,8 @@ import {
   Triangle, 
   Lock, 
   Hash,
-  Languages
+  Languages,
+  MoveHorizontal
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -70,6 +71,18 @@ const Sidebar = () => {
         images: [],
         solution: [0, 0, 0],
         maxLetter: 'Z'
+      }
+    });
+  };
+
+  const handleSequencePuzzleClick = () => {
+    addElement('sequencePuzzle', {
+      name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
+      sequencePuzzleConfig: {
+        name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
+        images: [],
+        solution: [],
+        currentOrder: []
       }
     });
   };
@@ -152,6 +165,15 @@ const Sidebar = () => {
                 </div>
               </PopoverContent>
             </Popover>
+            
+            <Button 
+              variant="outline" 
+              className="h-14 flex flex-col gap-1 items-center justify-center col-span-2"
+              onClick={handleSequencePuzzleClick}
+            >
+              <MoveHorizontal className="h-5 w-5 text-blue-600" />
+              <span className="text-xs">{language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף'}</span>
+            </Button>
           </div>
         </TabsContent>
         

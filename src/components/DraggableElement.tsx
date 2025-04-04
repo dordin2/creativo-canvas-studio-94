@@ -8,6 +8,7 @@ import { getElementStyle, getRotation } from "@/utils/elementStyles";
 import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
+import SequencePuzzleElement from "./element/SequencePuzzleElement";
 
 interface DraggableElementProps {
   element: DesignElement;
@@ -60,7 +61,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   };
 
   const handlePuzzleClick = (e: React.MouseEvent) => {
-    if (element.type === 'puzzle' && !isDragging) {
+    if ((element.type === 'puzzle' || element.type === 'sequencePuzzle') && !isDragging) {
       e.stopPropagation();
       // The modal is now handled directly in the PuzzleElement component
       // so we don't need to do anything here
@@ -100,6 +101,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       <PuzzleElement 
         element={element} 
         onClick={handlePuzzleClick} 
+      />
+    );
+  } else if (element.type === 'sequencePuzzle') {
+    childContent = (
+      <SequencePuzzleElement
+        element={element}
+        onClick={handlePuzzleClick}
       />
     );
   }

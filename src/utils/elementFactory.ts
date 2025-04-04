@@ -1,3 +1,4 @@
+
 import { ElementType, DesignElement, generateId, PuzzleType } from "@/types/designTypes";
 
 // Default positions for new elements
@@ -130,6 +131,22 @@ export const createNewElement = (
           solution: [],
           maxNumber: puzzleType === 'number' ? 9 : undefined,
           maxLetter: puzzleType === 'alphabet' ? 'Z' : undefined
+        }
+      };
+
+    case 'sequencePuzzle':
+      return {
+        id: generateId(),
+        type,
+        position,
+        size: { width: 350, height: 150 },
+        style: { backgroundColor: '#EFF6FF', borderRadius: '8px', transform: 'rotate(0deg)' },
+        layer,
+        sequencePuzzleConfig: props?.sequencePuzzleConfig || {
+          name: props?.name || 'Sequence Puzzle',
+          images: [],
+          solution: [],
+          currentOrder: []
         }
       };
       

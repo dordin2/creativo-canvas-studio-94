@@ -12,7 +12,8 @@ export type ElementType =
   | 'paragraph' 
   | 'image'
   | 'background'
-  | 'puzzle';
+  | 'puzzle'
+  | 'sequencePuzzle';
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 
@@ -26,6 +27,15 @@ export interface PuzzleConfiguration {
   maxNumber?: number;
   // For alphabet puzzle
   maxLetter?: string;
+}
+
+export interface SequencePuzzleConfiguration {
+  name: string;
+  images: string[];
+  // The solution is the correct order of images (array of indices)
+  solution: number[];
+  // The current order of images (array of indices)
+  currentOrder: number[];
 }
 
 export interface DesignElement {
@@ -53,6 +63,7 @@ export interface DesignElement {
   dataUrl?: string; // Added for local image preview
   layer: number; // Added for layer ordering
   puzzleConfig?: PuzzleConfiguration; // Added for puzzle configuration
+  sequencePuzzleConfig?: SequencePuzzleConfiguration; // Added for sequence puzzle
 }
 
 export interface DesignContextType {
