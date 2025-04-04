@@ -2,11 +2,13 @@
 import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
-import { useRef } from "react";
+import LanguageSwitcher from "./LanguageSwitcher";
 
 const Header = () => {
   const { canvasRef } = useDesignState();
+  const { t, language } = useLanguage();
 
   const handleDownload = () => {
     if (!canvasRef) return;
@@ -46,7 +48,7 @@ const Header = () => {
           link.href = imgURI;
           link.click();
           
-          toast.success("Design downloaded successfully!");
+          toast.success(t('toast.success.download'));
         };
         
         img.src = url;
@@ -58,21 +60,22 @@ const Header = () => {
   };
 
   const handleShare = () => {
-    toast.info("Share functionality coming soon!");
+    toast.info(t('toast.info.share'));
   };
 
   const handleUndo = () => {
-    toast.info("Undo functionality coming soon!");
+    toast.info(t('toast.info.undo'));
   };
 
   const handleRedo = () => {
-    toast.info("Redo functionality coming soon!");
+    toast.info(t('toast.info.redo'));
   };
 
   return (
-    <header className="flex justify-between items-center py-4 px-6 border-b">
+    <header className={`flex justify-between items-center py-4 px-6 border-b ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center gap-2">
-        <div className="font-bold text-xl text-canvas-purple">CreativoCanvas</div>
+        <div className="font-bold text-xl text-canvas-purple">{t('app.title')}</div>
+        <LanguageSwitcher />
       </div>
       <div className="flex items-center gap-4">
         <Button variant="outline" size="icon" onClick={handleUndo} title="Undo">
@@ -83,11 +86,11 @@ const Header = () => {
         </Button>
         <Button variant="outline" className="gap-2" onClick={handleShare}>
           <Share className="h-4 w-4" />
-          <span>Share</span>
+          <span>{t('app.share')}</span>
         </Button>
         <Button className="gap-2" onClick={handleDownload}>
           <Download className="h-4 w-4" />
-          <span>Download</span>
+          <span>{t('app.download')}</span>
         </Button>
       </div>
     </header>

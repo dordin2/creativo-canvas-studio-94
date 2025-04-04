@@ -4,6 +4,7 @@ import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDe
 import { Button } from "@/components/ui/button";
 import { X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
+import { useLanguage } from "@/context/LanguageContext";
 import { DesignElement, PuzzleType } from "@/types/designTypes";
 
 interface PuzzleModalProps {
@@ -15,9 +16,10 @@ interface PuzzleModalProps {
 const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) => {
   const [currentStates, setCurrentStates] = useState<number[]>([]);
   const [solved, setSolved] = useState(false);
+  const { t, language } = useLanguage();
   
   const puzzleConfig = element.puzzleConfig || {
-    name: 'Puzzle',
+    name: language === 'en' ? 'Puzzle' : 'פאזל',
     type: 'image' as PuzzleType,
     placeholders: 3,
     images: [],
@@ -48,7 +50,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
     if (isSolved && !solved && isOpen) {
       setSolved(true);
       // Show success message
-      toast.success("Great job! Puzzle solved correctly!", {
+      toast.success(t('toast.success.puzzle'), {
         duration: 2000 // 2 seconds duration
       });
       
@@ -57,7 +59,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
         onClose();
       }, 2000);
     }
-  }, [currentStates, puzzleConfig.solution, solved, isOpen, onClose]);
+  }, [currentStates, puzzleConfig.solution, solved, isOpen, onClose, t]);
   
   const cyclePlaceholder = (index: number) => {
     if (puzzleType === 'image' && puzzleConfig.images.length === 0) return;
@@ -96,7 +98,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
         onClose();
       }
     }}>
-      <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl">
+      <DialogContent className={`sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <DialogHeader>
           <DialogTitle className="text-xl">{puzzleConfig.name}</DialogTitle>
           <DialogDescription className="sr-only">Interactive puzzle - click to solve</DialogDescription>
@@ -108,7 +110,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
               onClick={() => onClose()}
             >
               <X className="h-4 w-4" />
-              <span className="sr-only">Close</span>
+              <span className="sr-only">{t('puzzle.modal.close')}</span>
             </Button>
           </DialogClose>
         </DialogHeader>
@@ -134,8 +136,12 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
               </div>
             ) : (
               <div className="text-center py-10">
-                <p className="text-gray-500">No images available for this puzzle.</p>
-                <p className="text-sm mt-2">Please add images in the puzzle properties.</p>
+                <p className="text-gray-500">
+                  {language === 'en' ? 'No images available for this puzzle.' : 'אין תמונות זמינות לפאזל זה.'}
+                </p>
+                <p className="text-sm mt-2">
+                  {language === 'en' ? 'Please add images in the puzzle properties.' : 'אנא הוסף תמונות במאפייני הפאזל.'}
+                </p>
               </div>
             )
           ) : (
@@ -160,7 +166,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
         {solved && (
           <div className="flex items-center justify-center text-green-500 gap-2 pb-2">
             <CheckCircle className="h-5 w-5" />
-            <span>Puzzle solved! Great job!</span>
+            <span>{t('puzzle.modal.solved')}</span>
           </div>
         )}
       </DialogContent>

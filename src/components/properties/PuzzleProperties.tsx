@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { DesignElement, PuzzleType } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash, Languages } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,10 +28,11 @@ const PLACEHOLDER_IMAGES = [
 
 const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => {
   const { updateElement, addElement } = useDesignState();
+  const { t, language } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<string>("");
   const [localPuzzleConfig, setLocalPuzzleConfig] = useState(() => {
     return element.puzzleConfig || {
-      name: 'Puzzle',
+      name: language === 'en' ? 'Puzzle' : 'פאזל',
       type: 'image' as PuzzleType,
       placeholders: 3,
       images: [],
@@ -146,7 +149,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     
     const file = files[0];
     if (!file.type.startsWith('image/')) {
-      toast.error("Please select a valid image file");
+      toast.error(t('toast.error.file'));
       return;
     }
     
@@ -158,11 +161,11 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           ...prev,
           images: [...prev.images, imageDataUrl]
         }));
-        toast.success("Image uploaded successfully");
+        toast.success(t('toast.success.upload'));
       }
     };
     reader.onerror = () => {
-      toast.error("Failed to read image file");
+      toast.error(t('toast.error.upload'));
     };
     reader.readAsDataURL(file);
     
@@ -177,17 +180,17 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
   
   const handleApplyChanges = () => {
     if (localPuzzleConfig.name.trim() === '') {
-      toast.error("Puzzle name cannot be empty");
+      toast.error(t('toast.error.name'));
       return;
     }
     
     if (localPuzzleConfig.type === 'image' && localPuzzleConfig.images.length < 2) {
-      toast.error("Add at least 2 images to create an image puzzle");
+      toast.error(t('toast.error.images'));
       return;
     }
     
     if (localPuzzleConfig.type === 'image' && localPuzzleConfig.images.length <= 0) {
-      toast.error("Please add images to your puzzle");
+      toast.error(t('toast.error.add.images'));
       return;
     }
     
@@ -195,28 +198,28 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       puzzleConfig: localPuzzleConfig
     });
     
-    toast.success("Puzzle configuration saved");
+    toast.success(t('toast.success.config'));
   };
   
   const createPuzzleElement = () => {
     if (localPuzzleConfig.name.trim() === '') {
-      toast.error("Puzzle name cannot be empty");
+      toast.error(t('toast.error.name'));
       return;
     }
     
     if (localPuzzleConfig.type === 'image' && localPuzzleConfig.images.length < 2) {
-      toast.error("Add at least 2 images to create an image puzzle");
+      toast.error(t('toast.error.images'));
       return;
     }
     
     addElement('puzzle', { puzzleConfig: localPuzzleConfig });
-    toast.success("Puzzle added to canvas");
+    toast.success(t('toast.success.added'));
   };
   
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="puzzle-name">Puzzle Name</Label>
+        <Label htmlFor="puzzle-name">{t('puzzle.name')}</Label>
         <Input 
           id="puzzle-name" 
           value={localPuzzleConfig.name} 
@@ -226,7 +229,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       </div>
       
       <div>
-        <Label htmlFor="puzzle-type" className="mb-2 block">Puzzle Type</Label>
+        <Label htmlFor="puzzle-type" className="mb-2 block">{t('puzzle.type')}</Label>
         <RadioGroup 
           id="puzzle-type"
           value={localPuzzleConfig.type}
@@ -237,21 +240,21 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
             <RadioGroupItem value="image" id="image-puzzle" />
             <Label htmlFor="image-puzzle" className="flex items-center">
               <Lock className="h-4 w-4 mr-1" />
-              Image Puzzle
+              {t('sidebar.image.puzzle')}
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="number" id="number-puzzle" />
             <Label htmlFor="number-puzzle" className="flex items-center">
               <Hash className="h-4 w-4 mr-1" />
-              Number Lock
+              {t('sidebar.number.lock')}
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="alphabet" id="alphabet-puzzle" />
             <Label htmlFor="alphabet-puzzle" className="flex items-center">
               <Languages className="h-4 w-4 mr-1" />
-              Alphabet Lock
+              {t('sidebar.alphabet.lock')}
             </Label>
           </div>
         </RadioGroup>
@@ -259,9 +262,9 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       
       <div>
         <Label htmlFor="placeholders">
-          {localPuzzleConfig.type === 'image' ? 'Number of Placeholders' : 
-           localPuzzleConfig.type === 'number' ? 'Number of Digits' :
-           'Number of Letters'}
+          {localPuzzleConfig.type === 'image' ? t('puzzle.placeholders') : 
+           localPuzzleConfig.type === 'number' ? t('puzzle.digits') :
+           t('puzzle.letters')}
         </Label>
         <Select 
           value={localPuzzleConfig.placeholders.toString()} 
@@ -273,8 +276,11 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           <SelectContent>
             {[2, 3, 4, 5, 6].map(num => (
               <SelectItem key={num} value={num.toString()}>
-                {num} {localPuzzleConfig.type === 'image' ? 'placeholders' : 
-                       localPuzzleConfig.type === 'number' ? 'digits' : 'letters'}
+                {num} {localPuzzleConfig.type === 'image' ? 
+                       language === 'en' ? 'placeholders' : 'מיקומים' : 
+                       localPuzzleConfig.type === 'number' ? 
+                       language === 'en' ? 'digits' : 'ספרות' : 
+                       language === 'en' ? 'letters' : 'אותיות'}
               </SelectItem>
             ))}
           </SelectContent>
@@ -283,7 +289,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       
       {localPuzzleConfig.type === 'number' && (
         <div>
-          <Label htmlFor="max-number">Maximum Number</Label>
+          <Label htmlFor="max-number">{t('puzzle.max.number')}</Label>
           <Select 
             value={localPuzzleConfig.maxNumber?.toString() || "9"} 
             onValueChange={handleMaxNumberChange}
@@ -304,7 +310,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       
       {localPuzzleConfig.type === 'alphabet' && (
         <div>
-          <Label htmlFor="max-letter">Maximum Letter</Label>
+          <Label htmlFor="max-letter">{t('puzzle.max.letter')}</Label>
           <Select 
             value={localPuzzleConfig.maxLetter?.toString() || "Z"} 
             onValueChange={handleMaxLetterChange}
@@ -325,17 +331,17 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
       
       {localPuzzleConfig.type === 'image' && (
         <div>
-          <Label>Image Collection</Label>
+          <Label>{t('puzzle.image.collection')}</Label>
           <div className="mt-2 space-y-3">
             <div className="flex items-center gap-2">
               <Select value={selectedImage} onValueChange={setSelectedImage}>
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Select an image" />
+                  <SelectValue placeholder={t('puzzle.select.image')} />
                 </SelectTrigger>
                 <SelectContent>
                   {PLACEHOLDER_IMAGES.map((img, idx) => (
                     <SelectItem key={idx} value={img}>
-                      Image {idx + 1}
+                      {language === 'en' ? `Image ${idx + 1}` : `תמונה ${idx + 1}`}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -364,7 +370,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
                 onClick={handleBrowseClick}
               >
                 <Upload className="h-4 w-4 mr-2" />
-                Upload Image
+                {t('puzzle.upload.image')}
               </Button>
             </div>
           </div>
@@ -383,44 +389,51 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
                 >
                   <Trash2 className="h-3 w-3" />
                 </button>
-                <div className="text-xs text-center mt-1">Image {idx + 1}</div>
+                <div className="text-xs text-center mt-1">
+                  {language === 'en' ? `Image ${idx + 1}` : `תמונה ${idx + 1}`}
+                </div>
               </div>
             ))}
           </div>
           
           {localPuzzleConfig.images.length === 0 && (
             <div className="text-sm text-gray-500 text-center py-4">
-              Add images to your puzzle collection
+              {t('puzzle.add.images')}
             </div>
           )}
         </div>
       )}
       
       <div>
-        <Label>Solution Configuration</Label>
+        <Label>{t('puzzle.solution')}</Label>
         <div className="space-y-2 mt-2">
           {Array.from({ length: localPuzzleConfig.placeholders }).map((_, idx) => (
             <div key={idx} className="flex items-center gap-2">
               <span className="text-sm font-medium w-24">
-                {localPuzzleConfig.type === 'image' ? `Placeholder ${idx + 1}:` : 
-                 localPuzzleConfig.type === 'number' ? `Digit ${idx + 1}:` :
-                 `Letter ${idx + 1}:`}
+                {localPuzzleConfig.type === 'image' ? 
+                  `${t('puzzle.placeholder')} ${idx + 1}:` : 
+                 localPuzzleConfig.type === 'number' ? 
+                  `${t('puzzle.digit')} ${idx + 1}:` :
+                  `${t('puzzle.letter')} ${idx + 1}:`}
               </span>
               <Select 
                 value={localPuzzleConfig.solution[idx]?.toString() || "0"} 
                 onValueChange={(val) => handleSolutionChange(idx, val)}
               >
                 <SelectTrigger className="flex-1">
-                  <SelectValue placeholder={`Select correct ${
-                    localPuzzleConfig.type === 'image' ? 'image' : 
-                    localPuzzleConfig.type === 'number' ? 'number' : 'letter'
-                  }`} />
+                  <SelectValue placeholder={
+                    localPuzzleConfig.type === 'image' ? 
+                    t('puzzle.select.correct.image') : 
+                    localPuzzleConfig.type === 'number' ? 
+                    t('puzzle.select.correct.number') : 
+                    t('puzzle.select.correct.letter')
+                  } />
                 </SelectTrigger>
                 <SelectContent>
                   {localPuzzleConfig.type === 'image'
                     ? localPuzzleConfig.images.map((_, imgIdx) => (
                         <SelectItem key={imgIdx} value={imgIdx.toString()}>
-                          Image {imgIdx + 1}
+                          {language === 'en' ? `Image ${imgIdx + 1}` : `תמונה ${imgIdx + 1}`}
                         </SelectItem>
                       ))
                     : localPuzzleConfig.type === 'number'
@@ -451,7 +464,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           onClick={handleApplyChanges}
         >
           <FileCheck className="h-4 w-4 mr-2" />
-          Apply Changes
+          {t('puzzle.apply.changes')}
         </Button>
         
         <Button
@@ -459,7 +472,7 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
           className="w-full"
           onClick={createPuzzleElement}
         >
-          Add to Canvas
+          {t('puzzle.add.to.canvas')}
         </Button>
       </div>
     </div>

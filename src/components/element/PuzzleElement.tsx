@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Lock, Hash, Languages } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 import PuzzleModal from "./PuzzleModal";
 
 interface PuzzleElementProps {
@@ -11,6 +12,7 @@ interface PuzzleElementProps {
 
 const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const { t, language } = useLanguage();
   
   const handleClick = (e: React.MouseEvent) => {
     // Handle regular element click for selection
@@ -42,38 +44,38 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
   const getPuzzleLabel = () => {
     switch(puzzleType) {
       case 'image':
-        return 'Image Puzzle';
+        return language === 'en' ? 'Image Puzzle' : 'פאזל תמונה';
       case 'number':
-        return 'Number Lock';
+        return language === 'en' ? 'Number Lock' : 'מנעול מספרים';
       case 'alphabet':
-        return 'Alphabet Lock';
+        return language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות';
       default:
-        return 'Puzzle';
+        return language === 'en' ? 'Puzzle' : 'פאזל';
     }
   };
   
   const getPlaceholderLabel = () => {
     switch(puzzleType) {
       case 'image':
-        return 'placeholders';
+        return language === 'en' ? 'placeholders' : 'מיקומים';
       case 'number':
-        return 'digits';
+        return language === 'en' ? 'digits' : 'ספרות';
       case 'alphabet':
-        return 'letters';
+        return language === 'en' ? 'letters' : 'אותיות';
       default:
-        return 'placeholders';
+        return language === 'en' ? 'placeholders' : 'מיקומים';
     }
   };
   
   return (
     <>
       <div 
-        className="flex flex-col items-center justify-center w-full h-full p-3 cursor-pointer"
+        className={`flex flex-col items-center justify-center w-full h-full p-3 cursor-pointer ${language === 'he' ? 'rtl' : 'ltr'}`}
         onClick={handleClick}
       >
         {getPuzzleIcon()}
         <p className="text-sm font-medium text-center text-gray-700 line-clamp-2">
-          {element.puzzleConfig?.name || "Puzzle"}
+          {element.puzzleConfig?.name || (language === 'en' ? "Puzzle" : "פאזל")}
         </p>
         <div className="text-xs text-gray-500 mt-1">
           {getPuzzleLabel()}: {element.puzzleConfig?.placeholders || 3} {getPlaceholderLabel()}
