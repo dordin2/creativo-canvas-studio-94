@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useRef, ReactNode } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { toast } from "sonner";
@@ -98,14 +97,34 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           const naturalWidth = img.naturalWidth;
           const naturalHeight = img.naturalHeight;
           
-          // Update the element with both the file data and correct dimensions
+          // Calculate scaled dimensions for large images
+          // Maximum initial width or height
+          const MAX_INITIAL_SIZE = 300;
+          
+          let scaledWidth = naturalWidth;
+          let scaledHeight = naturalHeight;
+          
+          // If the image is larger than our max size, scale it down proportionally
+          if (naturalWidth > MAX_INITIAL_SIZE || naturalHeight > MAX_INITIAL_SIZE) {
+            if (naturalWidth > naturalHeight) {
+              // Landscape orientation
+              scaledWidth = MAX_INITIAL_SIZE;
+              scaledHeight = (naturalHeight / naturalWidth) * MAX_INITIAL_SIZE;
+            } else {
+              // Portrait or square orientation
+              scaledHeight = MAX_INITIAL_SIZE;
+              scaledWidth = (naturalWidth / naturalHeight) * MAX_INITIAL_SIZE;
+            }
+          }
+          
+          // Update the element with the file data and scaled dimensions
           updateElement(id, { 
             file, 
             dataUrl, 
             src: undefined, // Clear the external URL when using a local file
             size: {
-              width: naturalWidth,
-              height: naturalHeight
+              width: scaledWidth,
+              height: scaledHeight
             }
           });
           toast.success("Image uploaded successfully");
