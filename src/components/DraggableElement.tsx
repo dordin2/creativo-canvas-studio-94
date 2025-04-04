@@ -72,9 +72,14 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       height: height
     });
     
-    // Always calculate and store the original aspect ratio for any element
-    // This will be used for image elements to maintain their aspect ratio
-    setOriginalAspectRatio(width / height);
+    // For image elements, use the natural aspect ratio if available
+    if (element.type === 'image') {
+      // Calculate natural aspect ratio from the image's actual dimensions
+      setOriginalAspectRatio(width / height);
+    } else {
+      // For non-image elements, set to null as we don't need to maintain aspect ratio
+      setOriginalAspectRatio(null);
+    }
   };
 
   // Start rotation
@@ -116,7 +121,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         let newWidth = startSize.width;
         let newHeight = startSize.height;
         
-        // For images, always maintain aspect ratio automatically (like holding Shift)
+        // For images, maintain aspect ratio automatically
         const shouldMaintainAspectRatio = element.type === 'image' && originalAspectRatio !== null;
         
         if (shouldMaintainAspectRatio) {
