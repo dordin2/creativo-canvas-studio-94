@@ -1,6 +1,6 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { useDraggable } from "@/hooks/useDraggable";
 
 interface DraggableElementProps {
   element: DesignElement;
@@ -10,6 +10,7 @@ interface DraggableElementProps {
 
 const DraggableElement = ({ element, isActive, children }: DraggableElementProps) => {
   const { updateElement } = useDesignState();
+  const { startDrag } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isResizing, setIsResizing] = useState(false);
@@ -18,6 +19,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [startRotation, setStartRotation] = useState(0);
+  const [aspectRatio, setAspectRatio] = useState<number | null>(null);
 
   // Initialize rotation if it doesn't exist
   useEffect(() => {
@@ -60,10 +62,22 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     setIsResizing(true);
     setResizeDirection(direction);
     setStartPos({ x: e.clientX, y: e.clientY });
+    
+    const width = element.size?.width || 100;
+    const height = element.size?.height || 100;
+    
     setStartSize({
-      width: element.size?.width || 100,
-      height: element.size?.height || 100
+      width: width,
+      height: height
     });
+    
+    // Calculate and store the aspect ratio for images
+    // We'll always maintain aspect ratio for images now (simulating Shift key always pressed)
+    if (element.type === 'image') {
+      setAspectRatio(width / height);
+    } else {
+      setAspectRatio(null);
+    }
   };
 
   // Start rotation
@@ -105,33 +119,98 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         let newWidth = startSize.width;
         let newHeight = startSize.height;
         
-        // Handle different resize directions
-        if (resizeDirection.includes("e")) {
-          newWidth = Math.max(20, startSize.width + deltaX);
-        }
-        if (resizeDirection.includes("w")) {
-          newWidth = Math.max(20, startSize.width - deltaX);
-          if (newWidth !== startSize.width) {
+        // For images, maintain aspect ratio
+        if (aspectRatio !== null) {
+          // Handle different resize directions
+          if (resizeDirection.includes("e") || resizeDirection.includes("w")) {
+            // Horizontal resize - adjust height based on width
+            if (resizeDirection.includes("e")) {
+              newWidth = Math.max(20, startSize.width + deltaX);
+              newHeight = newWidth / aspectRatio;
+            } else { // "w"
+              newWidth = Math.max(20, startSize.width - deltaX);
+              newHeight = newWidth / aspectRatio;
+              
+              if (newWidth !== startSize.width) {
+                updateElement(element.id, {
+                  position: {
+                    x: element.position.x + (startSize.width - newWidth),
+                    y: element.position.y
+                  }
+                });
+              }
+            }
+          } else if (resizeDirection.includes("s") || resizeDirection.includes("n")) {
+            // Vertical resize - adjust width based on height
+            if (resizeDirection.includes("s")) {
+              newHeight = Math.max(20, startSize.height + deltaY);
+              newWidth = newHeight * aspectRatio;
+            } else { // "n"
+              newHeight = Math.max(20, startSize.height - deltaY);
+              newWidth = newHeight * aspectRatio;
+              
+              if (newHeight !== startSize.height) {
+                updateElement(element.id, {
+                  position: {
+                    x: element.position.x,
+                    y: element.position.y + (startSize.height - newHeight)
+                  }
+                });
+              }
+            }
+          }
+          
+          // Handle corner cases by prioritizing the primary direction
+          if (resizeDirection === "se" || resizeDirection === "ne") {
+            newWidth = Math.max(20, startSize.width + deltaX);
+            newHeight = newWidth / aspectRatio;
+            if (resizeDirection === "ne") {
+              updateElement(element.id, {
+                position: {
+                  x: element.position.x,
+                  y: element.position.y + (startSize.height - newHeight)
+                }
+              });
+            }
+          } else if (resizeDirection === "sw" || resizeDirection === "nw") {
+            newWidth = Math.max(20, startSize.width - deltaX);
+            newHeight = newWidth / aspectRatio;
             updateElement(element.id, {
               position: {
                 x: element.position.x + (startSize.width - newWidth),
-                y: element.position.y
+                y: element.position.y + (resizeDirection === "nw" ? (startSize.height - newHeight) : 0)
               }
             });
           }
-        }
-        if (resizeDirection.includes("s")) {
-          newHeight = Math.max(20, startSize.height + deltaY);
-        }
-        if (resizeDirection.includes("n")) {
-          newHeight = Math.max(20, startSize.height - deltaY);
-          if (newHeight !== startSize.height) {
-            updateElement(element.id, {
-              position: {
-                x: element.position.x,
-                y: element.position.y + (startSize.height - newHeight)
-              }
-            });
+        } else {
+          // Standard resize without aspect ratio for non-image elements
+          if (resizeDirection.includes("e")) {
+            newWidth = Math.max(20, startSize.width + deltaX);
+          }
+          if (resizeDirection.includes("w")) {
+            newWidth = Math.max(20, startSize.width - deltaX);
+            if (newWidth !== startSize.width) {
+              updateElement(element.id, {
+                position: {
+                  x: element.position.x + (startSize.width - newWidth),
+                  y: element.position.y
+                }
+              });
+            }
+          }
+          if (resizeDirection.includes("s")) {
+            newHeight = Math.max(20, startSize.height + deltaY);
+          }
+          if (resizeDirection.includes("n")) {
+            newHeight = Math.max(20, startSize.height - deltaY);
+            if (newHeight !== startSize.height) {
+              updateElement(element.id, {
+                position: {
+                  x: element.position.x,
+                  y: element.position.y + (startSize.height - newHeight)
+                }
+              });
+            }
           }
         }
         
@@ -141,7 +220,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         });
       } 
       else if (isRotating) {
-        // Calculate angle between center and current mouse position
         const centerX = startPos.x;
         const centerY = startPos.y;
         
@@ -163,6 +241,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       setIsDragging(false);
       setIsResizing(false);
       setIsRotating(false);
+      setAspectRatio(null);
     };
 
     if (isDragging || isResizing || isRotating) {
@@ -183,7 +262,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     startRotation,
     resizeDirection, 
     element, 
-    updateElement
+    updateElement,
+    aspectRatio
   ]);
 
   // Build the style for the element

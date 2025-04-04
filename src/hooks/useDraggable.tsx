@@ -8,12 +8,15 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, elements } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
   const rafRef = useRef<number | null>(null);
   const currentPosition = useRef<Position | null>(null);
+
+  // Find the current element to access its properties
+  const currentElement = elements.find(el => el.id === elementId);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -80,5 +83,5 @@ export const useDraggable = (elementId: string) => {
     elementInitialPos.current = initialPosition;
   };
 
-  return { startDrag, isDragging };
+  return { startDrag, isDragging, currentElement };
 };
