@@ -3,6 +3,7 @@ import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
 import LayersList from "./LayersList";
+import { Minus, Plus, RotateCcw } from "lucide-react";
 
 const Canvas = () => {
   const { 
@@ -16,6 +17,7 @@ const Canvas = () => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1); // Adding zoom state
   
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -52,6 +54,21 @@ const Canvas = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+  
+  // Function to handle zoom in
+  const handleZoomIn = () => {
+    setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
+  };
+  
+  // Function to handle zoom out
+  const handleZoomOut = () => {
+    setZoomLevel(prevZoom => Math.max(prevZoom - 0.1, 0.5));
+  };
+  
+  // Function to reset zoom
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+  };
   
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === containerRef.current) {
@@ -276,8 +293,8 @@ const Canvas = () => {
   } : { backgroundColor: 'white' };
   
   return (
-    <div className="flex-1 flex items-center justify-center p-8 canvas-workspace">
-      <div className="canvas-container relative">
+    <div className="flex-1 flex items-center justify-center p-8 canvas-workspace relative">
+      <div className="canvas-container" style={{ transform: `scale(${zoomLevel})`, transformOrigin: 'center center', transition: 'transform 0.2s ease-out' }}>
         <div
           ref={containerRef}
           className={`relative shadow-lg rounded-lg overflow-hidden transition-all ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
@@ -307,6 +324,20 @@ const Canvas = () => {
         >
           {/* This is where elements that can extend beyond the canvas will be rendered */}
         </div>
+      </div>
+      
+      {/* Zoom controls */}
+      <div className="zoom-controls">
+        <button onClick={handleZoomOut} title="Zoom Out">
+          <Minus size={16} />
+        </button>
+        <span>{Math.round(zoomLevel * 100)}%</span>
+        <button onClick={handleZoomIn} title="Zoom In">
+          <Plus size={16} />
+        </button>
+        <button onClick={handleResetZoom} title="Reset Zoom">
+          <RotateCcw size={16} />
+        </button>
       </div>
     </div>
   );

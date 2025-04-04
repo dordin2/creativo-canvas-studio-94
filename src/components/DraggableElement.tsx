@@ -265,18 +265,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
 
   const showRotationHandle = isActive && element.type !== 'background';
 
-  const handleClasses = "absolute w-3 h-3 bg-canvas-purple border-2 border-white rounded-full z-[1000] shadow-md";
-  const handleStyles = {
-    nw: `${handleClasses} cursor-nw-resize -top-2 -left-2`,
-    n: `${handleClasses} cursor-n-resize top-0 left-1/2 -translate-x-1/2 -translate-y-1/2`,
-    ne: `${handleClasses} cursor-ne-resize -top-2 -right-2`,
-    e: `${handleClasses} cursor-e-resize top-1/2 -right-2 -translate-y-1/2`,
-    se: `${handleClasses} cursor-se-resize -bottom-2 -right-2`,
-    s: `${handleClasses} cursor-s-resize bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2`,
-    sw: `${handleClasses} cursor-sw-resize -bottom-2 -left-2`,
-    w: `${handleClasses} cursor-w-resize top-1/2 -left-2 -translate-y-1/2`,
-  };
-
   return (
     <div
       ref={elementRef}
@@ -295,35 +283,35 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       {showResizeHandles && (
         <>
           <div 
-            className={handleStyles.nw}
+            className="resize-handle cursor-nw-resize -top-2 -left-2"
             onMouseDown={(e) => handleResizeStart(e, "nw")}
           />
           <div 
-            className={handleStyles.n}
+            className="resize-handle cursor-n-resize top-0 left-1/2 -translate-x-1/2 -translate-y-1/2"
             onMouseDown={(e) => handleResizeStart(e, "n")}
           />
           <div 
-            className={handleStyles.ne}
+            className="resize-handle cursor-ne-resize -top-2 -right-2"
             onMouseDown={(e) => handleResizeStart(e, "ne")}
           />
           <div 
-            className={handleStyles.e}
+            className="resize-handle cursor-e-resize top-1/2 -right-2 -translate-y-1/2"
             onMouseDown={(e) => handleResizeStart(e, "e")}
           />
           <div 
-            className={handleStyles.se}
+            className="resize-handle cursor-se-resize -bottom-2 -right-2"
             onMouseDown={(e) => handleResizeStart(e, "se")}
           />
           <div 
-            className={handleStyles.s}
+            className="resize-handle cursor-s-resize bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"
             onMouseDown={(e) => handleResizeStart(e, "s")}
           />
           <div 
-            className={handleStyles.sw}
+            className="resize-handle cursor-sw-resize -bottom-2 -left-2"
             onMouseDown={(e) => handleResizeStart(e, "sw")}
           />
           <div 
-            className={handleStyles.w}
+            className="resize-handle cursor-w-resize top-1/2 -left-2 -translate-y-1/2"
             onMouseDown={(e) => handleResizeStart(e, "w")}
           />
         </>
@@ -331,7 +319,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       
       {showRotationHandle && (
         <div 
-          className="absolute w-5 h-5 rounded-full bg-canvas-purple border-2 border-white flex items-center justify-center cursor-move top-0 left-1/2 -translate-x-1/2 -translate-y-10 z-[1000] shadow-md"
+          className="rotation-handle top-0 left-1/2 -translate-x-1/2 -translate-y-10"
           onMouseDown={handleRotateStart}
         >
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
