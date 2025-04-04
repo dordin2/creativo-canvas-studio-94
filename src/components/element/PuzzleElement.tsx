@@ -5,7 +5,7 @@ import { Lock } from "lucide-react";
 
 interface PuzzleElementProps {
   element: DesignElement;
-  onClick: () => void;
+  onClick: (e: React.MouseEvent) => void;
 }
 
 const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
