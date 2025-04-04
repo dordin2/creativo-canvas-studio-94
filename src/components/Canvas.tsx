@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect, useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
 import DraggableElement from "@/components/DraggableElement";
@@ -62,40 +63,56 @@ const Canvas = () => {
       case "circle":
       case "triangle":
       case "line":
-        return <DraggableElement {...elementProps} />;
+        return (
+          <DraggableElement {...elementProps}>
+            {() => null}
+          </DraggableElement>
+        );
         
       case "heading":
       case "subheading":
       case "paragraph":
-        return <DraggableElement {...elementProps}>
-          {(props) => (
-            <EditableText element={element} onChange={props.onChange} />
-          )}
-        </DraggableElement>;
+        return (
+          <DraggableElement {...elementProps}>
+            {({ onClick }) => (
+              <EditableText element={element} isEditing={false} setIsEditing={() => {}} textInputRef={{ current: null }} />
+            )}
+          </DraggableElement>
+        );
         
       case "image":
-        return <DraggableElement {...elementProps} />;
+        return (
+          <DraggableElement {...elementProps}>
+            {() => null}
+          </DraggableElement>
+        );
 
       case "puzzle":
-        return <DraggableElement {...elementProps}>
-          {(props) => (
-            <PuzzleElement element={element} onClick={props.onClick} />
-          )}
-        </DraggableElement>;
+        return (
+          <DraggableElement {...elementProps}>
+            {({ onClick }) => (
+              <PuzzleElement element={element} onClick={onClick} />
+            )}
+          </DraggableElement>
+        );
 
       case "sequencePuzzle":
-        return <DraggableElement {...elementProps}>
-          {(props) => (
-            <SequencePuzzleElement element={element} onClick={props.onClick} />
-          )}
-        </DraggableElement>;
+        return (
+          <DraggableElement {...elementProps}>
+            {({ onClick }) => (
+              <SequencePuzzleElement element={element} onClick={onClick} />
+            )}
+          </DraggableElement>
+        );
       
       case "clickSequencePuzzle":
-        return <DraggableElement {...elementProps}>
-          {(props) => (
-            <ClickSequencePuzzleElement element={element} onClick={props.onClick} />
-          )}
-        </DraggableElement>;
+        return (
+          <DraggableElement {...elementProps}>
+            {({ onClick }) => (
+              <ClickSequencePuzzleElement element={element} onClick={onClick} />
+            )}
+          </DraggableElement>
+        );
       
       default:
         return null;
@@ -121,7 +138,12 @@ const Canvas = () => {
         <div 
           className="absolute top-0 left-0 w-full h-full canvas-workspace"
           style={{ transform: `scale(${zoom / 100})` }}
-          ref={canvasRef}
+          ref={(el) => {
+            if (canvasRef && el) {
+              // Update the ref without replacing the entire object
+              Object.assign(canvasRef, el);
+            }
+          }}
         >
           {elements.map(renderElement)}
         </div>
