@@ -1,51 +1,106 @@
 
+import React from "react";
 import { DesignElement } from "@/types/designTypes";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLanguage } from "@/context/LanguageContext";
+import PositionProperties from "./PositionProperties";
 import ShapeProperties from "./ShapeProperties";
 import TextProperties from "./TextProperties";
 import ImageProperties from "./ImageProperties";
-import PositionProperties from "./PositionProperties";
 import LayerProperties from "./LayerProperties";
+import RotationProperty from "./RotationProperty";
 import PuzzleProperties from "./PuzzleProperties";
 import SequencePuzzleProperties from "./SequencePuzzleProperties";
+import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
 
-const ElementProperties = ({ element }: { element: DesignElement }) => {
-  const { t, language } = useLanguage();
-  
-  const isText = ['heading', 'subheading', 'paragraph'].includes(element.type);
-  const isShape = ['rectangle', 'circle', 'triangle', 'line'].includes(element.type);
-  const isImage = element.type === 'image';
-  const isPuzzle = element.type === 'puzzle';
-  const isSequencePuzzle = element.type === 'sequencePuzzle';
-  
-  return (
-    <div className={`p-4 ${language === 'he' ? 'rtl' : 'ltr'}`}>
-      <h2 className="text-lg font-medium mb-4">{t('properties.element')}</h2>
+interface ElementPropertiesProps {
+  element: DesignElement;
+}
+
+const ElementProperties: React.FC<ElementPropertiesProps> = ({ element }) => {
+  // Determine which properties panel to show based on element type
+  const renderPropertiesPanel = () => {
+    switch (element.type) {
+      case "rectangle":
+      case "circle":
+      case "triangle":
+      case "line":
+        return (
+          <>
+            <ShapeProperties element={element} />
+            <PositionProperties element={element} />
+            <RotationProperty element={element} />
+            <LayerProperties element={element} />
+          </>
+        );
       
-      <Tabs defaultValue="style" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="style">{t('properties.style')}</TabsTrigger>
-          <TabsTrigger value="position">{t('properties.position')}</TabsTrigger>
-          <TabsTrigger value="layer">{t('properties.layer')}</TabsTrigger>
-        </TabsList>
+      case "heading":
+      case "subheading":
+      case "paragraph":
+        return (
+          <>
+            <TextProperties element={element} />
+            <PositionProperties element={element} />
+            <RotationProperty element={element} />
+            <LayerProperties element={element} />
+          </>
+        );
+      
+      case "image":
+        return (
+          <>
+            <ImageProperties element={element} />
+            <PositionProperties element={element} />
+            <RotationProperty element={element} />
+            <LayerProperties element={element} />
+          </>
+        );
+      
+      case "background":
+        return (
+          <>
+            <ShapeProperties element={element} />
+            <LayerProperties element={element} />
+          </>
+        );
+
+      case "puzzle":
+        return (
+          <>
+            <PuzzleProperties element={element} />
+            <PositionProperties element={element} />
+            <RotationProperty element={element} />
+            <LayerProperties element={element} />
+          </>
+        );
+
+      case "sequencePuzzle":
+        return (
+          <>
+            <SequencePuzzleProperties element={element} />
+            <PositionProperties element={element} />
+            <RotationProperty element={element} />
+            <LayerProperties element={element} />
+          </>
+        );
         
-        <TabsContent value="style" className="py-4">
-          {isShape && <ShapeProperties element={element} />}
-          {isText && <TextProperties element={element} />}
-          {isImage && <ImageProperties element={element} />}
-          {isPuzzle && <PuzzleProperties element={element} />}
-          {isSequencePuzzle && <SequencePuzzleProperties element={element} />}
-        </TabsContent>
-        
-        <TabsContent value="position" className="py-4">
-          <PositionProperties element={element} />
-        </TabsContent>
-        
-        <TabsContent value="layer" className="py-4">
-          <LayerProperties element={element} />
-        </TabsContent>
-      </Tabs>
+      case "clickSequencePuzzle":
+        return (
+          <>
+            <ClickSequencePuzzleProperties element={element} />
+            <PositionProperties element={element} />
+            <RotationProperty element={element} />
+            <LayerProperties element={element} />
+          </>
+        );
+      
+      default:
+        return <div>No properties available for this element type.</div>;
+    }
+  };
+
+  return (
+    <div className="properties-panel border-l overflow-y-auto h-full p-4">
+      <h2 className="text-lg font-bold mb-4">Properties</h2>
+      {renderPropertiesPanel()}
     </div>
   );
 };
