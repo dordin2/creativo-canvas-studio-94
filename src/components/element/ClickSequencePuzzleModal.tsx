@@ -58,10 +58,19 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
   useEffect(() => {
     if (!isOpen || clickedIndices.length === 0 || clickSequencePuzzleConfig.solution.length === 0) return;
     
-    const isSolved = clickSequencePuzzleConfig.solution.length === clickedIndices.length && 
-                     clickSequencePuzzleConfig.solution.every((solutionIndex, index) => {
-                       return solutionIndex === clickedIndices[index];
-                     });
+    // Check if the sequence is valid so far
+    const isValidSoFar = clickedIndices.every((clickedIndex, index) => {
+      return clickedIndex === clickSequencePuzzleConfig.solution[index];
+    });
+    
+    // If the sequence is invalid, silently reset the clicked indices
+    if (!isValidSoFar) {
+      setClickedIndices([]);
+      return;
+    }
+    
+    // Check if the puzzle is fully solved
+    const isSolved = clickSequencePuzzleConfig.solution.length === clickedIndices.length && isValidSoFar;
     
     // Update the solved state and handle success
     if (isSolved && !solved) {
@@ -114,54 +123,11 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
   const handleImageClick = (index: number) => {
     if (solved) return; // Don't allow clicks if already solved
     
-    // Check if this index was already clicked
-    if (clickedIndices.includes(index)) {
-      // If it's the last item clicked, remove it
-      if (clickedIndices[clickedIndices.length - 1] === index) {
-        const newClickedIndices = [...clickedIndices];
-        newClickedIndices.pop();
-        setClickedIndices(newClickedIndices);
-        
-        // Update the global state
-        updateClickIndicesState(newClickedIndices);
-      } else {
-        // If it's not the last item, flash to indicate it can't be unclicked
-        toast.error(language === 'en' ? 'You can only undo the last click' : 'ניתן לבטל רק את הלחיצה האחרונה', {
-          duration: 2000
-        });
-      }
-    } else {
-      // Add this index to clicked indices
-      const newClickedIndices = [...clickedIndices, index];
-      setClickedIndices(newClickedIndices);
-      
-      // Update the global state
-      updateClickIndicesState(newClickedIndices);
-    }
-  };
-  
-  // Update the global state with debouncing
-  const updateClickIndicesState = (newClickedIndices: number[]) => {
-    if (!pendingUpdate.current) {
-      pendingUpdate.current = true;
-      
-      // Clear any existing timeout
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-      }
-      
-      // Use a timeout to debounce the update
-      timeoutRef.current = window.setTimeout(() => {
-        updateElement(element.id, {
-          clickSequencePuzzleConfig: {
-            ...clickSequencePuzzleConfig,
-            clickedIndices: newClickedIndices
-          }
-        });
-        pendingUpdate.current = false;
-        timeoutRef.current = null;
-      }, 300);
-    }
+    // Simply add the clicked index to the sequence
+    const newClickedIndices = [...clickedIndices, index];
+    setClickedIndices(newClickedIndices);
+    
+    // We don't need to update global state here as the effect will handle that if the puzzle is solved
   };
   
   return (
@@ -193,15 +159,11 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
               {/* Images grid */}
               <div className="flex flex-row justify-center items-center gap-4 flex-wrap">
                 {clickSequencePuzzleConfig.images.map((image, index) => {
-                  const isClicked = clickedIndices.includes(index);
-                  const clickPosition = clickedIndices.indexOf(index);
-                  
                   return (
                     <div 
                       key={index}
                       onClick={() => handleImageClick(index)}
-                      className={`relative transition-transform cursor-pointer 
-                                ${isClicked ? 'ring-2 ring-blue-500' : 'hover:scale-105'}`}
+                      className="relative transition-transform cursor-pointer hover:scale-105"
                     >
                       <div className="flex flex-col items-center">
                         <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-gray-300 rounded-md overflow-hidden hover:border-blue-500 bg-white relative">
@@ -210,13 +172,6 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
                             alt={`Image ${index + 1}`}
                             className="w-full h-full object-cover"
                           />
-                          
-                          {/* Position number badge - show when clicked */}
-                          {isClicked && (
-                            <div className="absolute top-0 left-0 bg-blue-600 text-white font-bold px-2 py-0.5 rounded-br">
-                              {clickPosition + 1}
-                            </div>
-                          )}
                         </div>
                         <div className="text-xs text-center mt-1">
                           {language === 'en' ? `Image ${index + 1}` : `תמונה ${index + 1}`}
