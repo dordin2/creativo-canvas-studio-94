@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { X, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
@@ -65,24 +65,22 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
     });
   };
   
-  // Simply pass the close operation to the parent component
-  const handleClose = () => {
-    if (!solved) {
-      onClose();
-    }
-    // If solved, the timeout will handle closing
-  };
-  
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog open={isOpen} onOpenChange={isOpen => {
+      if (!isOpen) {
+        onClose();
+      }
+    }}>
       <DialogContent className="sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl">
         <DialogHeader>
           <DialogTitle className="text-xl">{puzzleConfig.name}</DialogTitle>
           <DialogDescription className="sr-only">Interactive puzzle - click on images to solve</DialogDescription>
-          <Button variant="ghost" size="icon" className="absolute right-4 top-4" onClick={handleClose}>
-            <X className="h-4 w-4" />
-            <span className="sr-only">Close</span>
-          </Button>
+          <DialogClose asChild>
+            <Button variant="ghost" size="icon" className="absolute right-4 top-4">
+              <X className="h-4 w-4" />
+              <span className="sr-only">Close</span>
+            </Button>
+          </DialogClose>
         </DialogHeader>
         
         <div className="py-6">
