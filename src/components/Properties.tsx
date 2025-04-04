@@ -135,6 +135,26 @@ const Properties = () => {
         </TabsList>
         
         <TabsContent value="style" className="flex-1 flex flex-col space-y-6">
+          {activeElement.type !== 'background' && (
+            <div className="space-y-2">
+              <Label>Layer Number</Label>
+              <div className="flex items-center gap-2 mt-2">
+                <Input 
+                  type="number" 
+                  value={activeElement.layer} 
+                  onChange={(e) => updateElement(activeElement.id, { 
+                    layer: Number(e.target.value) 
+                  })}
+                  min="1"
+                  className="w-24"
+                />
+                <span className="text-sm text-muted-foreground">
+                  Higher = on top
+                </span>
+              </div>
+            </div>
+          )}
+        
           {['rectangle', 'circle', 'triangle', 'line'].includes(activeElement.type) && (
             <div className="space-y-4">
               <Label>Fill Color</Label>
@@ -323,24 +343,6 @@ const Properties = () => {
                   </div>
                 </div>
               )}
-              
-              <div className="mt-4">
-                <Label>Layer Number</Label>
-                <div className="flex items-center gap-2 mt-2">
-                  <Input 
-                    type="number" 
-                    value={activeElement.layer} 
-                    onChange={(e) => updateElement(activeElement.id, { 
-                      layer: Number(e.target.value) 
-                    })}
-                    min="1"
-                    className="w-24"
-                  />
-                  <span className="text-sm text-muted-foreground">
-                    Higher = on top
-                  </span>
-                </div>
-              </div>
             </div>
           )}
         </TabsContent>
