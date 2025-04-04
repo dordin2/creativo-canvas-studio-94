@@ -83,7 +83,7 @@ const Canvas = () => {
                 ...elementStyle,
                 width: element.size?.width || 100,
                 height: element.size?.height || 80,
-                backgroundColor: element.style?.backgroundColor || '#8B5CF6',
+                backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
                 borderRadius: element.style?.borderRadius || '4px'
               }}
               onClick={handleElementClick}
@@ -99,7 +99,7 @@ const Canvas = () => {
                 ...elementStyle,
                 width: element.size?.width || 100,
                 height: element.size?.width || 100,
-                backgroundColor: element.style?.backgroundColor || '#8B5CF6',
+                backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
                 borderRadius: '50%'
               }}
               onClick={handleElementClick}
@@ -117,7 +117,7 @@ const Canvas = () => {
                 height: 0,
                 borderLeft: `${(element.size?.width || 50)}px solid transparent`,
                 borderRight: `${(element.size?.width || 50)}px solid transparent`,
-                borderBottom: `${(element.size?.height || 100)}px solid ${element.style?.backgroundColor || '#8B5CF6'}`,
+                borderBottom: `${(element.size?.height || 100)}px solid ${element.style?.backgroundColor as string || '#8B5CF6'}`,
                 backgroundColor: 'transparent'
               }}
               onClick={handleElementClick}
@@ -133,7 +133,7 @@ const Canvas = () => {
                 ...elementStyle,
                 width: element.size?.width || 100,
                 height: '2px',
-                backgroundColor: element.style?.backgroundColor || '#8B5CF6'
+                backgroundColor: element.style?.backgroundColor as string || '#8B5CF6'
               }}
               onClick={handleElementClick}
             />
@@ -150,7 +150,7 @@ const Canvas = () => {
               <h2 style={{ 
                 fontSize: '28px', 
                 fontWeight: 'bold',
-                color: element.style?.color || '#1F2937',
+                color: element.style?.color as string || '#1F2937',
                 margin: 0
               }}>
                 {element.content || 'Add a heading'}
@@ -169,7 +169,7 @@ const Canvas = () => {
               <h3 style={{ 
                 fontSize: '20px', 
                 fontWeight: '600',
-                color: element.style?.color || '#1F2937',
+                color: element.style?.color as string || '#1F2937',
                 margin: 0
               }}>
                 {element.content || 'Add a subheading'}
@@ -190,7 +190,7 @@ const Canvas = () => {
             >
               <p style={{ 
                 fontSize: '16px',
-                color: element.style?.color || '#1F2937',
+                color: element.style?.color as string || '#1F2937',
                 margin: 0
               }}>
                 {element.content || 'Add your text here. Click to edit this text.'}
@@ -238,8 +238,8 @@ const Canvas = () => {
   // Find background element if it exists
   const backgroundElement = elements.find(elem => elem.type === 'background');
   const backgroundStyle = backgroundElement ? {
-    backgroundColor: backgroundElement.style?.backgroundColor || 'white',
-    background: backgroundElement.style?.background || undefined
+    backgroundColor: backgroundElement.style?.backgroundColor as string || 'white',
+    background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
   return (

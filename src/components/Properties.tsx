@@ -56,6 +56,22 @@ const Properties = () => {
     toast.success("Element deleted");
   };
 
+  // Helper function to parse borderRadius value to number
+  const parseBorderRadius = (borderRadiusValue: string | number | undefined): number => {
+    if (typeof borderRadiusValue === 'number') return borderRadiusValue;
+    if (!borderRadiusValue) return 4; // Default value
+    
+    // Extract number from string like "4px"
+    const match = String(borderRadiusValue).match(/^(\d+)/);
+    return match ? parseInt(match[1], 10) : 4;
+  };
+
+  // Helper to get opacity as a number
+  const getOpacityValue = (opacity: string | number | undefined): number => {
+    if (typeof opacity === 'number') return opacity * 100;
+    return 100; // Default value
+  };
+
   // Determine what properties to show based on element type
   const renderProperties = () => {
     switch (activeElement.type) {
@@ -69,7 +85,7 @@ const Properties = () => {
               <Input 
                 id="color" 
                 type="color" 
-                value={activeElement.style?.backgroundColor || '#8B5CF6'} 
+                value={activeElement.style?.backgroundColor as string || '#8B5CF6'} 
                 onChange={handleColorChange}
                 className="h-10"
               />
@@ -79,7 +95,7 @@ const Properties = () => {
               <Label htmlFor="opacity">Opacity</Label>
               <Slider 
                 id="opacity"
-                defaultValue={[(activeElement.style?.opacity || 1) * 100]} 
+                defaultValue={[getOpacityValue(activeElement.style?.opacity)]} 
                 max={100} 
                 step={1}
                 onValueChange={(value) => handleOpacityChange(value)}
@@ -92,7 +108,7 @@ const Properties = () => {
                 <Label htmlFor="borderRadius">Corner Radius</Label>
                 <Slider 
                   id="borderRadius"
-                  defaultValue={[parseInt(activeElement.style?.borderRadius as string || '4')]} 
+                  defaultValue={[parseBorderRadius(activeElement.style?.borderRadius)]} 
                   max={50} 
                   step={1}
                   onValueChange={(value) => handleBorderRadiusChange(value)}
@@ -139,7 +155,7 @@ const Properties = () => {
               <Input 
                 id="color" 
                 type="color" 
-                value={activeElement.style?.backgroundColor || '#8B5CF6'} 
+                value={activeElement.style?.backgroundColor as string || '#8B5CF6'} 
                 onChange={handleColorChange}
                 className="h-10"
               />
@@ -149,7 +165,7 @@ const Properties = () => {
               <Label htmlFor="opacity">Opacity</Label>
               <Slider 
                 id="opacity"
-                defaultValue={[(activeElement.style?.opacity || 1) * 100]} 
+                defaultValue={[getOpacityValue(activeElement.style?.opacity)]} 
                 max={100} 
                 step={1}
                 onValueChange={(value) => handleOpacityChange(value)}
@@ -195,7 +211,7 @@ const Properties = () => {
               <Input 
                 id="textColor" 
                 type="color" 
-                value={activeElement.style?.color || '#1F2937'} 
+                value={activeElement.style?.color as string || '#1F2937'} 
                 onChange={handleTextColorChange}
                 className="h-10 mt-1"
               />
@@ -205,7 +221,7 @@ const Properties = () => {
               <Label htmlFor="opacity">Opacity</Label>
               <Slider 
                 id="opacity"
-                defaultValue={[(activeElement.style?.opacity || 1) * 100]} 
+                defaultValue={[getOpacityValue(activeElement.style?.opacity)]} 
                 max={100} 
                 step={1}
                 onValueChange={(value) => handleOpacityChange(value)}
@@ -222,7 +238,7 @@ const Properties = () => {
               <Label htmlFor="opacity">Opacity</Label>
               <Slider 
                 id="opacity"
-                defaultValue={[(activeElement.style?.opacity || 1) * 100]} 
+                defaultValue={[getOpacityValue(activeElement.style?.opacity)]} 
                 max={100} 
                 step={1}
                 onValueChange={(value) => handleOpacityChange(value)}
@@ -277,7 +293,7 @@ const Properties = () => {
               <Input 
                 id="backgroundColor" 
                 type="color" 
-                value={activeElement.style?.backgroundColor || '#FFFFFF'} 
+                value={activeElement.style?.backgroundColor as string || '#FFFFFF'} 
                 onChange={handleColorChange}
                 className="h-10 mt-1"
               />
