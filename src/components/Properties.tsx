@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { HexColorPicker } from "react-colorful";
@@ -7,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Upload } from "lucide-react";
+import { Trash2, Upload, ZoomIn, ZoomOut } from "lucide-react";
 import LayersList from "./LayersList";
 
 const Properties = () => {
@@ -76,6 +77,23 @@ const Properties = () => {
     const rotation = parseInt(e.target.value) || 0;
     updateElement(activeElement.id, {
       style: { ...activeElement.style, transform: `rotate(${rotation}deg)` }
+    });
+  };
+  
+  // New function to handle image resizing with zoom buttons
+  const handleImageResize = (zoomIn: boolean) => {
+    if (!activeElement || !activeElement.size) return;
+    
+    // Calculate the scale factor (10% increase or decrease)
+    const scaleFactor = zoomIn ? 1.1 : 0.9;
+    
+    // Calculate new dimensions while preserving aspect ratio
+    const newWidth = Math.round(activeElement.size.width * scaleFactor);
+    const newHeight = Math.round(activeElement.size.height * scaleFactor);
+    
+    // Update the element with the new size
+    updateElement(activeElement.id, {
+      size: { width: newWidth, height: newHeight }
     });
   };
   
@@ -198,6 +216,34 @@ const Properties = () => {
                 <p className="text-xs text-muted-foreground mt-1">
                   When using a URL, the image will initially use default dimensions. Upload local files for precise dimensions.
                 </p>
+              </div>
+              
+              {/* New image resize controls */}
+              <div className="mt-4">
+                <Label className="mb-2 block">Resize Image</Label>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="text-sm">
+                    {activeElement.size?.width} × {activeElement.size?.height}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleImageResize(false)}
+                      title="Decrease size by 10%"
+                    >
+                      <ZoomOut className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleImageResize(true)}
+                      title="Increase size by 10%"
+                    >
+                      <ZoomIn className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
               </div>
               
               {(activeElement.dataUrl || activeElement.src) && (
