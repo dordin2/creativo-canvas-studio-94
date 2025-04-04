@@ -1,21 +1,20 @@
-import { DesignElement, useDesignState } from "@/context/DesignContext";
+
+import { DesignElement } from "@/types/designTypes";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Trash2 } from "lucide-react";
+import LayersList from "../LayersList";
+import { useState } from "react";
+import { useDesignState } from "@/context/DesignContext";
 import ShapeProperties from "./ShapeProperties";
 import TextProperties from "./TextProperties";
 import ImageProperties from "./ImageProperties";
 import PositionProperties from "./PositionProperties";
-import RotationProperty from "./RotationProperty";
 import LayerProperties from "./LayerProperties";
-import LayersList from "../layers/LayersList";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { Trash2 } from "lucide-react";
-import { useState } from "react";
 
 const ElementProperties = ({ element }: { element: DesignElement }) => {
   const [activeTab, setActiveTab] = useState("style");
   const { removeElement } = useDesignState();
-  const isMobile = useIsMobile();
 
   const handleDelete = () => {
     removeElement(element.id);
