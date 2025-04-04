@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -109,47 +110,66 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         const isImage = element.type === 'image';
         const maintainAspectRatio = isImage || originalAspectRatio !== null;
         
-        let mainDelta = 0;
-        if (resizeDirection.includes('e') || resizeDirection.includes('w')) {
-          mainDelta = deltaX;
-        } else if (resizeDirection.includes('s') || resizeDirection.includes('n')) {
-          mainDelta = deltaY;
-        } else if (Math.abs(deltaX) > Math.abs(deltaY)) {
-          mainDelta = deltaX;
-        } else {
-          mainDelta = deltaY;
+        // Use direct calculations based on direction instead of scale factor
+        let newWidth = startSize.width;
+        let newHeight = startSize.height;
+        let newX = element.position.x;
+        let newY = element.position.y;
+        
+        // Handle each direction with direct calculations
+        if (resizeDirection.includes('e')) {
+          // East/right edge - only width changes
+          newWidth = Math.max(20, startSize.width + deltaX);
         }
         
-        let scaleFactor = 1;
-        
-        if (resizeDirection.includes('w') || resizeDirection.includes('n')) {
-          scaleFactor = -1;
+        if (resizeDirection.includes('w')) {
+          // West/left edge - width and x position change
+          const widthChange = deltaX;
+          newWidth = Math.max(20, startSize.width - widthChange);
+          newX = element.position.x + (startSize.width - newWidth);
         }
         
-        const scaleChange = (Math.abs(mainDelta) / 100) * (mainDelta > 0 ? 1 : -1) * scaleFactor;
-        const scale = 1 + scaleChange;
+        if (resizeDirection.includes('s')) {
+          // South/bottom edge - only height changes
+          newHeight = Math.max(20, startSize.height + deltaY);
+        }
         
-        let newWidth = Math.max(20, startSize.width * scale);
-        let newHeight;
+        if (resizeDirection.includes('n')) {
+          // North/top edge - height and y position change
+          const heightChange = deltaY;
+          newHeight = Math.max(20, startSize.height - heightChange);
+          newY = element.position.y + (startSize.height - newHeight);
+        }
         
+        // Maintain aspect ratio if needed
         if (maintainAspectRatio && originalAspectRatio) {
-          newHeight = newWidth / originalAspectRatio;
-        } else {
-          newHeight = Math.max(20, startSize.height * scale);
+          if (resizeDirection.includes('e') || resizeDirection.includes('w')) {
+            // Width was primary change, adjust height accordingly
+            newHeight = newWidth / originalAspectRatio;
+            
+            // If north direction, adjust y position
+            if (resizeDirection.includes('n')) {
+              newY = element.position.y + (startSize.height - newHeight);
+            }
+          } else {
+            // Height was primary change, adjust width accordingly
+            newWidth = newHeight * originalAspectRatio;
+            
+            // If west direction, adjust x position
+            if (resizeDirection.includes('w')) {
+              newX = element.position.x + (startSize.width - newWidth);
+            }
+          }
         }
         
-        if (resizeDirection.includes('w') || resizeDirection.includes('n')) {
-          const posX = element.position.x - (newWidth - startSize.width);
-          const posY = element.position.y - (newHeight - startSize.height);
-          
+        // Update position if it changed
+        if (newX !== element.position.x || newY !== element.position.y) {
           updateElement(element.id, {
-            position: {
-              x: posX,
-              y: posY
-            }
+            position: { x: newX, y: newY }
           });
         }
         
+        // Update size
         updateElement(element.id, {
           size: { width: newWidth, height: newHeight }
         });
