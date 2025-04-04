@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { HexColorPicker } from "react-colorful";
@@ -99,31 +98,6 @@ const Properties = () => {
   };
 
   // Handle text formatting functions
-  const handleFontSizeChange = (value: number[]) => {
-    if (!activeElement || !['heading', 'subheading', 'paragraph'].includes(activeElement.type)) return;
-    
-    updateElement(activeElement.id, {
-      style: { 
-        ...activeElement.style, 
-        fontSize: `${value[0]}px` 
-      }
-    });
-  };
-
-  const getFontSize = (): number => {
-    if (!activeElement?.style?.fontSize) {
-      // Default font sizes based on element type
-      if (activeElement?.type === 'heading') return 28;
-      if (activeElement?.type === 'subheading') return 20;
-      if (activeElement?.type === 'paragraph') return 16;
-      return 16;
-    }
-    
-    const fontSizeStr = activeElement.style.fontSize.toString();
-    const match = fontSizeStr.match(/(\d+)px/);
-    return match ? parseInt(match[1], 10) : 16;
-  };
-
   const toggleTextStyle = (style: 'fontWeight' | 'textDecoration' | 'fontStyle', value: string) => {
     if (!activeElement || !['heading', 'subheading', 'paragraph'].includes(activeElement.type)) return;
     
@@ -240,24 +214,10 @@ const Properties = () => {
 
               {/* Text Formatting Controls */}
               <div className="space-y-2">
-                <Label>Font Size</Label>
-                <div className="flex items-center justify-between mb-2">
-                  <Slider
-                    value={[getFontSize()]}
-                    min={8}
-                    max={72}
-                    step={1}
-                    onValueChange={handleFontSizeChange}
-                    className="w-full"
-                  />
-                  <span className="text-sm font-medium ml-2 min-w-16 text-right">
-                    {getFontSize()}px
-                  </span>
-                </div>
-              </div>
-
-              <div className="space-y-2">
                 <Label>Text Style</Label>
+                <p className="text-xs text-muted-foreground mb-2">
+                  Text size scales automatically with the element size
+                </p>
                 <ToggleGroup type="multiple" className="mt-2 justify-start">
                   <ToggleGroupItem 
                     value="bold" 

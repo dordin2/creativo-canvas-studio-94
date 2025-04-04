@@ -40,11 +40,37 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     return match ? parseInt(match[1], 10) : 0;
   };
 
+  // Calculate font size based on element dimensions
+  const calculateFontSize = (): string => {
+    if (!element.size) return '16px';
+    
+    // Calculate font size proportionally to the element width
+    // Different base sizes depending on element type
+    let baseSize = 16;
+    if (element.type === 'heading') baseSize = 28;
+    if (element.type === 'subheading') baseSize = 20;
+    
+    // Base width reference
+    const baseWidth = element.type === 'heading' ? 300 : 
+                     element.type === 'subheading' ? 250 : 200;
+    
+    // Calculate proportional font size
+    const calculatedSize = (element.size.width / baseWidth) * baseSize;
+    
+    // Apply min/max constraints 
+    const minSize = 8;  // Minimum readable size
+    const maxSize = element.type === 'heading' ? 72 : 
+                   element.type === 'subheading' ? 48 : 36;
+    
+    const finalSize = Math.max(minSize, Math.min(calculatedSize, maxSize));
+    return `${Math.round(finalSize)}px`;
+  }
+
   const getTextStyle = (): CSSProperties => {
-    const fontSize = element.style?.fontSize || (
-      element.type === 'heading' ? '28px' : 
-      element.type === 'subheading' ? '20px' : '16px'
-    );
+    // Calculate font size based on element dimensions
+    const fontSize = textElementTypes.includes(element.type) ? 
+      calculateFontSize() : 
+      (element.style?.fontSize as string || '16px');
     
     const fontWeight = element.style?.fontWeight || (
       element.type === 'heading' ? 'bold' : 
@@ -69,6 +95,14 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       lineHeight: 'inherit',
       overflow: 'hidden'
     };
+  };
+
+  // Update both element size and adjust text properties
+  const updateElementSize = (newWidth: number, newHeight: number) => {
+    // Update element size
+    updateElement(element.id, {
+      size: { width: newWidth, height: newHeight }
+    });
   };
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -216,9 +250,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
           position: { x: newX, y: newY }
         });
         
-        updateElement(element.id, {
-          size: { width: newWidth, height: newHeight }
-        });
+        // Update size and font together
+        updateElementSize(newWidth, newHeight);
       } 
       else if (isRotating) {
         const centerX = startPos.x;
