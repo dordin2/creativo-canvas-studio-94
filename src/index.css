@@ -157,7 +157,7 @@
   /* Frame for the selection border that extends beyond canvas */
   .element-frame {
     position: absolute;
-    border: 1px solid #8B5CF6;
+    border: 2px solid #8B5CF6;
     pointer-events: none;
     z-index: 999;
     box-sizing: border-box;

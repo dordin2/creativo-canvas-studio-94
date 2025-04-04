@@ -300,11 +300,12 @@ const Canvas = () => {
       }}>
         <div
           ref={containerRef}
-          className={`relative shadow-lg rounded-lg overflow-hidden transition-all ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
+          className={`relative shadow-lg rounded-lg ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
           style={{
             width: canvasDimensions.width,
             height: canvasDimensions.height,
-            ...backgroundStyle
+            ...backgroundStyle,
+            overflow: 'hidden'
           }}
           onClick={handleCanvasClick}
           onDragOver={handleDragOver}
@@ -320,14 +321,13 @@ const Canvas = () => {
             position: 'absolute',
             top: 0,
             left: 0,
-            width: '100%',
-            height: '100%',
+            width: canvasDimensions.width,
+            height: canvasDimensions.height,
             overflow: 'visible',
             pointerEvents: 'none',
             zIndex: 1000,
           }}
-        >
-        </div>
+        />
       </div>
       
       <div className="zoom-controls">

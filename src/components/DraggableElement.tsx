@@ -290,7 +290,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       </div>
 
       {isActive && (
-        <div className="absolute top-0 left-0 w-full h-full pointer-events-none element-controls-wrapper">
+        <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
           <div
             className="element-frame"
             style={{
