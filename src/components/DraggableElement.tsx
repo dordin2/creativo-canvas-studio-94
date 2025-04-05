@@ -28,17 +28,19 @@ const DraggableElement = ({ element, isActive, children }: {
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
 
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
+  const puzzleElementTypes = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle'];
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
     
+    // Always set the active element on mousedown
     setActiveElement(element);
     
     // Don't start dragging if editing text
     if (isEditing) return;
     
-    // For all elements, including images, start dragging immediately
+    // Start drag for all elements
     startDrag(e, element.position);
     setIsDragging(true);
     setStartPos({ x: e.clientX, y: e.clientY });
@@ -57,10 +59,9 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handlePuzzleClick = (e: React.MouseEvent) => {
-    if ((element.type === 'puzzle' || element.type === 'sequencePuzzle') && !isDragging) {
+    if (puzzleElementTypes.includes(element.type) && !isDragging) {
       e.stopPropagation();
-      // The modal is now handled directly in the PuzzleElement component
-      // so we don't need to do anything here
+      // The modal is now handled directly in the respective Puzzle Element components
     }
   };
 
@@ -69,6 +70,12 @@ const DraggableElement = ({ element, isActive, children }: {
     setActiveElement(element);
     startDrag(e, element.position);
     setIsDragging(true);
+  };
+
+  // Handle click specifically for element selection
+  const handleElementClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveElement(element);
   };
 
   useEffect(() => {
@@ -155,6 +162,7 @@ const DraggableElement = ({ element, isActive, children }: {
           pointerEvents: 'auto'
         }}
         onMouseDown={handleMouseDown}
+        onClick={handleElementClick}
         onDoubleClick={handleTextDoubleClick}
       >
         {childContent}

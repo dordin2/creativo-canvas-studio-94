@@ -100,7 +100,7 @@ export const useDraggable = (elementId: string) => {
         animationFrame.current = null;
       }
     };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement]);
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, elements]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
     e.stopPropagation();
