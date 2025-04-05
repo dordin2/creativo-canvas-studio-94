@@ -23,6 +23,8 @@ const ElementControls = ({
   onDragHandleMouseDown,
   showControls
 }: ElementControlsProps) => {
+  // TypeScript is complaining because 'background' is not in ElementType in the error message
+  // We need to fix this by properly checking the type using the `as` operator or type guard
   if (!showControls || element.type === 'background') return null;
 
   const showResizeHandles = isActive && element.type !== 'background';
