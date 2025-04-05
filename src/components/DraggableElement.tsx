@@ -9,15 +9,12 @@ import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
-import { Plus } from "lucide-react";
 
-interface DraggableElementProps {
+const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
   isActive: boolean;
   children: React.ReactNode;
-}
-
-const DraggableElement = ({ element, isActive, children }: DraggableElementProps) => {
+}) => {
   const { updateElement, setActiveElement } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -154,8 +151,10 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         className="canvas-element"
         style={{
           ...elementStyle,
-          transition: isDragging ? 'none' : undefined,
-          willChange: isDragging ? 'transform' : undefined,
+          transition: isDragging ? 'none' : 'transform 0.1s ease',
+          transform: element.style?.transform || '',
+          cursor: isDragging ? 'move' : 'grab',
+          willChange: isDragging ? 'transform' : 'auto',
         }}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleTextDoubleClick}

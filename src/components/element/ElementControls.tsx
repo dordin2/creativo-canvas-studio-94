@@ -2,7 +2,7 @@
 import { DesignElement } from "@/context/DesignContext";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
-import { Plus } from "lucide-react";
+import { Move } from "lucide-react";
 
 interface ElementControlsProps {
   isActive: boolean;
@@ -70,12 +70,12 @@ const ElementControls = ({
           onRotateStart={onRotateStart}
         />
         
-        {/* Drag handle positioned near the rotation handle */}
+        {/* Drag handle positioned above the rotation handle */}
         <div 
           className="drag-handle"
           style={{ 
             position: 'absolute',
-            top: -70, 
+            top: -36, 
             left: '50%', 
             transform: 'translateX(-50%)',
             width: '24px',
@@ -85,7 +85,7 @@ const ElementControls = ({
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            cursor: 'grab',
+            cursor: 'move',
             border: '2px solid white',
             boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
             pointerEvents: 'auto',
@@ -93,7 +93,7 @@ const ElementControls = ({
           }}
           onMouseDown={onDragHandleMouseDown}
         >
-          <Plus className="text-white" size={14} />
+          <Move className="text-white" size={14} />
         </div>
       </div>
     </div>

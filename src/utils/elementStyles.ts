@@ -52,8 +52,12 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     top: element.position.y,
     width: element.size?.width,
     height: element.size?.height,
-    cursor: isDragging ? 'grabbing' : 'grab',
+    cursor: isDragging ? 'move' : 'grab',
     border: 'none',
     zIndex: element.layer,
+    touchAction: 'none',
+    userSelect: 'none',
+    // Apply hardware acceleration for smoother dragging
+    transform: `translate3d(0, 0, 0) ${element.style?.transform || ''}`.trim(),
   };
 };
