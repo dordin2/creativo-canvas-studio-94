@@ -10,11 +10,13 @@ import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 
-const DraggableElement = ({ element, isActive, children }: {
+interface DraggableElementProps {
   element: DesignElement;
   isActive: boolean;
   children: React.ReactNode;
-}) => {
+}
+
+const DraggableElement = ({ element, isActive, children }: DraggableElementProps) => {
   const { updateElement, setActiveElement } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -22,25 +24,25 @@ const DraggableElement = ({ element, isActive, children }: {
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [showControls, setShowControls] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
 
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
-  const puzzleElementTypes = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle'];
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    // Always set the active element on mousedown
+    if (element.type === 'image' && 
+        (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
+      e.preventDefault();
+    }
+    
     setActiveElement(element);
     
-    // Don't start dragging if editing text
     if (isEditing) return;
     
-    // Start drag for all elements
     startDrag(e, element.position);
     setIsDragging(true);
     setStartPos({ x: e.clientX, y: e.clientY });
@@ -59,23 +61,11 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handlePuzzleClick = (e: React.MouseEvent) => {
-    if (puzzleElementTypes.includes(element.type) && !isDragging) {
+    if ((element.type === 'puzzle' || element.type === 'sequencePuzzle') && !isDragging) {
       e.stopPropagation();
-      // The modal is now handled directly in the respective Puzzle Element components
+      // The modal is now handled directly in the PuzzleElement component
+      // so we don't need to do anything here
     }
-  };
-
-  const handleDragHandleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveElement(element);
-    startDrag(e, element.position);
-    setIsDragging(true);
-  };
-
-  // Handle click specifically for element selection
-  const handleElementClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveElement(element);
   };
 
   useEffect(() => {
@@ -89,32 +79,6 @@ const DraggableElement = ({ element, isActive, children }: {
 
     return () => {
       document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging]);
-
-  useEffect(() => {
-    // Show controls when element is hovered
-    const handleMouseEnter = () => {
-      setShowControls(true);
-    };
-
-    const handleMouseLeave = () => {
-      if (!isDragging) {
-        setShowControls(false);
-      }
-    };
-
-    const element = elementRef.current;
-    if (element) {
-      element.addEventListener('mouseenter', handleMouseEnter);
-      element.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    return () => {
-      if (element) {
-        element.removeEventListener('mouseenter', handleMouseEnter);
-        element.removeEventListener('mouseleave', handleMouseLeave);
-      }
     };
   }, [isDragging]);
 
@@ -153,17 +117,15 @@ const DraggableElement = ({ element, isActive, children }: {
       <div
         ref={elementRef}
         className="canvas-element"
-        style={{
-          ...elementStyle,
-          transition: isDragging ? 'none' : 'transform 0.1s ease',
-          transform: element.style?.transform || '',
-          cursor: isDragging ? 'move' : 'grab',
-          willChange: isDragging ? 'transform' : 'auto',
-          pointerEvents: 'auto'
-        }}
+        style={elementStyle}
         onMouseDown={handleMouseDown}
-        onClick={handleElementClick}
         onDoubleClick={handleTextDoubleClick}
+        onDragOver={(e) => {
+          if (element.type === 'image') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
       >
         {childContent}
       </div>
@@ -174,8 +136,6 @@ const DraggableElement = ({ element, isActive, children }: {
         frameTransform={frameTransform}
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
-        onDragHandleMouseDown={handleDragHandleMouseDown}
-        showControls={showControls || isActive || isDragging}
       />
     </>
   );

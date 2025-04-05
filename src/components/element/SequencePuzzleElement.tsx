@@ -15,10 +15,10 @@ const SequencePuzzleElement: React.FC<SequencePuzzleElementProps> = ({ element, 
   const { t, language } = useLanguage();
   
   const handleClick = (e: React.MouseEvent) => {
-    // Call the parent onClick handler for selection
+    // Handle regular element click for selection
     onClick(e);
     
-    // Open the puzzle modal
+    // Then open the puzzle modal
     setIsModalOpen(true);
   };
   

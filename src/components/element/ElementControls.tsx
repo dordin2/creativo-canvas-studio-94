@@ -1,5 +1,5 @@
 
-import { ElementType, DesignElement } from "@/types/designTypes";
+import { DesignElement } from "@/context/DesignContext";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
 
@@ -9,8 +9,6 @@ interface ElementControlsProps {
   frameTransform: string;
   onResizeStart: (e: React.MouseEvent, direction: string) => void;
   onRotateStart: (e: React.MouseEvent) => void;
-  onDragHandleMouseDown: (e: React.MouseEvent) => void;
-  showControls: boolean;
 }
 
 const ElementControls = ({ 
@@ -18,18 +16,12 @@ const ElementControls = ({
   element, 
   frameTransform, 
   onResizeStart, 
-  onRotateStart,
-  onDragHandleMouseDown,
-  showControls
+  onRotateStart 
 }: ElementControlsProps) => {
-  // Need to fix TypeScript error by explicitly checking if the type is 'background'
-  // using type assertion to make TypeScript happy
-  const isBackground = element.type === 'background';
-  
-  if (!showControls || isBackground) return null;
+  if (!isActive) return null;
 
-  const showResizeHandles = isActive && !isBackground;
-  const showRotationHandle = isActive && !isBackground;
+  const showResizeHandles = isActive && element.type !== 'background';
+  const showRotationHandle = isActive && element.type !== 'background';
   
   const elementDimensions = {
     width: element.size?.width || 0,
@@ -39,9 +31,8 @@ const ElementControls = ({
   return (
     <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
       <div
-        className={`element-frame ${isActive ? 'border-2 border-blue-500' : ''}`}
+        className="element-frame"
         style={{
-          position: 'absolute',
           left: element.position.x,
           top: element.position.y,
           width: elementDimensions.width,
@@ -64,25 +55,6 @@ const ElementControls = ({
           pointerEvents: 'none',
         }}
       >
-        {/* Invisible drag overlay that appears for all elements when active */}
-        {isActive && (
-          <div
-            className="drag-overlay"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: '100%',
-              height: '100%',
-              backgroundColor: 'transparent',
-              cursor: 'move',
-              pointerEvents: 'auto',
-              zIndex: 1002,
-            }}
-            onMouseDown={onDragHandleMouseDown}
-          />
-        )}
-        
         <ResizeHandles
           show={showResizeHandles}
           onResizeStart={onResizeStart}
