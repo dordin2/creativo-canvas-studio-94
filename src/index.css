@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,81 +7,46 @@
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
-
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 262 83% 63%;
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
-
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 262 83% 63%;
-
+    --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 262 83% 63%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 262 83% 63%;
   }
 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
-
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
-
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-
-    --primary: 262 83% 63%;
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
-
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
-
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
-
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
-
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 262 83% 63%;
-
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 262 83% 63%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 262 83% 63%;
+    --ring: 224.3 76.3% 48%;
   }
 }
 
@@ -90,167 +54,132 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', sans-serif;
-  }
-
-  .canvas-element {
-    @apply cursor-move transition-none relative;
-    will-change: transform, left, top;
-    touch-action: none;
-    /* Allow elements to extend beyond their parent container */
-    pointer-events: auto !important;
-    /* Disable transition during drag for better performance */
-    transition: none !important;
-  }
-
-  .canvas-element.dragging {
-    /* Apply hardware acceleration for smoother dragging */
-    transform: translate3d(0, 0, 0);
-  }
-
-  .canvas-element:hover {
-    @apply outline outline-2 outline-canvas-purple/30;
-  }
-  
-  /* Canvas container to manage overflow behavior */
-  .canvas-container {
-    position: relative;
-    /* Allow controls to remain visible outside the canvas */
-    overflow: visible !important;
-    pointer-events: auto;
-  }
-  
-  /* Main canvas has overflow:hidden to mask content */
-  .canvas-container > div:first-child {
-    overflow: hidden !important;
-    /* Controls should still be interactive even outside the canvas */
-    pointer-events: auto;
-  }
-
-  /* Ensure resize and rotation handles are always visible */
-  .resize-handle {
-    @apply absolute w-3 h-3 bg-canvas-purple border-2 border-white rounded-full shadow-md z-[1000];
-    pointer-events: auto !important;
-    /* Ensure handles are visible outside the canvas */
-    position: absolute;
-    visibility: visible !important;
-    display: block !important;
-  }
-
-  .rotation-handle {
-    @apply absolute w-5 h-5 rounded-full bg-canvas-purple border-2 border-white flex items-center justify-center cursor-move shadow-md z-[1000];
-    pointer-events: auto !important;
-    /* Ensure rotation handle is visible outside the canvas */
-    position: absolute;
-    visibility: visible !important;
-    display: block !important;
-  }
-  
-  .drag-handle {
-    pointer-events: auto !important;
-    position: absolute;
-    visibility: visible !important;
-    display: block !important;
-    z-index: 1001;
-  }
-  
-  .drag-handle:active {
-    cursor: grabbing !important;
-  }
-  
-  /* Element controls wrapper that sits outside the canvas overflow */
-  .element-controls-wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 1000;
-    overflow: visible !important;
-  }
-
-  /* Frame for the selection border that extends beyond canvas */
-  .element-frame {
-    position: absolute;
-    border: 2px solid #8B5CF6;
-    pointer-events: none;
-    z-index: 999;
-    box-sizing: border-box;
   }
 }
 
-/* Canvas workspace styling */
-.canvas-workspace {
-  background-size: 20px 20px;
-  background-image: 
-    linear-gradient(to right, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+/* Canvas and design elements */
+.element-frame {
+  position: absolute;
+  box-sizing: border-box;
+  border: 1px solid transparent;
+  border-radius: 2px;
 }
 
-/* Cursor styles for resize handlers */
-.cursor-nw-resize { cursor: nw-resize; }
-.cursor-n-resize { cursor: n-resize; }
-.cursor-ne-resize { cursor: ne-resize; }
-.cursor-e-resize { cursor: e-resize; }
-.cursor-se-resize { cursor: se-resize; }
-.cursor-s-resize { cursor: s-resize; }
-.cursor-sw-resize { cursor: sw-resize; }
-.cursor-w-resize { cursor: w-resize; }
-
-/* Fix for side panels */
-.sidebar-panel {
-  @apply h-full bg-white overflow-y-auto;
-  min-width: 16rem;
-  width: 16rem;
-  flex: 0 0 auto;
+.element-frame.active {
+  border-color: #3b82f6;
 }
 
-.properties-panel {
-  @apply h-full bg-sidebar-background text-sidebar-foreground overflow-y-auto;
-  min-width: 20rem;
-  width: 20rem;
-  flex: 0 0 auto;
+.element-controls-wrapper {
+  pointer-events: none;
+}
+
+.resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background-color: white;
+  border: 1px solid #3b82f6;
+  border-radius: 50%;
+  pointer-events: auto;
+  z-index: 1001;
+}
+
+.rotation-handle {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background-color: white;
+  border: 1px solid #3b82f6;
+  border-radius: 50%;
+  top: -30px;
+  left: 50%;
+  transform: translateX(-50%);
+  cursor: grab;
+  pointer-events: auto;
+  z-index: 1001;
+}
+
+.rotation-handle::after {
+  content: '';
+  position: absolute;
+  height: 15px;
+  width: 1px;
+  background-color: #3b82f6;
+  left: 50%;
+  bottom: 100%;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.canvas-element {
+  position: absolute;
+  user-select: none;
 }
 
 /* Zoom controls */
 .zoom-controls {
-  @apply fixed bottom-4 right-4 flex items-center gap-2 bg-white p-2 rounded-lg shadow-md z-50;
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background-color: white;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
 }
 
 .zoom-controls button {
-  @apply bg-sidebar-accent hover:bg-sidebar-accent-foreground/10 text-sidebar-foreground rounded-md p-2 transition-colors;
+  width: 28px;
+  height: 28px;
+  border-radius: 4px;
+  background-color: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border: none;
+  color: #1f2937;
+}
+
+.zoom-controls button:hover {
+  background-color: #e5e7eb;
 }
 
 .zoom-controls span {
-  @apply px-2 text-sm font-medium text-sidebar-foreground;
+  font-size: 14px;
+  font-weight: 500;
+  color: #1f2937;
+  min-width: 50px;
+  text-align: center;
 }
 
-/* Sequence Puzzle Drag and Drop styles */
-.dragging {
-  opacity: 0.6;
-  transform: scale(1.05);
-  z-index: 100;
+/* Drag handle */
+.drag-handle {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background-color: white;
+  border: 1px solid #3b82f6;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: move;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  pointer-events: auto;
+  z-index: 1002;
 }
 
-.drag-over {
-  border-color: #8B5CF6;
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
-  transform: scale(1.03);
+/* Show a blue border around selected elements for better visibility */
+.canvas-element.active {
+  outline: 2px solid #3b82f6;
 }
 
-/* Custom drag ghost image */
-[draggable] {
-  user-select: none;
-  -webkit-user-drag: element;
-}
-
-/* Hide default drag image in Firefox */
-@-moz-document url-prefix() {
-  [draggable] {
-    -moz-user-select: none;
-  }
+/* Add styles for the drag overlay to make it visually recognizable when debugging */
+.drag-overlay {
+  outline: 2px solid rgba(59, 130, 246, 0.5);
 }

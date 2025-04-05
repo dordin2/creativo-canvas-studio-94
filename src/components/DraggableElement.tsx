@@ -33,16 +33,16 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    if (element.type === 'image' && 
-        (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
-      e.preventDefault();
-    }
-    
     setActiveElement(element);
     
-    // For image elements, we only set as active but don't start drag
-    // Dragging will be handled by the invisible overlay in ElementControls
-    if (isEditing || element.type === 'image') return;
+    // Don't start dragging if editing text
+    if (isEditing) return;
+    
+    // For image elements, we'll handle this differently
+    if (element.type === 'image') {
+      // We'll still set active, but dragging will be handled by the overlay in ElementControls
+      return;
+    }
     
     startDrag(e, element.position);
     setIsDragging(true);
@@ -155,16 +155,17 @@ const DraggableElement = ({ element, isActive, children }: {
           ...elementStyle,
           transition: isDragging ? 'none' : 'transform 0.1s ease',
           transform: element.style?.transform || '',
-          cursor: element.type === 'image' ? 'default' : (isDragging ? 'move' : 'grab'),
+          cursor: isDragging ? 'move' : 'grab',
           willChange: isDragging ? 'transform' : 'auto',
           pointerEvents: 'auto'
         }}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleTextDoubleClick}
-        onDragOver={(e) => {
+        onClick={(e) => {
+          // Ensure click for image selection registers
           if (element.type === 'image') {
-            e.preventDefault();
             e.stopPropagation();
+            setActiveElement(element);
           }
         }}
       >

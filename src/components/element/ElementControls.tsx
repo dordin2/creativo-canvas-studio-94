@@ -2,7 +2,6 @@
 import { ElementType, DesignElement } from "@/types/designTypes";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
-import { Move } from "lucide-react";
 
 interface ElementControlsProps {
   isActive: boolean;
@@ -25,7 +24,7 @@ const ElementControls = ({
 }: ElementControlsProps) => {
   // Need to fix TypeScript error by explicitly checking if the type is 'background'
   // using type assertion to make TypeScript happy
-  const isBackground = element.type === ('background' as ElementType);
+  const isBackground = element.type === 'background';
   
   if (!showControls || isBackground) return null;
 
@@ -40,8 +39,9 @@ const ElementControls = ({
   return (
     <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
       <div
-        className="element-frame"
+        className={`element-frame ${isActive ? 'border-2 border-blue-500' : ''}`}
         style={{
+          position: 'absolute',
           left: element.position.x,
           top: element.position.y,
           width: elementDimensions.width,
@@ -64,8 +64,8 @@ const ElementControls = ({
           pointerEvents: 'none',
         }}
       >
-        {/* Invisible drag overlay that appears only when element is active */}
-        {isActive && element.type === 'image' && (
+        {/* Invisible drag overlay that appears for all elements when active */}
+        {isActive && (
           <div
             className="drag-overlay"
             style={{
@@ -92,8 +92,6 @@ const ElementControls = ({
           show={showRotationHandle}
           onRotateStart={onRotateStart}
         />
-        
-        {/* We're removing the drag handle at the user's request */}
       </div>
     </div>
   );

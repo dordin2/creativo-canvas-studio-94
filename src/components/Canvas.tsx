@@ -244,6 +244,9 @@ const Canvas = () => {
             <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="h-full w-full flex items-center justify-center overflow-hidden"
+                style={{
+                  pointerEvents: 'auto'
+                }}
                 onDragOver={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
@@ -267,7 +270,8 @@ const Canvas = () => {
                     style={{ 
                       objectFit: 'contain', 
                       width: '100%', 
-                      height: '100%'
+                      height: '100%',
+                      pointerEvents: 'auto'
                     }}
                   />
                 ) : element.src ? (
@@ -279,7 +283,8 @@ const Canvas = () => {
                     style={{ 
                       objectFit: 'contain', 
                       width: '100%', 
-                      height: '100%'
+                      height: '100%',
+                      pointerEvents: 'auto'
                     }}
                   />
                 ) : (
