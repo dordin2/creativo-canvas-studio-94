@@ -13,6 +13,7 @@ export const useDraggable = (elementId: string) => {
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
+  const animationFrame = useRef<number | null>(null);
 
   // Find the current element to access its properties
   const currentElement = elements.find(el => el.id === elementId);
@@ -26,16 +27,24 @@ export const useDraggable = (elementId: string) => {
         isDragStarted.current = true;
       }
 
-      // Calculate the new position
-      const deltaX = e.clientX - startPosition.current.x;
-      const deltaY = e.clientY - startPosition.current.y;
+      // Cancel any existing animation frame to prevent queuing updates
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+      }
 
-      const newX = elementInitialPos.current.x + deltaX;
-      const newY = elementInitialPos.current.y + deltaY;
-      
-      // Immediately update the element's position for responsive dragging
-      updateElementWithoutHistory(elementId, { 
-        position: { x: newX, y: newY }
+      // Use requestAnimationFrame for smooth updates
+      animationFrame.current = requestAnimationFrame(() => {
+        // Calculate the new position
+        const deltaX = e.clientX - startPosition.current!.x;
+        const deltaY = e.clientY - startPosition.current!.y;
+
+        const newX = elementInitialPos.current!.x + deltaX;
+        const newY = elementInitialPos.current!.y + deltaY;
+        
+        // Immediately update the element's position for responsive dragging
+        updateElementWithoutHistory(elementId, { 
+          position: { x: newX, y: newY }
+        });
       });
     };
 
@@ -50,16 +59,28 @@ export const useDraggable = (elementId: string) => {
       
       startPosition.current = null;
       elementInitialPos.current = null;
+      
+      // Cancel any pending animation frame
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+        animationFrame.current = null;
+      }
     };
 
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove, { passive: true });
+      window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
     }
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      
+      // Clean up any pending animation frame
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+        animationFrame.current = null;
+      }
     };
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory]);
 

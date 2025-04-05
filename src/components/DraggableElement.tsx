@@ -25,7 +25,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [showDragHandle, setShowDragHandle] = useState(false);
+  const [showControls, setShowControls] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -92,14 +92,14 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   }, [isDragging]);
 
   useEffect(() => {
-    // Show drag handle when element is hovered
+    // Show controls when element is hovered
     const handleMouseEnter = () => {
-      setShowDragHandle(true);
+      setShowControls(true);
     };
 
     const handleMouseLeave = () => {
       if (!isDragging) {
-        setShowDragHandle(false);
+        setShowControls(false);
       }
     };
 
@@ -152,7 +152,11 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       <div
         ref={elementRef}
         className="canvas-element"
-        style={elementStyle}
+        style={{
+          ...elementStyle,
+          transition: isDragging ? 'none' : undefined,
+          willChange: isDragging ? 'transform' : undefined,
+        }}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleTextDoubleClick}
         onDragOver={(e) => {
@@ -163,19 +167,6 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         }}
       >
         {childContent}
-        
-        {(showDragHandle || isDragging || isActive) && element.type !== 'background' && (
-          <div 
-            className="absolute -top-4 -left-4 w-8 h-8 bg-canvas-purple rounded-full flex items-center justify-center cursor-grab z-50 shadow-md border-2 border-white"
-            onMouseDown={handleDragHandleMouseDown}
-            style={{
-              cursor: isDragging ? 'grabbing' : 'grab',
-              pointerEvents: 'auto',
-            }}
-          >
-            <Plus className="text-white" size={18} />
-          </div>
-        )}
       </div>
 
       <ElementControls
@@ -184,6 +175,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         frameTransform={frameTransform}
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
+        onDragHandleMouseDown={handleDragHandleMouseDown}
+        showControls={showControls || isActive || isDragging}
       />
     </>
   );
