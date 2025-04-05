@@ -1,9 +1,8 @@
-
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
 import LayersList from "./LayersList";
-import { Minus, Plus, RotateCcw, Move } from "lucide-react";
+import { Minus, Plus, RotateCcw } from "lucide-react";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
@@ -22,10 +21,6 @@ const Canvas = () => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
-  const [isPanning, setIsPanning] = useState(false);
-  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
-  const [lastMousePosition, setLastMousePosition] = useState({ x: 0, y: 0 });
-  const [spaceKeyPressed, setSpaceKeyPressed] = useState(false);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -77,126 +72,18 @@ const Canvas = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
-
-  // Handle keyboard events for panning mode
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !spaceKeyPressed) {
-        setSpaceKeyPressed(true);
-        if (document.body.style.cursor !== 'grab') {
-          document.body.style.cursor = 'grab';
-        }
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === 'Space') {
-        setSpaceKeyPressed(false);
-        setIsPanning(false);
-        document.body.style.cursor = '';
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    window.addEventListener('keyup', handleKeyUp);
-
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-      document.body.style.cursor = '';
-    };
-  }, [spaceKeyPressed]);
-
-  // Handle mouse events for panning
-  const handleMouseDown = useCallback(
-    (e: React.MouseEvent) => {
-      if (spaceKeyPressed) {
-        setIsPanning(true);
-        setLastMousePosition({ x: e.clientX, y: e.clientY });
-        document.body.style.cursor = 'grabbing';
-        e.preventDefault();
-      }
-    },
-    [spaceKeyPressed]
-  );
-
-  const handleMouseMove = useCallback(
-    (e: React.MouseEvent) => {
-      if (isPanning) {
-        const deltaX = e.clientX - lastMousePosition.x;
-        const deltaY = e.clientY - lastMousePosition.y;
-        
-        setPanPosition(prev => ({
-          x: prev.x + deltaX,
-          y: prev.y + deltaY
-        }));
-        
-        setLastMousePosition({ x: e.clientX, y: e.clientY });
-        e.preventDefault();
-      }
-    },
-    [isPanning, lastMousePosition]
-  );
-
-  const handleMouseUp = useCallback(() => {
-    if (isPanning) {
-      setIsPanning(false);
-      document.body.style.cursor = spaceKeyPressed ? 'grab' : '';
-    }
-  }, [isPanning, spaceKeyPressed]);
-
-  // Apply these handlers to the window to ensure smooth panning even when mouse moves outside the canvas
-  useEffect(() => {
-    const handleGlobalMouseMove = (e: MouseEvent) => {
-      if (isPanning) {
-        const deltaX = e.clientX - lastMousePosition.x;
-        const deltaY = e.clientY - lastMousePosition.y;
-        
-        setPanPosition(prev => ({
-          x: prev.x + deltaX,
-          y: prev.y + deltaY
-        }));
-        
-        setLastMousePosition({ x: e.clientX, y: e.clientY });
-      }
-    };
-
-    const handleGlobalMouseUp = () => {
-      if (isPanning) {
-        setIsPanning(false);
-        document.body.style.cursor = spaceKeyPressed ? 'grab' : '';
-      }
-    };
-
-    if (isPanning) {
-      window.addEventListener('mousemove', handleGlobalMouseMove);
-      window.addEventListener('mouseup', handleGlobalMouseUp);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleGlobalMouseMove);
-      window.removeEventListener('mouseup', handleGlobalMouseUp);
-    };
-  }, [isPanning, lastMousePosition, spaceKeyPressed]);
   
-  const handleZoomIn = useCallback(() => {
-    setZoomLevel(prevZoom => {
-      const newZoom = Math.min(prevZoom + 0.1, 3);
-      return newZoom;
-    });
-  }, []);
+  const handleZoomIn = () => {
+    setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
+  };
   
-  const handleZoomOut = useCallback(() => {
-    setZoomLevel(prevZoom => {
-      const newZoom = Math.max(prevZoom - 0.1, 0.5);
-      return newZoom;
-    });
-  }, []);
+  const handleZoomOut = () => {
+    setZoomLevel(prevZoom => Math.max(prevZoom - 0.1, 0.5));
+  };
   
-  const handleResetZoom = useCallback(() => {
+  const handleResetZoom = () => {
     setZoomLevel(1);
-    setPanPosition({ x: 0, y: 0 });
-  }, []);
+  };
   
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === containerRef.current) {
@@ -448,21 +335,14 @@ const Canvas = () => {
   
   return (
     <div ref={parentRef} className="flex-1 flex items-center justify-center p-4 canvas-workspace relative">
-      <div 
-        className="canvas-container overflow-hidden" 
-        style={{ 
-          transform: `scale(${zoomLevel})`, 
-          transformOrigin: 'center center', 
-          transition: 'transform 0.2s ease-out',
-          position: 'relative',
-          width: 'fit-content',
-          height: 'fit-content',
-          cursor: spaceKeyPressed ? (isPanning ? 'grabbing' : 'grab') : 'default'
-        }}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-      >
+      <div className="canvas-container" style={{ 
+        transform: `scale(${zoomLevel})`, 
+        transformOrigin: 'center center', 
+        transition: 'transform 0.2s ease-out',
+        position: 'relative',
+        width: 'fit-content',
+        height: 'fit-content'
+      }}>
         <div
           ref={containerRef}
           className={`relative shadow-lg rounded-lg ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
@@ -470,9 +350,7 @@ const Canvas = () => {
             width: `${canvasDimensions.width}px`,
             height: `${canvasDimensions.height}px`,
             ...backgroundStyle,
-            overflow: 'hidden',
-            transform: `translate(${panPosition.x}px, ${panPosition.y}px)`,
-            willChange: 'transform'
+            overflow: 'hidden'
           }}
           onClick={handleCanvasClick}
           onDragOver={handleDragOver}
@@ -493,38 +371,21 @@ const Canvas = () => {
             overflow: 'visible',
             pointerEvents: 'none',
             zIndex: 1000,
-            transform: `translate(${panPosition.x}px, ${panPosition.y}px)`,
           }}
         />
       </div>
       
-      <div className="zoom-controls absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-white rounded-full shadow-md px-4 py-2 flex items-center space-x-4">
-        <button 
-          onClick={handleZoomOut} 
-          title="Zoom Out"
-          className="p-1 hover:bg-gray-100 rounded"
-        >
+      <div className="zoom-controls">
+        <button onClick={handleZoomOut} title="Zoom Out">
           <Minus size={16} />
         </button>
-        <span className="text-sm text-gray-700">{Math.round(zoomLevel * 100)}%</span>
-        <button 
-          onClick={handleZoomIn} 
-          title="Zoom In"
-          className="p-1 hover:bg-gray-100 rounded"
-        >
+        <span>{Math.round(zoomLevel * 100)}%</span>
+        <button onClick={handleZoomIn} title="Zoom In">
           <Plus size={16} />
         </button>
-        <button 
-          onClick={handleResetZoom} 
-          title="Reset Zoom and Pan"
-          className="p-1 hover:bg-gray-100 rounded"
-        >
+        <button onClick={handleResetZoom} title="Reset Zoom">
           <RotateCcw size={16} />
         </button>
-        <div className="border-l border-gray-200 h-6 mx-1"></div>
-        <div className="flex items-center text-xs text-gray-500">
-          <Move size={14} className="mr-1" /> <span>Hold Space + Drag</span>
-        </div>
       </div>
     </div>
   );
