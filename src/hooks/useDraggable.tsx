@@ -12,8 +12,6 @@ export const useDraggable = (elementId: string) => {
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
-  const rafRef = useRef<number | null>(null);
-  const currentPosition = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
 
   // Find the current element to access its properties
@@ -35,23 +33,10 @@ export const useDraggable = (elementId: string) => {
       const newX = elementInitialPos.current.x + deltaX;
       const newY = elementInitialPos.current.y + deltaY;
       
-      // Store the current position for use in the animation frame
-      currentPosition.current = { x: newX, y: newY };
-      
-      // If there's no animation frame requested yet, request one
-      if (rafRef.current === null) {
-        rafRef.current = requestAnimationFrame(() => {
-          // Only update if we have a position
-          if (currentPosition.current) {
-            // Use updateElementWithoutHistory to avoid adding every movement to history
-            updateElementWithoutHistory(elementId, { 
-              position: currentPosition.current
-            });
-          }
-          // Reset the animation frame reference
-          rafRef.current = null;
-        });
-      }
+      // Immediately update the element's position for responsive dragging
+      updateElementWithoutHistory(elementId, { 
+        position: { x: newX, y: newY }
+      });
     };
 
     const handleMouseUp = () => {
@@ -65,12 +50,6 @@ export const useDraggable = (elementId: string) => {
       
       startPosition.current = null;
       elementInitialPos.current = null;
-      
-      // Cancel any pending animation frame
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
     };
 
     if (isDragging) {
@@ -81,12 +60,6 @@ export const useDraggable = (elementId: string) => {
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
-      
-      // Cleanup any pending animation frame
-      if (rafRef.current !== null) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
     };
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory]);
 

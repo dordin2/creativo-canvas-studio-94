@@ -9,6 +9,7 @@ import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
+import { Plus } from "lucide-react";
 
 interface DraggableElementProps {
   element: DesignElement;
@@ -24,6 +25,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [showDragHandle, setShowDragHandle] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -68,6 +70,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     }
   };
 
+  const handleDragHandleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveElement(element);
+    startDrag(e, element.position);
+    setIsDragging(true);
+  };
+
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false);
@@ -79,6 +88,32 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
 
     return () => {
       document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  useEffect(() => {
+    // Show drag handle when element is hovered
+    const handleMouseEnter = () => {
+      setShowDragHandle(true);
+    };
+
+    const handleMouseLeave = () => {
+      if (!isDragging) {
+        setShowDragHandle(false);
+      }
+    };
+
+    const element = elementRef.current;
+    if (element) {
+      element.addEventListener('mouseenter', handleMouseEnter);
+      element.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (element) {
+        element.removeEventListener('mouseenter', handleMouseEnter);
+        element.removeEventListener('mouseleave', handleMouseLeave);
+      }
     };
   }, [isDragging]);
 
@@ -128,6 +163,19 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         }}
       >
         {childContent}
+        
+        {(showDragHandle || isDragging || isActive) && element.type !== 'background' && (
+          <div 
+            className="absolute -top-4 -left-4 w-8 h-8 bg-canvas-purple rounded-full flex items-center justify-center cursor-grab z-50 shadow-md border-2 border-white"
+            onMouseDown={handleDragHandleMouseDown}
+            style={{
+              cursor: isDragging ? 'grabbing' : 'grab',
+              pointerEvents: 'auto',
+            }}
+          >
+            <Plus className="text-white" size={18} />
+          </div>
+        )}
       </div>
 
       <ElementControls

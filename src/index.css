@@ -97,7 +97,7 @@
   }
 
   .canvas-element {
-    @apply cursor-move transition-transform duration-75 ease-out relative;
+    @apply cursor-move transition-none relative;
     will-change: transform, left, top, width, height, z-index;
     touch-action: none;
     /* Allow elements to extend beyond their parent container */
