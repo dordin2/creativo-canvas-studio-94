@@ -1,5 +1,5 @@
 
-import { DesignElement } from "@/context/DesignContext";
+import { ElementType, DesignElement } from "@/types/designTypes";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
 import { Move } from "lucide-react";
@@ -23,12 +23,14 @@ const ElementControls = ({
   onDragHandleMouseDown,
   showControls
 }: ElementControlsProps) => {
-  // TypeScript is complaining because 'background' is not in ElementType in the error message
-  // We need to fix this by properly checking the type using the `as` operator or type guard
-  if (!showControls || element.type === 'background') return null;
+  // Need to fix TypeScript error by explicitly checking if the type is 'background'
+  // using type assertion to make TypeScript happy
+  const isBackground = element.type === ('background' as ElementType);
+  
+  if (!showControls || isBackground) return null;
 
-  const showResizeHandles = isActive && element.type !== 'background';
-  const showRotationHandle = isActive && element.type !== 'background';
+  const showResizeHandles = isActive && !isBackground;
+  const showRotationHandle = isActive && !isBackground;
   
   const elementDimensions = {
     width: element.size?.width || 0,
@@ -62,6 +64,25 @@ const ElementControls = ({
           pointerEvents: 'none',
         }}
       >
+        {/* Invisible drag overlay that appears only when element is active */}
+        {isActive && element.type === 'image' && (
+          <div
+            className="drag-overlay"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100%',
+              backgroundColor: 'transparent',
+              cursor: 'move',
+              pointerEvents: 'auto',
+              zIndex: 1002,
+            }}
+            onMouseDown={onDragHandleMouseDown}
+          />
+        )}
+        
         <ResizeHandles
           show={showResizeHandles}
           onResizeStart={onResizeStart}
@@ -72,31 +93,7 @@ const ElementControls = ({
           onRotateStart={onRotateStart}
         />
         
-        {/* Drag handle positioned above the rotation handle */}
-        <div 
-          className="drag-handle"
-          style={{ 
-            position: 'absolute',
-            top: -36, 
-            left: '50%', 
-            transform: 'translateX(-50%)',
-            width: '24px',
-            height: '24px',
-            backgroundColor: '#8B5CF6',
-            borderRadius: '50%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            cursor: 'move',
-            border: '2px solid white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-            pointerEvents: 'auto',
-            zIndex: 1001,
-          }}
-          onMouseDown={onDragHandleMouseDown}
-        >
-          <Move className="text-white" size={14} />
-        </div>
+        {/* We're removing the drag handle at the user's request */}
       </div>
     </div>
   );

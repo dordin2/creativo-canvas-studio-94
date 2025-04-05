@@ -78,5 +78,26 @@ export interface DesignElement {
   clickSequencePuzzleConfig?: ClickSequencePuzzleConfiguration; // Added for click sequence puzzle
 }
 
+// Add back the DesignContextType interface that was accidentally removed
+export interface DesignContextType {
+  elements: DesignElement[];
+  activeElement: DesignElement | null;
+  canvasRef: HTMLDivElement | null;
+  setCanvasRef: (ref: HTMLDivElement) => void;
+  addElement: (type: ElementType, props?: any) => DesignElement;
+  updateElement: (id: string, updates: Partial<DesignElement>) => void;
+  updateElementWithoutHistory: (id: string, updates: Partial<DesignElement>) => void;
+  commitToHistory: () => void;
+  removeElement: (id: string) => void;
+  setActiveElement: (element: DesignElement | null) => void;
+  updateElementLayer: (id: string, newLayer: number) => void;
+  getHighestLayer: () => number;
+  handleImageUpload: (id: string, file: File) => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+}
+
 // Helper function to generate new unique IDs
 export const generateId = (): string => uuidv4();

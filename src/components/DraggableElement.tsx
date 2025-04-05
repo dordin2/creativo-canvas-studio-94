@@ -40,7 +40,9 @@ const DraggableElement = ({ element, isActive, children }: {
     
     setActiveElement(element);
     
-    if (isEditing) return;
+    // For image elements, we only set as active but don't start drag
+    // Dragging will be handled by the invisible overlay in ElementControls
+    if (isEditing || element.type === 'image') return;
     
     startDrag(e, element.position);
     setIsDragging(true);
@@ -153,8 +155,9 @@ const DraggableElement = ({ element, isActive, children }: {
           ...elementStyle,
           transition: isDragging ? 'none' : 'transform 0.1s ease',
           transform: element.style?.transform || '',
-          cursor: isDragging ? 'move' : 'grab',
+          cursor: element.type === 'image' ? 'default' : (isDragging ? 'move' : 'grab'),
           willChange: isDragging ? 'transform' : 'auto',
+          pointerEvents: 'auto'
         }}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleTextDoubleClick}
