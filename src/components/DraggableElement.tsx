@@ -38,12 +38,7 @@ const DraggableElement = ({ element, isActive, children }: {
     // Don't start dragging if editing text
     if (isEditing) return;
     
-    // For image elements, we'll handle this differently
-    if (element.type === 'image') {
-      // We'll still set active, but dragging will be handled by the overlay in ElementControls
-      return;
-    }
-    
+    // For all elements, including images, start dragging immediately
     startDrag(e, element.position);
     setIsDragging(true);
     setStartPos({ x: e.clientX, y: e.clientY });
@@ -161,13 +156,6 @@ const DraggableElement = ({ element, isActive, children }: {
         }}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleTextDoubleClick}
-        onClick={(e) => {
-          // Ensure click for image selection registers
-          if (element.type === 'image') {
-            e.stopPropagation();
-            setActiveElement(element);
-          }
-        }}
       >
         {childContent}
       </div>
