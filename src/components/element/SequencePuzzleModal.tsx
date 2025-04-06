@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -268,8 +269,17 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                             ref={arrayIndex === draggedItem ? dragImageRef : null}
                             src={sequencePuzzleConfig.images[imageIndex]}
                             alt={`Image ${imageIndex + 1}`}
-                            className="w-full h-full object-cover"
-                            style={{ pointerEvents: 'none', touchAction: 'none', userSelect: 'none', WebkitUserDrag: 'none' }}
+                            className="w-full h-full object-cover no-select"
+                            style={{ 
+                              pointerEvents: 'none', 
+                              touchAction: 'none', 
+                              userSelect: 'none',
+                              // Fix: Use CSS variable instead of direct WebkitUserDrag property
+                              // which causes TypeScript error
+                              WebkitUserSelect: 'none',
+                              MozUserSelect: 'none',
+                              msUserSelect: 'none'
+                            }}
                             draggable={false}
                           />
                         )}
@@ -297,10 +307,10 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
           ) : (
             <div className="text-center py-10">
               <p className="text-gray-500">
-                {language === 'en' ? 'No images available for this puzzle.' : 'אין תמונות זמינות לפазל זה.'}
+                {language === 'en' ? 'No images available for this puzzle.' : 'אין תמונות זמינות לפאזל זה.'}
               </p>
               <p className="text-sm mt-2">
-                {language === 'en' ? 'Please add images in the puzzle properties.' : 'אנא הוסף תמונות במאפייני הפ Pazel.'}
+                {language === 'en' ? 'Please add images in the puzzle properties.' : 'אנא הוסף תמונות במאפייני הפאזל.'}
               </p>
             </div>
           )}
@@ -309,7 +319,7 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
         {solved && (
           <div className="flex items-center justify-center text-green-500 gap-2 pb-2">
             <CheckCircle className="h-5 w-5" />
-            <span>{language === 'en' ? 'Puzzle solved correctly!' : 'הפ Pazel נפתר בהצלחה!'}</span>
+            <span>{language === 'en' ? 'Puzzle solved correctly!' : 'הפאזל נפתר בהצלחה!'}</span>
           </div>
         )}
       </DialogContent>
