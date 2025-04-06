@@ -1,6 +1,6 @@
 
 import React, { useState, useRef } from "react";
-import { DesignElement, InteractionType } from "@/types/designTypes";
+import { DesignElement, InteractionType, InteractionConfig } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -46,7 +46,7 @@ const InteractionProperties: React.FC<{ element: DesignElement }> = ({ element }
     }
   };
   
-  const [interactionConfig, setInteractionConfig] = useState(initialConfig);
+  const [interactionConfig, setInteractionConfig] = useState<InteractionConfig>(initialConfig);
   
   // For message interaction
   const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -80,7 +80,7 @@ const InteractionProperties: React.FC<{ element: DesignElement }> = ({ element }
     }));
   };
   
-  const handlePositionChange = (position: string) => {
+  const handlePositionChange = (position: 'top' | 'center' | 'bottom') => {
     setInteractionConfig(prev => ({
       ...prev,
       message: {

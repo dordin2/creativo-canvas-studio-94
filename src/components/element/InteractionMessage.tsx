@@ -5,7 +5,7 @@ interface InteractionMessageProps {
   config: {
     text: string;
     color?: string;
-    position?: string;
+    position?: 'top' | 'center' | 'bottom';
   };
 }
 

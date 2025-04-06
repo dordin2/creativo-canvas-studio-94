@@ -3,12 +3,13 @@ import * as React from "react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { HexColorPicker } from "react-colorful";
 
-interface ColorSwatchProps extends React.HTMLAttributes<HTMLDivElement> {
+interface ColorSwatchProps {
   value: string;
   onChange: (value: string) => void;
+  className?: string;
 }
 
-export function ColorSwatch({ value, onChange, className, ...props }: ColorSwatchProps) {
+export function ColorSwatch({ value, onChange, className, ...props }: ColorSwatchProps & Omit<React.HTMLAttributes<HTMLDivElement>, 'onChange'>) {
   return (
     <Popover>
       <PopoverTrigger asChild>
