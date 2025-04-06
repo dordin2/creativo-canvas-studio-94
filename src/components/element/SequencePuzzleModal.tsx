@@ -21,10 +21,12 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const { t, language } = useLanguage();
   
-  // Use refs to prevent excessive updates to the global state
+  // Use a ref to prevent excessive updates to the global state
   const isInitialized = useRef(false);
   const pendingUpdate = useRef(false);
   const timeoutRef = useRef<number | null>(null);
+  const dragItemRef = useRef<HTMLDivElement | null>(null);
+  const dragImageRef = useRef<HTMLImageElement | null>(null);
   
   const sequencePuzzleConfig = element.sequencePuzzleConfig || {
     name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
@@ -125,63 +127,80 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     return array;
   };
   
-  // Handle drag start
+  // Handle dragging start with custom image
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
-    // Store the index in dataTransfer to retrieve it on drop
-    e.dataTransfer.setData('text/plain', index.toString());
+    if (dragImageRef.current) {
+      // Creating a custom drag image
+      const rect = dragImageRef.current.getBoundingClientRect();
+      const offsetX = e.clientX - rect.left;
+      const offsetY = e.clientY - rect.top;
+      
+      // Use the actual image element as drag image for a natural feel
+      e.dataTransfer.setDragImage(dragImageRef.current, offsetX, offsetY);
+    }
+    
+    // Set drag effect to move for a more natural feel
     e.dataTransfer.effectAllowed = 'move';
     
-    // Add visual styling
-    e.currentTarget.classList.add('dragging');
+    // Store the dragged item index
     setDraggedItem(index);
+    dragItemRef.current = e.currentTarget;
+    
+    // Add a class to style during dragging
+    e.currentTarget.classList.add('dragging');
   };
   
-  // Handle drag over - required to enable dropping
+  // Handle drag over to enable dropping
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     
-    // Add a class to highlight drop target
-    if (!e.currentTarget.classList.contains('drag-over')) {
-      e.currentTarget.classList.add('drag-over');
-    }
+    // Add visual indication of drop target
+    e.currentTarget.classList.add('drag-over');
   };
   
-  // Remove highlight when drag leaves element
+  // Handle drag leave to reset visual indication
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.currentTarget.classList.remove('drag-over');
   };
   
-  // Handle drop - move the dragged item to this position
+  // Handle dropping
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
     
-    // Get the dragged item index from dataTransfer
-    const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
+    if (draggedItem === null) return;
     
-    if (isNaN(draggedIndex) || draggedIndex === targetIndex) return;
+    // Remove the dragging class from the source element
+    if (dragItemRef.current) {
+      dragItemRef.current.classList.remove('dragging');
+    }
     
-    // Reorder the items
+    // Make a copy of the current order
     const newOrder = [...currentOrder];
-    const draggedItemValue = newOrder[draggedIndex];
+    const draggedItemValue = newOrder[draggedItem];
     
-    // Remove the dragged item, then insert at the new position
-    newOrder.splice(draggedIndex, 1);
+    // Remove the dragged item from its original position
+    newOrder.splice(draggedItem, 1);
+    
+    // Insert it at the target position
     newOrder.splice(targetIndex, 0, draggedItemValue);
     
-    // Update state with new order
+    // Update the state
     setCurrentOrder(newOrder);
     setDraggedItem(null);
+    dragItemRef.current = null;
     
-    // Update global state, but debounce it
+    // Only update the global state when completed, not during drag operations
     if (!pendingUpdate.current) {
       pendingUpdate.current = true;
       
+      // Clear any existing timeout
       if (timeoutRef.current !== null) {
         window.clearTimeout(timeoutRef.current);
       }
       
+      // Use a timeout to debounce the update
       timeoutRef.current = window.setTimeout(() => {
         updateElement(element.id, {
           sequencePuzzleConfig: {
@@ -195,13 +214,17 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     }
   };
   
-  // Clear styling on drag end
+  // Handle end of drag operation
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    // Reset any visual states
     e.currentTarget.classList.remove('dragging');
+    
+    // Clear references and state if drag completed without a valid drop
     setDraggedItem(null);
+    dragItemRef.current = null;
   };
   
-  // Reset the puzzle with shuffled order
+  // Reset the puzzle
   const handleReset = () => {
     const initialOrder = Array.from({ length: sequencePuzzleConfig.images.length }, (_, i) => i);
     const shuffled = shuffleArray([...initialOrder]);
@@ -233,29 +256,6 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     }
   };
   
-  // Add some CSS for drag and drop styles
-  useEffect(() => {
-    // Add CSS for drag and drop operations
-    const style = document.createElement('style');
-    style.textContent = `
-      .dragging {
-        opacity: 0.6;
-        transform: scale(1.05);
-        z-index: 100;
-      }
-      .drag-over {
-        border: 2px dashed #3b82f6;
-        background-color: rgba(59, 130, 246, 0.1);
-        transform: scale(1.02);
-      }
-    `;
-    document.head.appendChild(style);
-    
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
@@ -286,22 +286,24 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                 {currentOrder.map((imageIndex, arrayIndex) => (
                   <div 
                     key={arrayIndex}
-                    draggable="true"
+                    draggable
                     onDragStart={(e) => handleDragStart(e, arrayIndex)}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, arrayIndex)}
                     onDragEnd={handleDragEnd}
-                    className="relative transition-all duration-200 cursor-move"
+                    className="relative transition-transform"
                   >
                     <div className="flex flex-col items-center">
                       <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-blue-300 rounded-md overflow-hidden cursor-grab active:cursor-grabbing hover:border-blue-500 bg-white relative">
-                        <img
-                          src={sequencePuzzleConfig.images[imageIndex]}
-                          alt={`Image ${imageIndex + 1}`}
-                          className="w-full h-full object-cover"
-                          draggable="false" // Prevent image-specific dragging
-                        />
+                        {sequencePuzzleConfig.images[imageIndex] && (
+                          <img
+                            ref={arrayIndex === draggedItem ? dragImageRef : null}
+                            src={sequencePuzzleConfig.images[imageIndex]}
+                            alt={`Image ${imageIndex + 1}`}
+                            className="w-full h-full object-cover"
+                          />
+                        )}
                         <div className="absolute top-0 left-0 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-br">
                           {arrayIndex + 1}
                         </div>

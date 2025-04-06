@@ -52,16 +52,12 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     top: element.position.y,
     width: element.size?.width,
     height: element.size?.height,
-    cursor: isDragging ? 'grabbing' : 'grab',
+    cursor: isDragging ? 'move' : 'grab',
     border: 'none',
     zIndex: element.layer,
-    userSelect: 'none', // Prevent selection
-    WebkitUserSelect: 'none', // For compatibility
-    MozUserSelect: 'none', // For compatibility
-    msUserSelect: 'none', // For compatibility
-    WebkitTouchCallout: 'none', // Disable callout on iOS
-    // Remove the problematic WebkitUserDrag property
-    // and use the standard CSS property instead
-    userDrag: 'none' // Standard CSS property
-  } as CSSProperties;
+    touchAction: 'none',
+    userSelect: 'none',
+    // Apply hardware acceleration for smoother dragging
+    transform: `translate3d(0, 0, 0) ${element.style?.transform || ''}`.trim(),
+  };
 };

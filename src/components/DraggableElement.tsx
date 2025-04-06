@@ -10,13 +10,11 @@ import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 
-interface DraggableElementProps {
+const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
   isActive: boolean;
   children: React.ReactNode;
-}
-
-const DraggableElement = ({ element, isActive, children }: DraggableElementProps) => {
+}) => {
   const { updateElement, setActiveElement } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -24,6 +22,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [showControls, setShowControls] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -34,8 +33,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    // Prevent default browser drag behavior for images
-    if (element.type === 'image') {
+    if (element.type === 'image' && 
+        (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
       e.preventDefault();
     }
     
@@ -68,6 +67,13 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     }
   };
 
+  const handleDragHandleMouseDown = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setActiveElement(element);
+    startDrag(e, element.position);
+    setIsDragging(true);
+  };
+
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false);
@@ -79,6 +85,32 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
 
     return () => {
       document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  useEffect(() => {
+    // Show controls when element is hovered
+    const handleMouseEnter = () => {
+      setShowControls(true);
+    };
+
+    const handleMouseLeave = () => {
+      if (!isDragging) {
+        setShowControls(false);
+      }
+    };
+
+    const element = elementRef.current;
+    if (element) {
+      element.addEventListener('mouseenter', handleMouseEnter);
+      element.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (element) {
+        element.removeEventListener('mouseenter', handleMouseEnter);
+        element.removeEventListener('mouseleave', handleMouseLeave);
+      }
     };
   }, [isDragging]);
 
@@ -117,10 +149,21 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
       <div
         ref={elementRef}
         className="canvas-element"
-        style={elementStyle}
+        style={{
+          ...elementStyle,
+          transition: isDragging ? 'none' : 'transform 0.1s ease',
+          transform: element.style?.transform || '',
+          cursor: isDragging ? 'move' : 'grab',
+          willChange: isDragging ? 'transform' : 'auto',
+        }}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleTextDoubleClick}
-        draggable={false} // Prevent default HTML5 drag
+        onDragOver={(e) => {
+          if (element.type === 'image') {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
       >
         {childContent}
       </div>
@@ -131,6 +174,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         frameTransform={frameTransform}
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
+        onDragHandleMouseDown={handleDragHandleMouseDown}
+        showControls={showControls || isActive || isDragging}
       />
     </>
   );

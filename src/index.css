@@ -97,11 +97,18 @@
   }
 
   .canvas-element {
-    @apply cursor-move transition-transform duration-75 ease-out relative;
-    will-change: transform, left, top, width, height, z-index;
+    @apply cursor-move transition-none relative;
+    will-change: transform, left, top;
     touch-action: none;
     /* Allow elements to extend beyond their parent container */
     pointer-events: auto !important;
+    /* Disable transition during drag for better performance */
+    transition: none !important;
+  }
+
+  .canvas-element.dragging {
+    /* Apply hardware acceleration for smoother dragging */
+    transform: translate3d(0, 0, 0);
   }
 
   .canvas-element:hover {
@@ -140,6 +147,18 @@
     position: absolute;
     visibility: visible !important;
     display: block !important;
+  }
+  
+  .drag-handle {
+    pointer-events: auto !important;
+    position: absolute;
+    visibility: visible !important;
+    display: block !important;
+    z-index: 1001;
+  }
+  
+  .drag-handle:active {
+    cursor: grabbing !important;
   }
   
   /* Element controls wrapper that sits outside the canvas overflow */
