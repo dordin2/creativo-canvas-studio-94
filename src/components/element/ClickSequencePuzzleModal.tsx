@@ -166,11 +166,11 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
                       className="relative transition-transform cursor-pointer hover:scale-105"
                     >
                       <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-gray-300 rounded-md overflow-hidden hover:border-blue-500 bg-white relative">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-gray-300 rounded-md overflow-hidden hover:border-blue-500 bg-white relative flex items-center justify-center">
                           <img
                             src={image}
                             alt={`Image ${index + 1}`}
-                            className="w-full h-full object-cover"
+                            className="max-w-full max-h-full object-contain"
                           />
                         </div>
                         <div className="text-xs text-center mt-1">
