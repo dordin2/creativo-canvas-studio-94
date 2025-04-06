@@ -1,4 +1,3 @@
-
 export type ElementType =
   | 'rectangle'
   | 'circle'
@@ -125,8 +124,6 @@ export interface DesignContextType {
   removeCanvas: (index: number) => void;
   setActiveCanvas: (index: number) => void;
   updateCanvasName: (id: string, newName: string) => void;
-  duplicateCanvas: (index: number) => void;
-  reorderCanvases: (sourceIndex: number, targetIndex: number) => void;
 }
 
 export const generateId = (): string => {

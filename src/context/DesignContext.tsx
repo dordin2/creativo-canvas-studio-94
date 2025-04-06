@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { 
@@ -231,59 +232,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  const duplicateCanvas = (index: number) => {
-    const sourceCanvas = canvases[index];
-    if (!sourceCanvas) return;
-    
-    const duplicatedCanvas: Canvas = {
-      id: generateId(),
-      name: `${sourceCanvas.name} (Copy)`,
-      elements: JSON.parse(JSON.stringify(sourceCanvas.elements))
-    };
-    
-    const updatedCanvases = [...canvases];
-    updatedCanvases.splice(index + 1, 0, duplicatedCanvas);
-    
-    setCanvases(updatedCanvases);
-    setActiveCanvasIndex(index + 1);
-    addToHistory(updatedCanvases);
-    setActiveElement(null);
-    
-    toast.success(t('toast.success.duplicateCanvas') || "Canvas duplicated");
-  };
-  
-  const reorderCanvases = (sourceIndex: number, targetIndex: number) => {
-    if (
-      sourceIndex < 0 || 
-      sourceIndex >= canvases.length || 
-      targetIndex < 0 || 
-      targetIndex >= canvases.length ||
-      sourceIndex === targetIndex
-    ) {
-      return;
-    }
-    
-    const updatedCanvases = [...canvases];
-    const [movedCanvas] = updatedCanvases.splice(sourceIndex, 1);
-    updatedCanvases.splice(targetIndex, 0, movedCanvas);
-    
-    setCanvases(updatedCanvases);
-    
-    if (activeCanvasIndex === sourceIndex) {
-      setActiveCanvasIndex(targetIndex);
-    } else if (
-      (sourceIndex < activeCanvasIndex && targetIndex >= activeCanvasIndex) ||
-      (sourceIndex > activeCanvasIndex && targetIndex <= activeCanvasIndex)
-    ) {
-      setActiveCanvasIndex(
-        sourceIndex < activeCanvasIndex ? activeCanvasIndex - 1 : activeCanvasIndex + 1
-      );
-    }
-    
-    addToHistory(updatedCanvases);
-    toast.success(t('toast.success.reorderCanvas') || "Canvas order updated");
-  };
-  
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
@@ -368,9 +316,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     addCanvas,
     removeCanvas,
     setActiveCanvas,
-    updateCanvasName,
-    duplicateCanvas,
-    reorderCanvases
+    updateCanvasName
   };
   
   return (
