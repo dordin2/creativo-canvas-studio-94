@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -19,8 +20,8 @@ export const useDraggable = (elementId: string) => {
   const currentElement = elements.find(el => el.id === elementId);
   
   // Check if this is a puzzle element or image
-  const isPuzzleElement = currentElement?.type === 'puzzle' || 
-                           currentElement?.type === 'sequencePuzzle';
+  const isPuzzleElement = currentElement?.type === 'puzzle';
+  const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
   const isImageElement = currentElement?.type === 'image';
 
   useEffect(() => {
@@ -107,8 +108,8 @@ export const useDraggable = (elementId: string) => {
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
-    // Prevent browser's native drag behavior for images
-    if (isImageElement) {
+    // Prevent browser's native drag behavior for images and puzzle elements
+    if (isImageElement || isPuzzleElement) {
       e.preventDefault();
     }
     

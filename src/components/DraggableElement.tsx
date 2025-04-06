@@ -28,7 +28,8 @@ const DraggableElement = ({ element, isActive, children }: {
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
 
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
-  const isPuzzleElement = element.type === 'puzzle' || element.type === 'sequencePuzzle';
+  const isSequencePuzzleElement = element.type === 'sequencePuzzle';
+  const isPuzzleElement = element.type === 'puzzle';
   const isImageElement = element.type === 'image';
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -44,10 +45,8 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing) return;
     
-    // For puzzle elements, we don't want to start drag immediately on single click
-    // This reverts to the previous behavior where puzzles required double-click 
-    // to activate the drag behavior
-    if (!isPuzzleElement) {
+    // Only sequence puzzle requires double-click, regular puzzle gets single-click like images
+    if (!isSequencePuzzleElement) {
       startDrag(e, element.position);
       setIsDragging(true);
     }
@@ -64,8 +63,8 @@ const DraggableElement = ({ element, isActive, children }: {
           textInputRef.current.focus();
         }
       }, 10);
-    } else if (isPuzzleElement) {
-      // For puzzle elements, start drag only on double click
+    } else if (isSequencePuzzleElement) {
+      // For sequence puzzle elements, start drag only on double click
       startDrag(e, element.position);
       setIsDragging(true);
     }
