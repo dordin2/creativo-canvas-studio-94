@@ -45,7 +45,10 @@ export const getTextStyle = (element: DesignElement): CSSProperties => {
 };
 
 export const getElementStyle = (element: DesignElement, isDragging: boolean): CSSProperties => {
-  return {
+  // Special styles for puzzle elements
+  const isPuzzleElement = element.type === 'sequencePuzzle' || element.type === 'puzzle';
+  
+  const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
     position: 'absolute',
     left: element.position.x,
@@ -60,4 +63,11 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     // Apply hardware acceleration for smoother dragging
     transform: `translate3d(0, 0, 0) ${element.style?.transform || ''}`.trim(),
   };
+
+  // Prevent browser's default drag behavior for image elements
+  if (isPuzzleElement || element.type === 'image') {
+    style.userDrag = 'none' as any;
+  }
+
+  return style;
 };

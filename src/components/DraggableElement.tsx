@@ -28,12 +28,14 @@ const DraggableElement = ({ element, isActive, children }: {
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
 
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
+  const isPuzzleElement = element.type === 'puzzle' || element.type === 'sequencePuzzle';
+  const isImageElement = element.type === 'image';
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    if (element.type === 'image' && 
+    if (isImageElement && 
         (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
       e.preventDefault();
     }
@@ -60,7 +62,7 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handlePuzzleClick = (e: React.MouseEvent) => {
-    if ((element.type === 'puzzle' || element.type === 'sequencePuzzle') && !isDragging) {
+    if (isPuzzleElement && !isDragging) {
       e.stopPropagation();
       // The modal is now handled directly in the PuzzleElement component
       // so we don't need to do anything here
@@ -158,8 +160,13 @@ const DraggableElement = ({ element, isActive, children }: {
         }}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleTextDoubleClick}
+        draggable={false}
+        onDragStart={(e) => {
+          // Prevent default drag behavior for all elements
+          e.preventDefault();
+        }}
         onDragOver={(e) => {
-          if (element.type === 'image') {
+          if (isImageElement || isPuzzleElement) {
             e.preventDefault();
             e.stopPropagation();
           }
