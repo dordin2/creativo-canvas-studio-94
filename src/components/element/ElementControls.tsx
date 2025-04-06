@@ -1,6 +1,6 @@
 
 import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { Trash2, Copy, Eye, EyeOff, Zap, ZapOff, Play } from "lucide-react";
+import { Trash2, Copy, Eye, EyeOff } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,6 @@ interface ElementControlsProps {
   onResizeStart: (e: React.MouseEvent, direction: string) => void;
   onRotateStart: (e: React.MouseEvent) => void;
   showControls: boolean;
-  onActivateInteraction?: (e: React.MouseEvent) => void;
 }
 
 const ElementControls = ({ 
@@ -27,8 +26,7 @@ const ElementControls = ({
   frameTransform, 
   onResizeStart, 
   onRotateStart,
-  showControls,
-  onActivateInteraction
+  showControls
 }: ElementControlsProps) => {
   const { updateElement, removeElement, addElement } = useDesignState();
   
@@ -70,30 +68,12 @@ const ElementControls = ({
     });
   };
 
-  const handleToggleInteractive = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    updateElement(element.id, {
-      isInteractive: !element.isInteractive,
-      interactionConfig: element.interactionConfig || {
-        type: 'none'
-      }
-    });
-  };
-
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     removeElement(element.id);
   };
 
-  const handleActivateInteraction = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onActivateInteraction) {
-      onActivateInteraction(e);
-    }
-  };
-
   const isVisible = !element.isHidden;
-  const isInteractive = element.isInteractive;
 
   return (
     <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
@@ -185,48 +165,6 @@ const ElementControls = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className={`h-8 w-8 ${isInteractive ? 'bg-blue-100' : 'bg-white'}`}
-                    onClick={handleToggleInteractive}
-                  >
-                    {isInteractive ? (
-                      <Zap className="h-4 w-4 text-blue-500" />
-                    ) : (
-                      <ZapOff className="h-4 w-4" />
-                    )}
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{isInteractive ? 'Disable Interaction' : 'Enable Interaction'}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
-            {isInteractive && element.interactionConfig && element.interactionConfig.type !== 'none' && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      className="h-8 w-8 bg-green-100 text-green-600"
-                      onClick={handleActivateInteraction}
-                    >
-                      <Play className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Activate Interaction</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
             
             <TooltipProvider>
               <Tooltip>

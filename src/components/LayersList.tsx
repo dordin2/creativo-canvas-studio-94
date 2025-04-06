@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
-import { Layers, Eye, EyeOff, Trash2, Copy, Play } from "lucide-react";
+import { Layers, Eye, EyeOff, Trash2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,8 +10,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { toast } from "sonner";
-import PuzzleModal from "./element/PuzzleModal";
 
 const LayersList = () => {
   const { 
@@ -28,8 +26,6 @@ const LayersList = () => {
   const [newLayerValue, setNewLayerValue] = useState<number>(0);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [newNameValue, setNewNameValue] = useState<string>('');
-  const [activePuzzleElement, setActivePuzzleElement] = useState<DesignElement | null>(null);
-  const [isPuzzleModalOpen, setIsPuzzleModalOpen] = useState(false);
 
   // Filter out background element and sort by layer (highest first)
   const layerElements = [...elements]
@@ -66,57 +62,6 @@ const LayersList = () => {
     updateElement(element.id, {
       isHidden: !element.isHidden
     });
-  };
-
-  const handleActivateInteraction = (element: DesignElement) => {
-    if (!element.isInteractive || !element.interactionConfig) return;
-    
-    const config = element.interactionConfig;
-    
-    switch (config.type) {
-      case 'puzzle':
-        if (config.puzzle) {
-          setActivePuzzleElement(element);
-          setIsPuzzleModalOpen(true);
-          toast.info("Opening puzzle");
-        }
-        break;
-      case 'message':
-        if (config.message) {
-          // Fix: Use a function that returns a ReactElement instead of directly passing the ReactElement
-          toast.custom((id) => (
-            <div 
-              key={id}
-              className="fixed bottom-10 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-md bg-white shadow-lg font-medium text-lg z-50 text-center"
-              style={{ color: config.message.color || '#000000', maxWidth: '90%' }}
-            >
-              {config.message.text}
-            </div>
-          ), {
-            duration: config.message.duration,
-            position: 'bottom-center',
-          });
-        }
-        break;
-      case 'sound':
-        if (config.sound && config.sound.soundUrl) {
-          const audio = new Audio(config.sound.soundUrl);
-          // Ensure volume is a valid number between 0 and 1
-          const volume = typeof config.sound.volume === 'number' && 
-                         !isNaN(config.sound.volume) && 
-                         isFinite(config.sound.volume) ? 
-                         Math.min(Math.max(config.sound.volume, 0), 1) : 0.5;
-          
-          audio.volume = volume;
-          audio.play().catch(err => {
-            console.error("Error playing audio:", err);
-            toast.error("Failed to play sound");
-          });
-        }
-        break;
-      default:
-        break;
-    }
   };
 
   const getElementTypeName = (type: string): string => {
@@ -246,29 +191,6 @@ const LayersList = () => {
                       </Tooltip>
                     </TooltipProvider>
                     
-                    {element.isInteractive && element.interactionConfig && element.interactionConfig.type !== 'none' && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-7 w-7 p-0 text-green-500"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleActivateInteraction(element);
-                              }}
-                            >
-                              <Play className="h-3.5 w-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Activate Interaction</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                    
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -317,14 +239,6 @@ const LayersList = () => {
           ))
         )}
       </div>
-      
-      {activePuzzleElement && (
-        <PuzzleModal 
-          isOpen={isPuzzleModalOpen} 
-          onClose={() => setIsPuzzleModalOpen(false)} 
-          element={activePuzzleElement} 
-        />
-      )}
     </div>
   );
 };
