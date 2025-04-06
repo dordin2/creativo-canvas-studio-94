@@ -129,6 +129,8 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   
   // Handle dragging start with custom image
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    e.stopPropagation();
+    
     if (dragImageRef.current) {
       // Creating a custom drag image
       const rect = dragImageRef.current.getBoundingClientRect();
@@ -286,7 +288,7 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                 {currentOrder.map((imageIndex, arrayIndex) => (
                   <div 
                     key={arrayIndex}
-                    draggable
+                    draggable={true}
                     onDragStart={(e) => handleDragStart(e, arrayIndex)}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
@@ -302,6 +304,7 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                             src={sequencePuzzleConfig.images[imageIndex]}
                             alt={`Image ${imageIndex + 1}`}
                             className="w-full h-full object-cover"
+                            style={{ pointerEvents: 'none' }}
                           />
                         )}
                         <div className="absolute top-0 left-0 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-br">
