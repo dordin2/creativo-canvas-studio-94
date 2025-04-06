@@ -56,8 +56,8 @@ const DraggableElement = ({ element, isActive, children }: {
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
 
-  // If the element is hidden and not active, don't render it at all
-  if (element.isHidden && !isActive) {
+  // If the element is hidden and we're in game mode, don't render it at all
+  if (element.isHidden && isGameMode) {
     return null;
   }
 
@@ -323,7 +323,7 @@ const DraggableElement = ({ element, isActive, children }: {
           ? (hasInteraction ? 'pointer' : 'default') 
           : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
         willChange: isDragging ? 'transform' : 'auto',
-        opacity: element.isHidden ? 0.5 : 1, // Make hidden elements semi-transparent in edit mode
+        opacity: element.isHidden && !isGameMode ? 0.5 : 1, // Only apply opacity in edit mode
         position: 'relative',
       }}
       onMouseDown={handleMouseDown}
