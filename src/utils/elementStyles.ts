@@ -59,8 +59,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     WebkitUserSelect: 'none', // For compatibility
     MozUserSelect: 'none', // For compatibility
     msUserSelect: 'none', // For compatibility
-    // Use kebab-case with a string key for vendor prefixed properties
     WebkitTouchCallout: 'none', // Disable callout on iOS
-    ...{ '-webkit-user-drag': 'none' } // Prevent default drag in WebKit browsers
+    WebkitUserDrag: 'none' // Prevent default drag in WebKit browsers
   };
 };

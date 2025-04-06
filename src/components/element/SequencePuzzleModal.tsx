@@ -25,7 +25,6 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   const isInitialized = useRef(false);
   const pendingUpdate = useRef(false);
   const timeoutRef = useRef<number | null>(null);
-  const dragItemRef = useRef<HTMLDivElement | null>(null);
   
   const sequencePuzzleConfig = element.sequencePuzzleConfig || {
     name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
@@ -126,76 +125,63 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     return array;
   };
   
-  // Handle dragging start
+  // Handle drag start
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    // Store the index in dataTransfer to retrieve it on drop
+    e.dataTransfer.setData('text/plain', index.toString());
     e.dataTransfer.effectAllowed = 'move';
     
-    // Use the actual element as the drag image
-    const dragImage = e.currentTarget.querySelector('img');
-    if (dragImage) {
-      const rect = dragImage.getBoundingClientRect();
-      e.dataTransfer.setDragImage(dragImage, rect.width / 2, rect.height / 2);
-    }
-    
-    // Store the dragged item index
-    setDraggedItem(index);
-    dragItemRef.current = e.currentTarget;
-    
-    // Add a class to style during dragging
+    // Add visual styling
     e.currentTarget.classList.add('dragging');
+    setDraggedItem(index);
   };
   
-  // Handle drag over to enable dropping
+  // Handle drag over - required to enable dropping
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault(); // Necessary to allow dropping
+    e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     
-    // Add visual indication of drop target
-    e.currentTarget.classList.add('drag-over');
+    // Add a class to highlight drop target
+    if (!e.currentTarget.classList.contains('drag-over')) {
+      e.currentTarget.classList.add('drag-over');
+    }
   };
   
-  // Handle drag leave to reset visual indication
+  // Remove highlight when drag leaves element
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.currentTarget.classList.remove('drag-over');
   };
   
-  // Handle dropping
+  // Handle drop - move the dragged item to this position
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
     
-    if (draggedItem === null) return;
+    // Get the dragged item index from dataTransfer
+    const draggedIndex = parseInt(e.dataTransfer.getData('text/plain'), 10);
     
-    // Remove the dragging class from the source element
-    if (dragItemRef.current) {
-      dragItemRef.current.classList.remove('dragging');
-    }
+    if (isNaN(draggedIndex) || draggedIndex === targetIndex) return;
     
-    // Make a copy of the current order
+    // Reorder the items
     const newOrder = [...currentOrder];
-    const draggedItemValue = newOrder[draggedItem];
+    const draggedItemValue = newOrder[draggedIndex];
     
-    // Remove the dragged item from its original position
-    newOrder.splice(draggedItem, 1);
-    
-    // Insert it at the target position
+    // Remove the dragged item, then insert at the new position
+    newOrder.splice(draggedIndex, 1);
     newOrder.splice(targetIndex, 0, draggedItemValue);
     
-    // Update the state
+    // Update state with new order
     setCurrentOrder(newOrder);
     setDraggedItem(null);
-    dragItemRef.current = null;
     
-    // Only update the global state when completed, not during drag operations
+    // Update global state, but debounce it
     if (!pendingUpdate.current) {
       pendingUpdate.current = true;
       
-      // Clear any existing timeout
       if (timeoutRef.current !== null) {
         window.clearTimeout(timeoutRef.current);
       }
       
-      // Use a timeout to debounce the update
       timeoutRef.current = window.setTimeout(() => {
         updateElement(element.id, {
           sequencePuzzleConfig: {
@@ -209,19 +195,13 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     }
   };
   
-  // Handle end of drag operation
+  // Clear styling on drag end
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
-    // Reset any visual states
-    if (dragItemRef.current) {
-      dragItemRef.current.classList.remove('dragging');
-    }
-    
-    // Clear references and state if drag completed without a valid drop
+    e.currentTarget.classList.remove('dragging');
     setDraggedItem(null);
-    dragItemRef.current = null;
   };
   
-  // Reset the puzzle
+  // Reset the puzzle with shuffled order
   const handleReset = () => {
     const initialOrder = Array.from({ length: sequencePuzzleConfig.images.length }, (_, i) => i);
     const shuffled = shuffleArray([...initialOrder]);
@@ -253,6 +233,29 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     }
   };
   
+  // Add some CSS for drag and drop styles
+  useEffect(() => {
+    // Add CSS for drag and drop operations
+    const style = document.createElement('style');
+    style.textContent = `
+      .dragging {
+        opacity: 0.6;
+        transform: scale(1.05);
+        z-index: 100;
+      }
+      .drag-over {
+        border: 2px dashed #3b82f6;
+        background-color: rgba(59, 130, 246, 0.1);
+        transform: scale(1.02);
+      }
+    `;
+    document.head.appendChild(style);
+    
+    return () => {
+      document.head.removeChild(style);
+    };
+  }, []);
+  
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
       if (!open) {
@@ -283,23 +286,22 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                 {currentOrder.map((imageIndex, arrayIndex) => (
                   <div 
                     key={arrayIndex}
-                    draggable
+                    draggable="true"
                     onDragStart={(e) => handleDragStart(e, arrayIndex)}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, arrayIndex)}
                     onDragEnd={handleDragEnd}
-                    className="relative transition-transform cursor-move"
+                    className="relative transition-all duration-200 cursor-move"
                   >
                     <div className="flex flex-col items-center">
                       <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-blue-300 rounded-md overflow-hidden cursor-grab active:cursor-grabbing hover:border-blue-500 bg-white relative">
-                        {sequencePuzzleConfig.images[imageIndex] && (
-                          <img
-                            src={sequencePuzzleConfig.images[imageIndex]}
-                            alt={`Image ${imageIndex + 1}`}
-                            className="w-full h-full object-cover"
-                          />
-                        )}
+                        <img
+                          src={sequencePuzzleConfig.images[imageIndex]}
+                          alt={`Image ${imageIndex + 1}`}
+                          className="w-full h-full object-cover"
+                          draggable="false" // Prevent image-specific dragging
+                        />
                         <div className="absolute top-0 left-0 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-br">
                           {arrayIndex + 1}
                         </div>
