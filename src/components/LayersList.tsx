@@ -15,6 +15,8 @@ const LayersList = () => {
   const { elements, activeElement, setActiveElement, updateElementLayer, updateElement, removeElement } = useDesignState();
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
   const [newLayerValue, setNewLayerValue] = useState<number>(0);
+  const [editingNameId, setEditingNameId] = useState<string | null>(null);
+  const [newNameValue, setNewNameValue] = useState<string>('');
 
   // Filter out background element and sort by layer (highest first)
   const layerElements = [...elements]
@@ -24,6 +26,11 @@ const LayersList = () => {
   const handleLayerChange = (elementId: string, newValue: number) => {
     updateElementLayer(elementId, newValue);
     setEditingLayerId(null);
+  };
+
+  const handleNameChange = (elementId: string, newName: string) => {
+    updateElement(elementId, { name: newName });
+    setEditingNameId(null);
   };
 
   const moveLayerUp = (element: DesignElement) => {
@@ -72,6 +79,10 @@ const LayersList = () => {
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
 
+  const getElementName = (element: DesignElement): string => {
+    return element.name || getElementTypeName(element.type);
+  };
+
   return (
     <div className="border rounded-md p-4 mt-4">
       <div className="flex items-center gap-2 mb-4">
@@ -91,18 +102,49 @@ const LayersList = () => {
               } cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
             >
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-1 min-w-0">
                 <div 
-                  className="w-4 h-4 rounded-sm" 
+                  className="w-4 h-4 rounded-sm flex-shrink-0" 
                   style={{ 
                     backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
                     borderRadius: element.type === 'circle' ? '50%' : element.style?.borderRadius as string || '0' 
                   }}
                 ></div>
-                <div className="text-sm font-medium">{getElementTypeName(element.type)}</div>
+                
+                {editingNameId === element.id ? (
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      handleNameChange(element.id, newNameValue);
+                    }}
+                    className="flex-1 min-w-0"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Input
+                      type="text"
+                      value={newNameValue}
+                      onChange={(e) => setNewNameValue(e.target.value)}
+                      className="h-7 text-xs w-full"
+                      autoFocus
+                      onBlur={() => handleNameChange(element.id, newNameValue)}
+                    />
+                  </form>
+                ) : (
+                  <div 
+                    className="text-sm font-medium truncate flex-1"
+                    onDoubleClick={(e) => {
+                      e.stopPropagation();
+                      setEditingNameId(element.id);
+                      setNewNameValue(getElementName(element));
+                    }}
+                    title={getElementName(element)}
+                  >
+                    {getElementName(element)}
+                  </div>
+                )}
               </div>
 
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 {editingLayerId === element.id ? (
                   <form 
                     onSubmit={(e) => {
@@ -110,6 +152,7 @@ const LayersList = () => {
                       handleLayerChange(element.id, newLayerValue);
                     }}
                     className="flex items-center gap-1"
+                    onClick={(e) => e.stopPropagation()}
                   >
                     <Input
                       type="number"
@@ -171,6 +214,28 @@ const LayersList = () => {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>Duplicate</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingNameId(element.id);
+                              setNewNameValue(getElementName(element));
+                            }}
+                          >
+                            <Edit className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Rename</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

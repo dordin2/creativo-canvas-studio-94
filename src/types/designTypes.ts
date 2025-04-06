@@ -77,6 +77,7 @@ export interface DesignElement {
   sliderPuzzleConfig?: SliderPuzzleConfig;
   layer: number;
   isHidden?: boolean;
+  name?: string;
 }
 
 export interface DesignContextType {
