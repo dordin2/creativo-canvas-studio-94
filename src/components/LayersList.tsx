@@ -12,7 +12,16 @@ import {
 } from "@/components/ui/tooltip";
 
 const LayersList = () => {
-  const { elements, activeElement, setActiveElement, updateElementLayer, updateElement, removeElement } = useDesignState();
+  const { 
+    elements, 
+    activeElement, 
+    setActiveElement, 
+    updateElementLayer, 
+    updateElement, 
+    removeElement,
+    addElement 
+  } = useDesignState();
+  
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
   const [newLayerValue, setNewLayerValue] = useState<number>(0);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
@@ -52,8 +61,6 @@ const LayersList = () => {
   };
 
   const handleDuplicate = (element: DesignElement) => {
-    const { addElement } = useDesignState();
-    
     // Create a duplicate with the same properties but at a slightly offset position
     const duplicateProps = {
       ...element,
