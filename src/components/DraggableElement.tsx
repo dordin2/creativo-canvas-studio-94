@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -55,10 +56,50 @@ const DraggableElement = ({ element, isActive, children }: {
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
 
-  // If the element is hidden, don't render it at all - regardless of game mode or edit mode
-  if (element.isHidden) {
-    return null;
-  }
+  // IMPORTANT: We've moved this check here and are now using conditional rendering
+  // instead of an early return to avoid React hooks errors
+  const shouldRenderElement = !element.isHidden;
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  useEffect(() => {
+    const handleMouseEnter = () => {
+      if (!isGameMode) {
+        setShowControls(true);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      if (!isDragging) {
+        setShowControls(false);
+      }
+    };
+
+    const element = elementRef.current;
+    if (element) {
+      element.addEventListener('mouseenter', handleMouseEnter);
+      element.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (element) {
+        element.removeEventListener('mouseenter', handleMouseEnter);
+        element.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, [isDragging, isGameMode]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -180,47 +221,6 @@ const DraggableElement = ({ element, isActive, children }: {
     removeElement(element.id);
   };
 
-  useEffect(() => {
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      document.addEventListener("mouseup", handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging]);
-
-  useEffect(() => {
-    const handleMouseEnter = () => {
-      if (!isGameMode) {
-        setShowControls(true);
-      }
-    };
-
-    const handleMouseLeave = () => {
-      if (!isDragging) {
-        setShowControls(false);
-      }
-    };
-
-    const element = elementRef.current;
-    if (element) {
-      element.addEventListener('mouseenter', handleMouseEnter);
-      element.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    return () => {
-      if (element) {
-        element.removeEventListener('mouseenter', handleMouseEnter);
-        element.removeEventListener('mouseleave', handleMouseLeave);
-      }
-    };
-  }, [isDragging, isGameMode]);
-
   const elementStyle = getElementStyle(element, isDragging);
   const rotation = getRotation(element);
   const frameTransform = `rotate(${rotation}deg)`;
@@ -323,6 +323,7 @@ const DraggableElement = ({ element, isActive, children }: {
           : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
         willChange: isDragging ? 'transform' : 'auto',
         position: 'relative',
+        display: shouldRenderElement ? 'block' : 'none', // Use display:none instead of early return
       }}
       onMouseDown={handleMouseDown}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
