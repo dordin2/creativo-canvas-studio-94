@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
-import { Layers, Eye, EyeOff, Trash2, Copy } from "lucide-react";
+import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +10,20 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const LayersList = () => {
   const { 
@@ -19,13 +33,19 @@ const LayersList = () => {
     updateElementLayer, 
     updateElement, 
     removeElement,
-    addElement 
+    addElement,
+    canvases,
+    activeCanvasIndex,
+    moveElementToCanvas
   } = useDesignState();
   
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
   const [newLayerValue, setNewLayerValue] = useState<number>(0);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [newNameValue, setNewNameValue] = useState<string>('');
+  const [showMoveDialog, setShowMoveDialog] = useState<boolean>(false);
+  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [selectedTargetCanvas, setSelectedTargetCanvas] = useState<string>('');
 
   // Filter out background element and sort by layer (highest first)
   const layerElements = [...elements]
@@ -72,11 +92,29 @@ const LayersList = () => {
     return element.name || getElementTypeName(element.type);
   };
 
+  const handleMoveToCanvas = () => {
+    if (selectedElementId && selectedTargetCanvas) {
+      const targetCanvasIndex = canvases.findIndex(canvas => canvas.id === selectedTargetCanvas);
+      if (targetCanvasIndex !== -1) {
+        moveElementToCanvas(selectedElementId, targetCanvasIndex);
+        setShowMoveDialog(false);
+        setSelectedElementId(null);
+        setSelectedTargetCanvas('');
+      }
+    }
+  };
+
+  const openMoveDialog = (elementId: string) => {
+    setSelectedElementId(elementId);
+    setSelectedTargetCanvas('');
+    setShowMoveDialog(true);
+  };
+
   return (
     <div className="border rounded-md p-4 mt-4">
       <div className="flex items-center gap-2 mb-4">
         <Layers className="h-5 w-5 text-canvas-purple" />
-        <h3 className="font-medium">Layers</h3>
+        <h3 className="font-medium">Layers ({canvases[activeCanvasIndex]?.name || 'Current Canvas'})</h3>
       </div>
 
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
@@ -212,6 +250,29 @@ const LayersList = () => {
                       </Tooltip>
                     </TooltipProvider>
                     
+                    {canvases.length > 1 && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7 w-7 p-0 text-blue-500"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openMoveDialog(element.id);
+                              }}
+                            >
+                              <MoveRight className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Move to canvas</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                    
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
@@ -239,6 +300,44 @@ const LayersList = () => {
           ))
         )}
       </div>
+
+      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Move element to canvas</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Select destination canvas:</label>
+              <Select value={selectedTargetCanvas} onValueChange={setSelectedTargetCanvas}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a canvas" />
+                </SelectTrigger>
+                <SelectContent>
+                  {canvases.map((canvas, index) => 
+                    index !== activeCanvasIndex && (
+                      <SelectItem key={canvas.id} value={canvas.id}>
+                        {canvas.name}
+                      </SelectItem>
+                    )
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setShowMoveDialog(false)}>
+                Cancel
+              </Button>
+              <Button 
+                disabled={!selectedTargetCanvas} 
+                onClick={handleMoveToCanvas}
+              >
+                Move
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

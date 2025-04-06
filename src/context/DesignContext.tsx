@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { 
@@ -232,6 +231,92 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
+  const duplicateCanvas = (index: number) => {
+    const sourceCanvas = canvases[index];
+    if (!sourceCanvas) return;
+    
+    const duplicatedCanvas: Canvas = {
+      id: generateId(),
+      name: `${sourceCanvas.name} (Copy)`,
+      elements: JSON.parse(JSON.stringify(sourceCanvas.elements))
+    };
+    
+    const updatedCanvases = [...canvases];
+    updatedCanvases.splice(index + 1, 0, duplicatedCanvas);
+    
+    setCanvases(updatedCanvases);
+    setActiveCanvasIndex(index + 1);
+    addToHistory(updatedCanvases);
+    setActiveElement(null);
+    
+    toast.success(t('toast.success.duplicateCanvas') || "Canvas duplicated");
+  };
+  
+  const moveElementToCanvas = useCallback((elementId: string, targetCanvasIndex: number) => {
+    if (
+      targetCanvasIndex < 0 || 
+      targetCanvasIndex >= canvases.length || 
+      targetCanvasIndex === activeCanvasIndex
+    ) {
+      return;
+    }
+    
+    const elementToMove = elements.find(el => el.id === elementId);
+    if (!elementToMove) {
+      return;
+    }
+    
+    const elementCopy = JSON.parse(JSON.stringify(elementToMove));
+    
+    const updatedCanvases = [...canvases];
+    updatedCanvases[targetCanvasIndex].elements.push(elementCopy);
+    
+    updatedCanvases[activeCanvasIndex].elements = updatedCanvases[activeCanvasIndex].elements.filter(
+      el => el.id !== elementId
+    );
+    
+    setCanvases(updatedCanvases);
+    addToHistory(updatedCanvases);
+    
+    if (activeElement && activeElement.id === elementId) {
+      setActiveElement(null);
+    }
+    
+    toast.success(`Element moved to ${canvases[targetCanvasIndex].name}`);
+  }, [canvases, activeCanvasIndex, elements, activeElement]);
+  
+  const reorderCanvases = (sourceIndex: number, targetIndex: number) => {
+    if (
+      sourceIndex < 0 || 
+      sourceIndex >= canvases.length || 
+      targetIndex < 0 || 
+      targetIndex >= canvases.length ||
+      sourceIndex === targetIndex
+    ) {
+      return;
+    }
+    
+    const updatedCanvases = [...canvases];
+    const [movedCanvas] = updatedCanvases.splice(sourceIndex, 1);
+    updatedCanvases.splice(targetIndex, 0, movedCanvas);
+    
+    setCanvases(updatedCanvases);
+    
+    if (activeCanvasIndex === sourceIndex) {
+      setActiveCanvasIndex(targetIndex);
+    } else if (
+      (sourceIndex < activeCanvasIndex && targetIndex >= activeCanvasIndex) ||
+      (sourceIndex > activeCanvasIndex && targetIndex <= activeCanvasIndex)
+    ) {
+      setActiveCanvasIndex(
+        sourceIndex < activeCanvasIndex ? activeCanvasIndex - 1 : activeCanvasIndex + 1
+      );
+    }
+    
+    addToHistory(updatedCanvases);
+    toast.success(t('toast.success.reorderCanvas') || "Canvas order updated");
+  };
+  
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
@@ -316,7 +401,10 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     addCanvas,
     removeCanvas,
     setActiveCanvas,
-    updateCanvasName
+    updateCanvasName,
+    duplicateCanvas,
+    reorderCanvases,
+    moveElementToCanvas
   };
   
   return (
