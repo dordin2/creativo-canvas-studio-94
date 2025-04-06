@@ -1,4 +1,3 @@
-
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Trash2, Copy, Eye, EyeOff, Zap, Navigation } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
@@ -39,10 +38,10 @@ const ElementControls = ({
   const showResizeHandles = isActive;
   const showRotationHandle = isActive;
   
-  // Round dimensions to ensure consistency with the element
+  // Use exact dimensions to ensure consistency
   const elementDimensions = {
-    width: element.size?.width ? Math.round(element.size.width) : 0,
-    height: element.size?.height ? Math.round(element.size.height) : 0
+    width: element.size?.width || 0,
+    height: element.size?.height || 0
   };
 
   const handleDuplicate = (e: React.MouseEvent) => {
@@ -107,9 +106,9 @@ const ElementControls = ({
   // Get the current rotation directly from the element style for consistent transforms
   const rotation = getRotation(element);
   
-  // Use exact positioning with Math.round to ensure consistency
-  const posX = Math.round(element.position.x);
-  const posY = Math.round(element.position.y);
+  // Use exact positioning without rounding to ensure smooth movement
+  const posX = element.position.x;
+  const posY = element.position.y;
   
   // Apply the same transformation to the frame as the element has
   const frameStyle = {

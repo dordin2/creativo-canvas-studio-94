@@ -52,11 +52,12 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   // Extract rotation from transform to apply it directly at the top level
   const rotation = getRotation(element);
   
-  // Use Math.round to ensure consistent positioning
-  const left = Math.round(element.position.x);
-  const top = Math.round(element.position.y);
-  const width = element.size?.width ? Math.round(element.size.width) : undefined;
-  const height = element.size?.height ? Math.round(element.size.height) : undefined;
+  // Use exact positioning values to avoid jumpiness during transforms
+  // Only round the values when displaying them in input fields, not in the actual styling
+  const left = element.position.x;
+  const top = element.position.y;
+  const width = element.size?.width;
+  const height = element.size?.height;
   
   // Create a clean object for the style to avoid reference issues
   const style: CSSProperties & { userDrag?: string } = {
