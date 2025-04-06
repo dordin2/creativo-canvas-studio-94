@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -54,6 +55,11 @@ const DraggableElement = ({ element, isActive, children }: {
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
+
+  // If the element is hidden and not active, don't render it at all
+  if (element.isHidden && !isActive) {
+    return null;
+  }
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -261,10 +267,6 @@ const DraggableElement = ({ element, isActive, children }: {
     );
   }
 
-  if (element.isHidden && !isActive) {
-    return null;
-  }
-
   const renderPuzzleModal = () => {
     if (!showPuzzleModal) return null;
     
@@ -321,7 +323,7 @@ const DraggableElement = ({ element, isActive, children }: {
           ? (hasInteraction ? 'pointer' : 'default') 
           : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
         willChange: isDragging ? 'transform' : 'auto',
-        opacity: element.isHidden ? 0 : 1,
+        opacity: element.isHidden ? 0.5 : 1, // Make hidden elements semi-transparent in edit mode
         position: 'relative',
       }}
       onMouseDown={handleMouseDown}
@@ -352,29 +354,7 @@ const DraggableElement = ({ element, isActive, children }: {
       ) : (
         <ContextMenu>
           <ContextMenuTrigger asChild>
-            <div
-              ref={elementRef}
-              className="canvas-element"
-              style={elementStyle}
-              onMouseDown={handleMouseDown}
-              onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
-              onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
-              draggable={false}
-              onDragStart={(e) => {
-                e.preventDefault();
-              }}
-              onDragOver={(e) => {
-                if ((isImageElement || isPuzzleElement) && !isGameMode) {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }
-              }}
-            >
-              {childContent}
-              {showInteractionIndicator && interactionType === 'canvasNavigation' && (
-                <div className={indicatorStyles} title="Click to navigate to another canvas"></div>
-              )}
-            </div>
+            {elementContent}
           </ContextMenuTrigger>
           <ContextMenuContent>
             <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
