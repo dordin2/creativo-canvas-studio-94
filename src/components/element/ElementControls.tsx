@@ -28,9 +28,12 @@ const ElementControls = ({
   onRotateStart,
   showControls
 }: ElementControlsProps) => {
-  const { updateElement, removeElement } = useDesignState();
+  const { updateElement, removeElement, addElement } = useDesignState();
   
-  if (!showControls || element.type === 'background') return null;
+  // Don't render controls at all if the element is hidden or it's the background
+  if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
+    return null;
+  }
 
   const showResizeHandles = isActive;
   const showRotationHandle = isActive;
@@ -42,7 +45,6 @@ const ElementControls = ({
 
   const handleDuplicate = (e: React.MouseEvent) => {
     e.stopPropagation();
-    const { addElement } = useDesignState();
     
     // Create a duplicate with the same properties but at a slightly offset position
     const duplicateProps = {
@@ -86,7 +88,7 @@ const ElementControls = ({
           pointerEvents: 'none',
           zIndex: 1000 + element.layer,
           border: isActive ? '1px solid #6366F1' : 'none',
-          opacity: element.isHidden ? 0.4 : 1,
+          opacity: 1, // Always show border at full opacity when active
         }}
       />
       

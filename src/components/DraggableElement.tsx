@@ -24,7 +24,7 @@ const DraggableElement = ({ element, isActive, children }: {
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { updateElement, setActiveElement, removeElement } = useDesignState();
+  const { updateElement, setActiveElement, removeElement, addElement } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -91,8 +91,6 @@ const DraggableElement = ({ element, isActive, children }: {
 
   // Context menu handlers
   const handleDuplicate = () => {
-    const { addElement } = useDesignState();
-    
     // Create a duplicate with the same properties but at a slightly offset position
     const duplicateProps = {
       ...element,
@@ -201,7 +199,7 @@ const DraggableElement = ({ element, isActive, children }: {
     );
   }
 
-  // Don't render the element if it's hidden, but still render the controls when active
+  // Don't render anything at all if the element is hidden and not active
   if (element.isHidden && !isActive) {
     return null;
   }
@@ -216,10 +214,10 @@ const DraggableElement = ({ element, isActive, children }: {
             style={{
               ...elementStyle,
               transition: isDragging ? 'none' : 'transform 0.1s ease',
-              transform: element.style?.transform?.toString() || '',
+              transform: element.style?.transform as string || '',
               cursor: isDragging ? 'move' : 'grab',
               willChange: isDragging ? 'transform' : 'auto',
-              opacity: element.isHidden ? 0.4 : 1,
+              opacity: element.isHidden ? 0 : 1, // Changed from 0.4 to 0 for complete invisibility 
             }}
             onMouseDown={handleMouseDown}
             onDoubleClick={handleTextDoubleClick}
@@ -269,7 +267,7 @@ const DraggableElement = ({ element, isActive, children }: {
         frameTransform={frameTransform}
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
-        showControls={showControls || isActive || isDragging}
+        showControls={showControls && isActive && !element.isHidden}
       />
     </>
   );
