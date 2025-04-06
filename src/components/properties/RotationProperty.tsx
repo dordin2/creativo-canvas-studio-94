@@ -7,7 +7,7 @@ import { getRotation } from "@/utils/elementStyles";
 import { useState, useEffect } from "react";
 
 const RotationProperty = ({ element }: { element: DesignElement }) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, isGameMode } = useDesignState();
   const [rotation, setRotation] = useState(getRotation(element));
 
   useEffect(() => {
@@ -15,6 +15,8 @@ const RotationProperty = ({ element }: { element: DesignElement }) => {
   }, [element]);
 
   const handleRotationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isGameMode) return; // No rotation in game mode
+    
     const newRotation = parseInt(e.target.value) || 0;
     setRotation(newRotation);
     updateElement(element.id, {
@@ -33,6 +35,7 @@ const RotationProperty = ({ element }: { element: DesignElement }) => {
           min={-360}
           max={360}
           className="w-24"
+          disabled={isGameMode}
         />
         <span className="text-sm">degrees</span>
       </div>

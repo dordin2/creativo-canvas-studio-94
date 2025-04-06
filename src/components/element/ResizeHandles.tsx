@@ -1,5 +1,6 @@
 
 import { CSSProperties } from "react";
+import { useDesignState } from "@/context/DesignContext";
 
 interface ResizeHandlesProps {
   show: boolean;
@@ -7,7 +8,10 @@ interface ResizeHandlesProps {
 }
 
 const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
-  if (!show) return null;
+  const { isGameMode } = useDesignState();
+  
+  // Don't show resize handles in game mode
+  if (!show || isGameMode) return null;
 
   const handleStyle: CSSProperties = {
     position: 'absolute',

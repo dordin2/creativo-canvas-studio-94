@@ -1,3 +1,4 @@
+import { CSSProperties } from "react";
 
 export type ElementType =
   | 'rectangle'
@@ -107,6 +108,8 @@ export interface DesignContextType {
   elements: DesignElement[];
   activeElement: DesignElement | null;
   canvasRef: HTMLDivElement | null;
+  isGameMode: boolean;
+  toggleGameMode: () => void;
   setCanvasRef: (ref: HTMLDivElement) => void;
   addElement: (type: ElementType, props?: any) => DesignElement;
   updateElement: (id: string, updates: Partial<DesignElement>) => void;

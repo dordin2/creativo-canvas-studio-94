@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -29,7 +30,7 @@ const DraggableElement = ({ element, isActive, children }: {
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases } = useDesignState();
+  const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases, isGameMode } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -65,6 +66,14 @@ const DraggableElement = ({ element, isActive, children }: {
       e.preventDefault();
     }
     
+    // In game mode, only handle interactions, not drag operations
+    if (isGameMode) {
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
+    }
+    
     setActiveElement(element);
     
     if (isEditing) return;
@@ -79,6 +88,11 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
+    // In game mode, a single click handles interactions so we don't need double click
+    if (isGameMode) {
+      return;
+    }
+    
     if (textElementTypes.includes(element.type)) {
       e.stopPropagation();
       setIsEditing(true);
@@ -132,6 +146,13 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handlePuzzleClick = (e: React.MouseEvent) => {
+    // In game mode, always handle puzzle clicks
+    if (isGameMode) {
+      e.stopPropagation();
+      handleInteraction();
+      return;
+    }
+    
     if (isPuzzleElement && !isDragging) {
       e.stopPropagation();
       // The modal is now handled directly in the PuzzleElement component
@@ -182,7 +203,9 @@ const DraggableElement = ({ element, isActive, children }: {
 
   useEffect(() => {
     const handleMouseEnter = () => {
-      setShowControls(true);
+      if (!isGameMode) {
+        setShowControls(true);
+      }
     };
 
     const handleMouseLeave = () => {
@@ -203,7 +226,7 @@ const DraggableElement = ({ element, isActive, children }: {
         element.removeEventListener('mouseleave', handleMouseLeave);
       }
     };
-  }, [isDragging]);
+  }, [isDragging, isGameMode]);
 
   const elementStyle = getElementStyle(element, isDragging);
   const frameTransform = element.style?.transform?.toString() || 'rotate(0deg)';
@@ -214,7 +237,7 @@ const DraggableElement = ({ element, isActive, children }: {
     childContent = (
       <EditableText
         element={element}
-        isEditing={isEditing}
+        isEditing={isEditing && !isGameMode}
         setIsEditing={setIsEditing}
         textInputRef={textInputRef}
       />
@@ -301,75 +324,89 @@ const DraggableElement = ({ element, isActive, children }: {
   const indicatorStyles = interactionType === 'canvasNavigation' ? 
     "absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full animate-pulse" : "";
 
+  // Don't show context menu in game mode
+  const elementContent = (
+    <div
+      ref={elementRef}
+      className="canvas-element"
+      style={{
+        ...elementStyle,
+        transition: isDragging ? 'none' : 'transform 0.1s ease',
+        transform: element.style?.transform as string || '',
+        cursor: isGameMode 
+          ? (hasInteraction ? 'pointer' : 'default') 
+          : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
+        willChange: isDragging ? 'transform' : 'auto',
+        opacity: element.isHidden ? 0 : 1,
+        position: 'relative',
+      }}
+      onMouseDown={handleMouseDown}
+      onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
+      onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+      draggable={false}
+      onDragStart={(e) => {
+        // Prevent default drag behavior for all elements
+        e.preventDefault();
+      }}
+      onDragOver={(e) => {
+        if ((isImageElement || isPuzzleElement) && !isGameMode) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }}
+    >
+      {childContent}
+      {showInteractionIndicator && interactionType === 'canvasNavigation' && (
+        <div className={indicatorStyles} title="Click to navigate to another canvas"></div>
+      )}
+    </div>
+  );
+
   return (
     <>
-      <ContextMenu>
-        <ContextMenuTrigger asChild>
-          <div
-            ref={elementRef}
-            className="canvas-element"
-            style={{
-              ...elementStyle,
-              transition: isDragging ? 'none' : 'transform 0.1s ease',
-              transform: element.style?.transform as string || '',
-              cursor: isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab'),
-              willChange: isDragging ? 'transform' : 'auto',
-              opacity: element.isHidden ? 0 : 1, // Changed from 0.4 to 0 for complete invisibility 
-              position: 'relative', // Ensure position relative for the indicator
-            }}
-            onMouseDown={handleMouseDown}
-            onDoubleClick={handleTextDoubleClick}
-            draggable={false}
-            onDragStart={(e) => {
-              // Prevent default drag behavior for all elements
-              e.preventDefault();
-            }}
-            onDragOver={(e) => {
-              if (isImageElement || isPuzzleElement) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-          >
-            {childContent}
-            {showInteractionIndicator && interactionType === 'canvasNavigation' && (
-              <div className={indicatorStyles} title="Click to navigate to another canvas"></div>
-            )}
-          </div>
-        </ContextMenuTrigger>
-        <ContextMenuContent>
-          <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
-            <Copy className="h-4 w-4" />
-            <span>Duplicate</span>
-          </ContextMenuItem>
-          <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
-            {element.isHidden ? (
-              <>
-                <Eye className="h-4 w-4" />
-                <span>Show</span>
-              </>
-            ) : (
-              <>
-                <EyeOff className="h-4 w-4" />
-                <span>Hide</span>
-              </>
-            )}
-          </ContextMenuItem>
-          <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
-            <Trash2 className="h-4 w-4" />
-            <span>Delete</span>
-          </ContextMenuItem>
-        </ContextMenuContent>
-      </ContextMenu>
+      {isGameMode ? (
+        elementContent
+      ) : (
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            {elementContent}
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
+              <Copy className="h-4 w-4" />
+              <span>Duplicate</span>
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
+              {element.isHidden ? (
+                <>
+                  <Eye className="h-4 w-4" />
+                  <span>Show</span>
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-4 w-4" />
+                  <span>Hide</span>
+                </>
+              )}
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
+              <Trash2 className="h-4 w-4" />
+              <span>Delete</span>
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      )}
 
-      <ElementControls
-        isActive={isActive}
-        element={element}
-        frameTransform={frameTransform}
-        onResizeStart={handleResizeStart}
-        onRotateStart={handleRotateStart}
-        showControls={showControls && isActive && !element.isHidden}
-      />
+      {!isGameMode && (
+        <ElementControls
+          isActive={isActive}
+          element={element}
+          frameTransform={frameTransform}
+          onResizeStart={handleResizeStart}
+          onRotateStart={handleRotateStart}
+          showControls={showControls && isActive && !element.isHidden}
+        />
+      )}
       
       {/* Hidden audio element for sound interactions */}
       {interactionType === 'sound' && element.interaction?.soundUrl && (

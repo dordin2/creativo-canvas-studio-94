@@ -1,5 +1,6 @@
 
 import { CSSProperties } from "react";
+import { useDesignState } from "@/context/DesignContext";
 
 interface RotationHandleProps {
   show: boolean;
@@ -7,7 +8,10 @@ interface RotationHandleProps {
 }
 
 const RotationHandle = ({ show, onRotateStart }: RotationHandleProps) => {
-  if (!show) return null;
+  const { isGameMode } = useDesignState();
+  
+  // Don't show rotation handle in game mode
+  if (!show || isGameMode) return null;
 
   const handleStyle: CSSProperties = {
     position: 'absolute',

@@ -27,10 +27,18 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   const [canvasRef, setCanvasRefState] = useState<HTMLDivElement | null>(null);
   const [history, setHistory] = useState<Canvas[][]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
+  const [isGameMode, setIsGameMode] = useState<boolean>(false);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
     setCanvasRefState(ref);
+  };
+  
+  const toggleGameMode = () => {
+    setIsGameMode(prev => !prev);
+    if (!isGameMode) {
+      setActiveElement(null);
+    }
   };
   
   const addToHistory = useCallback((newCanvases: Canvas[]) => {
@@ -384,6 +392,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     elements,
     activeElement,
     canvasRef,
+    isGameMode,
+    toggleGameMode,
     setCanvasRef,
     addElement,
     updateElement,

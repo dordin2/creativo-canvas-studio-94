@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -15,7 +16,8 @@ const Canvas = () => {
     elements, 
     activeElement, 
     setActiveElement,
-    handleImageUpload 
+    handleImageUpload,
+    isGameMode
   } = useDesignState();
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 1200, height: 900 });
@@ -87,22 +89,28 @@ const Canvas = () => {
   };
   
   const handleCanvasClick = (e: React.MouseEvent) => {
-    if (e.target === containerRef.current) {
+    if (e.target === containerRef.current && !isGameMode) {
       setActiveElement(null);
     }
   };
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    if (isGameMode) return; // No dragging in game mode
+    
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingOver(true);
   };
   
   const handleDragLeave = () => {
+    if (isGameMode) return;
+    
     setIsDraggingOver(false);
   };
   
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    if (isGameMode) return; // No dropping in game mode
+    
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingOver(false);
@@ -357,7 +365,7 @@ const Canvas = () => {
         }}>
           <div
             ref={containerRef}
-            className={`relative shadow-lg rounded-lg ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
+            className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`}
             style={{
               width: `${canvasDimensions.width}px`,
               height: `${canvasDimensions.height}px`,
@@ -365,27 +373,29 @@ const Canvas = () => {
               overflow: 'hidden'
             }}
             onClick={handleCanvasClick}
-            onDragOver={handleDragOver}
-            onDragLeave={handleDragLeave}
-            onDrop={handleDrop}
+            onDragOver={!isGameMode ? handleDragOver : undefined}
+            onDragLeave={!isGameMode ? handleDragLeave : undefined}
+            onDrop={!isGameMode ? handleDrop : undefined}
           >
             {renderElements()}
             
           </div>
         </div>
         
-        <div className="zoom-controls">
-          <button onClick={handleZoomOut} title="Zoom Out">
-            <Minus size={16} />
-          </button>
-          <span>{Math.round(zoomLevel * 100)}%</span>
-          <button onClick={handleZoomIn} title="Zoom In">
-            <Plus size={16} />
-          </button>
-          <button onClick={handleResetZoom} title="Reset Zoom">
-            <RotateCcw size={16} />
-          </button>
-        </div>
+        {!isGameMode && (
+          <div className="zoom-controls">
+            <button onClick={handleZoomOut} title="Zoom Out">
+              <Minus size={16} />
+            </button>
+            <span>{Math.round(zoomLevel * 100)}%</span>
+            <button onClick={handleZoomIn} title="Zoom In">
+              <Plus size={16} />
+            </button>
+            <button onClick={handleResetZoom} title="Reset Zoom">
+              <RotateCcw size={16} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

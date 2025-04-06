@@ -5,9 +5,12 @@ import Sidebar from "@/components/Sidebar";
 import Canvas from "@/components/Canvas";
 import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
+import GameModeToggle from "@/components/GameModeToggle";
+import { useDesignState } from "@/context/DesignContext";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const { isGameMode } = useDesignState();
 
   useEffect(() => {
     // Simulate loading resources
@@ -33,18 +36,33 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      <Header />
-      <div className="flex flex-1 overflow-hidden">
-        <div className="flex-shrink-0 w-64">
-          <Sidebar />
-        </div>
+      {!isGameMode && <Header />}
+      <div className={`${isGameMode ? 'pt-2' : ''} flex flex-1 overflow-hidden`}>
+        {!isGameMode && (
+          <div className="flex-shrink-0 w-64">
+            <Sidebar />
+          </div>
+        )}
         <div className="flex-1 overflow-hidden flex flex-col">
-          <CanvasTabs />
-          <Canvas />
+          {!isGameMode ? (
+            <>
+              <CanvasTabs />
+              <Canvas />
+            </>
+          ) : (
+            <div className="flex flex-col h-full">
+              <div className="p-2 flex justify-end">
+                <GameModeToggle />
+              </div>
+              <Canvas />
+            </div>
+          )}
         </div>
-        <div className="flex-shrink-0 w-80">
-          <Properties />
-        </div>
+        {!isGameMode && (
+          <div className="flex-shrink-0 w-80">
+            <Properties />
+          </div>
+        )}
       </div>
     </div>
   );
