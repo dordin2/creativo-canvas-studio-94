@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { toast } from "sonner";
-import { Check, X } from "lucide-react";
+import { Check } from "lucide-react";
 
 interface SliderPuzzleModalProps {
   element: DesignElement;
@@ -85,19 +85,12 @@ export const SliderPuzzleModal: React.FC<SliderPuzzleModalProps> = ({ element, i
             ))}
           </div>
           
-          {isCorrect !== null && (
-            <div className={`mt-4 p-2 rounded-lg text-center ${isCorrect ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-              {isCorrect ? (
-                <div className="flex items-center justify-center gap-2">
-                  <Check size={16} />
-                  <span>Correct combination!</span>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <X size={16} />
-                  <span>Incorrect combination</span>
-                </div>
-              )}
+          {isCorrect === true && (
+            <div className="mt-4 p-2 rounded-lg text-center bg-green-100 text-green-800">
+              <div className="flex items-center justify-center gap-2">
+                <Check size={16} />
+                <span>Correct combination!</span>
+              </div>
             </div>
           )}
         </div>
