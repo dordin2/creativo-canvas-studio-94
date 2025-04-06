@@ -15,6 +15,7 @@ export type ElementType =
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 export type SliderOrientation = 'horizontal' | 'vertical';
+export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound';
 
 export interface PuzzleConfig {
   name: string;
@@ -49,6 +50,18 @@ export interface SliderPuzzleConfig {
   maxValue: number;
 }
 
+export interface InteractionConfig {
+  type: InteractionType;
+  puzzleType?: ElementType;
+  puzzleConfig?: PuzzleConfig;
+  sequencePuzzleConfig?: SequencePuzzleConfig;
+  clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
+  sliderPuzzleConfig?: SliderPuzzleConfig;
+  message?: string;
+  sound?: string;
+  soundUrl?: string;
+}
+
 export interface DesignElement {
   id: string;
   type: ElementType;
@@ -77,9 +90,9 @@ export interface DesignElement {
   layer: number;
   isHidden?: boolean;
   name?: string;
+  interaction?: InteractionConfig;
 }
 
-// New interface for Canvas
 export interface Canvas {
   id: string;
   name: string;
@@ -112,7 +125,6 @@ export interface DesignContextType {
   updateCanvasName: (id: string, newName: string) => void;
 }
 
-// Helper function to generate unique IDs
 export const generateId = (): string => {
   return Math.random().toString(36).substring(2, 11);
 };

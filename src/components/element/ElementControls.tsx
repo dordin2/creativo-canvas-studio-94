@@ -1,6 +1,6 @@
 
 import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { Trash2, Copy, Eye, EyeOff } from "lucide-react";
+import { Trash2, Copy, Eye, EyeOff, Zap } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
 import { Button } from "@/components/ui/button";
@@ -68,12 +68,33 @@ const ElementControls = ({
     });
   };
 
+  const handleToggleInteractive = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const currentInteraction = element.interaction || { type: 'none' };
+    
+    // Toggle between 'none' and the last selected interaction type or default to 'puzzle'
+    const newType = currentInteraction.type === 'none' ? 
+      (currentInteraction.type === 'none' ? 'puzzle' : currentInteraction.type) : 
+      'none';
+      
+    updateElement(element.id, {
+      interaction: {
+        ...currentInteraction,
+        type: newType
+      }
+    });
+  };
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     removeElement(element.id);
   };
 
   const isVisible = !element.isHidden;
+  const isInteractive = element.interaction?.type !== 'none' && element.interaction?.type !== undefined;
+  
+  // Check if the element is a puzzle type - don't show interactive button for puzzles
+  const isPuzzleElement = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'].includes(element.type);
 
   return (
     <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
@@ -126,6 +147,26 @@ const ElementControls = ({
               pointerEvents: 'auto',
             }}
           >
+            {!isPuzzleElement && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className={`h-8 w-8 bg-white ${isInteractive ? 'text-blue-600 border-blue-600' : ''}`}
+                      onClick={handleToggleInteractive}
+                    >
+                      <Zap className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{isInteractive ? 'Interactive (On)' : 'Interactive (Off)'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>

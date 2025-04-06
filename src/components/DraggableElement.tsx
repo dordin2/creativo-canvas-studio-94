@@ -11,6 +11,11 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
+import InteractionMessageModal from "./element/InteractionMessageModal";
+import PuzzleModal from "./element/PuzzleModal";
+import SequencePuzzleModal from "./element/SequencePuzzleModal";
+import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
+import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -18,6 +23,7 @@ import {
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
+import { toast } from "sonner";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -28,10 +34,13 @@ const DraggableElement = ({ element, isActive, children }: {
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [showControls, setShowControls] = useState(false);
+  const [showMessageModal, setShowMessageModal] = useState(false);
+  const [showPuzzleModal, setShowPuzzleModal] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -42,6 +51,11 @@ const DraggableElement = ({ element, isActive, children }: {
   const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
   const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
+  
+  // Get interaction settings
+  const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
+  const interactionType = element.interaction?.type || 'none';
+  const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -78,6 +92,30 @@ const DraggableElement = ({ element, isActive, children }: {
       // For sequence puzzle elements, start drag only on double click
       startDrag(e, element.position);
       setIsDragging(true);
+    } else if (hasInteraction && !isEditing && !isDragging) {
+      // Handle interactions on double click for non-puzzle elements
+      e.stopPropagation();
+      handleInteraction();
+    }
+  };
+
+  const handleInteraction = () => {
+    if (!hasInteraction) return;
+    
+    if (interactionType === 'message' && element.interaction?.message) {
+      setShowMessageModal(true);
+    } 
+    else if (interactionType === 'sound' && element.interaction?.soundUrl) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(err => {
+          toast.error('Could not play sound');
+          console.error('Audio playback error:', err);
+        });
+      }
+    }
+    else if (interactionType === 'puzzle') {
+      setShowPuzzleModal(true);
     }
   };
 
@@ -204,6 +242,48 @@ const DraggableElement = ({ element, isActive, children }: {
     return null;
   }
 
+  // Render the appropriate modal based on puzzle type
+  const renderPuzzleModal = () => {
+    if (!showPuzzleModal) return null;
+    
+    switch (interactionPuzzleType) {
+      case 'puzzle':
+        return (
+          <PuzzleModal 
+            isOpen={showPuzzleModal} 
+            onClose={() => setShowPuzzleModal(false)} 
+            element={{...element, puzzleConfig: element.interaction?.puzzleConfig}} 
+          />
+        );
+      case 'sequencePuzzle':
+        return (
+          <SequencePuzzleModal 
+            isOpen={showPuzzleModal} 
+            onClose={() => setShowPuzzleModal(false)} 
+            element={{...element, sequencePuzzleConfig: element.interaction?.sequencePuzzleConfig}} 
+          />
+        );
+      case 'clickSequencePuzzle':
+        return (
+          <ClickSequencePuzzleModal 
+            isOpen={showPuzzleModal} 
+            onClose={() => setShowPuzzleModal(false)} 
+            element={{...element, clickSequencePuzzleConfig: element.interaction?.clickSequencePuzzleConfig}} 
+          />
+        );
+      case 'sliderPuzzle':
+        return (
+          <SliderPuzzleModal 
+            isOpen={showPuzzleModal} 
+            onClose={() => setShowPuzzleModal(false)} 
+            element={{...element, sliderPuzzleConfig: element.interaction?.sliderPuzzleConfig}} 
+          />
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <>
       <ContextMenu>
@@ -215,7 +295,7 @@ const DraggableElement = ({ element, isActive, children }: {
               ...elementStyle,
               transition: isDragging ? 'none' : 'transform 0.1s ease',
               transform: element.style?.transform as string || '',
-              cursor: isDragging ? 'move' : 'grab',
+              cursor: isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab'),
               willChange: isDragging ? 'transform' : 'auto',
               opacity: element.isHidden ? 0 : 1, // Changed from 0.4 to 0 for complete invisibility 
             }}
@@ -269,6 +349,27 @@ const DraggableElement = ({ element, isActive, children }: {
         onRotateStart={handleRotateStart}
         showControls={showControls && isActive && !element.isHidden}
       />
+      
+      {/* Hidden audio element for sound interactions */}
+      {interactionType === 'sound' && element.interaction?.soundUrl && (
+        <audio 
+          ref={audioRef}
+          src={element.interaction.soundUrl}
+          style={{ display: 'none' }}
+        />
+      )}
+      
+      {/* Message modal for message interactions */}
+      {interactionType === 'message' && (
+        <InteractionMessageModal
+          isOpen={showMessageModal}
+          onClose={() => setShowMessageModal(false)}
+          message={element.interaction?.message || ''}
+        />
+      )}
+      
+      {/* Render appropriate puzzle modal */}
+      {renderPuzzleModal()}
     </>
   );
 };
