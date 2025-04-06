@@ -14,7 +14,7 @@ import InteractionMessageModal from "./element/InteractionMessageModal";
 import PuzzleModal from "./element/PuzzleModal";
 import SequencePuzzleModal from "./element/SequencePuzzleModal";
 import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
-import ClickSequencePuzzleModal from "./ClickSequencePuzzleModal";
+import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
 import {
   ContextMenu,
   ContextMenuContent,
