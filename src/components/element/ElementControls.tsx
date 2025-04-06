@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getRotation } from "@/utils/elementStyles";
 
 interface ElementControlsProps {
   isActive: boolean;
@@ -102,21 +103,30 @@ const ElementControls = ({
     ? canvases.find(c => c.id === element.interaction?.targetCanvasId)?.name || 'Unknown Canvas'
     : '';
 
+  // Get the current rotation directly from the element style for consistent transforms
+  const rotation = getRotation(element);
+  
+  // Apply the same transformation to the frame as the element has
+  const frameStyle = {
+    position: 'absolute' as const,
+    left: element.position.x,
+    top: element.position.y,
+    width: elementDimensions.width,
+    height: elementDimensions.height,
+    transform: `rotate(${rotation}deg)`,
+    pointerEvents: 'none' as const,
+    zIndex: 1000 + element.layer,
+    border: isActive ? '1px solid #6366F1' : 'none',
+    opacity: 1,
+    boxSizing: 'border-box' as const,
+    borderRadius: '2px',
+  };
+
   return (
     <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
       <div
         className="element-frame"
-        style={{
-          left: element.position.x,
-          top: element.position.y,
-          width: elementDimensions.width,
-          height: elementDimensions.height,
-          transform: frameTransform,
-          pointerEvents: 'none',
-          zIndex: 1000 + element.layer,
-          border: isActive ? '1px solid #6366F1' : 'none',
-          opacity: 1, // Always show border at full opacity when active
-        }}
+        style={frameStyle}
       />
       
       <div 
@@ -126,7 +136,7 @@ const ElementControls = ({
           top: element.position.y,
           width: elementDimensions.width,
           height: elementDimensions.height,
-          transform: frameTransform,
+          transform: `rotate(${rotation}deg)`,
           zIndex: 1000 + element.layer,
           pointerEvents: 'none',
         }}

@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -52,7 +51,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
   
-  // Get interaction settings
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
@@ -66,7 +64,6 @@ const DraggableElement = ({ element, isActive, children }: {
       e.preventDefault();
     }
     
-    // In game mode, only handle interactions, not drag operations
     if (isGameMode) {
       if (hasInteraction) {
         handleInteraction();
@@ -78,7 +75,6 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing) return;
     
-    // Only sequence puzzle requires double-click, regular puzzle gets single-click like images
     if (!isSequencePuzzleElement) {
       startDrag(e, element.position);
       setIsDragging(true);
@@ -88,7 +84,6 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
-    // In game mode, a single click handles interactions so we don't need double click
     if (isGameMode) {
       return;
     }
@@ -102,11 +97,9 @@ const DraggableElement = ({ element, isActive, children }: {
         }
       }, 10);
     } else if (isSequencePuzzleElement) {
-      // For sequence puzzle elements, start drag only on double click
       startDrag(e, element.position);
       setIsDragging(true);
     } else if (hasInteraction && !isEditing && !isDragging) {
-      // Handle interactions on double click for non-puzzle elements
       e.stopPropagation();
       handleInteraction();
     }
@@ -131,7 +124,6 @@ const DraggableElement = ({ element, isActive, children }: {
       setShowPuzzleModal(true);
     }
     else if (interactionType === 'canvasNavigation' && element.interaction?.targetCanvasId) {
-      // Find the index of the target canvas
       const targetCanvasIndex = canvases.findIndex(
         canvas => canvas.id === element.interaction?.targetCanvasId
       );
@@ -146,7 +138,6 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handlePuzzleClick = (e: React.MouseEvent) => {
-    // In game mode, always handle puzzle clicks
     if (isGameMode) {
       e.stopPropagation();
       handleInteraction();
@@ -160,9 +151,7 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  // Context menu handlers
   const handleDuplicate = () => {
-    // Create a duplicate with the same properties but at a slightly offset position
     const duplicateProps = {
       ...element,
       position: {
@@ -171,7 +160,6 @@ const DraggableElement = ({ element, isActive, children }: {
       }
     };
     
-    // Remove the id to ensure a new one is generated
     delete (duplicateProps as any).id;
     
     addElement(element.type, duplicateProps);
@@ -229,7 +217,8 @@ const DraggableElement = ({ element, isActive, children }: {
   }, [isDragging, isGameMode]);
 
   const elementStyle = getElementStyle(element, isDragging);
-  const frameTransform = element.style?.transform?.toString() || 'rotate(0deg)';
+  const rotation = getRotation(element);
+  const frameTransform = `rotate(${rotation}deg)`;
 
   let childContent = children;
   
@@ -272,12 +261,10 @@ const DraggableElement = ({ element, isActive, children }: {
     );
   }
 
-  // Don't render anything at all if the element is hidden and not active
   if (element.isHidden && !isActive) {
     return null;
   }
 
-  // Render the appropriate modal based on puzzle type
   const renderPuzzleModal = () => {
     if (!showPuzzleModal) return null;
     
@@ -319,12 +306,10 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  // Add a small indicator for interactive elements with canvas navigation
   const showInteractionIndicator = hasInteraction && !isActive && !isDragging;
   const indicatorStyles = interactionType === 'canvasNavigation' ? 
     "absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full animate-pulse" : "";
 
-  // Don't show context menu in game mode
   const elementContent = (
     <div
       ref={elementRef}
@@ -332,7 +317,6 @@ const DraggableElement = ({ element, isActive, children }: {
       style={{
         ...elementStyle,
         transition: isDragging ? 'none' : 'transform 0.1s ease',
-        transform: element.style?.transform as string || '',
         cursor: isGameMode 
           ? (hasInteraction ? 'pointer' : 'default') 
           : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
@@ -345,7 +329,6 @@ const DraggableElement = ({ element, isActive, children }: {
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
       draggable={false}
       onDragStart={(e) => {
-        // Prevent default drag behavior for all elements
         e.preventDefault();
       }}
       onDragOver={(e) => {
@@ -408,7 +391,6 @@ const DraggableElement = ({ element, isActive, children }: {
         />
       )}
       
-      {/* Hidden audio element for sound interactions */}
       {interactionType === 'sound' && element.interaction?.soundUrl && (
         <audio 
           ref={audioRef}
@@ -417,7 +399,6 @@ const DraggableElement = ({ element, isActive, children }: {
         />
       )}
       
-      {/* Message modal for message interactions */}
       {interactionType === 'message' && (
         <InteractionMessageModal
           isOpen={showMessageModal}
@@ -426,7 +407,6 @@ const DraggableElement = ({ element, isActive, children }: {
         />
       )}
       
-      {/* Render appropriate puzzle modal */}
       {renderPuzzleModal()}
     </>
   );

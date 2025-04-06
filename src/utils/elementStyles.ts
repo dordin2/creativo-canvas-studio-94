@@ -52,11 +52,12 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   // Extract rotation from transform to apply it directly at the top level
   const rotation = getRotation(element);
   
+  // Create a clean object for the style to avoid reference issues
   const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
     position: 'absolute',
-    left: element.position.x,
-    top: element.position.y,
+    left: Math.round(element.position.x),
+    top: Math.round(element.position.y),
     width: element.size?.width,
     height: element.size?.height,
     cursor: isDragging ? 'move' : 'grab',
