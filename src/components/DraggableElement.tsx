@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -10,22 +9,13 @@ import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
-import { Copy, Trash2, EyeOff } from "lucide-react";
-import { toast } from "sonner";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-  ContextMenuSeparator,
-} from "@/components/ui/context-menu";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { updateElement, setActiveElement, removeElement, addElement } = useDesignState();
+  const { updateElement, setActiveElement } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -89,44 +79,6 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  // Context menu handlers
-  const handleDuplicateElement = () => {
-    const newElement = { ...JSON.parse(JSON.stringify(element)) };
-    // Offset the position slightly to make it clear it's a duplicate
-    const offsetPosition = {
-      x: element.position.x + 20,
-      y: element.position.y + 20
-    };
-    
-    // Add the new element via the addElement function which will 
-    // generate a new ID and handle history
-    const duplicatedElement = addElement(element.type, {
-      ...newElement,
-      position: offsetPosition
-    });
-    
-    toast.success("Element duplicated");
-  };
-
-  const handleDeleteElement = () => {
-    removeElement(element.id);
-    toast.success("Element deleted");
-  };
-
-  const handleToggleVisibility = () => {
-    const newVisibility = element.style?.display === 'none' ? 'block' : 'none';
-    const actionText = newVisibility === 'none' ? 'hidden' : 'visible';
-    
-    updateElement(element.id, {
-      style: {
-        ...element.style,
-        display: newVisibility
-      }
-    });
-    
-    toast.success(`Element is now ${actionText}`);
-  };
-
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false);
@@ -168,7 +120,6 @@ const DraggableElement = ({ element, isActive, children }: {
 
   const elementStyle = getElementStyle(element, isDragging);
   const frameTransform = element.style?.transform || 'rotate(0deg)';
-  const isHidden = element.style?.display === 'none';
 
   let childContent = children;
   
@@ -205,64 +156,43 @@ const DraggableElement = ({ element, isActive, children }: {
   }
 
   return (
-    <ContextMenu>
-      <ContextMenuTrigger asChild>
-        <>
-          <div
-            ref={elementRef}
-            className="canvas-element"
-            style={{
-              ...elementStyle,
-              transition: isDragging ? 'none' : 'transform 0.1s ease',
-              transform: element.style?.transform || '',
-              cursor: isDragging ? 'move' : 'grab',
-              willChange: isDragging ? 'transform' : 'auto',
-              opacity: isHidden ? 0.4 : 1,
-            }}
-            onMouseDown={handleMouseDown}
-            onDoubleClick={handleTextDoubleClick}
-            draggable={false}
-            onDragStart={(e) => {
-              // Prevent default drag behavior for all elements
-              e.preventDefault();
-            }}
-            onDragOver={(e) => {
-              if (isImageElement || isPuzzleElement) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-            }}
-          >
-            {childContent}
-          </div>
+    <>
+      <div
+        ref={elementRef}
+        className="canvas-element"
+        style={{
+          ...elementStyle,
+          transition: isDragging ? 'none' : 'transform 0.1s ease',
+          transform: element.style?.transform || '',
+          cursor: isDragging ? 'move' : 'grab',
+          willChange: isDragging ? 'transform' : 'auto',
+        }}
+        onMouseDown={handleMouseDown}
+        onDoubleClick={handleTextDoubleClick}
+        draggable={false}
+        onDragStart={(e) => {
+          // Prevent default drag behavior for all elements
+          e.preventDefault();
+        }}
+        onDragOver={(e) => {
+          if (isImageElement || isPuzzleElement) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        }}
+      >
+        {childContent}
+      </div>
 
-          <ElementControls
-            isActive={isActive}
-            element={element}
-            frameTransform={frameTransform}
-            onResizeStart={handleResizeStart}
-            onRotateStart={handleRotateStart}
-            showControls={showControls || isActive || isDragging}
-          />
-        </>
-      </ContextMenuTrigger>
-      <ContextMenuContent className="w-48">
-        <ContextMenuItem onClick={handleDuplicateElement} className="cursor-pointer flex items-center gap-2">
-          <Copy className="h-4 w-4" />
-          <span>Duplicate</span>
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={handleToggleVisibility} className="cursor-pointer flex items-center gap-2">
-          <EyeOff className="h-4 w-4" />
-          <span>{isHidden ? "Show" : "Hide"}</span>
-        </ContextMenuItem>
-        <ContextMenuSeparator />
-        <ContextMenuItem onClick={handleDeleteElement} className="cursor-pointer text-red-500 flex items-center gap-2">
-          <Trash2 className="h-4 w-4" />
-          <span>Delete</span>
-        </ContextMenuItem>
-      </ContextMenuContent>
-    </ContextMenu>
+      <ElementControls
+        isActive={isActive}
+        element={element}
+        frameTransform={frameTransform}
+        onResizeStart={handleResizeStart}
+        onRotateStart={handleRotateStart}
+        showControls={showControls || isActive || isDragging}
+      />
+    </>
   );
 };
 
