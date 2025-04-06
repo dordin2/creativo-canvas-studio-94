@@ -108,8 +108,8 @@ export const useDraggable = (elementId: string) => {
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
-    // For images prevent browser's native drag behavior
-    if (isImageElement) {
+    // Prevent browser's native drag behavior for images
+    if (isImageElement || isPuzzleElement) {
       e.preventDefault();
     }
     

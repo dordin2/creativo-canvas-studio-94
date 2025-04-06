@@ -2,7 +2,6 @@
 import { DesignElement } from "@/context/DesignContext";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
-import { Move } from "lucide-react";
 
 interface ElementControlsProps {
   isActive: boolean;
@@ -10,7 +9,6 @@ interface ElementControlsProps {
   frameTransform: string;
   onResizeStart: (e: React.MouseEvent, direction: string) => void;
   onRotateStart: (e: React.MouseEvent) => void;
-  onDragHandleMouseDown: (e: React.MouseEvent) => void;
   showControls: boolean;
 }
 
@@ -20,7 +18,6 @@ const ElementControls = ({
   frameTransform, 
   onResizeStart, 
   onRotateStart,
-  onDragHandleMouseDown,
   showControls
 }: ElementControlsProps) => {
   if (!showControls || element.type === 'background') return null;
@@ -71,31 +68,7 @@ const ElementControls = ({
           onRotateStart={onRotateStart}
         />
         
-        {/* Drag handle positioned above the rotation handle */}
-        <div 
-          className="drag-handle"
-          style={{ 
-            position: 'absolute',
-            top: -36, 
-            left: '50%', 
-            transform: 'translateX(-50%)',
-            width: '24px',
-            height: '24px',
-            backgroundColor: '#8B5CF6',
-            borderRadius: '50%',
-            display: 'flex',
-            justifyContent: 'center',
-            alignItems: 'center',
-            cursor: 'move',
-            border: '2px solid white',
-            boxShadow: '0 2px 4px rgba(0,0,0,0.2)',
-            pointerEvents: 'auto',
-            zIndex: 1001,
-          }}
-          onMouseDown={onDragHandleMouseDown}
-        >
-          <Move className="text-white" size={14} />
-        </div>
+        {/* Drag handle removed */}
       </div>
     </div>
   );

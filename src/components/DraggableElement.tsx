@@ -44,13 +44,9 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing) return;
     
-    // For puzzle elements, we don't want to start drag immediately on single click
-    // This reverts to the previous behavior where puzzles required double-click 
-    // to activate the drag behavior
-    if (!isPuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
-    }
+    // Allow single-click dragging for all elements including puzzle elements
+    startDrag(e, element.position);
+    setIsDragging(true);
     
     setStartPos({ x: e.clientX, y: e.clientY });
   };
@@ -64,10 +60,6 @@ const DraggableElement = ({ element, isActive, children }: {
           textInputRef.current.focus();
         }
       }, 10);
-    } else if (isPuzzleElement) {
-      // For puzzle elements, start drag only on double click
-      startDrag(e, element.position);
-      setIsDragging(true);
     }
   };
 
@@ -79,12 +71,8 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  const handleDragHandleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setActiveElement(element);
-    startDrag(e, element.position);
-    setIsDragging(true);
-  };
+  // We're removing the handleDragHandleMouseDown function as we no longer need it
+  // since we're removing the drag handle
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -191,7 +179,7 @@ const DraggableElement = ({ element, isActive, children }: {
         frameTransform={frameTransform}
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
-        onDragHandleMouseDown={handleDragHandleMouseDown}
+        // We remove the onDragHandleMouseDown prop since we're removing the drag handle
         showControls={showControls || isActive || isDragging}
       />
     </>
