@@ -7,7 +7,6 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
-import CanvasTabs from "./CanvasTabs";
 
 const Canvas = () => {
   const { 
@@ -347,7 +346,6 @@ const Canvas = () => {
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full">
-      <CanvasTabs />
       <div className="flex-1 flex items-center justify-center p-4 canvas-workspace relative">
         <div className="canvas-container" style={{ 
           transform: `scale(${zoomLevel})`, 
