@@ -31,8 +31,8 @@ const ElementControls = ({
 }: ElementControlsProps) => {
   const { updateElement, removeElement, addElement, canvases } = useDesignState();
   
-  // Don't render controls at all if the element is hidden or it's the background
-  if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
+  // Don't render controls at all if it's the background
+  if ((!showControls && !isActive) || element.type === 'background') {
     return null;
   }
 
@@ -223,9 +223,9 @@ const ElementControls = ({
                     onClick={handleToggleVisibility}
                   >
                     {isVisible ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
                       <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </TooltipTrigger>

@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -56,8 +55,8 @@ const DraggableElement = ({ element, isActive, children }: {
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
 
-  // If the element is hidden and we're in game mode, don't render it at all
-  if (element.isHidden && isGameMode) {
+  // If the element is hidden, don't render it at all - regardless of game mode or edit mode
+  if (element.isHidden) {
     return null;
   }
 
@@ -323,7 +322,6 @@ const DraggableElement = ({ element, isActive, children }: {
           ? (hasInteraction ? 'pointer' : 'default') 
           : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
         willChange: isDragging ? 'transform' : 'auto',
-        opacity: element.isHidden && !isGameMode ? 0.5 : 1, // Only apply opacity in edit mode
         position: 'relative',
       }}
       onMouseDown={handleMouseDown}
