@@ -48,6 +48,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   // Special styles for puzzle elements
   const isPuzzleElement = element.type === 'sequencePuzzle' || element.type === 'puzzle';
   const isImageElement = element.type === 'image';
+  const isVideoElement = element.type === 'video';
   
   // Extract rotation from transform to apply it directly at the top level
   const rotation = getRotation(element);
@@ -80,8 +81,8 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     boxSizing: 'border-box',
   };
 
-  // Prevent browser's default drag behavior for image elements
-  if (isImageElement) {
+  // Prevent browser's default drag behavior for image and video elements
+  if (isImageElement || isVideoElement) {
     style.userDrag = 'none' as any;
   }
 

@@ -3,7 +3,7 @@ import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
 import LayersList from "./LayersList";
-import { Minus, Plus, RotateCcw } from "lucide-react";
+import { Minus, Plus, RotateCcw, Maximize, Minimize } from "lucide-react";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
@@ -294,6 +294,61 @@ const Canvas = () => {
                 ) : (
                   <div className="text-sm upload-placeholder-text text-gray-400 select-none w-full h-full flex items-center justify-center">
                     Click to upload image
+                  </div>
+                )}
+              </div>
+            </DraggableElement>
+          );
+          
+        case 'video':
+          return (
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <div
+                className="h-full w-full flex items-center justify-center overflow-hidden"
+                onDragOver={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  const files = e.dataTransfer.files;
+                  if (files.length > 0 && files[0].type.startsWith('video/')) {
+                    handleImageUpload(element.id, files[0]);
+                  }
+                }}
+              >
+                {(element.dataUrl || element.src) ? (
+                  <video 
+                    src={element.dataUrl || element.src}
+                    className="w-full h-full" 
+                    controls={isGameMode ? element.videoControls : true}
+                    autoPlay={isGameMode && element.videoAutoplay}
+                    loop={element.videoLoop}
+                    muted={element.videoMuted}
+                    playsInline
+                    style={{ 
+                      objectFit: 'contain', 
+                      width: '100%', 
+                      height: '100%'
+                    }}
+                    onClick={(e) => {
+                      if (isGameMode) {
+                        e.stopPropagation();
+                        const video = e.target as HTMLVideoElement;
+                        
+                        if (document.fullscreenElement) {
+                          document.exitFullscreen();
+                        } else {
+                          video.requestFullscreen();
+                        }
+                      }
+                    }}
+                  />
+                ) : (
+                  <div className="text-sm upload-placeholder-text text-gray-400 select-none w-full h-full flex items-center justify-center">
+                    Click to upload video
                   </div>
                 )}
               </div>
