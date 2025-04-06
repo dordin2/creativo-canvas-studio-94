@@ -5,7 +5,6 @@ import Sidebar from "@/components/Sidebar";
 import Canvas from "@/components/Canvas";
 import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
-import GameModeToggle from "@/components/GameModeToggle";
 import { useDesignState } from "@/context/DesignContext";
 
 const Index = () => {
@@ -36,8 +35,8 @@ const Index = () => {
 
   return (
     <div className="flex flex-col h-screen overflow-hidden">
-      {!isGameMode && <Header />}
-      <div className={`${isGameMode ? 'pt-2' : ''} flex flex-1 overflow-hidden`}>
+      <Header />
+      <div className="flex flex-1 overflow-hidden">
         {!isGameMode && (
           <div className="flex-shrink-0 w-64">
             <Sidebar />
@@ -50,12 +49,7 @@ const Index = () => {
               <Canvas />
             </>
           ) : (
-            <div className="flex flex-col h-full">
-              <div className="p-2 flex justify-end">
-                <GameModeToggle />
-              </div>
-              <Canvas />
-            </div>
+            <Canvas />
           )}
         </div>
         {!isGameMode && (

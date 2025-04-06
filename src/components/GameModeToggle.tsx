@@ -10,28 +10,26 @@ const GameModeToggle = () => {
   const { isGameMode, toggleGameMode } = useDesignState();
 
   return (
-    <div className="flex items-center gap-2 px-4">
-      <TooltipProvider>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div className="flex items-center gap-2">
-              <Gamepad2 className={`h-5 w-5 ${isGameMode ? 'text-canvas-purple' : 'text-gray-500'}`} />
-              <Switch
-                id="game-mode"
-                checked={isGameMode}
-                onCheckedChange={toggleGameMode}
-              />
-              <Label htmlFor="game-mode" className={`text-sm font-medium cursor-pointer ${isGameMode ? 'text-canvas-purple' : 'text-gray-500'}`}>
-                Game Mode
-              </Label>
-            </div>
-          </TooltipTrigger>
-          <TooltipContent side="bottom">
-            <p>{isGameMode ? 'Exit Game Mode' : 'Enter Game Mode'}</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
-    </div>
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="flex items-center gap-2">
+            <Gamepad2 className={`h-5 w-5 ${isGameMode ? 'text-canvas-purple' : 'text-gray-500'}`} />
+            <Switch
+              id="game-mode"
+              checked={isGameMode}
+              onCheckedChange={toggleGameMode}
+            />
+            <Label htmlFor="game-mode" className={`text-sm font-medium cursor-pointer ${isGameMode ? 'text-canvas-purple' : 'text-gray-500'}`}>
+              Game Mode
+            </Label>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">
+          <p>{isGameMode ? 'Exit Game Mode' : 'Enter Game Mode'}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 };
 
