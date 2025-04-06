@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
-import { Layers, ChevronUp, ChevronDown, Edit, Eye, EyeOff, Trash2, Copy } from "lucide-react";
+import { Layers, Eye, EyeOff, Trash2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -40,24 +40,6 @@ const LayersList = () => {
   const handleNameChange = (elementId: string, newName: string) => {
     updateElement(elementId, { name: newName });
     setEditingNameId(null);
-  };
-
-  const moveLayerUp = (element: DesignElement) => {
-    // Find next highest layer value
-    const higherElements = elements.filter(elem => elem.layer > element.layer);
-    if (higherElements.length === 0) return; // Already at the top
-    
-    const nextLayer = Math.min(...higherElements.map(elem => elem.layer));
-    updateElementLayer(element.id, nextLayer + 1);
-  };
-
-  const moveLayerDown = (element: DesignElement) => {
-    // Find next lowest layer value
-    const lowerElements = elements.filter(elem => elem.layer < element.layer && elem.type !== 'background');
-    if (lowerElements.length === 0) return; // Already at the bottom (except background)
-    
-    const prevLayer = Math.max(...lowerElements.map(elem => elem.layer));
-    updateElementLayer(element.id, prevLayer - 1);
   };
 
   const handleDuplicate = (element: DesignElement) => {
@@ -168,14 +150,19 @@ const LayersList = () => {
                       className="w-16 h-7 text-xs"
                       min="1"
                       autoFocus
+                      onBlur={() => handleLayerChange(element.id, newLayerValue)}
                     />
-                    <Button type="submit" size="sm" variant="ghost" className="h-7 w-7 p-0">
-                      ✓
-                    </Button>
                   </form>
                 ) : (
                   <>
-                    <div className="text-xs bg-gray-100 px-2 py-1 rounded">
+                    <div 
+                      className="text-xs bg-gray-100 px-2 py-1 rounded cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingLayerId(element.id);
+                        setNewLayerValue(element.layer);
+                      }}
+                    >
                       {element.layer}
                     </div>
                     
@@ -221,91 +208,6 @@ const LayersList = () => {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>Duplicate</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingNameId(element.id);
-                              setNewNameValue(getElementName(element));
-                            }}
-                          >
-                            <Edit className="h-3.5 w-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Rename</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 p-0"
-                            onClick={() => {
-                              setEditingLayerId(element.id);
-                              setNewLayerValue(element.layer);
-                            }}
-                          >
-                            <Edit className="h-3.5 w-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Edit layer number</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moveLayerUp(element);
-                            }}
-                          >
-                            <ChevronUp className="h-3.5 w-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Move higher</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              moveLayerDown(element);
-                            }}
-                          >
-                            <ChevronDown className="h-3.5 w-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Move lower</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
