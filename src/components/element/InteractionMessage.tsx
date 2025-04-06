@@ -10,7 +10,7 @@ interface InteractionMessageProps {
 }
 
 const InteractionMessage: React.FC<InteractionMessageProps> = ({ config }) => {
-  const { text, color = '#000000', position = 'center' } = config;
+  const { text, color = '#000000', position = 'bottom' } = config;
   
   let positionStyle = {};
   switch (position) {
@@ -18,10 +18,10 @@ const InteractionMessage: React.FC<InteractionMessageProps> = ({ config }) => {
       positionStyle = { top: 0, left: '50%', transform: 'translateX(-50%)' };
       break;
     case 'bottom':
-      positionStyle = { bottom: 0, left: '50%', transform: 'translateX(-50%)' };
+    default:
+      positionStyle = { bottom: '10%', left: '50%', transform: 'translateX(-50%)' };
       break;
     case 'center':
-    default:
       positionStyle = { 
         top: '50%', 
         left: '50%', 
@@ -32,13 +32,14 @@ const InteractionMessage: React.FC<InteractionMessageProps> = ({ config }) => {
   
   return (
     <div 
-      className="absolute z-50 px-4 py-2 rounded-md bg-white shadow-lg animate-fade-in font-medium"
+      className="fixed z-50 px-6 py-4 rounded-md bg-white shadow-lg animate-fade-in font-medium"
       style={{
         ...positionStyle,
         color,
         maxWidth: '90%',
         textAlign: 'center',
         pointerEvents: 'none',
+        fontSize: '1.25rem',
       }}
     >
       {text}

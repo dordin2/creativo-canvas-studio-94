@@ -38,7 +38,7 @@ const InteractionProperties: React.FC<{ element: DesignElement }> = ({ element }
       text: '',
       duration: 2000,
       color: '#000000',
-      position: 'center',
+      position: 'bottom',
     },
     sound: {
       soundUrl: '',

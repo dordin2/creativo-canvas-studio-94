@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { InteractionConfig } from "@/types/designTypes";
@@ -13,6 +12,7 @@ import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import InteractionMessage from "./element/InteractionMessage";
+import PuzzleModal from "./element/PuzzleModal";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -42,6 +42,7 @@ const DraggableElement = ({ element, isActive, children }: {
     color?: string; 
     position?: 'top' | 'center' | 'bottom' 
   }>({ text: '' });
+  const [isPuzzleModalOpen, setIsPuzzleModalOpen] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -61,6 +62,7 @@ const DraggableElement = ({ element, isActive, children }: {
     switch (config.type) {
       case 'puzzle':
         if (config.puzzle) {
+          setIsPuzzleModalOpen(true);
           toast.info("Opening puzzle");
         }
         break;
@@ -353,6 +355,14 @@ const DraggableElement = ({ element, isActive, children }: {
         showControls={showControls && isActive && !element.isHidden}
         onActivateInteraction={handleInteraction}
       />
+      
+      {isPuzzleElement && (
+        <PuzzleModal 
+          isOpen={isPuzzleModalOpen} 
+          onClose={() => setIsPuzzleModalOpen(false)} 
+          element={element} 
+        />
+      )}
     </>
   );
 };

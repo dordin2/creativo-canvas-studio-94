@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, Play } from "lucide-react";
@@ -11,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import PuzzleModal from "./element/PuzzleModal";
 
 const LayersList = () => {
   const { 
@@ -27,6 +27,8 @@ const LayersList = () => {
   const [newLayerValue, setNewLayerValue] = useState<number>(0);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [newNameValue, setNewNameValue] = useState<string>('');
+  const [activePuzzleElement, setActivePuzzleElement] = useState<DesignElement | null>(null);
+  const [isPuzzleModalOpen, setIsPuzzleModalOpen] = useState(false);
 
   // Filter out background element and sort by layer (highest first)
   const layerElements = [...elements]
@@ -73,15 +75,25 @@ const LayersList = () => {
     switch (config.type) {
       case 'puzzle':
         if (config.puzzle) {
+          setActivePuzzleElement(element);
+          setIsPuzzleModalOpen(true);
           toast.info("Opening puzzle");
         }
         break;
       case 'message':
         if (config.message) {
-          toast.info(config.message.text, {
-            duration: config.message.duration,
-            style: { color: config.message.color }
-          });
+          toast.custom(
+            <div 
+              className="fixed bottom-10 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-md bg-white shadow-lg font-medium text-lg z-50 text-center"
+              style={{ color: config.message.color || '#000000', maxWidth: '90%' }}
+            >
+              {config.message.text}
+            </div>,
+            {
+              duration: config.message.duration,
+              position: 'bottom-center',
+            }
+          );
         }
         break;
       case 'sound':
@@ -303,6 +315,14 @@ const LayersList = () => {
           ))
         )}
       </div>
+      
+      {activePuzzleElement && (
+        <PuzzleModal 
+          isOpen={isPuzzleModalOpen} 
+          onClose={() => setIsPuzzleModalOpen(false)} 
+          element={activePuzzleElement} 
+        />
+      )}
     </div>
   );
 };
