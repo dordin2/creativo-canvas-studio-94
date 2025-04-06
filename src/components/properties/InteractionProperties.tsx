@@ -165,6 +165,28 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     return baseElement;
   };
 
+  // Function to handle updates from child puzzle components
+  const handlePuzzleConfigUpdate = (configType: string, config: any) => {
+    let updatedInteraction = { ...interactionConfig };
+    
+    if (configType === 'puzzleConfig') {
+      updatedInteraction.puzzleConfig = config;
+    } 
+    else if (configType === 'sequencePuzzleConfig') {
+      updatedInteraction.sequencePuzzleConfig = config;
+    }
+    else if (configType === 'clickSequencePuzzleConfig') {
+      updatedInteraction.clickSequencePuzzleConfig = config;
+    }
+    else if (configType === 'sliderPuzzleConfig') {
+      updatedInteraction.sliderPuzzleConfig = config;
+    }
+    
+    updateElement(element.id, {
+      interaction: updatedInteraction
+    });
+  };
+
   // Get the appropriate puzzle component based on the puzzle type
   const getPuzzleConfigComponent = () => {
     const puzzleType = interactionConfig.puzzleType || 'puzzle';
@@ -172,13 +194,33 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     
     switch (puzzleType) {
       case 'puzzle':
-        return <PuzzleProperties element={proxyElement} />;
+        return (
+          <PuzzleProperties 
+            element={proxyElement} 
+            onUpdateConfig={(config) => handlePuzzleConfigUpdate('puzzleConfig', config)} 
+          />
+        );
       case 'sequencePuzzle':
-        return <SequencePuzzleProperties element={proxyElement} />;
+        return (
+          <SequencePuzzleProperties 
+            element={proxyElement} 
+            onUpdateConfig={(config) => handlePuzzleConfigUpdate('sequencePuzzleConfig', config)} 
+          />
+        );
       case 'clickSequencePuzzle':
-        return <ClickSequencePuzzleProperties element={proxyElement} />;
+        return (
+          <ClickSequencePuzzleProperties 
+            element={proxyElement} 
+            onUpdateConfig={(config) => handlePuzzleConfigUpdate('clickSequencePuzzleConfig', config)} 
+          />
+        );
       case 'sliderPuzzle':
-        return <SliderPuzzleProperties element={proxyElement} />;
+        return (
+          <SliderPuzzleProperties 
+            element={proxyElement} 
+            onUpdateConfig={(config) => handlePuzzleConfigUpdate('sliderPuzzleConfig', config)} 
+          />
+        );
       default:
         return <div>Select a puzzle type to configure</div>;
     }

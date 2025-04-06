@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -18,7 +17,12 @@ const PLACEHOLDER_IMAGES = [
   "https://source.unsplash.com/random/300x200?sig=5"
 ];
 
-const SequencePuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => {
+interface SequencePuzzlePropertiesProps {
+  element: DesignElement;
+  onUpdateConfig?: (config: any) => void;
+}
+
+const SequencePuzzleProperties: React.FC<SequencePuzzlePropertiesProps> = ({ element, onUpdateConfig }) => {
   const { updateElement, addElement } = useDesignState();
   const { t, language } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<string>("");
@@ -155,9 +159,18 @@ const SequencePuzzleProperties: React.FC<{ element: DesignElement }> = ({ elemen
       return;
     }
     
+    const localPuzzleConfig = {
+      ...localConfig,
+      name: localConfig.name.trim()
+    };
+    
     updateElement(element.id, {
-      sequencePuzzleConfig: localConfig
+      sequencePuzzleConfig: localPuzzleConfig
     });
+    
+    if (onUpdateConfig) {
+      onUpdateConfig(localPuzzleConfig);
+    }
     
     toast.success(t('toast.success.config'));
   };

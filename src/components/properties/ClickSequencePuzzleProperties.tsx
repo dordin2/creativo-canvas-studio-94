@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Upload, Plus, Trash2, FileCheck, MousePointerClick, ArrowUp, ArrowDown } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
@@ -18,13 +17,18 @@ const PLACEHOLDER_IMAGES = [
   "https://source.unsplash.com/random/300x200?sig=5"
 ];
 
-const ClickSequencePuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => {
+interface ClickSequencePuzzlePropertiesProps {
+  element: DesignElement;
+  onUpdateConfig?: (config: any) => void;
+}
+
+const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps> = ({ element, onUpdateConfig }) => {
   const { updateElement, addElement } = useDesignState();
   const { t, language } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<string>("");
-  const [localConfig, setLocalConfig] = useState(() => {
+  const [localPuzzleConfig, setLocalPuzzleConfig] = useState(() => {
     return element.clickSequencePuzzleConfig || {
-      name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
+      name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף לחיצות',
       images: [],
       solution: [],
       clickedIndices: []
@@ -33,72 +37,44 @@ const ClickSequencePuzzleProperties: React.FC<{ element: DesignElement }> = ({ e
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setLocalConfig(prev => ({
+    setLocalPuzzleConfig(prev => ({
       ...prev,
       name: e.target.value
     }));
   };
   
   const handleAddImage = () => {
-    if (selectedImage && !localConfig.images.includes(selectedImage)) {
-      const newImages = [...localConfig.images, selectedImage];
-      const newSolution = [...Array(newImages.length).keys()]; // Default solution is sequential
-      
-      setLocalConfig(prev => ({
+    if (selectedImage && !localPuzzleConfig.images.includes(selectedImage)) {
+      setLocalPuzzleConfig(prev => ({
         ...prev,
-        images: newImages,
-        solution: newSolution,
-        clickedIndices: [] // Reset clicked indices when images change
+        images: [...prev.images, selectedImage]
       }));
       setSelectedImage("");
     }
   };
   
   const handleRemoveImage = (index: number) => {
-    const newImages = [...localConfig.images];
+    const newImages = [...localPuzzleConfig.images];
     newImages.splice(index, 1);
     
-    // Update solution indices to maintain valid references
-    const newSolution = localConfig.solution
-      .filter(solutionIndex => solutionIndex !== index) // Remove the deleted image from solution
-      .map(solutionIndex => solutionIndex > index ? solutionIndex - 1 : solutionIndex); // Adjust indices
-    
-    setLocalConfig(prev => ({
+    setLocalPuzzleConfig(prev => ({
       ...prev,
       images: newImages,
-      solution: newSolution,
-      clickedIndices: [] // Reset clicked indices when images change
+      solution: prev.solution.map(solIndex => {
+        if (solIndex === index) return 0;
+        if (solIndex > index) return solIndex - 1;
+        return solIndex;
+      })
     }));
   };
   
-  const handleMoveImageUp = (index: number) => {
-    if (index === 0) return; // Already at the top
+  const handleSolutionChange = (index: number, value: string) => {
+    const newSolution = [...localPuzzleConfig.solution];
+    newSolution[index] = parseInt(value);
     
-    const newImages = [...localConfig.images];
-    const newSolution = [...localConfig.solution];
-    
-    // Swap the images in the solution array
-    [newSolution[index], newSolution[index - 1]] = [newSolution[index - 1], newSolution[index]];
-    
-    setLocalConfig(prev => ({
+    setLocalPuzzleConfig(prev => ({
       ...prev,
-      solution: newSolution,
-      clickedIndices: [] // Reset clicked indices when solution changes
-    }));
-  };
-  
-  const handleMoveImageDown = (index: number) => {
-    if (index === localConfig.solution.length - 1) return; // Already at the bottom
-    
-    const newSolution = [...localConfig.solution];
-    
-    // Swap the images in the solution array
-    [newSolution[index], newSolution[index + 1]] = [newSolution[index + 1], newSolution[index]];
-    
-    setLocalConfig(prev => ({
-      ...prev,
-      solution: newSolution,
-      clickedIndices: [] // Reset clicked indices when solution changes
+      solution: newSolution
     }));
   };
   
@@ -116,14 +92,9 @@ const ClickSequencePuzzleProperties: React.FC<{ element: DesignElement }> = ({ e
     reader.onload = (event) => {
       if (event.target?.result) {
         const imageDataUrl = event.target.result.toString();
-        const newImages = [...localConfig.images, imageDataUrl];
-        const newSolution = [...Array(newImages.length).keys()]; // Default solution is sequential
-        
-        setLocalConfig(prev => ({
+        setLocalPuzzleConfig(prev => ({
           ...prev,
-          images: newImages,
-          solution: newSolution,
-          clickedIndices: [] // Reset clicked indices when images change
+          images: [...prev.images, imageDataUrl]
         }));
         toast.success(t('toast.success.upload'));
       }
@@ -143,66 +114,64 @@ const ClickSequencePuzzleProperties: React.FC<{ element: DesignElement }> = ({ e
   };
   
   const handleApplyChanges = () => {
-    if (localConfig.name.trim() === '') {
+    if (localPuzzleConfig.name.trim() === '') {
       toast.error(t('toast.error.name'));
       return;
     }
     
-    if (localConfig.images.length < 2) {
-      toast.error(language === 'en' ? 'Add at least 2 images to create a click sequence puzzle' : 'הוסף לפחות 2 תמונות ליצירת פאזל רצף קליקים');
+    if (localPuzzleConfig.images.length < 2) {
+      toast.error(t('toast.error.images'));
       return;
     }
     
     updateElement(element.id, {
-      clickSequencePuzzleConfig: localConfig
+      clickSequencePuzzleConfig: localPuzzleConfig
     });
+    
+    if (onUpdateConfig) {
+      onUpdateConfig(localPuzzleConfig);
+    }
     
     toast.success(t('toast.success.config'));
   };
   
-  const createClickSequencePuzzleElement = () => {
-    if (localConfig.name.trim() === '') {
+  const createPuzzleElement = () => {
+    if (localPuzzleConfig.name.trim() === '') {
       toast.error(t('toast.error.name'));
       return;
     }
     
-    if (localConfig.images.length < 2) {
-      toast.error(language === 'en' ? 'Add at least 2 images to create a click sequence puzzle' : 'הוסף לפחות 2 תמונות ליצירת פאזל רצף קליקים');
+    if (localPuzzleConfig.images.length < 2) {
+      toast.error(t('toast.error.images'));
       return;
     }
     
-    addElement('clickSequencePuzzle', { clickSequencePuzzleConfig: localConfig });
-    toast.success(language === 'en' ? 'Click sequence puzzle added to canvas' : 'פאזל רצף קליקים נוסף לקנבס');
+    addElement('clickSequencePuzzle', { clickSequencePuzzleConfig: localPuzzleConfig });
+    toast.success(t('toast.success.added'));
   };
   
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="puzzle-name">{language === 'en' ? 'Puzzle Name' : 'שם הפאזל'}</Label>
+        <Label htmlFor="puzzle-name">{t('puzzle.name')}</Label>
         <Input 
           id="puzzle-name" 
-          value={localConfig.name} 
+          value={localPuzzleConfig.name} 
           onChange={handleNameChange}
           className="mt-1"
         />
       </div>
       
       <div>
-        <Label>{language === 'en' ? 'Image Collection' : 'אוסף תמונות'}</Label>
+        <Label>{t('puzzle.image.collection')}</Label>
         <div className="mt-2 space-y-3">
           <div className="flex items-center gap-2">
-            <select 
-              value={selectedImage} 
+            <Input
+              type="text"
+              placeholder={t('puzzle.image.url')}
+              value={selectedImage}
               onChange={(e) => setSelectedImage(e.target.value)}
-              className="flex-1 border rounded-md px-3 py-2"
-            >
-              <option value="">{language === 'en' ? 'Select an image' : 'בחר תמונה'}</option>
-              {PLACEHOLDER_IMAGES.map((img, idx) => (
-                <option key={idx} value={img}>
-                  {language === 'en' ? `Image ${idx + 1}` : `תמונה ${idx + 1}`}
-                </option>
-              ))}
-            </select>
+            />
             <Button 
               size="sm" 
               variant="outline"
@@ -227,66 +196,17 @@ const ClickSequencePuzzleProperties: React.FC<{ element: DesignElement }> = ({ e
               onClick={handleBrowseClick}
             >
               <Upload className="h-4 w-4 mr-2" />
-              {language === 'en' ? 'Upload Image' : 'העלה תמונה'}
+              {t('puzzle.upload.image')}
             </Button>
           </div>
         </div>
         
-        <div className="mt-4">
-          <Label className="mb-2 block">
-            {language === 'en' ? 'Sequence Order (correct solution)' : 'סדר הרצף (פתרון נכון)'}
-          </Label>
-          <div className="space-y-2">
-            {localConfig.solution.map((imageIndex, solutionPosition) => (
-              <div key={solutionPosition} className="flex items-center gap-2 bg-gray-50 p-2 rounded">
-                <div className="flex-shrink-0 w-10 h-10 bg-white border rounded overflow-hidden">
-                  {localConfig.images[imageIndex] && (
-                    <img 
-                      src={localConfig.images[imageIndex]} 
-                      alt={`Image ${imageIndex + 1}`} 
-                      className="w-full h-full object-cover"
-                    />
-                  )}
-                </div>
-                <div className="flex-grow">
-                  <div className="text-sm font-medium">
-                    {language === 'en' ? `Position ${solutionPosition + 1}` : `מיקום ${solutionPosition + 1}`}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {language === 'en' ? `Image ${imageIndex + 1}` : `תמונה ${imageIndex + 1}`}
-                  </div>
-                </div>
-                <div className="flex space-x-1">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => handleMoveImageUp(solutionPosition)}
-                    disabled={solutionPosition === 0}
-                  >
-                    <ArrowUp className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7"
-                    onClick={() => handleMoveImageDown(solutionPosition)}
-                    disabled={solutionPosition === localConfig.solution.length - 1}
-                  >
-                    <ArrowDown className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-3 gap-2 mt-4">
-          {localConfig.images.map((img, idx) => (
+        <div className="grid grid-cols-3 gap-2 mt-3">
+          {localPuzzleConfig.images.map((img, idx) => (
             <div key={idx} className="relative group">
               <img 
                 src={img} 
-                alt={`Image ${idx + 1}`} 
+                alt={`Image ${idx}`} 
                 className="h-16 w-full object-cover rounded border"
               />
               <button
@@ -302,11 +222,30 @@ const ClickSequencePuzzleProperties: React.FC<{ element: DesignElement }> = ({ e
           ))}
         </div>
         
-        {localConfig.images.length === 0 && (
+        {localPuzzleConfig.images.length === 0 && (
           <div className="text-sm text-gray-500 text-center py-4">
-            {language === 'en' ? 'Add images to your click sequence puzzle' : 'הוסף תמונות לפאזל הרצף שלך'}
+            {t('puzzle.add.images')}
           </div>
         )}
+      </div>
+      
+      <div>
+        <Label>{t('puzzle.solution')}</Label>
+        <div className="space-y-2 mt-2">
+          {Array.from({ length: localPuzzleConfig.images.length }).map((_, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <span className="text-sm font-medium w-24">
+                {`${t('puzzle.step')} ${idx + 1}:`}
+              </span>
+              <Input
+                type="number"
+                value={localPuzzleConfig.solution[idx]?.toString() || ""}
+                onChange={(e) => handleSolutionChange(idx, e.target.value)}
+                className="flex-1"
+              />
+            </div>
+          ))}
+        </div>
       </div>
       
       <div className="flex gap-2 pt-3">
@@ -316,16 +255,15 @@ const ClickSequencePuzzleProperties: React.FC<{ element: DesignElement }> = ({ e
           onClick={handleApplyChanges}
         >
           <FileCheck className="h-4 w-4 mr-2" />
-          {language === 'en' ? 'Apply Changes' : 'החל שינויים'}
+          {t('puzzle.apply.changes')}
         </Button>
         
         <Button
           variant="default"
           className="w-full"
-          onClick={createClickSequencePuzzleElement}
+          onClick={createPuzzleElement}
         >
-          <MousePointerClick className="h-4 w-4 mr-2" />
-          {language === 'en' ? 'Add to Canvas' : 'הוסף לקנבס'}
+          {t('puzzle.add.to.canvas')}
         </Button>
       </div>
     </div>

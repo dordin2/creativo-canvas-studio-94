@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { DesignElement, PuzzleType } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -14,7 +13,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Upload, Plus, Trash2, FileCheck, XCircle, Lock, Hash, Languages } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
@@ -26,7 +25,12 @@ const PLACEHOLDER_IMAGES = [
   "https://source.unsplash.com/random/300x200?sig=5"
 ];
 
-const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => {
+interface PuzzlePropertiesProps {
+  element: DesignElement;
+  onUpdateConfig?: (config: any) => void;
+}
+
+const PuzzleProperties: React.FC<PuzzlePropertiesProps> = ({ element, onUpdateConfig }) => {
   const { updateElement, addElement } = useDesignState();
   const { t, language } = useLanguage();
   const [selectedImage, setSelectedImage] = useState<string>("");
@@ -197,6 +201,10 @@ const PuzzleProperties: React.FC<{ element: DesignElement }> = ({ element }) => 
     updateElement(element.id, {
       puzzleConfig: localPuzzleConfig
     });
+    
+    if (onUpdateConfig) {
+      onUpdateConfig(localPuzzleConfig);
+    }
     
     toast.success(t('toast.success.config'));
   };
