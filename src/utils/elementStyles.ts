@@ -55,5 +55,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     cursor: isDragging ? 'grabbing' : 'grab',
     border: 'none',
     zIndex: element.layer,
+    userSelect: 'none', // Prevent selection
+    WebkitUserDrag: 'none', // Prevent default drag in WebKit browsers
   };
 };

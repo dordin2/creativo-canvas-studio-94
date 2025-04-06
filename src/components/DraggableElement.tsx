@@ -34,8 +34,8 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    if (element.type === 'image' && 
-        (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
+    // Prevent default browser drag behavior for images
+    if (element.type === 'image') {
       e.preventDefault();
     }
     
@@ -120,12 +120,7 @@ const DraggableElement = ({ element, isActive, children }: DraggableElementProps
         style={elementStyle}
         onMouseDown={handleMouseDown}
         onDoubleClick={handleTextDoubleClick}
-        onDragOver={(e) => {
-          if (element.type === 'image') {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
+        draggable={false} // Prevent default HTML5 drag
       >
         {childContent}
       </div>

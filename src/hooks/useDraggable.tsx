@@ -54,8 +54,11 @@ export const useDraggable = (elementId: string) => {
       }
     };
 
-    const handleMouseUp = () => {
+    const handleMouseUp = (e: MouseEvent) => {
       setIsDragging(false);
+      
+      // Stop propagation to prevent unwanted behavior
+      e.stopPropagation();
       
       // If we actually dragged (not just clicked), commit the final position to history
       if (isDragStarted.current) {
@@ -74,7 +77,7 @@ export const useDraggable = (elementId: string) => {
     };
 
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove, { passive: true });
+      window.addEventListener('mousemove', handleMouseMove, { passive: false });
       window.addEventListener('mouseup', handleMouseUp);
     }
 
@@ -91,7 +94,10 @@ export const useDraggable = (elementId: string) => {
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
+    // Prevent default browser behavior
+    e.preventDefault();
     e.stopPropagation();
+    
     setIsDragging(true);
     startPosition.current = { x: e.clientX, y: e.clientY };
     elementInitialPos.current = initialPosition;

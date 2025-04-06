@@ -33,11 +33,13 @@ const ElementControls = ({
       <div
         className="element-frame"
         style={{
+          position: 'absolute',
           left: element.position.x,
           top: element.position.y,
           width: elementDimensions.width,
           height: elementDimensions.height,
           transform: frameTransform,
+          border: '1px solid #8B5CF6',
           pointerEvents: 'none',
           zIndex: 1000 + element.layer,
         }}

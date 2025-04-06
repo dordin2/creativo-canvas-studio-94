@@ -267,7 +267,8 @@ const Canvas = () => {
                     style={{ 
                       objectFit: 'contain', 
                       width: '100%', 
-                      height: '100%'
+                      height: '100%',
+                      pointerEvents: 'none'
                     }}
                   />
                 ) : element.src ? (
@@ -279,7 +280,8 @@ const Canvas = () => {
                     style={{ 
                       objectFit: 'contain', 
                       width: '100%', 
-                      height: '100%'
+                      height: '100%',
+                      pointerEvents: 'none'
                     }}
                   />
                 ) : (
