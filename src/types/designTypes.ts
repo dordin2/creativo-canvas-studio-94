@@ -1,3 +1,4 @@
+
 import { CSSProperties } from "react";
 
 export type ElementType =
@@ -107,6 +108,7 @@ export interface DesignContextType {
   activeCanvasIndex: number;
   elements: DesignElement[];
   activeElement: DesignElement | null;
+  selectedElementIds: string[];
   canvasRef: HTMLDivElement | null;
   isGameMode: boolean;
   toggleGameMode: () => void;
@@ -114,9 +116,15 @@ export interface DesignContextType {
   addElement: (type: ElementType, props?: any) => DesignElement;
   updateElement: (id: string, updates: Partial<DesignElement>) => void;
   updateElementWithoutHistory: (id: string, updates: Partial<DesignElement>) => void;
+  updateMultipleElements: (elementIds: string[], updateFn: (element: DesignElement) => Partial<DesignElement>) => void;
+  updateMultipleElementsWithoutHistory: (elementIds: string[], updateFn: (element: DesignElement) => Partial<DesignElement>) => void;
   commitToHistory: () => void;
   removeElement: (id: string) => void;
+  removeMultipleElements: (ids: string[]) => void;
   setActiveElement: (element: DesignElement | null) => void;
+  selectElement: (id: string, isMultiSelect?: boolean) => void;
+  selectMultipleElements: (ids: string[]) => void;
+  clearSelection: () => void;
   updateElementLayer: (id: string, newLayer: number) => void;
   getHighestLayer: () => number;
   handleImageUpload: (id: string, file: File) => void;

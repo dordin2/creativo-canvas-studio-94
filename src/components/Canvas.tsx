@@ -3,6 +3,7 @@ import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
 import LayersList from "./LayersList";
+import SelectionArea from "./SelectionArea";
 import { Minus, Plus, RotateCcw } from "lucide-react";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
@@ -15,7 +16,8 @@ const Canvas = () => {
     setCanvasRef, 
     elements, 
     activeElement, 
-    setActiveElement,
+    selectedElementIds,
+    clearSelection,
     handleImageUpload,
     isGameMode
   } = useDesignState();
@@ -90,7 +92,10 @@ const Canvas = () => {
   
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === containerRef.current && !isGameMode) {
-      setActiveElement(null);
+      // If not holding shift, clear the selection
+      if (!e.shiftKey) {
+        clearSelection();
+      }
     }
   };
   
@@ -134,7 +139,7 @@ const Canvas = () => {
       .sort((a, b) => a.layer - b.layer);
     
     return sortedElements.map((element) => {
-      const isActive = activeElement?.id === element.id;
+      const isActive = activeElement?.id === element.id || selectedElementIds.includes(element.id);
       
       switch (element.type) {
         case 'rectangle':
@@ -378,7 +383,7 @@ const Canvas = () => {
             onDrop={!isGameMode ? handleDrop : undefined}
           >
             {renderElements()}
-            
+            {!isGameMode && <SelectionArea canvasRef={containerRef.current} />}
           </div>
         </div>
         
