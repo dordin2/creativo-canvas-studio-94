@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -232,56 +231,26 @@
 
 /* Sequence Puzzle Drag and Drop styles */
 .dragging {
-  opacity: 0.85;
-  transform: scale(1.1);
+  opacity: 0.6;
+  transform: scale(1.05);
   z-index: 100;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-  transition: transform 0.1s ease-out, opacity 0.1s ease-out;
-  pointer-events: none;
 }
 
 .drag-over {
-  border-color: #8B5CF6 !important;
+  border-color: #8B5CF6;
   box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
-  transform: scale(1.05);
-  transition: transform 0.1s ease-out;
+  transform: scale(1.03);
 }
 
-/* Prevent default drag behavior for all elements in the puzzle */
+/* Custom drag ghost image */
 [draggable] {
-  -webkit-user-drag: none;
   user-select: none;
+  -webkit-user-drag: element;
 }
 
-/* Disable text selection during drag */
-.no-select {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-}
-
-/* Custom cursor styles for draggable elements */
-.cursor-grab {
-  cursor: grab;
-}
-
-.cursor-grabbing {
-  cursor: grabbing !important;
-}
-
-/* Hide browser focus outlines on draggable elements */
-[draggable]:focus {
-  outline: none;
-}
-
-/* Animation for successful drop */
-@keyframes success-pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.05); }
-  100% { transform: scale(1); }
-}
-
-.drop-success {
-  animation: success-pulse 0.3s ease-out;
+/* Hide default drag image in Firefox */
+@-moz-document url-prefix() {
+  [draggable] {
+    -moz-user-select: none;
+  }
 }
