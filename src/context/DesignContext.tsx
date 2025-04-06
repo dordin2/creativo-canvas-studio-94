@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { 
@@ -25,7 +24,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   ]);
   const [activeCanvasIndex, setActiveCanvasIndex] = useState<number>(0);
   const [activeElement, setActiveElement] = useState<DesignElement | null>(null);
-  const [selectedElementIds, setSelectedElementIds] = useState<string[]>([]);
   const [canvasRef, setCanvasRefState] = useState<HTMLDivElement | null>(null);
   const [history, setHistory] = useState<Canvas[][]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
@@ -40,7 +38,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setIsGameMode(prev => !prev);
     if (!isGameMode) {
       setActiveElement(null);
-      setSelectedElementIds([]);
     }
   };
   
@@ -73,26 +70,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
       setActiveElement({ ...activeElement, ...updates });
     }
   }, [canvases, activeCanvasIndex, activeElement]);
-
-  const updateMultipleElementsWithoutHistory = useCallback((elementIds: string[], updateFn: (element: DesignElement) => Partial<DesignElement>) => {
-    const updatedCanvases = [...canvases];
-    const activeCanvas = updatedCanvases[activeCanvasIndex];
-    
-    if (!activeCanvas) return;
-    
-    activeCanvas.elements = activeCanvas.elements.map(element => {
-      if (elementIds.includes(element.id)) {
-        return { ...element, ...updateFn(element) };
-      }
-      return element;
-    });
-    
-    setCanvases(updatedCanvases);
-    
-    if (activeElement && elementIds.includes(activeElement.id)) {
-      setActiveElement({ ...activeElement, ...updateFn(activeElement) });
-    }
-  }, [canvases, activeCanvasIndex, activeElement]);
   
   const commitToHistory = useCallback(() => {
     addToHistory(canvases);
@@ -118,7 +95,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
         setCanvases(updatedCanvases);
         addToHistory(updatedCanvases);
         setActiveElement(newElement);
-        setSelectedElementIds([newElement.id]);
         toast.success(`Added new ${type}`);
         return newElement;
       }
@@ -130,7 +106,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
       setCanvases(updatedCanvases);
       addToHistory(updatedCanvases);
       setActiveElement(backgroundElement);
-      setSelectedElementIds([backgroundElement.id]);
       toast.success(`Added new ${type}`);
       return backgroundElement;
     }
@@ -142,7 +117,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setCanvases(updatedCanvases);
     addToHistory(updatedCanvases);
     setActiveElement(newElement);
-    setSelectedElementIds([newElement.id]);
     
     toast.success(`Added new ${type}`);
     return newElement;
@@ -166,27 +140,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     
     if (activeElement && activeElement.id === id) {
       setActiveElement({ ...activeElement, ...updates });
-    }
-  };
-
-  const updateMultipleElements = (elementIds: string[], updateFn: (element: DesignElement) => Partial<DesignElement>) => {
-    const updatedCanvases = [...canvases];
-    const activeCanvas = updatedCanvases[activeCanvasIndex];
-    
-    if (!activeCanvas) return;
-    
-    activeCanvas.elements = activeCanvas.elements.map(element => {
-      if (elementIds.includes(element.id)) {
-        return { ...element, ...updateFn(element) };
-      }
-      return element;
-    });
-    
-    setCanvases(updatedCanvases);
-    addToHistory(updatedCanvases);
-    
-    if (activeElement && elementIds.includes(activeElement.id)) {
-      setActiveElement({ ...activeElement, ...updateFn(activeElement) });
     }
   };
   
@@ -227,30 +180,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     if (activeElement && activeElement.id === id) {
       setActiveElement(null);
     }
-
-    // Remove from selected elements
-    setSelectedElementIds(prev => prev.filter(elementId => elementId !== id));
-  };
-
-  const removeMultipleElements = (ids: string[]) => {
-    const updatedCanvases = [...canvases];
-    const activeCanvas = updatedCanvases[activeCanvasIndex];
-    
-    if (!activeCanvas) return;
-    
-    activeCanvas.elements = activeCanvas.elements.filter(element => !ids.includes(element.id));
-    
-    setCanvases(updatedCanvases);
-    addToHistory(updatedCanvases);
-    
-    if (activeElement && ids.includes(activeElement.id)) {
-      setActiveElement(null);
-    }
-    
-    // Clear selection
-    setSelectedElementIds([]);
-    
-    toast.success(`Removed ${ids.length} elements`);
   };
   
   const addCanvas = () => {
@@ -265,7 +194,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setActiveCanvasIndex(updatedCanvases.length - 1);
     addToHistory(updatedCanvases);
     setActiveElement(null);
-    setSelectedElementIds([]);
     
     toast.success(t('toast.success.addCanvas') || "Added new canvas");
   };
@@ -288,7 +216,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     
     addToHistory(updatedCanvases);
     setActiveElement(null);
-    setSelectedElementIds([]);
     
     toast.success(t('toast.success.removeCanvas') || "Canvas removed");
   };
@@ -297,7 +224,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     if (index >= 0 && index < canvases.length) {
       setActiveCanvasIndex(index);
       setActiveElement(null);
-      setSelectedElementIds([]);
     }
   };
   
@@ -330,7 +256,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setActiveCanvasIndex(index + 1);
     addToHistory(updatedCanvases);
     setActiveElement(null);
-    setSelectedElementIds([]);
     
     toast.success(t('toast.success.duplicateCanvas') || "Canvas duplicated");
   };
@@ -364,53 +289,9 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     if (activeElement && activeElement.id === elementId) {
       setActiveElement(null);
     }
-
-    // Remove from selected elements
-    setSelectedElementIds(prev => prev.filter(id => id !== elementId));
     
     toast.success(`Element moved to ${canvases[targetCanvasIndex].name}`);
   }, [canvases, activeCanvasIndex, elements, activeElement]);
-
-  // Methods for multi-select
-  const selectElement = (id: string, isMultiSelect: boolean = false) => {
-    const element = elements.find(el => el.id === id);
-    if (!element) return;
-
-    setActiveElement(element);
-    
-    if (isMultiSelect) {
-      // Toggle selection
-      setSelectedElementIds(prev => 
-        prev.includes(id) 
-          ? prev.filter(elId => elId !== id)
-          : [...prev, id]
-      );
-    } else {
-      // Set as single selection
-      setSelectedElementIds([id]);
-    }
-  };
-
-  const selectMultipleElements = (ids: string[]) => {
-    if (ids.length === 0) {
-      setActiveElement(null);
-      setSelectedElementIds([]);
-      return;
-    }
-
-    // Set the first element as active for properties panel
-    const firstElement = elements.find(el => el.id === ids[0]);
-    if (firstElement) {
-      setActiveElement(firstElement);
-    }
-    
-    setSelectedElementIds(ids);
-  };
-
-  const clearSelection = () => {
-    setActiveElement(null);
-    setSelectedElementIds([]);
-  };
   
   const reorderCanvases = (sourceIndex: number, targetIndex: number) => {
     if (
@@ -467,19 +348,12 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           setActiveElement(null);
         }
       }
-
-      // Update selected ids
-      const newSelectedIds = selectedElementIds.filter(id => {
-        const activeCanvas = previousState[activeCanvasIndex];
-        return activeCanvas?.elements.some(e => e.id === id);
-      });
-      setSelectedElementIds(newSelectedIds);
       
       toast.success(t('toast.success.undo'));
     } else {
       toast.info(t('toast.info.noMoreUndo'));
     }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t, selectedElementIds]);
+  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
@@ -501,19 +375,12 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
           setActiveElement(null);
         }
       }
-
-      // Update selected ids
-      const newSelectedIds = selectedElementIds.filter(id => {
-        const activeCanvas = nextState[activeCanvasIndex];
-        return activeCanvas?.elements.some(e => e.id === id);
-      });
-      setSelectedElementIds(newSelectedIds);
       
       toast.success(t('toast.success.redo'));
     } else {
       toast.info(t('toast.info.noMoreRedo'));
     }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t, selectedElementIds]);
+  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
   if (history.length === 0 && canvases.length > 0) {
     addToHistory(canvases);
@@ -524,7 +391,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     activeCanvasIndex,
     elements,
     activeElement,
-    selectedElementIds,
     canvasRef,
     isGameMode,
     toggleGameMode,
@@ -532,15 +398,9 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     addElement,
     updateElement,
     updateElementWithoutHistory,
-    updateMultipleElements,
-    updateMultipleElementsWithoutHistory,
     commitToHistory,
     removeElement,
-    removeMultipleElements,
     setActiveElement,
-    selectElement,
-    selectMultipleElements,
-    clearSelection,
     updateElementLayer,
     getHighestLayer: () => getHighestLayer(elements),
     handleImageUpload,

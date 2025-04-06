@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -30,18 +29,7 @@ const DraggableElement = ({ element, isActive, children }: {
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { 
-    updateElement, 
-    selectElement, 
-    removeElement, 
-    removeMultipleElements,
-    addElement, 
-    setActiveCanvas, 
-    canvases, 
-    isGameMode, 
-    selectedElementIds 
-  } = useDesignState();
-  
+  const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases, isGameMode } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -66,7 +54,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
-  const isSelected = selectedElementIds.includes(element.id);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -84,13 +71,12 @@ const DraggableElement = ({ element, isActive, children }: {
       return;
     }
     
-    // Handle multi-selection with shift key
-    selectElement(element.id, e.shiftKey);
+    setActiveElement(element);
     
     if (isEditing) return;
     
     if (!isSequencePuzzleElement) {
-      startDrag(e, element.position, isSelected ? selectedElementIds : [element.id]);
+      startDrag(e, element.position);
       setIsDragging(true);
     }
     
@@ -111,7 +97,7 @@ const DraggableElement = ({ element, isActive, children }: {
         }
       }, 10);
     } else if (isSequencePuzzleElement) {
-      startDrag(e, element.position, [element.id]);
+      startDrag(e, element.position);
       setIsDragging(true);
     } else if (hasInteraction && !isEditing && !isDragging) {
       e.stopPropagation();
@@ -186,13 +172,7 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handleDelete = () => {
-    if (selectedElementIds.length > 1 && selectedElementIds.includes(element.id)) {
-      // Delete all selected elements
-      removeMultipleElements(selectedElementIds);
-    } else {
-      // Just delete this element
-      removeElement(element.id);
-    }
+    removeElement(element.id);
   };
 
   useEffect(() => {
@@ -333,7 +313,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const elementContent = (
     <div
       ref={elementRef}
-      className={`canvas-element ${isSelected ? 'ring-2 ring-primary' : ''}`}
+      className="canvas-element"
       style={{
         ...elementStyle,
         transition: isDragging ? 'none' : 'transform 0.1s ease',
@@ -374,7 +354,7 @@ const DraggableElement = ({ element, isActive, children }: {
           <ContextMenuTrigger asChild>
             <div
               ref={elementRef}
-              className={`canvas-element ${isSelected ? 'ring-2 ring-primary' : ''}`}
+              className="canvas-element"
               style={elementStyle}
               onMouseDown={handleMouseDown}
               onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
@@ -416,13 +396,13 @@ const DraggableElement = ({ element, isActive, children }: {
             </ContextMenuItem>
             <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
               <Trash2 className="h-4 w-4" />
-              <span>{selectedElementIds.length > 1 && isSelected ? `Delete ${selectedElementIds.length} items` : 'Delete'}</span>
+              <span>Delete</span>
             </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
       )}
 
-      {!isGameMode && isActive && (
+      {!isGameMode && (
         <ElementControls
           isActive={isActive}
           element={element}
@@ -430,7 +410,6 @@ const DraggableElement = ({ element, isActive, children }: {
           onResizeStart={handleResizeStart}
           onRotateStart={handleRotateStart}
           showControls={showControls && isActive && !element.isHidden}
-          isMultiSelection={selectedElementIds.length > 1 && isSelected}
         />
       )}
       
