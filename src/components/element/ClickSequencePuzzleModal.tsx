@@ -34,12 +34,16 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({
           </p>
           
           <div className="grid grid-cols-2 gap-4">
-            {config.items?.map((item, index) => (
+            {config.images?.map((image, index) => (
               <div 
                 key={index}
                 className="p-3 bg-gray-100 rounded-md text-center cursor-pointer hover:bg-gray-200 transition-colors"
               >
-                {item}
+                <img 
+                  src={image} 
+                  alt={`Item ${index + 1}`}
+                  className="h-16 w-full object-cover rounded"
+                />
               </div>
             ))}
           </div>
