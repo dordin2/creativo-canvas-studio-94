@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -9,13 +10,20 @@ import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { updateElement, setActiveElement } = useDesignState();
+  const { updateElement, setActiveElement, removeElement } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -77,6 +85,35 @@ const DraggableElement = ({ element, isActive, children }: {
       // The modal is now handled directly in the PuzzleElement component
       // so we don't need to do anything here
     }
+  };
+
+  // Context menu handlers
+  const handleDuplicate = () => {
+    const { addElement } = useDesignState();
+    
+    // Create a duplicate with the same properties but at a slightly offset position
+    const duplicateProps = {
+      ...element,
+      position: {
+        x: element.position.x + 20,
+        y: element.position.y + 20
+      }
+    };
+    
+    // Remove the id to ensure a new one is generated
+    delete (duplicateProps as any).id;
+    
+    addElement(element.type, duplicateProps);
+  };
+
+  const handleToggleVisibility = () => {
+    updateElement(element.id, {
+      isHidden: !element.isHidden
+    });
+  };
+
+  const handleDelete = () => {
+    removeElement(element.id);
   };
 
   useEffect(() => {
@@ -155,34 +192,67 @@ const DraggableElement = ({ element, isActive, children }: {
     );
   }
 
+  // Don't render the element if it's hidden, but still render the controls when active
+  if (element.isHidden && !isActive) {
+    return null;
+  }
+
   return (
     <>
-      <div
-        ref={elementRef}
-        className="canvas-element"
-        style={{
-          ...elementStyle,
-          transition: isDragging ? 'none' : 'transform 0.1s ease',
-          transform: element.style?.transform || '',
-          cursor: isDragging ? 'move' : 'grab',
-          willChange: isDragging ? 'transform' : 'auto',
-        }}
-        onMouseDown={handleMouseDown}
-        onDoubleClick={handleTextDoubleClick}
-        draggable={false}
-        onDragStart={(e) => {
-          // Prevent default drag behavior for all elements
-          e.preventDefault();
-        }}
-        onDragOver={(e) => {
-          if (isImageElement || isPuzzleElement) {
-            e.preventDefault();
-            e.stopPropagation();
-          }
-        }}
-      >
-        {childContent}
-      </div>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div
+            ref={elementRef}
+            className="canvas-element"
+            style={{
+              ...elementStyle,
+              transition: isDragging ? 'none' : 'transform 0.1s ease',
+              transform: element.style?.transform || '',
+              cursor: isDragging ? 'move' : 'grab',
+              willChange: isDragging ? 'transform' : 'auto',
+              opacity: element.isHidden ? 0.4 : 1,
+            }}
+            onMouseDown={handleMouseDown}
+            onDoubleClick={handleTextDoubleClick}
+            draggable={false}
+            onDragStart={(e) => {
+              // Prevent default drag behavior for all elements
+              e.preventDefault();
+            }}
+            onDragOver={(e) => {
+              if (isImageElement || isPuzzleElement) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
+            }}
+          >
+            {childContent}
+          </div>
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
+            <Copy className="h-4 w-4" />
+            <span>Duplicate</span>
+          </ContextMenuItem>
+          <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
+            {element.isHidden ? (
+              <>
+                <Eye className="h-4 w-4" />
+                <span>Show</span>
+              </>
+            ) : (
+              <>
+                <EyeOff className="h-4 w-4" />
+                <span>Hide</span>
+              </>
+            )}
+          </ContextMenuItem>
+          <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
+            <Trash2 className="h-4 w-4" />
+            <span>Delete</span>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
 
       <ElementControls
         isActive={isActive}

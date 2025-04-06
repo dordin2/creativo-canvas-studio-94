@@ -1,7 +1,15 @@
 
-import { DesignElement } from "@/context/DesignContext";
+import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { Trash2, Copy, Eye, EyeOff } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
+import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ElementControlsProps {
   isActive: boolean;
@@ -20,9 +28,10 @@ const ElementControls = ({
   onRotateStart,
   showControls
 }: ElementControlsProps) => {
+  const { updateElement, removeElement } = useDesignState();
+  
   if (!showControls || element.type === 'background') return null;
 
-  // Remove the incorrect comparisons
   const showResizeHandles = isActive;
   const showRotationHandle = isActive;
   
@@ -30,6 +39,39 @@ const ElementControls = ({
     width: element.size?.width || 0,
     height: element.size?.height || 0
   };
+
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const { addElement } = useDesignState();
+    
+    // Create a duplicate with the same properties but at a slightly offset position
+    const duplicateProps = {
+      ...element,
+      position: {
+        x: element.position.x + 20,
+        y: element.position.y + 20
+      }
+    };
+    
+    // Remove the id to ensure a new one is generated
+    delete (duplicateProps as any).id;
+    
+    addElement(element.type, duplicateProps);
+  };
+
+  const handleToggleVisibility = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    updateElement(element.id, {
+      isHidden: !element.isHidden
+    });
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    removeElement(element.id);
+  };
+
+  const isVisible = !element.isHidden;
 
   return (
     <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
@@ -43,6 +85,8 @@ const ElementControls = ({
           transform: frameTransform,
           pointerEvents: 'none',
           zIndex: 1000 + element.layer,
+          border: isActive ? '1px solid #6366F1' : 'none',
+          opacity: element.isHidden ? 0.4 : 1,
         }}
       />
       
@@ -68,7 +112,77 @@ const ElementControls = ({
           onRotateStart={onRotateStart}
         />
         
-        {/* Drag handle removed */}
+        {isActive && (
+          <div 
+            className="element-controls"
+            style={{
+              position: 'absolute',
+              top: '-40px',
+              right: '0',
+              display: 'flex',
+              gap: '8px',
+              pointerEvents: 'auto',
+            }}
+          >
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8 bg-white"
+                    onClick={handleDuplicate}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Duplicate</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8 bg-white"
+                    onClick={handleToggleVisibility}
+                  >
+                    {isVisible ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isVisible ? 'Hide' : 'Show'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+            
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8 bg-white text-red-500"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Delete</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        )}
       </div>
     </div>
   );

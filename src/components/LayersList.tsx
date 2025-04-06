@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
-import { Layers, ChevronUp, ChevronDown, Edit, Eye, EyeOff, Trash2 } from "lucide-react";
+import { Layers, ChevronUp, ChevronDown, Edit, Eye, EyeOff, Trash2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/tooltip";
 
 const LayersList = () => {
-  const { elements, activeElement, setActiveElement, updateElementLayer, removeElement } = useDesignState();
+  const { elements, activeElement, setActiveElement, updateElementLayer, updateElement, removeElement } = useDesignState();
   const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
   const [newLayerValue, setNewLayerValue] = useState<number>(0);
 
@@ -44,6 +44,30 @@ const LayersList = () => {
     updateElementLayer(element.id, prevLayer - 1);
   };
 
+  const handleDuplicate = (element: DesignElement) => {
+    const { addElement } = useDesignState();
+    
+    // Create a duplicate with the same properties but at a slightly offset position
+    const duplicateProps = {
+      ...element,
+      position: {
+        x: element.position.x + 20,
+        y: element.position.y + 20
+      }
+    };
+    
+    // Remove the id to ensure a new one is generated
+    delete (duplicateProps as any).id;
+    
+    addElement(element.type, duplicateProps);
+  };
+
+  const toggleVisibility = (element: DesignElement) => {
+    updateElement(element.id, {
+      isHidden: !element.isHidden
+    });
+  };
+
   const getElementTypeName = (type: string): string => {
     return type.charAt(0).toUpperCase() + type.slice(1);
   };
@@ -64,7 +88,7 @@ const LayersList = () => {
               key={element.id}
               className={`p-2 border rounded-md flex items-center justify-between ${
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
-              } cursor-pointer`}
+              } cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
             >
               <div className="flex items-center gap-2">
@@ -104,6 +128,52 @@ const LayersList = () => {
                     <div className="text-xs bg-gray-100 px-2 py-1 rounded">
                       {element.layer}
                     </div>
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              toggleVisibility(element);
+                            }}
+                          >
+                            {element.isHidden ? (
+                              <Eye className="h-3.5 w-3.5" />
+                            ) : (
+                              <EyeOff className="h-3.5 w-3.5" />
+                            )}
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>{element.isHidden ? 'Show' : 'Hide'}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                    
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="h-7 w-7 p-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDuplicate(element);
+                            }}
+                          >
+                            <Copy className="h-3.5 w-3.5" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Duplicate</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                     
                     <TooltipProvider>
                       <Tooltip>

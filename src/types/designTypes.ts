@@ -1,68 +1,19 @@
-import { v4 as uuidv4 } from "uuid";
+import { PuzzleConfig } from "@/components/element/PuzzleElement";
 
-// Define the types for our design elements
-export type ElementType = 
-  | 'rectangle' 
-  | 'circle' 
-  | 'triangle' 
-  | 'line' 
-  | 'heading' 
-  | 'subheading' 
-  | 'paragraph' 
+export type ElementType =
+  | 'rectangle'
+  | 'circle'
+  | 'triangle'
+  | 'line'
+  | 'heading'
+  | 'subheading'
+  | 'paragraph'
   | 'image'
   | 'background'
   | 'puzzle'
   | 'sequencePuzzle'
   | 'clickSequencePuzzle'
-  | 'sliderPuzzle'; // Add the new slider puzzle type
-
-export type PuzzleType = 'image' | 'number' | 'alphabet';
-export type SliderOrientation = 'horizontal' | 'vertical';
-
-export interface PuzzleConfiguration {
-  name: string;
-  type: PuzzleType;
-  placeholders: number;
-  images: string[];
-  solution: number[];
-  // For number puzzle
-  maxNumber?: number;
-  // For alphabet puzzle
-  maxLetter?: string;
-}
-
-export interface SequencePuzzleConfiguration {
-  name: string;
-  images: string[];
-  // The solution is the correct order of images (array of indices)
-  solution: number[];
-  // The current order of images (array of indices)
-  currentOrder: number[];
-}
-
-// New configuration type for Click Sequence Puzzle
-export interface ClickSequencePuzzleConfiguration {
-  name: string;
-  images: string[];
-  // The solution is the correct order of clicks (array of indices)
-  solution: number[];
-  // The current state of clicks (array tracking which indices have been clicked)
-  clickedIndices: number[];
-}
-
-// New configuration type for Slider Puzzle
-export interface SliderPuzzleConfiguration {
-  name: string;
-  orientation: SliderOrientation;
-  // Number of sliders in the puzzle
-  sliderCount: number;
-  // The solution values for each slider (array of integers)
-  solution: number[];
-  // The current values of each slider (array of integers)
-  currentValues: number[];
-  // Max value for each slider
-  maxValue: number;
-}
+  | 'sliderPuzzle';
 
 export interface DesignElement {
   id: string;
@@ -75,23 +26,13 @@ export interface DesignElement {
     width: number;
     height: number;
   };
-  originalSize?: {  // Added for maintaining aspect ratio during resizing
-    width: number;
-    height: number;
-  };
-  style?: {
-    [key: string]: string | number;
-    transform?: string; // Added for rotation
-  };
+  style?: Record<string, string | number>;
   content?: string;
   src?: string;
-  file?: File; // Added for local file reference
-  dataUrl?: string; // Added for local image preview
-  layer: number; // Added for layer ordering
-  puzzleConfig?: PuzzleConfiguration; // Added for puzzle configuration
-  sequencePuzzleConfig?: SequencePuzzleConfiguration; // Added for sequence puzzle
-  clickSequencePuzzleConfig?: ClickSequencePuzzleConfiguration; // Added for click sequence puzzle
-  sliderPuzzleConfig?: SliderPuzzleConfiguration; // Added for slider puzzle
+  dataUrl?: string;
+  puzzle?: PuzzleConfig;
+  layer: number;
+  isHidden?: boolean;
 }
 
 export interface DesignContextType {
@@ -101,18 +42,15 @@ export interface DesignContextType {
   setCanvasRef: (ref: HTMLDivElement) => void;
   addElement: (type: ElementType, props?: any) => DesignElement;
   updateElement: (id: string, updates: Partial<DesignElement>) => void;
-  updateElementWithoutHistory: (id: string, updates: Partial<DesignElement>) => void; // Added for drag operations
-  commitToHistory: () => void; // Added to record final position after drag
+  updateElementWithoutHistory: (id: string, updates: Partial<DesignElement>) => void;
+  commitToHistory: () => void;
   removeElement: (id: string) => void;
   setActiveElement: (element: DesignElement | null) => void;
-  updateElementLayer: (id: string, newLayer: number) => void; // Added for layer management
-  getHighestLayer: () => number; // Helper to get highest layer
-  handleImageUpload: (id: string, file: File) => void; // Added for file uploads
-  undo: () => void; // Added for history management
-  redo: () => void; // Added for history management
-  canUndo: boolean; // Added to check if undo is available
-  canRedo: boolean; // Added to check if redo is available
+  updateElementLayer: (id: string, newLayer: number) => void;
+  getHighestLayer: () => number;
+  handleImageUpload: (id: string, file: File) => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
 }
-
-// Helper function to generate new unique IDs
-export const generateId = (): string => uuidv4();
