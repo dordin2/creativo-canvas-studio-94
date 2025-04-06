@@ -44,7 +44,6 @@ export const processImageUpload = (
         
         // Provide the processed image data
         onSuccess({ 
-          file, 
           dataUrl, 
           src: undefined, // Clear the external URL when using a local file
           size: {

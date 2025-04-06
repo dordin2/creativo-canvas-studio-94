@@ -1,4 +1,3 @@
-import { PuzzleConfig } from "@/components/element/PuzzleElement";
 
 export type ElementType =
   | 'rectangle'
@@ -15,6 +14,42 @@ export type ElementType =
   | 'clickSequencePuzzle'
   | 'sliderPuzzle';
 
+export type PuzzleType = 'image' | 'number' | 'alphabet';
+export type SliderOrientation = 'horizontal' | 'vertical';
+
+export interface PuzzleConfig {
+  name: string;
+  type: PuzzleType;
+  placeholders: number;
+  images: string[];
+  solution: number[];
+  maxNumber?: number;
+  maxLetter?: string;
+}
+
+export interface SequencePuzzleConfig {
+  name: string;
+  images: string[];
+  solution: number[];
+  currentOrder: number[];
+}
+
+export interface ClickSequencePuzzleConfig {
+  name: string;
+  images: string[];
+  solution: number[];
+  clickedIndices: number[];
+}
+
+export interface SliderPuzzleConfig {
+  name: string;
+  orientation: SliderOrientation;
+  sliderCount: number;
+  solution: number[];
+  currentValues: number[];
+  maxValue: number;
+}
+
 export interface DesignElement {
   id: string;
   type: ElementType;
@@ -30,7 +65,16 @@ export interface DesignElement {
   content?: string;
   src?: string;
   dataUrl?: string;
+  file?: File;
+  originalSize?: {
+    width: number;
+    height: number;
+  };
   puzzle?: PuzzleConfig;
+  puzzleConfig?: PuzzleConfig;
+  sequencePuzzleConfig?: SequencePuzzleConfig;
+  clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
+  sliderPuzzleConfig?: SliderPuzzleConfig;
   layer: number;
   isHidden?: boolean;
 }
@@ -54,3 +98,8 @@ export interface DesignContextType {
   canUndo: boolean;
   canRedo: boolean;
 }
+
+// Helper function to generate unique IDs
+export const generateId = (): string => {
+  return Math.random().toString(36).substring(2, 11);
+};

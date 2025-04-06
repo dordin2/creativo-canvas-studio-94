@@ -10,6 +10,7 @@ import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
+import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -38,6 +39,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
   const isSequencePuzzleElement = element.type === 'sequencePuzzle';
   const isPuzzleElement = element.type === 'puzzle';
+  const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
   const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
 
@@ -156,7 +158,7 @@ const DraggableElement = ({ element, isActive, children }: {
   }, [isDragging]);
 
   const elementStyle = getElementStyle(element, isDragging);
-  const frameTransform = element.style?.transform || 'rotate(0deg)';
+  const frameTransform = element.style?.transform?.toString() || 'rotate(0deg)';
 
   let childContent = children;
   
@@ -179,6 +181,13 @@ const DraggableElement = ({ element, isActive, children }: {
   } else if (element.type === 'sequencePuzzle') {
     childContent = (
       <SequencePuzzleElement
+        element={element}
+        onClick={handlePuzzleClick}
+      />
+    );
+  } else if (element.type === 'clickSequencePuzzle') {
+    childContent = (
+      <ClickSequencePuzzleElement
         element={element}
         onClick={handlePuzzleClick}
       />
@@ -207,7 +216,7 @@ const DraggableElement = ({ element, isActive, children }: {
             style={{
               ...elementStyle,
               transition: isDragging ? 'none' : 'transform 0.1s ease',
-              transform: element.style?.transform || '',
+              transform: element.style?.transform?.toString() || '',
               cursor: isDragging ? 'move' : 'grab',
               willChange: isDragging ? 'transform' : 'auto',
               opacity: element.isHidden ? 0.4 : 1,
