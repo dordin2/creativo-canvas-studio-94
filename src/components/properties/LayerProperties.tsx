@@ -5,8 +5,7 @@ import { Input } from "@/components/ui/input";
 import { useDesignState } from "@/context/DesignContext";
 
 const LayerProperties = ({ element }: { element: DesignElement }) => {
-  const { updateElement, canvases, activeCanvasIndex } = useDesignState();
-  const currentCanvas = canvases[activeCanvasIndex];
+  const { updateElement } = useDesignState();
 
   return (
     <div className="space-y-2">
@@ -24,9 +23,6 @@ const LayerProperties = ({ element }: { element: DesignElement }) => {
         <span className="text-sm text-muted-foreground">
           Higher = on top
         </span>
-      </div>
-      <div className="mt-2 text-sm text-muted-foreground">
-        Canvas: {currentCanvas?.name || 'Current Canvas'}
       </div>
     </div>
   );
