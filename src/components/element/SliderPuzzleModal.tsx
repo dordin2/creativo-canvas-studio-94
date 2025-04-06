@@ -23,6 +23,7 @@ export const SliderPuzzleModal: React.FC<SliderPuzzleModalProps> = ({ element, i
   useEffect(() => {
     if (config) {
       setSliderValues([...config.currentValues]);
+      setIsCorrect(null); // Reset correctness status when modal opens
     }
   }, [config, isOpen]);
   
@@ -33,23 +34,13 @@ export const SliderPuzzleModal: React.FC<SliderPuzzleModalProps> = ({ element, i
     newValues[index] = value[0];
     setSliderValues(newValues);
     
-    // Reset the correctness status when user makes changes
-    if (isCorrect !== null) {
-      setIsCorrect(null);
-    }
-  };
-  
-  const handleCheck = () => {
-    if (!config) return;
-    
-    // Check if the current values match the solution
-    const isCorrectSolution = sliderValues.every((value, index) => value === config.solution[index]);
+    // Automatically check if the solution is correct
+    const isCorrectSolution = newValues.every((val, idx) => val === config.solution[idx]);
     setIsCorrect(isCorrectSolution);
     
-    if (isCorrectSolution) {
+    if (isCorrectSolution && isCorrect === false) {
+      // Only show success toast when transitioning from incorrect to correct
       toast.success("Correct combination!");
-    } else {
-      toast.error("Incorrect combination. Try again!");
     }
   };
   
@@ -112,10 +103,7 @@ export const SliderPuzzleModal: React.FC<SliderPuzzleModalProps> = ({ element, i
         </div>
         
         <DialogFooter className="sm:justify-between">
-          <div className="flex gap-2">
-            <Button variant="secondary" onClick={onClose}>Cancel</Button>
-            <Button variant="secondary" onClick={handleCheck}>Check</Button>
-          </div>
+          <Button variant="secondary" onClick={onClose}>Cancel</Button>
           <Button onClick={handleSave}>Save</Button>
         </DialogFooter>
       </DialogContent>
