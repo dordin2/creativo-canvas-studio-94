@@ -18,7 +18,7 @@ const VideoProperties = ({
 }) => {
   const {
     updateElement,
-    handleImageUpload
+    handleVideoUpload
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
@@ -51,7 +51,7 @@ const VideoProperties = ({
       return;
     }
     
-    handleImageUpload(element.id, file);
+    handleVideoUpload(element.id, file);
     
     // Force video reload by changing key
     setTimeout(() => {

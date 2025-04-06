@@ -125,6 +125,7 @@ export interface DesignContextType {
   updateElementLayer: (id: string, newLayer: number) => void;
   getHighestLayer: () => number;
   handleImageUpload: (id: string, file: File) => void;
+  handleVideoUpload: (id: string, file: File) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
