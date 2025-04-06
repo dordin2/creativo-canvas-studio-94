@@ -1,10 +1,12 @@
 
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo } from "lucide-react";
+import { Download, Share, Undo, Redo, Layers } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import LanguageSwitcher from "./LanguageSwitcher";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import LayersList from "./LayersList";
 
 const Header = () => {
   const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
@@ -88,6 +90,20 @@ const Header = () => {
         >
           <Redo className="h-4 w-4" />
         </Button>
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="gap-2">
+              <Layers className="h-4 w-4" />
+              <span>{language === 'he' ? 'שכבות' : 'Layers'}</span>
+            </Button>
+          </SheetTrigger>
+          <SheetContent side={language === 'he' ? 'right' : 'left'}>
+            <div className="py-6">
+              <h2 className="text-lg font-semibold mb-4">{language === 'he' ? 'שכבות' : 'Layers'}</h2>
+              <LayersList />
+            </div>
+          </SheetContent>
+        </Sheet>
         <Button variant="outline" className="gap-2" onClick={handleShare}>
           <Share className="h-4 w-4" />
           <span>{t('app.share')}</span>
