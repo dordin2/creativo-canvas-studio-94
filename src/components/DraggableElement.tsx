@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { InteractionConfig } from "@/types/designTypes";
@@ -37,7 +36,11 @@ const DraggableElement = ({ element, isActive, children }: {
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [showControls, setShowControls] = useState(false);
   const [showMessage, setShowMessage] = useState(false);
-  const [messageConfig, setMessageConfig] = useState<{ text: string; color?: string; position?: string }>({ text: '' });
+  const [messageConfig, setMessageConfig] = useState<{ 
+    text: string; 
+    color?: string; 
+    position?: 'top' | 'center' | 'bottom' 
+  }>({ text: '' });
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -57,7 +60,6 @@ const DraggableElement = ({ element, isActive, children }: {
     switch (config.type) {
       case 'puzzle':
         if (config.puzzle) {
-          // Open puzzle modal (this will be handled by the puzzle component)
           toast.info("Opening puzzle");
         }
         break;
@@ -104,7 +106,6 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing) return;
     
-    // Only sequence puzzle requires double-click, regular puzzle gets single-click like images
     if (!isSequencePuzzleElement) {
       startDrag(e, element.position);
       setIsDragging(true);
@@ -123,7 +124,6 @@ const DraggableElement = ({ element, isActive, children }: {
         }
       }, 10);
     } else if (isSequencePuzzleElement) {
-      // For sequence puzzle elements, start drag only on double click
       startDrag(e, element.position);
       setIsDragging(true);
     } else if (element.isInteractive) {
@@ -135,14 +135,10 @@ const DraggableElement = ({ element, isActive, children }: {
   const handlePuzzleClick = (e: React.MouseEvent) => {
     if (isPuzzleElement && !isDragging) {
       e.stopPropagation();
-      // The modal is now handled directly in the PuzzleElement component
-      // so we don't need to do anything here
     }
   };
 
-  // Context menu handlers
   const handleDuplicate = () => {
-    // Create a duplicate with the same properties but at a slightly offset position
     const duplicateProps = {
       ...element,
       position: {
@@ -151,7 +147,6 @@ const DraggableElement = ({ element, isActive, children }: {
       }
     };
     
-    // Remove the id to ensure a new one is generated
     delete (duplicateProps as any).id;
     
     addElement(element.type, duplicateProps);
@@ -259,7 +254,6 @@ const DraggableElement = ({ element, isActive, children }: {
     );
   }
 
-  // Don't render anything at all if the element is hidden and not active
   if (element.isHidden && !isActive) {
     return null;
   }
@@ -277,13 +271,12 @@ const DraggableElement = ({ element, isActive, children }: {
               transform: element.style?.transform as string || '',
               cursor: isDragging ? 'move' : (element.isInteractive ? 'pointer' : 'grab'),
               willChange: isDragging ? 'transform' : 'auto',
-              opacity: element.isHidden ? 0 : 1, // Changed from 0.4 to 0 for complete invisibility 
+              opacity: element.isHidden ? 0 : 1,
             }}
             onMouseDown={handleMouseDown}
             onDoubleClick={handleTextDoubleClick}
             draggable={false}
             onDragStart={(e) => {
-              // Prevent default drag behavior for all elements
               e.preventDefault();
             }}
             onDragOver={(e) => {
