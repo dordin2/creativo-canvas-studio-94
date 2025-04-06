@@ -4,6 +4,7 @@ import Header from "@/components/Header";
 import Sidebar from "@/components/Sidebar";
 import Canvas from "@/components/Canvas";
 import Properties from "@/components/Properties";
+import CanvasTabs from "@/components/CanvasTabs";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -38,6 +39,7 @@ const Index = () => {
           <Sidebar />
         </div>
         <div className="flex-1 overflow-hidden flex flex-col">
+          <CanvasTabs />
           <Canvas />
         </div>
         <div className="flex-shrink-0 w-80">
