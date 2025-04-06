@@ -66,18 +66,22 @@ const Header = () => {
   };
 
   return (
-    <header className={`flex justify-between items-center py-4 px-6 border-b ${language === 'he' ? 'rtl' : 'ltr'}`}>
-      <div className="flex items-center gap-2">
-        <div className="font-bold text-xl text-canvas-purple">{t('app.title')}</div>
+    <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
+      <div className="flex items-center gap-3">
+        <div className="font-bold text-xl bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
+          {t('app.title')}
+        </div>
+        <div className="h-6 w-px bg-gray-200 mx-1"></div>
         <LanguageSwitcher />
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
         <Button 
           variant="outline" 
           size="icon" 
           onClick={undo} 
           title={t('app.undo')}
           disabled={!canUndo}
+          className="hover:bg-gray-50"
         >
           <Undo className="h-4 w-4" />
         </Button>
@@ -87,28 +91,30 @@ const Header = () => {
           onClick={redo} 
           title={t('app.redo')}
           disabled={!canRedo}
+          className="hover:bg-gray-50"
         >
           <Redo className="h-4 w-4" />
         </Button>
+        <div className="w-px h-6 bg-gray-200 mx-1"></div>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 hover:bg-gray-50">
               <Layers className="h-4 w-4" />
               <span>{language === 'he' ? 'שכבות' : 'Layers'}</span>
             </Button>
           </SheetTrigger>
-          <SheetContent side={language === 'he' ? 'right' : 'left'}>
+          <SheetContent side={language === 'he' ? 'right' : 'left'} className="w-80">
             <div className="py-6">
-              <h2 className="text-lg font-semibold mb-4">{language === 'he' ? 'שכבות' : 'Layers'}</h2>
+              <h2 className="text-lg font-semibold mb-4 border-b pb-2">{language === 'he' ? 'שכבות' : 'Layers'}</h2>
               <LayersList />
             </div>
           </SheetContent>
         </Sheet>
-        <Button variant="outline" className="gap-2" onClick={handleShare}>
+        <Button variant="outline" className="gap-2 hover:bg-gray-50" onClick={handleShare}>
           <Share className="h-4 w-4" />
           <span>{t('app.share')}</span>
         </Button>
-        <Button className="gap-2" onClick={handleDownload}>
+        <Button className="gap-2 bg-gradient-to-r from-canvas-purple to-canvas-indigo hover:from-canvas-purple-dark hover:to-canvas-indigo hover:shadow-md transition-shadow button-glow" onClick={handleDownload}>
           <Download className="h-4 w-4" />
           <span>{t('app.download')}</span>
         </Button>

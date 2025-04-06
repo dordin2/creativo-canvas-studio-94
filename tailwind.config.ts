@@ -54,6 +54,11 @@ const config = {
           foreground: "hsl(var(--card-foreground))",
         },
         "canvas-purple": "#8B5CF6",
+        "canvas-purple-light": "#A78BFF",
+        "canvas-purple-dark": "#7048D5",
+        "canvas-indigo": "#6366F1",
+        "design-blue": "#1E40AF",
+        "design-blue-light": "#60A5FA",
         // Add sidebar colors
         sidebar: {
           background: "hsl(var(--sidebar-background))",
@@ -80,13 +85,28 @@ const config = {
           from: { height: "var(--radix-accordion-content-height)" },
           to: { height: "0" },
         },
+        "pulse-subtle": {
+          "0%, 100%": { opacity: "1" },
+          "50%": { opacity: "0.85" },
+        },
+        "float": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-5px)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
+        "pulse-subtle": "pulse-subtle 4s ease-in-out infinite",
+        "float": "float 3s ease-in-out infinite",
       },
       fontFamily: {
         inter: ["Inter", "sans-serif"],
+      },
+      boxShadow: {
+        "element": "0 4px 12px rgba(0, 0, 0, 0.08)",
+        "canvas": "0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.08)",
+        "glow": "0 0 10px rgba(139, 92, 246, 0.3)",
       },
     },
   },
