@@ -14,7 +14,7 @@ import InteractionMessageModal from "./element/InteractionMessageModal";
 import PuzzleModal from "./element/PuzzleModal";
 import SequencePuzzleModal from "./element/SequencePuzzleModal";
 import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
-import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
+import ClickSequencePuzzleModal from "./ClickSequencePuzzleModal";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -352,7 +352,29 @@ const DraggableElement = ({ element, isActive, children }: {
       ) : (
         <ContextMenu>
           <ContextMenuTrigger asChild>
-            {elementContent}
+            <div
+              ref={elementRef}
+              className="canvas-element"
+              style={elementStyle}
+              onMouseDown={handleMouseDown}
+              onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
+              onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+              draggable={false}
+              onDragStart={(e) => {
+                e.preventDefault();
+              }}
+              onDragOver={(e) => {
+                if ((isImageElement || isPuzzleElement) && !isGameMode) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
+            >
+              {childContent}
+              {showInteractionIndicator && interactionType === 'canvasNavigation' && (
+                <div className={indicatorStyles} title="Click to navigate to another canvas"></div>
+              )}
+            </div>
           </ContextMenuTrigger>
           <ContextMenuContent>
             <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">

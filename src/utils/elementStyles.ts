@@ -52,14 +52,20 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   // Extract rotation from transform to apply it directly at the top level
   const rotation = getRotation(element);
   
+  // Use Math.round to ensure consistent positioning
+  const left = Math.round(element.position.x);
+  const top = Math.round(element.position.y);
+  const width = element.size?.width ? Math.round(element.size.width) : undefined;
+  const height = element.size?.height ? Math.round(element.size.height) : undefined;
+  
   // Create a clean object for the style to avoid reference issues
   const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
     position: 'absolute',
-    left: Math.round(element.position.x),
-    top: Math.round(element.position.y),
-    width: element.size?.width,
-    height: element.size?.height,
+    left,
+    top,
+    width,
+    height,
     cursor: isDragging ? 'move' : 'grab',
     border: 'none',
     zIndex: element.layer,
@@ -70,6 +76,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     // Apply hardware acceleration for smoother rendering
     willChange: isDragging ? 'transform' : 'auto',
     transition: isDragging ? 'none' : 'transform 0.05s ease-out',
+    boxSizing: 'border-box',
   };
 
   // Prevent browser's default drag behavior for image elements

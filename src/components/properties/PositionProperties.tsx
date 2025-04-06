@@ -15,7 +15,7 @@ const PositionProperties = ({
     updateElement(element.id, {
       position: {
         ...element.position,
-        x: Number(e.target.value)
+        x: Math.round(Number(e.target.value))
       }
     });
   };
@@ -24,7 +24,7 @@ const PositionProperties = ({
     updateElement(element.id, {
       position: {
         ...element.position,
-        y: Number(e.target.value)
+        y: Math.round(Number(e.target.value))
       }
     });
   };
@@ -35,7 +35,7 @@ const PositionProperties = ({
     updateElement(element.id, {
       size: {
         ...element.size,
-        width: Number(e.target.value)
+        width: Math.round(Number(e.target.value))
       }
     });
   };
@@ -46,7 +46,7 @@ const PositionProperties = ({
     updateElement(element.id, {
       size: {
         ...element.size,
-        height: Number(e.target.value)
+        height: Math.round(Number(e.target.value))
       }
     });
   };
@@ -59,7 +59,7 @@ const PositionProperties = ({
           <Input
             id="position-x"
             type="number"
-            value={element.position.x}
+            value={Math.round(element.position.x)}
             onChange={handleXChange}
           />
         </div>
@@ -68,7 +68,7 @@ const PositionProperties = ({
           <Input
             id="position-y"
             type="number"
-            value={element.position.y}
+            value={Math.round(element.position.y)}
             onChange={handleYChange}
           />
         </div>
@@ -81,7 +81,7 @@ const PositionProperties = ({
             <Input
               id="size-width"
               type="number"
-              value={element.size.width}
+              value={Math.round(element.size.width)}
               onChange={handleWidthChange}
             />
           </div>
@@ -90,7 +90,7 @@ const PositionProperties = ({
             <Input
               id="size-height"
               type="number"
-              value={element.size.height}
+              value={Math.round(element.size.height)}
               onChange={handleHeightChange}
             />
           </div>
