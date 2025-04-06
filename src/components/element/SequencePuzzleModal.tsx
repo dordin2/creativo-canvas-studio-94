@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -21,7 +20,6 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const { t, language } = useLanguage();
   
-  // Use a ref to prevent excessive updates to the global state
   const isInitialized = useRef(false);
   const pendingUpdate = useRef(false);
   const timeoutRef = useRef<number | null>(null);
@@ -35,24 +33,20 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     currentOrder: []
   };
   
-  // Initialize current order when modal opens or puzzle changes
   useEffect(() => {
     if (!isOpen) {
-      // Reset state when modal closes
       setSolved(false);
       setDraggedItem(null);
       isInitialized.current = false;
       return;
     }
     
-    // Only initialize once when the modal opens
     if (!isInitialized.current) {
       let initialOrder: number[];
       
       if (sequencePuzzleConfig.currentOrder.length === sequencePuzzleConfig.images.length) {
         initialOrder = [...sequencePuzzleConfig.currentOrder];
       } else if (sequencePuzzleConfig.images.length > 0) {
-        // Create a shuffled order if there's no current order
         const indices = Array.from({ length: sequencePuzzleConfig.images.length }, (_, i) => i);
         initialOrder = shuffleArray([...indices]);
       } else {
@@ -64,7 +58,6 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     }
   }, [isOpen, sequencePuzzleConfig.images.length]);
   
-  // Check if the puzzle is solved, but avoid updating the global state too frequently
   useEffect(() => {
     if (!isOpen || currentOrder.length === 0 || sequencePuzzleConfig.solution.length === 0) return;
     
@@ -75,16 +68,13 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     if (isSolved && !solved) {
       setSolved(true);
       
-      // Update the element with the current order, but only once
       if (!pendingUpdate.current) {
         pendingUpdate.current = true;
         
-        // Clear any existing timeout
         if (timeoutRef.current !== null) {
           window.clearTimeout(timeoutRef.current);
         }
         
-        // Use a timeout to debounce the update
         timeoutRef.current = window.setTimeout(() => {
           updateElement(element.id, {
             sequencePuzzleConfig: {
@@ -95,12 +85,10 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
           pendingUpdate.current = false;
           timeoutRef.current = null;
           
-          // Show success message
           toast.success(t('toast.success.sequence'), {
-            duration: 2000 // 2 seconds duration
+            duration: 2000
           });
           
-          // Close after delay
           setTimeout(() => {
             onClose();
           }, 2000);
@@ -109,7 +97,6 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     }
   }, [currentOrder, sequencePuzzleConfig.solution, solved, isOpen, onClose, t, element.id, updateElement]);
   
-  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       if (timeoutRef.current !== null) {
@@ -118,7 +105,6 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     };
   }, []);
   
-  // Helper function to shuffle an array
   const shuffleArray = (array: number[]): number[] => {
     for (let i = array.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1));
@@ -127,82 +113,68 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     return array;
   };
   
-  // Handle dragging start with custom image
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
     e.stopPropagation();
     
-    if (dragImageRef.current) {
-      // Creating a custom drag image
-      const rect = dragImageRef.current.getBoundingClientRect();
-      const offsetX = e.clientX - rect.left;
-      const offsetY = e.clientY - rect.top;
-      
-      // Use the actual image element as drag image for a natural feel
-      e.dataTransfer.setDragImage(dragImageRef.current, offsetX, offsetY);
-    }
+    const dragGhost = document.createElement('div');
+    dragGhost.style.position = 'absolute';
+    dragGhost.style.width = '1px';
+    dragGhost.style.height = '1px';
+    dragGhost.style.top = '-500px';
+    dragGhost.style.opacity = '0';
+    document.body.appendChild(dragGhost);
     
-    // Set drag effect to move for a more natural feel
+    e.dataTransfer.setDragImage(dragGhost, 0, 0);
     e.dataTransfer.effectAllowed = 'move';
     
-    // Store the dragged item index
     setDraggedItem(index);
     dragItemRef.current = e.currentTarget;
     
-    // Add a class to style during dragging
     e.currentTarget.classList.add('dragging');
+    
+    setTimeout(() => {
+      document.body.removeChild(dragGhost);
+    }, 0);
   };
   
-  // Handle drag over to enable dropping
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     
-    // Add visual indication of drop target
     e.currentTarget.classList.add('drag-over');
   };
   
-  // Handle drag leave to reset visual indication
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
     e.currentTarget.classList.remove('drag-over');
   };
   
-  // Handle dropping
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
     e.preventDefault();
     e.currentTarget.classList.remove('drag-over');
     
     if (draggedItem === null) return;
     
-    // Remove the dragging class from the source element
     if (dragItemRef.current) {
       dragItemRef.current.classList.remove('dragging');
     }
     
-    // Make a copy of the current order
     const newOrder = [...currentOrder];
     const draggedItemValue = newOrder[draggedItem];
     
-    // Remove the dragged item from its original position
     newOrder.splice(draggedItem, 1);
-    
-    // Insert it at the target position
     newOrder.splice(targetIndex, 0, draggedItemValue);
     
-    // Update the state
     setCurrentOrder(newOrder);
     setDraggedItem(null);
     dragItemRef.current = null;
     
-    // Only update the global state when completed, not during drag operations
     if (!pendingUpdate.current) {
       pendingUpdate.current = true;
       
-      // Clear any existing timeout
       if (timeoutRef.current !== null) {
         window.clearTimeout(timeoutRef.current);
       }
       
-      // Use a timeout to debounce the update
       timeoutRef.current = window.setTimeout(() => {
         updateElement(element.id, {
           sequencePuzzleConfig: {
@@ -216,33 +188,26 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     }
   };
   
-  // Handle end of drag operation
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
-    // Reset any visual states
     e.currentTarget.classList.remove('dragging');
     
-    // Clear references and state if drag completed without a valid drop
     setDraggedItem(null);
     dragItemRef.current = null;
   };
   
-  // Reset the puzzle
   const handleReset = () => {
     const initialOrder = Array.from({ length: sequencePuzzleConfig.images.length }, (_, i) => i);
     const shuffled = shuffleArray([...initialOrder]);
     setCurrentOrder(shuffled);
     setSolved(false);
     
-    // Update the element with the shuffled order
     if (!pendingUpdate.current) {
       pendingUpdate.current = true;
       
-      // Clear any existing timeout
       if (timeoutRef.current !== null) {
         window.clearTimeout(timeoutRef.current);
       }
       
-      // Use a timeout to debounce the update
       timeoutRef.current = window.setTimeout(() => {
         updateElement(element.id, {
           sequencePuzzleConfig: {
@@ -304,7 +269,8 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                             src={sequencePuzzleConfig.images[imageIndex]}
                             alt={`Image ${imageIndex + 1}`}
                             className="w-full h-full object-cover"
-                            style={{ pointerEvents: 'none' }}
+                            style={{ pointerEvents: 'none', touchAction: 'none', userSelect: 'none', WebkitUserDrag: 'none' }}
+                            draggable={false}
                           />
                         )}
                         <div className="absolute top-0 left-0 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-br">
@@ -331,10 +297,10 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
           ) : (
             <div className="text-center py-10">
               <p className="text-gray-500">
-                {language === 'en' ? 'No images available for this puzzle.' : 'אין תמונות זמינות לפאזל זה.'}
+                {language === 'en' ? 'No images available for this puzzle.' : 'אין תמונות זמינות לפазל זה.'}
               </p>
               <p className="text-sm mt-2">
-                {language === 'en' ? 'Please add images in the puzzle properties.' : 'אנא הוסף תמונות במאפייני הפאזל.'}
+                {language === 'en' ? 'Please add images in the puzzle properties.' : 'אנא הוסף תמונות במאפייני הפ Pazel.'}
               </p>
             </div>
           )}
@@ -343,7 +309,7 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
         {solved && (
           <div className="flex items-center justify-center text-green-500 gap-2 pb-2">
             <CheckCircle className="h-5 w-5" />
-            <span>{language === 'en' ? 'Puzzle solved correctly!' : 'הפאזל נפתר בהצלחה!'}</span>
+            <span>{language === 'en' ? 'Puzzle solved correctly!' : 'הפ Pazel נפתר בהצלחה!'}</span>
           </div>
         )}
       </DialogContent>
