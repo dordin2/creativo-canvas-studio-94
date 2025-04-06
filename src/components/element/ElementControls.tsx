@@ -1,3 +1,4 @@
+
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Trash2, Copy, Eye, EyeOff, Zap, Navigation } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
@@ -106,15 +107,11 @@ const ElementControls = ({
   // Get the current rotation directly from the element style for consistent transforms
   const rotation = getRotation(element);
   
-  // Use exact positioning without rounding to ensure smooth movement
-  const posX = element.position.x;
-  const posY = element.position.y;
-  
-  // Apply the same transformation to the frame as the element has
+  // Apply the same positioning as the element itself without any adjustments
   const frameStyle = {
     position: 'absolute' as const,
-    left: posX,
-    top: posY,
+    left: element.position.x,
+    top: element.position.y,
     width: elementDimensions.width,
     height: elementDimensions.height,
     transform: `rotate(${rotation}deg)`,
@@ -136,8 +133,8 @@ const ElementControls = ({
       <div 
         style={{
           position: 'absolute',
-          left: posX,
-          top: posY,
+          left: element.position.x,
+          top: element.position.y,
           width: elementDimensions.width,
           height: elementDimensions.height,
           transform: `rotate(${rotation}deg)`,
