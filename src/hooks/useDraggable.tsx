@@ -19,9 +19,10 @@ export const useDraggable = (elementId: string) => {
   // Find the current element to access its properties
   const currentElement = elements.find(el => el.id === elementId);
   
-  // Check if this is a puzzle element or image
+  // Check if this is a puzzle element, slider puzzle, or image
   const isPuzzleElement = currentElement?.type === 'puzzle';
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
+  const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
   const isImageElement = currentElement?.type === 'image';
 
   useEffect(() => {
@@ -109,7 +110,7 @@ export const useDraggable = (elementId: string) => {
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
     // Prevent browser's native drag behavior for images and puzzle elements
-    if (isImageElement || isPuzzleElement) {
+    if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
       e.preventDefault();
     }
     

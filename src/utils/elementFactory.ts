@@ -1,5 +1,4 @@
-
-import { ElementType, DesignElement, generateId, PuzzleType } from "@/types/designTypes";
+import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
 // Default positions for new elements
 export const getDefaultPosition = (canvasRef: HTMLDivElement | null) => {
@@ -163,6 +162,39 @@ export const createNewElement = (
           images: [],
           solution: [],
           clickedIndices: []
+        }
+      };
+      
+    case 'sliderPuzzle':
+      const orientation = props?.sliderPuzzleConfig?.orientation || 'horizontal';
+      const sliderCount = props?.sliderPuzzleConfig?.sliderCount || 3;
+      const maxValue = props?.sliderPuzzleConfig?.maxValue || 10;
+      
+      // Generate initial values and solution
+      const initialValues = Array(sliderCount).fill(0);
+      const solution = Array(sliderCount).fill(0).map(() => Math.floor(Math.random() * maxValue));
+      
+      return {
+        id: generateId(),
+        type,
+        position,
+        size: { 
+          width: orientation === 'horizontal' ? 300 : 150, 
+          height: orientation === 'horizontal' ? 150 : 300 
+        },
+        style: { 
+          backgroundColor: '#F0F9FF', // Light blue background
+          borderRadius: '8px', 
+          transform: 'rotate(0deg)' 
+        },
+        layer,
+        sliderPuzzleConfig: props?.sliderPuzzleConfig || {
+          name: props?.name || 'Slider Puzzle',
+          orientation: orientation as SliderOrientation,
+          sliderCount,
+          solution,
+          currentValues: initialValues,
+          maxValue
         }
       };
       

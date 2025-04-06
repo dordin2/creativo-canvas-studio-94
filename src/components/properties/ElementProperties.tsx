@@ -1,54 +1,47 @@
 
-import { DesignElement } from "@/types/designTypes";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useLanguage } from "@/context/LanguageContext";
-import ShapeProperties from "./ShapeProperties";
+import { DesignElement } from "@/context/DesignContext";
 import TextProperties from "./TextProperties";
+import ShapeProperties from "./ShapeProperties";
 import ImageProperties from "./ImageProperties";
-import PositionProperties from "./PositionProperties";
 import LayerProperties from "./LayerProperties";
+import PositionProperties from "./PositionProperties";
+import RotationProperty from "./RotationProperty";
 import PuzzleProperties from "./PuzzleProperties";
 import SequencePuzzleProperties from "./SequencePuzzleProperties";
 import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
+import SliderPuzzleProperties from "./SliderPuzzleProperties";
 
-const ElementProperties = ({ element }: { element: DesignElement }) => {
-  const { t, language } = useLanguage();
-  
-  const isText = ['heading', 'subheading', 'paragraph'].includes(element.type);
-  const isShape = ['rectangle', 'circle', 'triangle', 'line'].includes(element.type);
-  const isImage = element.type === 'image';
-  const isPuzzle = element.type === 'puzzle';
-  const isSequencePuzzle = element.type === 'sequencePuzzle';
-  const isClickSequencePuzzle = element.type === 'clickSequencePuzzle';
+interface ElementPropertiesProps {
+  element: DesignElement;
+}
+
+const ElementProperties = ({ element }: ElementPropertiesProps) => {
+  const textElements = ['heading', 'subheading', 'paragraph'];
+  const shapeElements = ['rectangle', 'circle', 'triangle', 'line'];
   
   return (
-    <div className={`p-4 ${language === 'he' ? 'rtl' : 'ltr'}`}>
-      <h2 className="text-lg font-medium mb-4">{t('properties.element')}</h2>
+    <div className="properties-panel p-4 space-y-6">
+      <h2 className="text-lg font-semibold mb-4">Properties</h2>
       
-      <Tabs defaultValue="style" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="style">{t('properties.style')}</TabsTrigger>
-          <TabsTrigger value="position">{t('properties.position')}</TabsTrigger>
-          <TabsTrigger value="layer">{t('properties.layer')}</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="style" className="py-4">
-          {isShape && <ShapeProperties element={element} />}
-          {isText && <TextProperties element={element} />}
-          {isImage && <ImageProperties element={element} />}
-          {isPuzzle && <PuzzleProperties element={element} />}
-          {isSequencePuzzle && <SequencePuzzleProperties element={element} />}
-          {isClickSequencePuzzle && <ClickSequencePuzzleProperties element={element} />}
-        </TabsContent>
-        
-        <TabsContent value="position" className="py-4">
-          <PositionProperties element={element} />
-        </TabsContent>
-        
-        <TabsContent value="layer" className="py-4">
-          <LayerProperties element={element} />
-        </TabsContent>
-      </Tabs>
+      <PositionProperties element={element} />
+      
+      {element.size && <RotationProperty element={element} />}
+      
+      {textElements.includes(element.type) && <TextProperties element={element} />}
+      
+      {shapeElements.includes(element.type) && <ShapeProperties element={element} />}
+      
+      {element.type === 'image' && <ImageProperties element={element} />}
+      
+      {element.type === 'puzzle' && <PuzzleProperties element={element} />}
+      
+      {element.type === 'sequencePuzzle' && <SequencePuzzleProperties element={element} />}
+      
+      {element.type === 'clickSequencePuzzle' && <ClickSequencePuzzleProperties element={element} />}
+      
+      {element.type === 'sliderPuzzle' && <SliderPuzzleProperties element={element} />}
+      
+      <LayerProperties element={element} />
     </div>
   );
 };

@@ -1,4 +1,3 @@
-
 import { v4 as uuidv4 } from "uuid";
 
 // Define the types for our design elements
@@ -14,9 +13,11 @@ export type ElementType =
   | 'background'
   | 'puzzle'
   | 'sequencePuzzle'
-  | 'clickSequencePuzzle'; // Add the new click sequence puzzle type
+  | 'clickSequencePuzzle'
+  | 'sliderPuzzle'; // Add the new slider puzzle type
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
+export type SliderOrientation = 'horizontal' | 'vertical';
 
 export interface PuzzleConfiguration {
   name: string;
@@ -49,6 +50,20 @@ export interface ClickSequencePuzzleConfiguration {
   clickedIndices: number[];
 }
 
+// New configuration type for Slider Puzzle
+export interface SliderPuzzleConfiguration {
+  name: string;
+  orientation: SliderOrientation;
+  // Number of sliders in the puzzle
+  sliderCount: number;
+  // The solution values for each slider (array of integers)
+  solution: number[];
+  // The current values of each slider (array of integers)
+  currentValues: number[];
+  // Max value for each slider
+  maxValue: number;
+}
+
 export interface DesignElement {
   id: string;
   type: ElementType;
@@ -76,6 +91,7 @@ export interface DesignElement {
   puzzleConfig?: PuzzleConfiguration; // Added for puzzle configuration
   sequencePuzzleConfig?: SequencePuzzleConfiguration; // Added for sequence puzzle
   clickSequencePuzzleConfig?: ClickSequencePuzzleConfiguration; // Added for click sequence puzzle
+  sliderPuzzleConfig?: SliderPuzzleConfiguration; // Added for slider puzzle
 }
 
 export interface DesignContextType {

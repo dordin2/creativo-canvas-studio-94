@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -9,6 +8,7 @@ import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
+import SliderPuzzleElement from "./element/SliderPuzzleElement";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -30,6 +30,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
   const isSequencePuzzleElement = element.type === 'sequencePuzzle';
   const isPuzzleElement = element.type === 'puzzle';
+  const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -78,9 +79,6 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  // We're removing the handleDragHandleMouseDown function as we no longer need it
-  // since we're removing the drag handle
-
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false);
@@ -96,7 +94,6 @@ const DraggableElement = ({ element, isActive, children }: {
   }, [isDragging]);
 
   useEffect(() => {
-    // Show controls when element is hovered
     const handleMouseEnter = () => {
       setShowControls(true);
     };
@@ -149,6 +146,13 @@ const DraggableElement = ({ element, isActive, children }: {
         onClick={handlePuzzleClick}
       />
     );
+  } else if (element.type === 'sliderPuzzle') {
+    childContent = (
+      <SliderPuzzleElement
+        element={element}
+        onClick={handlePuzzleClick}
+      />
+    );
   }
 
   return (
@@ -186,7 +190,6 @@ const DraggableElement = ({ element, isActive, children }: {
         frameTransform={frameTransform}
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
-        // We remove the onDragHandleMouseDown prop since we're removing the drag handle
         showControls={showControls || isActive || isDragging}
       />
     </>

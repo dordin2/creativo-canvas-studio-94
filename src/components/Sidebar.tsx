@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -11,7 +10,9 @@ import {
   Hash,
   Languages,
   MoveHorizontal,
-  MousePointerClick
+  MousePointerClick,
+  SlidersHorizontal,
+  SlidersVertical
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -96,6 +97,34 @@ const Sidebar = () => {
         images: [],
         solution: [],
         clickedIndices: []
+      }
+    });
+  };
+
+  const handleHorizontalSliderPuzzleClick = () => {
+    addElement('sliderPuzzle', {
+      name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
+      sliderPuzzleConfig: {
+        name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
+        orientation: 'horizontal',
+        sliderCount: 3,
+        solution: [5, 7, 3],
+        currentValues: [0, 0, 0],
+        maxValue: 10
+      }
+    });
+  };
+
+  const handleVerticalSliderPuzzleClick = () => {
+    addElement('sliderPuzzle', {
+      name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
+      sliderPuzzleConfig: {
+        name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
+        orientation: 'vertical',
+        sliderCount: 3,
+        solution: [8, 4, 6],
+        currentValues: [0, 0, 0],
+        maxValue: 10
       }
     });
   };
@@ -196,6 +225,35 @@ const Sidebar = () => {
               <MousePointerClick className="h-5 w-5 text-green-600" />
               <span className="text-xs">{language === 'en' ? 'Click Sequence' : 'רצף קליקים'}</span>
             </Button>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center">
+                  <SlidersHorizontal className="h-5 w-5 text-purple-600" />
+                  <span className="text-xs">{language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים'}</span>
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-60 p-2">
+                <div className="grid gap-2">
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleHorizontalSliderPuzzleClick}
+                  >
+                    <SlidersHorizontal className="h-4 w-4 mr-2 text-purple-600" />
+                    {language === 'en' ? 'Horizontal Sliders' : 'מחוונים אופקיים'}
+                  </Button>
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleVerticalSliderPuzzleClick}
+                  >
+                    <SlidersVertical className="h-4 w-4 mr-2 text-purple-600" />
+                    {language === 'en' ? 'Vertical Sliders' : 'מחוונים אנכיים'}
+                  </Button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </div>
         </TabsContent>
         

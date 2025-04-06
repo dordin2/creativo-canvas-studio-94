@@ -6,6 +6,7 @@ import { Minus, Plus, RotateCcw } from "lucide-react";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
+import SliderPuzzleElement from "./element/SliderPuzzleElement";
 
 const Canvas = () => {
   const { 
@@ -315,6 +316,16 @@ const Canvas = () => {
           return (
             <DraggableElement key={element.id} element={element} isActive={isActive}>
               <ClickSequencePuzzleElement 
+                element={element} 
+                onClick={(e) => e.stopPropagation()} 
+              />
+            </DraggableElement>
+          );
+          
+        case 'sliderPuzzle':
+          return (
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <SliderPuzzleElement 
                 element={element} 
                 onClick={(e) => e.stopPropagation()} 
               />
