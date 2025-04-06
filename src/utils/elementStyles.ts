@@ -60,6 +60,8 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     MozUserSelect: 'none', // For compatibility
     msUserSelect: 'none', // For compatibility
     WebkitTouchCallout: 'none', // Disable callout on iOS
-    WebkitUserDrag: 'none' // Prevent default drag in WebKit browsers
-  };
+    // Remove the problematic WebkitUserDrag property
+    // and use the standard CSS property instead
+    userDrag: 'none' // Standard CSS property
+  } as CSSProperties;
 };
