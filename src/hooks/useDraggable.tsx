@@ -18,6 +18,11 @@ export const useDraggable = (elementId: string) => {
 
   // Find the current element to access its properties
   const currentElement = elements.find(el => el.id === elementId);
+  
+  // Check if this is a puzzle element or image
+  const isPuzzleElement = currentElement?.type === 'puzzle' || 
+                           currentElement?.type === 'sequencePuzzle';
+  const isImageElement = currentElement?.type === 'image';
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -103,8 +108,10 @@ export const useDraggable = (elementId: string) => {
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
-    // Prevent browser's default behavior for all elements
-    e.preventDefault();
+    // For images prevent browser's native drag behavior
+    if (isImageElement) {
+      e.preventDefault();
+    }
     
     e.stopPropagation();
     setIsDragging(true);
