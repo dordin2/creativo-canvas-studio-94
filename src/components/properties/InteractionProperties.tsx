@@ -1,13 +1,10 @@
-
 import React, { useState } from "react";
-import { DesignElement, InteractionType, useDesignState } from "@/context/DesignContext";
+import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { InteractionType, PuzzleType } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { PuzzleType } from "@/types/designTypes";
 import { toast } from "sonner";
 import { AlertCircle, MessageSquare, Music, Puzzle } from "lucide-react";
 
@@ -52,7 +49,6 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
   };
 
   const handlePuzzleTypeChange = (value: string) => {
-    // Here we're copying the existing puzzle configs from the element types
     let newConfig = { ...interactionConfig };
     
     if (value === 'puzzle') {

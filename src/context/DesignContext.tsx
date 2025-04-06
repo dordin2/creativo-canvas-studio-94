@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { 
@@ -5,7 +6,8 @@ import {
   DesignElement, 
   DesignContextType,
   Canvas,
-  generateId
+  generateId,
+  InteractionType
 } from "@/types/designTypes";
 import { 
   getDefaultPosition, 
@@ -334,4 +336,4 @@ export const useDesignState = () => {
   return context;
 };
 
-export type { ElementType, DesignElement };
+export type { ElementType, DesignElement, InteractionType };
