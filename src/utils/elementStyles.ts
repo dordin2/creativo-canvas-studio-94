@@ -47,6 +47,7 @@ export const getTextStyle = (element: DesignElement): CSSProperties => {
 export const getElementStyle = (element: DesignElement, isDragging: boolean): CSSProperties => {
   // Special styles for puzzle elements
   const isPuzzleElement = element.type === 'sequencePuzzle' || element.type === 'puzzle';
+  const isImageElement = element.type === 'image';
   
   const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
@@ -65,7 +66,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   };
 
   // Prevent browser's default drag behavior for image elements
-  if (isPuzzleElement || element.type === 'image') {
+  if (isImageElement) {
     style.userDrag = 'none' as any;
   }
 

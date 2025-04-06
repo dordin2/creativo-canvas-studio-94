@@ -20,9 +20,9 @@ export const useDraggable = (elementId: string) => {
   const currentElement = elements.find(el => el.id === elementId);
   
   // Check if this is a puzzle element or image
-  const isPuzzleOrImage = currentElement?.type === 'puzzle' || 
-                           currentElement?.type === 'sequencePuzzle' || 
-                           currentElement?.type === 'image';
+  const isPuzzleElement = currentElement?.type === 'puzzle' || 
+                           currentElement?.type === 'sequencePuzzle';
+  const isImageElement = currentElement?.type === 'image';
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
@@ -108,8 +108,8 @@ export const useDraggable = (elementId: string) => {
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
-    // Prevent default behavior for puzzle and image elements
-    if (isPuzzleOrImage) {
+    // For images prevent browser's native drag behavior
+    if (isImageElement) {
       e.preventDefault();
     }
     
