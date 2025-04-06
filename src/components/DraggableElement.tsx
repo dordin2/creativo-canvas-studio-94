@@ -44,13 +44,9 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing) return;
     
-    // For puzzle elements, we don't want to start drag immediately on single click
-    // This reverts to the previous behavior where puzzles required double-click 
-    // to activate the drag behavior
-    if (!isPuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
-    }
+    // Start dragging for all elements consistently
+    startDrag(e, element.position);
+    setIsDragging(true);
     
     setStartPos({ x: e.clientX, y: e.clientY });
   };
@@ -64,10 +60,6 @@ const DraggableElement = ({ element, isActive, children }: {
           textInputRef.current.focus();
         }
       }, 10);
-    } else if (isPuzzleElement) {
-      // For puzzle elements, start drag only on double click
-      startDrag(e, element.position);
-      setIsDragging(true);
     }
   };
 
