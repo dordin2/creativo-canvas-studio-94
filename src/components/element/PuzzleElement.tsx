@@ -1,9 +1,8 @@
 
-import React, { useState } from "react";
+import React from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Lock, Hash, Languages } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import PuzzleModal from "./PuzzleModal";
 
 interface PuzzleElementProps {
   element: DesignElement;
@@ -11,19 +10,11 @@ interface PuzzleElementProps {
 }
 
 const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const { t, language } = useLanguage();
+  const { language } = useLanguage();
   
   const handleClick = (e: React.MouseEvent) => {
     // Handle regular element click for selection
     onClick(e);
-    
-    // Then open the puzzle modal
-    setIsModalOpen(true);
-  };
-  
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
   };
   
   const puzzleType = element.puzzleConfig?.type || 'image';
@@ -68,26 +59,18 @@ const PuzzleElement: React.FC<PuzzleElementProps> = ({ element, onClick }) => {
   };
   
   return (
-    <>
-      <div 
-        className={`flex flex-col items-center justify-center w-full h-full p-3 cursor-pointer ${language === 'he' ? 'rtl' : 'ltr'}`}
-        onClick={handleClick}
-      >
-        {getPuzzleIcon()}
-        <p className="text-sm font-medium text-center text-gray-700 line-clamp-2">
-          {element.puzzleConfig?.name || (language === 'en' ? "Puzzle" : "פאזל")}
-        </p>
-        <div className="text-xs text-gray-500 mt-1">
-          {getPuzzleLabel()}: {element.puzzleConfig?.placeholders || 3} {getPlaceholderLabel()}
-        </div>
+    <div 
+      className={`flex flex-col items-center justify-center w-full h-full p-3 cursor-pointer ${language === 'he' ? 'rtl' : 'ltr'}`}
+      onClick={handleClick}
+    >
+      {getPuzzleIcon()}
+      <p className="text-sm font-medium text-center text-gray-700 line-clamp-2">
+        {element.puzzleConfig?.name || (language === 'en' ? "Puzzle" : "פאזל")}
+      </p>
+      <div className="text-xs text-gray-500 mt-1">
+        {getPuzzleLabel()}: {element.puzzleConfig?.placeholders || 3} {getPlaceholderLabel()}
       </div>
-      
-      <PuzzleModal 
-        isOpen={isModalOpen} 
-        onClose={handleCloseModal} 
-        element={element} 
-      />
-    </>
+    </div>
   );
 };
 

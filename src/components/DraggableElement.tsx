@@ -82,7 +82,6 @@ const DraggableElement = ({ element, isActive, children }: {
       case 'sound':
         if (config.sound && config.sound.soundUrl) {
           if (audioRef.current) {
-            // Ensure volume is a valid number between 0 and 1
             const volume = typeof config.sound.volume === 'number' && 
                            !isNaN(config.sound.volume) && 
                            isFinite(config.sound.volume) ? 
@@ -142,7 +141,7 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handlePuzzleClick = (e: React.MouseEvent) => {
-    if (isPuzzleElement && !isDragging) {
+    if ((isPuzzleElement || isSliderPuzzleElement || isClickSequencePuzzleElement) && !isDragging) {
       e.stopPropagation();
     }
   };
@@ -356,7 +355,7 @@ const DraggableElement = ({ element, isActive, children }: {
         onActivateInteraction={handleInteraction}
       />
       
-      {isPuzzleElement && (
+      {element.type === 'puzzle' && (
         <PuzzleModal 
           isOpen={isPuzzleModalOpen} 
           onClose={() => setIsPuzzleModalOpen(false)} 
