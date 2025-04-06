@@ -15,13 +15,10 @@ const SequencePuzzleElement: React.FC<SequencePuzzleElementProps> = ({ element, 
   const { t, language } = useLanguage();
   
   const handleClick = (e: React.MouseEvent) => {
-    // Handle regular element click for selection without opening modal
+    // Handle regular element click for selection
     onClick(e);
-  };
-  
-  const handleDoubleClick = (e: React.MouseEvent) => {
-    // Open the puzzle modal on double click
-    e.stopPropagation();
+    
+    // Then open the puzzle modal
     setIsModalOpen(true);
   };
   
@@ -41,7 +38,6 @@ const SequencePuzzleElement: React.FC<SequencePuzzleElementProps> = ({ element, 
       <div 
         className={`flex flex-col items-center justify-center w-full h-full p-3 cursor-pointer ${language === 'he' ? 'rtl' : 'ltr'}`}
         onClick={handleClick}
-        onDoubleClick={handleDoubleClick}
       >
         <MoveHorizontal className="w-8 h-8 text-blue-700 mb-2" />
         <p className="text-sm font-medium text-center text-gray-700 line-clamp-2">

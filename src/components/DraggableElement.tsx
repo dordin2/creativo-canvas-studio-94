@@ -32,6 +32,9 @@ const DraggableElement = ({ element, isActive, children }: {
   const isPuzzleElement = element.type === 'puzzle';
   const isImageElement = element.type === 'image';
 
+  // This will track if we're interacting with the placeholder or the modal
+  const [isOpeningModal, setIsOpeningModal] = useState(false);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
@@ -45,9 +48,12 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing) return;
     
-    // All elements can be dragged with a single click, including sequence puzzle elements
-    startDrag(e, element.position);
-    setIsDragging(true);
+    // For all element types, including sequencePuzzle placeholder (but not when opening modal)
+    // start drag on single click
+    if (!isOpeningModal) {
+      startDrag(e, element.position);
+      setIsDragging(true);
+    }
     
     setStartPos({ x: e.clientX, y: e.clientY });
   };
@@ -68,7 +74,6 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isPuzzleElement && !isDragging) {
       e.stopPropagation();
       // The modal is now handled directly in the PuzzleElement component
-      // so we don't need to do anything here
     }
   };
 
@@ -137,7 +142,18 @@ const DraggableElement = ({ element, isActive, children }: {
     childContent = (
       <SequencePuzzleElement
         element={element}
-        onClick={handlePuzzleClick}
+        onClick={(e) => {
+          // When we're actually opening the modal, set the flag to prevent dragging
+          setIsOpeningModal(true);
+          
+          // Reset the flag after a short delay
+          setTimeout(() => {
+            setIsOpeningModal(false);
+          }, 300);
+          
+          // Handle the click normally
+          handlePuzzleClick(e);
+        }}
       />
     );
   }
@@ -177,6 +193,7 @@ const DraggableElement = ({ element, isActive, children }: {
         frameTransform={frameTransform}
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
+        // We remove the onDragHandleMouseDown prop since we're removing the drag handle
         showControls={showControls || isActive || isDragging}
       />
     </>
