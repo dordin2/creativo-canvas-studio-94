@@ -49,6 +49,9 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   const isPuzzleElement = element.type === 'sequencePuzzle' || element.type === 'puzzle';
   const isImageElement = element.type === 'image';
   
+  // Extract rotation from transform to apply it directly at the top level
+  const rotation = getRotation(element);
+  
   const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
     position: 'absolute',
@@ -61,8 +64,11 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     zIndex: element.layer,
     touchAction: 'none',
     userSelect: 'none',
-    // Apply hardware acceleration for smoother dragging
-    transform: `translate3d(0, 0, 0) ${element.style?.transform || ''}`.trim(),
+    // Use clean transform with direct rotation to avoid compounding transforms
+    transform: `rotate(${rotation}deg)`,
+    // Apply hardware acceleration for smoother rendering
+    willChange: isDragging ? 'transform' : 'auto',
+    transition: isDragging ? 'none' : 'transform 0.05s ease-out',
   };
 
   // Prevent browser's default drag behavior for image elements

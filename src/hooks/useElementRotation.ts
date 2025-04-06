@@ -6,10 +6,10 @@ import { getRotation } from "@/utils/elementStyles";
 export const useElementRotation = (element: DesignElement, elementRef: React.RefObject<HTMLDivElement>) => {
   const { updateElement } = useDesignState();
   const [isRotating, setIsRotating] = useState(false);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [startAngle, setStartAngle] = useState(0);
   const [centerPos, setCenterPos] = useState({ x: 0, y: 0 });
+  const [startAngle, setStartAngle] = useState(0);
   const lastRotation = useRef(getRotation(element));
+  const lastMouseAngle = useRef(0);
 
   const handleRotateStart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -26,13 +26,14 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
       const initialAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
       
       setCenterPos({ x: centerX, y: centerY });
-      setStartPos({ x: e.clientX, y: e.clientY });
       setStartAngle(initialAngle);
+      lastMouseAngle.current = initialAngle;
       lastRotation.current = getRotation(element);
     }
   };
 
   useEffect(() => {
+    // Ensure element has a transform property
     if (element.style && typeof element.style.transform === 'undefined') {
       updateElement(element.id, {
         style: { ...element.style, transform: "rotate(0deg)" }
@@ -42,38 +43,42 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isRotating) {
-        // Calculate current angle between center and mouse position
-        const currentAngle = Math.atan2(e.clientY - centerPos.y, e.clientX - centerPos.x) * (180 / Math.PI);
-        
-        // Calculate the angle change
-        let angleDiff = currentAngle - startAngle;
-        
-        // Calculate the new absolute rotation by adding the angle change to the starting rotation
-        let newRotation = lastRotation.current + angleDiff;
-        
-        // Round to the nearest degree to reduce jitter
-        newRotation = Math.round(newRotation);
-        
-        // Apply a threshold to avoid tiny movements
-        if (Math.abs(newRotation - lastRotation.current) < 1) {
-          return;
-        }
-        
-        // Update the rotation
-        const newStyle = { 
+      if (!isRotating) return;
+      
+      // Calculate current angle between center and mouse position
+      const currentAngle = Math.atan2(e.clientY - centerPos.y, e.clientX - centerPos.x) * (180 / Math.PI);
+      
+      // Calculate the angle change
+      let angleDiff = currentAngle - lastMouseAngle.current;
+      
+      // Handle the case when the angle crosses the ±180° boundary
+      if (angleDiff > 180) angleDiff -= 360;
+      if (angleDiff < -180) angleDiff += 360;
+      
+      // Apply a threshold to avoid tiny movements that cause jitter
+      if (Math.abs(angleDiff) < 1) return;
+      
+      // Update the rotation by adding the incremental change
+      let newRotation = lastRotation.current + angleDiff;
+      
+      // Round to nearest degree
+      newRotation = Math.round(newRotation);
+      
+      // Update the element's rotation
+      updateElement(element.id, { 
+        style: { 
           ...element.style, 
           transform: `rotate(${newRotation}deg)` 
-        };
-        
-        updateElement(element.id, { style: newStyle });
-      }
+        } 
+      });
+      
+      // Store the current mouse angle for the next movement
+      lastMouseAngle.current = currentAngle;
+      lastRotation.current = newRotation;
     };
 
     const handleMouseUp = () => {
       if (isRotating) {
-        // Update the last rotation value before ending
-        lastRotation.current = getRotation(element);
         setIsRotating(false);
       }
     };
@@ -89,8 +94,6 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
     };
   }, [
     isRotating,
-    startPos,
-    startAngle,
     centerPos,
     element,
     updateElement
