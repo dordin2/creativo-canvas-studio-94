@@ -45,11 +45,9 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing) return;
     
-    // Only sequence puzzle requires double-click, regular puzzle gets single-click like images
-    if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
-    }
+    // All elements can be dragged with a single click, including sequence puzzle elements
+    startDrag(e, element.position);
+    setIsDragging(true);
     
     setStartPos({ x: e.clientX, y: e.clientY });
   };
@@ -63,10 +61,6 @@ const DraggableElement = ({ element, isActive, children }: {
           textInputRef.current.focus();
         }
       }, 10);
-    } else if (isSequencePuzzleElement) {
-      // For sequence puzzle elements, start drag only on double click
-      startDrag(e, element.position);
-      setIsDragging(true);
     }
   };
 
@@ -77,9 +71,6 @@ const DraggableElement = ({ element, isActive, children }: {
       // so we don't need to do anything here
     }
   };
-
-  // We're removing the handleDragHandleMouseDown function as we no longer need it
-  // since we're removing the drag handle
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -171,7 +162,7 @@ const DraggableElement = ({ element, isActive, children }: {
           e.preventDefault();
         }}
         onDragOver={(e) => {
-          if (isImageElement || isPuzzleElement) {
+          if (isImageElement || isPuzzleElement || isSequencePuzzleElement) {
             e.preventDefault();
             e.stopPropagation();
           }
@@ -186,7 +177,6 @@ const DraggableElement = ({ element, isActive, children }: {
         frameTransform={frameTransform}
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
-        // We remove the onDragHandleMouseDown prop since we're removing the drag handle
         showControls={showControls || isActive || isDragging}
       />
     </>
