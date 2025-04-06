@@ -32,9 +32,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const isPuzzleElement = element.type === 'puzzle';
   const isImageElement = element.type === 'image';
 
-  // This will track if we're interacting with the placeholder or the modal
-  const [isOpeningModal, setIsOpeningModal] = useState(false);
-
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
@@ -48,9 +45,8 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing) return;
     
-    // For all element types, including sequencePuzzle placeholder (but not when opening modal)
-    // start drag on single click
-    if (!isOpeningModal) {
+    // Only sequence puzzle requires double-click, regular puzzle gets single-click like images
+    if (!isSequencePuzzleElement) {
       startDrag(e, element.position);
       setIsDragging(true);
     }
@@ -67,6 +63,10 @@ const DraggableElement = ({ element, isActive, children }: {
           textInputRef.current.focus();
         }
       }, 10);
+    } else if (isSequencePuzzleElement) {
+      // For sequence puzzle elements, start drag only on double click
+      startDrag(e, element.position);
+      setIsDragging(true);
     }
   };
 
@@ -74,8 +74,12 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isPuzzleElement && !isDragging) {
       e.stopPropagation();
       // The modal is now handled directly in the PuzzleElement component
+      // so we don't need to do anything here
     }
   };
+
+  // We're removing the handleDragHandleMouseDown function as we no longer need it
+  // since we're removing the drag handle
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -142,18 +146,7 @@ const DraggableElement = ({ element, isActive, children }: {
     childContent = (
       <SequencePuzzleElement
         element={element}
-        onClick={(e) => {
-          // When we're actually opening the modal, set the flag to prevent dragging
-          setIsOpeningModal(true);
-          
-          // Reset the flag after a short delay
-          setTimeout(() => {
-            setIsOpeningModal(false);
-          }, 300);
-          
-          // Handle the click normally
-          handlePuzzleClick(e);
-        }}
+        onClick={handlePuzzleClick}
       />
     );
   }
@@ -178,7 +171,7 @@ const DraggableElement = ({ element, isActive, children }: {
           e.preventDefault();
         }}
         onDragOver={(e) => {
-          if (isImageElement || isPuzzleElement || isSequencePuzzleElement) {
+          if (isImageElement || isPuzzleElement) {
             e.preventDefault();
             e.stopPropagation();
           }
