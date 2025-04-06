@@ -252,6 +252,39 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     toast.success(t('toast.success.duplicateCanvas') || "Canvas duplicated");
   };
   
+  const moveElementToCanvas = useCallback((elementId: string, targetCanvasIndex: number) => {
+    if (
+      targetCanvasIndex < 0 || 
+      targetCanvasIndex >= canvases.length || 
+      targetCanvasIndex === activeCanvasIndex
+    ) {
+      return;
+    }
+    
+    const elementToMove = elements.find(el => el.id === elementId);
+    if (!elementToMove) {
+      return;
+    }
+    
+    const elementCopy = JSON.parse(JSON.stringify(elementToMove));
+    
+    const updatedCanvases = [...canvases];
+    updatedCanvases[targetCanvasIndex].elements.push(elementCopy);
+    
+    updatedCanvases[activeCanvasIndex].elements = updatedCanvases[activeCanvasIndex].elements.filter(
+      el => el.id !== elementId
+    );
+    
+    setCanvases(updatedCanvases);
+    addToHistory(updatedCanvases);
+    
+    if (activeElement && activeElement.id === elementId) {
+      setActiveElement(null);
+    }
+    
+    toast.success(`Element moved to ${canvases[targetCanvasIndex].name}`);
+  }, [canvases, activeCanvasIndex, elements, activeElement]);
+  
   const reorderCanvases = (sourceIndex: number, targetIndex: number) => {
     if (
       sourceIndex < 0 || 
@@ -370,7 +403,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setActiveCanvas,
     updateCanvasName,
     duplicateCanvas,
-    reorderCanvases
+    reorderCanvases,
+    moveElementToCanvas
   };
   
   return (

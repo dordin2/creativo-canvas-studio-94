@@ -127,6 +127,7 @@ export interface DesignContextType {
   updateCanvasName: (id: string, newName: string) => void;
   duplicateCanvas: (index: number) => void;
   reorderCanvases: (sourceIndex: number, targetIndex: number) => void;
+  moveElementToCanvas: (elementId: string, targetCanvasIndex: number) => void;
 }
 
 export const generateId = (): string => {
