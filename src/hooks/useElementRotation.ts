@@ -77,7 +77,38 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
       lastRotation.current = newRotation;
     };
 
-    const handleMouseUp = () => {
+    const handleTouchMove = (e: TouchEvent) => {
+      if (!isRotating || e.touches.length === 0) return;
+      
+      // Get the first touch
+      const touch = e.touches[0];
+      
+      // Calculate current angle between center and touch position
+      const currentAngle = Math.atan2(touch.clientY - centerPos.y, touch.clientX - centerPos.x) * (180 / Math.PI);
+      
+      // Use the same logic as mouse move
+      let angleDiff = currentAngle - lastMouseAngle.current;
+      
+      if (angleDiff > 180) angleDiff -= 360;
+      if (angleDiff < -180) angleDiff += 360;
+      
+      if (Math.abs(angleDiff) < 1) return;
+      
+      let newRotation = lastRotation.current + angleDiff;
+      newRotation = Math.round(newRotation);
+      
+      updateElement(element.id, { 
+        style: { 
+          ...element.style, 
+          transform: `rotate(${newRotation}deg)` 
+        } 
+      });
+      
+      lastMouseAngle.current = currentAngle;
+      lastRotation.current = newRotation;
+    };
+
+    const handleEnd = () => {
       if (isRotating) {
         setIsRotating(false);
       }
@@ -85,12 +116,18 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
 
     if (isRotating) {
       document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
+      document.addEventListener("mouseup", handleEnd);
+      document.addEventListener("touchmove", handleTouchMove);
+      document.addEventListener("touchend", handleEnd);
+      document.addEventListener("touchcancel", handleEnd);
     }
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mouseup", handleEnd);
+      document.removeEventListener("touchmove", handleTouchMove);
+      document.removeEventListener("touchend", handleEnd);
+      document.removeEventListener("touchcancel", handleEnd);
     };
   }, [
     isRotating,
