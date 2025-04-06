@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { 
@@ -16,6 +17,7 @@ import { processImageUpload } from "@/utils/imageUploader";
 import { getHighestLayer, handleBackgroundLayer } from "@/utils/layerUtils";
 import { useLanguage } from "@/context/LanguageContext";
 
+// Create the context with undefined as initial value
 const DesignContext = createContext<DesignContextType | undefined>(undefined);
 
 export const DesignProvider = ({ children }: { children: ReactNode }) => {
@@ -424,6 +426,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
+// Custom hook to use the design context
 export const useDesignState = () => {
   const context = useContext(DesignContext);
   
