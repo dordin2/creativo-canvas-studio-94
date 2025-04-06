@@ -4,12 +4,13 @@ import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { getRotation } from "@/utils/elementStyles";
 
 export const useElementRotation = (element: DesignElement, elementRef: React.RefObject<HTMLDivElement>) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, updateMultipleElements, selectedElementIds, elements } = useDesignState();
   const [isRotating, setIsRotating] = useState(false);
   const [centerPos, setCenterPos] = useState({ x: 0, y: 0 });
   const [startAngle, setStartAngle] = useState(0);
   const lastRotation = useRef(getRotation(element));
   const lastMouseAngle = useRef(0);
+  const initialRotations = useRef<{[id: string]: number}>({});
 
   const handleRotateStart = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -29,6 +30,18 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
       setStartAngle(initialAngle);
       lastMouseAngle.current = initialAngle;
       lastRotation.current = getRotation(element);
+      
+      // Store initial rotations for all selected elements
+      if (selectedElementIds.length > 1) {
+        const rotations: {[id: string]: number} = {};
+        selectedElementIds.forEach(id => {
+          const el = elements.find(e => e.id === id);
+          if (el) {
+            rotations[id] = getRotation(el);
+          }
+        });
+        initialRotations.current = rotations;
+      }
     }
   };
 
@@ -58,23 +71,40 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
       // Apply a threshold to avoid tiny movements that cause jitter
       if (Math.abs(angleDiff) < 1) return;
       
-      // Update the rotation by adding the incremental change
-      let newRotation = lastRotation.current + angleDiff;
-      
-      // Round to nearest degree
-      newRotation = Math.round(newRotation);
-      
-      // Update the element's rotation
-      updateElement(element.id, { 
-        style: { 
-          ...element.style, 
-          transform: `rotate(${newRotation}deg)` 
-        } 
-      });
+      // Multiple selection rotation
+      if (selectedElementIds.length > 1 && selectedElementIds.includes(element.id)) {
+        // Update all selected elements with the same rotation change
+        updateMultipleElements(selectedElementIds, (el) => {
+          const initialRotation = initialRotations.current[el.id] || 0;
+          const newRotation = Math.round(initialRotation + angleDiff);
+          
+          return { 
+            style: { 
+              ...el.style, 
+              transform: `rotate(${newRotation}deg)` 
+            } 
+          };
+        });
+      } else {
+        // Single element rotation
+        // Update the rotation by adding the incremental change
+        let newRotation = lastRotation.current + angleDiff;
+        
+        // Round to nearest degree
+        newRotation = Math.round(newRotation);
+        
+        // Update the element's rotation
+        updateElement(element.id, { 
+          style: { 
+            ...element.style, 
+            transform: `rotate(${newRotation}deg)` 
+          } 
+        });
+      }
       
       // Store the current mouse angle for the next movement
       lastMouseAngle.current = currentAngle;
-      lastRotation.current = newRotation;
+      lastRotation.current += angleDiff;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -94,23 +124,40 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
       
       if (Math.abs(angleDiff) < 1) return;
       
-      let newRotation = lastRotation.current + angleDiff;
-      newRotation = Math.round(newRotation);
-      
-      updateElement(element.id, { 
-        style: { 
-          ...element.style, 
-          transform: `rotate(${newRotation}deg)` 
-        } 
-      });
+      // Handle multi-selection similar to mouse move
+      if (selectedElementIds.length > 1 && selectedElementIds.includes(element.id)) {
+        updateMultipleElements(selectedElementIds, (el) => {
+          const initialRotation = initialRotations.current[el.id] || 0;
+          const newRotation = Math.round(initialRotation + angleDiff);
+          
+          return { 
+            style: { 
+              ...el.style, 
+              transform: `rotate(${newRotation}deg)` 
+            } 
+          };
+        });
+      } else {
+        // Single element rotation
+        let newRotation = lastRotation.current + angleDiff;
+        newRotation = Math.round(newRotation);
+        
+        updateElement(element.id, { 
+          style: { 
+            ...element.style, 
+            transform: `rotate(${newRotation}deg)` 
+          } 
+        });
+      }
       
       lastMouseAngle.current = currentAngle;
-      lastRotation.current = newRotation;
+      lastRotation.current += angleDiff;
     };
 
     const handleEnd = () => {
       if (isRotating) {
         setIsRotating(false);
+        initialRotations.current = {};
       }
     };
 
@@ -133,7 +180,10 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
     isRotating,
     centerPos,
     element,
-    updateElement
+    updateElement,
+    selectedElementIds,
+    updateMultipleElements,
+    elements
   ]);
 
   return {

@@ -15,7 +15,7 @@ interface SelectionRect {
 }
 
 const SelectionArea = ({ canvasRef }: SelectionAreaProps) => {
-  const { elements, selectMultipleElements, clearSelection, isGameMode } = useDesignState();
+  const { elements, selectMultipleElements, clearSelection, isGameMode, selectedElementIds } = useDesignState();
   const [isSelecting, setIsSelecting] = useState(false);
   const [selectionRect, setSelectionRect] = useState<SelectionRect | null>(null);
   const startPosRef = useRef<{ x: number, y: number } | null>(null);
@@ -96,12 +96,26 @@ const SelectionArea = ({ canvasRef }: SelectionAreaProps) => {
     }
     
     // Find all elements that are within the selection area
-    const selectedElements = elements.filter(element => 
+    const newSelectedElements = elements.filter(element => 
       isElementInSelectionArea(element, selectionRect)
     );
     
-    if (selectedElements.length > 0) {
-      selectMultipleElements(selectedElements.map(el => el.id));
+    if (newSelectedElements.length > 0) {
+      // Preserve existing selection if shift key was used
+      if (selectedElementIds.length > 0) {
+        const combinedSelection = [...selectedElementIds];
+        
+        // Add newly selected elements that aren't already selected
+        newSelectedElements.forEach(element => {
+          if (!selectedElementIds.includes(element.id)) {
+            combinedSelection.push(element.id);
+          }
+        });
+        
+        selectMultipleElements(combinedSelection);
+      } else {
+        selectMultipleElements(newSelectedElements.map(el => el.id));
+      }
     }
     
     setIsSelecting(false);
@@ -129,7 +143,7 @@ const SelectionArea = ({ canvasRef }: SelectionAreaProps) => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isSelecting, selectionRect]);
+  }, [isSelecting, selectionRect, selectedElementIds]);
 
   if (!isSelecting || !selectionRect) return null;
 

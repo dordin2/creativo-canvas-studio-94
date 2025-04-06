@@ -3,13 +3,16 @@ import { useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 
 export const useElementResize = (element: DesignElement) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, updateMultipleElements, selectedElementIds } = useDesignState();
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [originalAspectRatio, setOriginalAspectRatio] = useState<number | null>(null);
+  const [initialElementsState, setInitialElementsState] = useState<{
+    [id: string]: { size: { width: number, height: number }, position: { x: number, y: number } }
+  }>({});
 
   const handleResizeStart = (e: React.MouseEvent, direction: string) => {
     e.stopPropagation();
@@ -32,6 +35,27 @@ export const useElementResize = (element: DesignElement) => {
       y: Math.round(element.position.y)
     });
     
+    // Store initial state of all selected elements for multi-selection resize
+    if (selectedElementIds.length > 1) {
+      const elementsState: { [id: string]: any } = {};
+      selectedElementIds.forEach(id => {
+        const el = useDesignState().elements.find(e => e.id === id);
+        if (el) {
+          elementsState[id] = {
+            size: { 
+              width: el.size?.width || 100, 
+              height: el.size?.height || 100 
+            },
+            position: { 
+              x: el.position.x, 
+              y: el.position.y 
+            }
+          };
+        }
+      });
+      setInitialElementsState(elementsState);
+    }
+    
     if (element.type === 'image') {
       setOriginalAspectRatio(width / height);
     } else {
@@ -40,17 +64,77 @@ export const useElementResize = (element: DesignElement) => {
   };
 
   const updateElementSize = (newWidth: number, newHeight: number, newX: number, newY: number) => {
-    // Round values to eliminate sub-pixel rendering issues that cause jumping
-    updateElement(element.id, {
-      size: { 
-        width: Math.round(newWidth), 
-        height: Math.round(newHeight) 
-      },
-      position: { 
-        x: Math.round(newX), 
-        y: Math.round(newY) 
-      }
-    });
+    // Check if we're dealing with multiple selected elements
+    if (selectedElementIds.length > 1 && selectedElementIds.includes(element.id)) {
+      // Calculate scale factors
+      const widthFactor = newWidth / startSize.width;
+      const heightFactor = newHeight / startSize.height;
+      
+      // Calculate position shift
+      const dx = newX - startPosition.x;
+      const dy = newY - startPosition.y;
+      
+      // Update all selected elements
+      updateMultipleElements(selectedElementIds, (el) => {
+        const initialState = initialElementsState[el.id];
+        
+        // Skip if we don't have initial state for this element
+        if (!initialState) return {};
+        
+        const initialWidth = initialState.size.width;
+        const initialHeight = initialState.size.height;
+        const initialX = initialState.position.x;
+        const initialY = initialState.position.y;
+        
+        let newElWidth, newElHeight, newElX, newElY;
+        
+        // Handle different resize directions
+        if (resizeDirection?.includes('e')) {
+          newElWidth = Math.round(initialWidth * widthFactor);
+          newElX = initialX;
+        } else if (resizeDirection?.includes('w')) {
+          newElWidth = Math.round(initialWidth * widthFactor);
+          newElX = initialX + dx;
+        } else {
+          newElWidth = initialWidth;
+          newElX = initialX;
+        }
+        
+        if (resizeDirection?.includes('s')) {
+          newElHeight = Math.round(initialHeight * heightFactor);
+          newElY = initialY;
+        } else if (resizeDirection?.includes('n')) {
+          newElHeight = Math.round(initialHeight * heightFactor);
+          newElY = initialY + dy;
+        } else {
+          newElHeight = initialHeight;
+          newElY = initialY;
+        }
+        
+        return {
+          size: { 
+            width: Math.max(20, newElWidth), 
+            height: Math.max(20, newElHeight) 
+          },
+          position: { 
+            x: Math.round(newElX), 
+            y: Math.round(newElY) 
+          }
+        };
+      });
+    } else {
+      // Single element resize
+      updateElement(element.id, {
+        size: { 
+          width: Math.round(newWidth), 
+          height: Math.round(newHeight) 
+        },
+        position: { 
+          x: Math.round(newX), 
+          y: Math.round(newY) 
+        }
+      });
+    }
   };
 
   useEffect(() => {
@@ -165,6 +249,7 @@ export const useElementResize = (element: DesignElement) => {
     const handleMouseUp = () => {
       setIsResizing(false);
       setResizeDirection(null);
+      setInitialElementsState({});
     };
 
     if (isResizing) {
@@ -184,7 +269,9 @@ export const useElementResize = (element: DesignElement) => {
     resizeDirection, 
     element, 
     updateElement,
-    originalAspectRatio
+    originalAspectRatio,
+    selectedElementIds,
+    initialElementsState
   ]);
 
   return {
