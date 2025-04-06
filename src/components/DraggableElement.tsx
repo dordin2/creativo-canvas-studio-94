@@ -1,6 +1,6 @@
 
 import { useRef, useState, useEffect } from "react";
-import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { DesignElement, useDesignState, InteractionConfig } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
 import { useElementRotation } from "@/hooks/useElementRotation";
@@ -11,13 +11,15 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
+import InteractionMessage from "./element/InteractionMessage";
 import {
   ContextMenu,
   ContextMenuContent,
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff, Zap, ZapOff } from "lucide-react";
+import { toast } from "sonner";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -28,10 +30,13 @@ const DraggableElement = ({ element, isActive, children }: {
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [showControls, setShowControls] = useState(false);
+  const [showMessage, setShowMessage] = useState(false);
+  const [messageConfig, setMessageConfig] = useState<{ text: string; color?: string; position?: string }>({ text: '' });
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -42,6 +47,48 @@ const DraggableElement = ({ element, isActive, children }: {
   const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
   const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
+
+  const handleInteraction = () => {
+    if (!element.isInteractive || !element.interactionConfig) return;
+    
+    const config = element.interactionConfig;
+    
+    switch (config.type) {
+      case 'puzzle':
+        if (config.puzzle) {
+          // Open puzzle modal (this will be handled by the puzzle component)
+          toast.info("Opening puzzle");
+        }
+        break;
+      case 'message':
+        if (config.message) {
+          setMessageConfig({
+            text: config.message.text,
+            color: config.message.color,
+            position: config.message.position
+          });
+          setShowMessage(true);
+          setTimeout(() => {
+            setShowMessage(false);
+          }, config.message.duration);
+        }
+        break;
+      case 'sound':
+        if (config.sound && config.sound.soundUrl) {
+          if (audioRef.current) {
+            audioRef.current.volume = config.sound.volume;
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(err => {
+              console.error("Error playing audio:", err);
+              toast.error("Failed to play sound");
+            });
+          }
+        }
+        break;
+      default:
+        break;
+    }
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -78,6 +125,9 @@ const DraggableElement = ({ element, isActive, children }: {
       // For sequence puzzle elements, start drag only on double click
       startDrag(e, element.position);
       setIsDragging(true);
+    } else if (element.isInteractive) {
+      e.stopPropagation();
+      handleInteraction();
     }
   };
 
@@ -109,6 +159,15 @@ const DraggableElement = ({ element, isActive, children }: {
   const handleToggleVisibility = () => {
     updateElement(element.id, {
       isHidden: !element.isHidden
+    });
+  };
+
+  const handleToggleInteractive = () => {
+    updateElement(element.id, {
+      isInteractive: !element.isInteractive,
+      interactionConfig: element.interactionConfig || {
+        type: 'none'
+      }
     });
   };
 
@@ -210,12 +269,12 @@ const DraggableElement = ({ element, isActive, children }: {
         <ContextMenuTrigger asChild>
           <div
             ref={elementRef}
-            className="canvas-element"
+            className={`canvas-element ${element.isInteractive ? 'cursor-pointer' : ''}`}
             style={{
               ...elementStyle,
               transition: isDragging ? 'none' : 'transform 0.1s ease',
               transform: element.style?.transform as string || '',
-              cursor: isDragging ? 'move' : 'grab',
+              cursor: isDragging ? 'move' : (element.isInteractive ? 'pointer' : 'grab'),
               willChange: isDragging ? 'transform' : 'auto',
               opacity: element.isHidden ? 0 : 1, // Changed from 0.4 to 0 for complete invisibility 
             }}
@@ -234,6 +293,16 @@ const DraggableElement = ({ element, isActive, children }: {
             }}
           >
             {childContent}
+            {showMessage && <InteractionMessage config={messageConfig} />}
+            {element.interactionConfig?.type === 'sound' && 
+              element.interactionConfig.sound?.soundUrl && (
+              <audio 
+                ref={audioRef} 
+                src={element.interactionConfig.sound.soundUrl} 
+                preload="auto"
+                style={{ display: 'none' }} 
+              />
+            )}
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>
@@ -251,6 +320,19 @@ const DraggableElement = ({ element, isActive, children }: {
               <>
                 <EyeOff className="h-4 w-4" />
                 <span>Hide</span>
+              </>
+            )}
+          </ContextMenuItem>
+          <ContextMenuItem onClick={handleToggleInteractive} className="flex items-center gap-2">
+            {element.isInteractive ? (
+              <>
+                <ZapOff className="h-4 w-4" />
+                <span>Disable Interaction</span>
+              </>
+            ) : (
+              <>
+                <Zap className="h-4 w-4" />
+                <span>Enable Interaction</span>
               </>
             )}
           </ContextMenuItem>

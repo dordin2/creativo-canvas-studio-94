@@ -1,6 +1,6 @@
 
 import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { Trash2, Copy, Eye, EyeOff } from "lucide-react";
+import { Trash2, Copy, Eye, EyeOff, Zap, ZapOff } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
 import { Button } from "@/components/ui/button";
@@ -68,12 +68,23 @@ const ElementControls = ({
     });
   };
 
+  const handleToggleInteractive = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    updateElement(element.id, {
+      isInteractive: !element.isInteractive,
+      interactionConfig: element.interactionConfig || {
+        type: 'none'
+      }
+    });
+  };
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     removeElement(element.id);
   };
 
   const isVisible = !element.isHidden;
+  const isInteractive = element.isInteractive;
 
   return (
     <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
@@ -162,6 +173,28 @@ const ElementControls = ({
                 </TooltipTrigger>
                 <TooltipContent>
                   <p>{isVisible ? 'Hide' : 'Show'}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className={`h-8 w-8 ${isInteractive ? 'bg-blue-100' : 'bg-white'}`}
+                    onClick={handleToggleInteractive}
+                  >
+                    {isInteractive ? (
+                      <Zap className="h-4 w-4 text-blue-500" />
+                    ) : (
+                      <ZapOff className="h-4 w-4" />
+                    )}
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{isInteractive ? 'Disable Interaction' : 'Enable Interaction'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
