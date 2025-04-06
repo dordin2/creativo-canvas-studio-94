@@ -1,5 +1,5 @@
 
-import LayersList from "../LayersList";
+import LayersList from "./LayersList";
 import { useDesignState } from "@/context/DesignContext";
 
 const NoElementSelected = () => {
