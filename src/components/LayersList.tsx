@@ -87,7 +87,13 @@ const LayersList = () => {
       case 'sound':
         if (config.sound && config.sound.soundUrl) {
           const audio = new Audio(config.sound.soundUrl);
-          audio.volume = config.sound.volume;
+          // Ensure volume is a valid number between 0 and 1
+          const volume = typeof config.sound.volume === 'number' && 
+                         !isNaN(config.sound.volume) && 
+                         isFinite(config.sound.volume) ? 
+                         Math.min(Math.max(config.sound.volume, 0), 1) : 0.5;
+          
+          audio.volume = volume;
           audio.play().catch(err => {
             console.error("Error playing audio:", err);
             toast.error("Failed to play sound");

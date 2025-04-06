@@ -69,7 +69,7 @@ const DraggableElement = ({ element, isActive, children }: {
           setMessageConfig({
             text: config.message.text,
             color: config.message.color,
-            position: config.message.position
+            position: config.message.position as 'top' | 'center' | 'bottom'
           });
           setShowMessage(true);
           setTimeout(() => {
@@ -80,7 +80,13 @@ const DraggableElement = ({ element, isActive, children }: {
       case 'sound':
         if (config.sound && config.sound.soundUrl) {
           if (audioRef.current) {
-            audioRef.current.volume = config.sound.volume;
+            // Ensure volume is a valid number between 0 and 1
+            const volume = typeof config.sound.volume === 'number' && 
+                           !isNaN(config.sound.volume) && 
+                           isFinite(config.sound.volume) ? 
+                           Math.min(Math.max(config.sound.volume, 0), 1) : 0.5;
+            
+            audioRef.current.volume = volume;
             audioRef.current.currentTime = 0;
             audioRef.current.play().catch(err => {
               console.error("Error playing audio:", err);
