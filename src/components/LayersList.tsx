@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
-import { Layers, Eye, EyeOff, Trash2, Copy } from "lucide-react";
+import { Layers, Eye, EyeOff, Trash2, Copy, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -10,6 +10,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 const LayersList = () => {
   const { 
@@ -62,6 +63,40 @@ const LayersList = () => {
     updateElement(element.id, {
       isHidden: !element.isHidden
     });
+  };
+
+  const handleActivateInteraction = (element: DesignElement) => {
+    if (!element.isInteractive || !element.interactionConfig) return;
+    
+    const config = element.interactionConfig;
+    
+    switch (config.type) {
+      case 'puzzle':
+        if (config.puzzle) {
+          toast.info("Opening puzzle");
+        }
+        break;
+      case 'message':
+        if (config.message) {
+          toast.info(config.message.text, {
+            duration: config.message.duration,
+            style: { color: config.message.color }
+          });
+        }
+        break;
+      case 'sound':
+        if (config.sound && config.sound.soundUrl) {
+          const audio = new Audio(config.sound.soundUrl);
+          audio.volume = config.sound.volume;
+          audio.play().catch(err => {
+            console.error("Error playing audio:", err);
+            toast.error("Failed to play sound");
+          });
+        }
+        break;
+      default:
+        break;
+    }
   };
 
   const getElementTypeName = (type: string): string => {
@@ -190,6 +225,29 @@ const LayersList = () => {
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>
+                    
+                    {element.isInteractive && element.interactionConfig && element.interactionConfig.type !== 'none' && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="h-7 w-7 p-0 text-green-500"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleActivateInteraction(element);
+                              }}
+                            >
+                              <Play className="h-3.5 w-3.5" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Activate Interaction</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
                     
                     <TooltipProvider>
                       <Tooltip>

@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { InteractionConfig } from "@/types/designTypes";
@@ -344,6 +345,7 @@ const DraggableElement = ({ element, isActive, children }: {
         onResizeStart={handleResizeStart}
         onRotateStart={handleRotateStart}
         showControls={showControls && isActive && !element.isHidden}
+        onActivateInteraction={handleInteraction}
       />
     </>
   );
