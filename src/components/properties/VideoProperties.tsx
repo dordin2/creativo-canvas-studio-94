@@ -1,5 +1,5 @@
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Upload } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import RotationProperty from "./RotationProperty";
+import { toast } from "sonner";
 
 const VideoProperties = ({
   element
@@ -21,6 +22,15 @@ const VideoProperties = ({
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
+  const [videoKey, setVideoKey] = useState(Date.now()); // Key to force video reload
+
+  // Update scale value when element changes
+  useEffect(() => {
+    if (element.originalSize && element.size) {
+      const newScaleValue = Math.round((element.size.width / element.originalSize.width) * 100);
+      setScaleValue(newScaleValue);
+    }
+  }, [element.originalSize, element.size]);
 
   const handleVideoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateElement(element.id, {
@@ -28,12 +38,25 @@ const VideoProperties = ({
       dataUrl: undefined,
       file: undefined
     });
+    // Force video reload by changing key
+    setVideoKey(Date.now());
   };
 
   const handleVideoFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
+    
+    if (!file.type.startsWith('video/')) {
+      toast.error('Please select a video file');
+      return;
+    }
+    
     handleImageUpload(element.id, file);
+    
+    // Force video reload by changing key
+    setTimeout(() => {
+      setVideoKey(Date.now());
+    }, 100);
   };
 
   const triggerFileInput = () => {
@@ -59,24 +82,32 @@ const VideoProperties = ({
     updateElement(element.id, {
       videoAutoplay: checked
     });
+    // Force video reload by changing key
+    setVideoKey(Date.now());
   };
 
   const handleMutedChange = (checked: boolean) => {
     updateElement(element.id, {
       videoMuted: checked
     });
+    // Force video reload by changing key
+    setVideoKey(Date.now());
   };
 
   const handleControlsChange = (checked: boolean) => {
     updateElement(element.id, {
       videoControls: checked
     });
+    // Force video reload by changing key
+    setVideoKey(Date.now());
   };
 
   const handleLoopChange = (checked: boolean) => {
     updateElement(element.id, {
       videoLoop: checked
     });
+    // Force video reload by changing key
+    setVideoKey(Date.now());
   };
 
   return (
@@ -165,6 +196,7 @@ const VideoProperties = ({
       {(element.dataUrl || element.src) && (
         <div className="mt-4 border rounded-md p-2 bg-background">
           <video 
+            key={videoKey}
             src={element.dataUrl || element.src} 
             className="w-full h-32 object-contain" 
             controls 

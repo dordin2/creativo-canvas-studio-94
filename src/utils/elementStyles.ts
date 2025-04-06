@@ -61,7 +61,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   const height = element.size?.height;
   
   // Create a clean object for the style to avoid reference issues
-  const style: CSSProperties & { userDrag?: string } = {
+  const style: CSSProperties & { userDrag?: string; WebkitUserDrag?: string; } = {
     ...element.style,
     position: 'absolute',
     left,
@@ -83,7 +83,8 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
 
   // Prevent browser's default drag behavior for image and video elements
   if (isImageElement || isVideoElement) {
-    style.userDrag = 'none' as any;
+    style.userDrag = 'none';
+    style.WebkitUserDrag = 'none'; // For Safari
   }
 
   return style;

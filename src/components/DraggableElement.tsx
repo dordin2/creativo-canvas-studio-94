@@ -22,7 +22,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff, Maximize2 } from "lucide-react";
 import { toast } from "sonner";
 
 const DraggableElement = ({ element, isActive, children }: {
@@ -33,6 +33,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases, isGameMode } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -41,6 +42,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const [showControls, setShowControls] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showPuzzleModal, setShowPuzzleModal] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -51,6 +53,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
   const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
+  const isVideoElement = element.type === 'video';
   
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
@@ -101,6 +104,13 @@ const DraggableElement = ({ element, isActive, children }: {
     };
   }, [isDragging, isGameMode]);
 
+  // Exit fullscreen when switching away from game mode
+  useEffect(() => {
+    if (!isGameMode) {
+      setIsFullscreen(false);
+    }
+  }, [isGameMode]);
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
@@ -111,6 +121,11 @@ const DraggableElement = ({ element, isActive, children }: {
     }
     
     if (isGameMode) {
+      if (isVideoElement) {
+        handleVideoClick(e);
+        return;
+      }
+      
       if (hasInteraction) {
         handleInteraction();
       }
@@ -127,6 +142,27 @@ const DraggableElement = ({ element, isActive, children }: {
     }
     
     setStartPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleVideoClick = (e: React.MouseEvent) => {
+    if (!isGameMode) return;
+    
+    e.stopPropagation();
+    
+    if (hasInteraction) {
+      handleInteraction();
+      return;
+    }
+    
+    setIsFullscreen(!isFullscreen);
+    
+    // If going into fullscreen, try to play the video
+    if (!isFullscreen && videoRef.current) {
+      videoRef.current.play().catch(err => {
+        // Autoplay might be blocked by browser policy
+        console.log('Video autoplay blocked:', err);
+      });
+    }
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
@@ -264,6 +300,42 @@ const DraggableElement = ({ element, isActive, children }: {
         onClick={handlePuzzleClick}
       />
     );
+  } else if (element.type === 'video') {
+    childContent = (
+      <video
+        ref={videoRef}
+        src={element.dataUrl || element.src}
+        className="w-full h-full object-contain"
+        autoPlay={element.videoAutoplay}
+        muted={element.videoMuted !== false} // Default to muted if not specified
+        controls={isGameMode ? element.videoControls !== false : false} // Only show controls in game mode and if not disabled
+        loop={element.videoLoop}
+        playsInline
+        onClick={isGameMode ? handleVideoClick : undefined}
+        onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
+        style={{ 
+          cursor: isGameMode ? 'pointer' : 'grab',
+          pointerEvents: isGameMode ? 'auto' : 'none' // Prevent video controls in edit mode
+        }}
+      />
+    );
+    
+    // Add fullscreen overlay icon for videos in game mode
+    if (isGameMode && !isFullscreen) {
+      childContent = (
+        <>
+          {childContent}
+          <div 
+            className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+            onClick={handleVideoClick}
+          >
+            <div className="bg-black bg-opacity-50 rounded-full p-2">
+              <Maximize2 className="text-white h-6 w-6" />
+            </div>
+          </div>
+        </>
+      );
+    }
   }
 
   const renderPuzzleModal = () => {
@@ -311,6 +383,35 @@ const DraggableElement = ({ element, isActive, children }: {
   const indicatorStyles = interactionType === 'canvasNavigation' ? 
     "absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full animate-pulse" : "";
 
+  // Render fullscreen video
+  if (isGameMode && isVideoElement && isFullscreen) {
+    return (
+      <div
+        className="fixed inset-0 z-50 bg-black flex items-center justify-center"
+        onClick={() => setIsFullscreen(false)}
+      >
+        <video
+          ref={videoRef}
+          src={element.dataUrl || element.src}
+          className="max-w-full max-h-full"
+          autoPlay={true}
+          muted={element.videoMuted !== false}
+          controls={element.videoControls !== false}
+          loop={element.videoLoop}
+          playsInline
+          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking directly on video
+          style={{ width: '90%', height: '90%', objectFit: 'contain' }}
+        />
+        <button
+          className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
+          onClick={() => setIsFullscreen(false)}
+        >
+          <Maximize2 className="h-6 w-6" />
+        </button>
+      </div>
+    );
+  }
+
   const elementContent = (
     <div
       ref={elementRef}
@@ -319,7 +420,7 @@ const DraggableElement = ({ element, isActive, children }: {
         ...elementStyle,
         transition: isDragging ? 'none' : 'transform 0.1s ease',
         cursor: isGameMode 
-          ? (hasInteraction ? 'pointer' : 'default') 
+          ? (hasInteraction || isVideoElement ? 'pointer' : 'default') 
           : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
         willChange: isDragging ? 'transform' : 'auto',
         position: 'relative',
@@ -327,13 +428,13 @@ const DraggableElement = ({ element, isActive, children }: {
       }}
       onMouseDown={handleMouseDown}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
-      onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+      onClick={isGameMode && (hasInteraction || isVideoElement) ? (e) => isVideoElement ? handleVideoClick(e) : handleInteraction() : undefined}
       draggable={false}
       onDragStart={(e) => {
         e.preventDefault();
       }}
       onDragOver={(e) => {
-        if ((isImageElement || isPuzzleElement) && !isGameMode) {
+        if ((isImageElement || isPuzzleElement || isVideoElement) && !isGameMode) {
           e.preventDefault();
           e.stopPropagation();
         }
