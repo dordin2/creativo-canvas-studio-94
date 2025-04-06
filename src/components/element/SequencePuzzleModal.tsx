@@ -297,13 +297,13 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                     className="relative transition-transform"
                   >
                     <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-blue-300 rounded-md overflow-hidden cursor-grab active:cursor-grabbing hover:border-blue-500 bg-white relative">
+                      <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-blue-300 rounded-md overflow-hidden cursor-grab active:cursor-grabbing hover:border-blue-500 bg-white relative flex items-center justify-center">
                         {sequencePuzzleConfig.images[imageIndex] && (
                           <img
                             ref={arrayIndex === draggedItem ? dragImageRef : null}
                             src={sequencePuzzleConfig.images[imageIndex]}
                             alt={`Image ${imageIndex + 1}`}
-                            className="w-full h-full object-cover"
+                            className="max-w-full max-h-full object-contain"
                             style={{ pointerEvents: 'none' }}
                           />
                         )}
