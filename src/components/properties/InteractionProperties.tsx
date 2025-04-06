@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { InteractionType, PuzzleType } from "@/types/designTypes";
@@ -7,6 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { AlertCircle, MessageSquare, Music, Puzzle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import PuzzleProperties from "./PuzzleProperties";
+import SequencePuzzleProperties from "./SequencePuzzleProperties";
+import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
+import SliderPuzzleProperties from "./SliderPuzzleProperties";
 
 interface InteractionPropertiesProps {
   element: DesignElement;
@@ -15,6 +21,7 @@ interface InteractionPropertiesProps {
 const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }) => {
   const { updateElement } = useDesignState();
   const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("config");
   
   const interactionConfig = element.interaction || { 
     type: 'none',
@@ -138,6 +145,45 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     reader.readAsDataURL(file);
   };
 
+  // Creates an element object that resembles a real puzzle element for the puzzle property components
+  const createPuzzleElementProxy = () => {
+    const baseElement = { ...element };
+    
+    if (interactionConfig.puzzleType === 'puzzle' && interactionConfig.puzzleConfig) {
+      baseElement.puzzleConfig = interactionConfig.puzzleConfig;
+    } 
+    else if (interactionConfig.puzzleType === 'sequencePuzzle' && interactionConfig.sequencePuzzleConfig) {
+      baseElement.sequencePuzzleConfig = interactionConfig.sequencePuzzleConfig;
+    }
+    else if (interactionConfig.puzzleType === 'clickSequencePuzzle' && interactionConfig.clickSequencePuzzleConfig) {
+      baseElement.clickSequencePuzzleConfig = interactionConfig.clickSequencePuzzleConfig;
+    }
+    else if (interactionConfig.puzzleType === 'sliderPuzzle' && interactionConfig.sliderPuzzleConfig) {
+      baseElement.sliderPuzzleConfig = interactionConfig.sliderPuzzleConfig;
+    }
+    
+    return baseElement;
+  };
+
+  // Get the appropriate puzzle component based on the puzzle type
+  const getPuzzleConfigComponent = () => {
+    const puzzleType = interactionConfig.puzzleType || 'puzzle';
+    const proxyElement = createPuzzleElementProxy();
+    
+    switch (puzzleType) {
+      case 'puzzle':
+        return <PuzzleProperties element={proxyElement} />;
+      case 'sequencePuzzle':
+        return <SequencePuzzleProperties element={proxyElement} />;
+      case 'clickSequencePuzzle':
+        return <ClickSequencePuzzleProperties element={proxyElement} />;
+      case 'sliderPuzzle':
+        return <SliderPuzzleProperties element={proxyElement} />;
+      default:
+        return <div>Select a puzzle type to configure</div>;
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -171,26 +217,39 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
       </div>
 
       {interactionConfig.type === 'puzzle' && (
-        <div>
-          <Label>Puzzle Type</Label>
-          <Select
-            value={interactionConfig.puzzleType || 'puzzle'}
-            onValueChange={handlePuzzleTypeChange}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select puzzle type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="puzzle">Regular Puzzle</SelectItem>
-              <SelectItem value="sequencePuzzle">Sequence Puzzle</SelectItem>
-              <SelectItem value="clickSequencePuzzle">Click Sequence Puzzle</SelectItem>
-              <SelectItem value="sliderPuzzle">Slider Puzzle</SelectItem>
-            </SelectContent>
-          </Select>
-          <p className="text-xs text-gray-500 mt-1">
-            Configure the puzzle in the Canvas using the regular puzzle properties.
-          </p>
-        </div>
+        <Tabs value={activeTab} onValueChange={setActiveTab}>
+          <TabsList className="w-full">
+            <TabsTrigger value="config">Basic Config</TabsTrigger>
+            <TabsTrigger value="advanced">Puzzle Setup</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="config" className="space-y-4">
+            <div>
+              <Label>Puzzle Type</Label>
+              <Select
+                value={interactionConfig.puzzleType || 'puzzle'}
+                onValueChange={handlePuzzleTypeChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select puzzle type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="puzzle">Regular Puzzle</SelectItem>
+                  <SelectItem value="sequencePuzzle">Sequence Puzzle</SelectItem>
+                  <SelectItem value="clickSequencePuzzle">Click Sequence Puzzle</SelectItem>
+                  <SelectItem value="sliderPuzzle">Slider Puzzle</SelectItem>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                Select the puzzle type, then go to the "Puzzle Setup" tab to configure it.
+              </p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="advanced">
+            {getPuzzleConfigComponent()}
+          </TabsContent>
+        </Tabs>
       )}
 
       {interactionConfig.type === 'message' && (
