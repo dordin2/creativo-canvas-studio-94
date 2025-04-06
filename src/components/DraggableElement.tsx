@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -22,7 +21,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Copy, Trash2, Eye, EyeOff, Maximize2 } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 
 const DraggableElement = ({ element, isActive, children }: {
@@ -33,7 +32,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases, isGameMode } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -42,7 +40,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const [showControls, setShowControls] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showPuzzleModal, setShowPuzzleModal] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -53,63 +50,10 @@ const DraggableElement = ({ element, isActive, children }: {
   const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
   const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
-  const isVideoElement = element.type === 'video';
   
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
-
-  // IMPORTANT: We've moved this check here and are now using conditional rendering
-  // instead of an early return to avoid React hooks errors
-  const shouldRenderElement = !element.isHidden;
-
-  useEffect(() => {
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-
-    if (isDragging) {
-      document.addEventListener("mouseup", handleMouseUp);
-    }
-
-    return () => {
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
-  }, [isDragging]);
-
-  useEffect(() => {
-    const handleMouseEnter = () => {
-      if (!isGameMode) {
-        setShowControls(true);
-      }
-    };
-
-    const handleMouseLeave = () => {
-      if (!isDragging) {
-        setShowControls(false);
-      }
-    };
-
-    const element = elementRef.current;
-    if (element) {
-      element.addEventListener('mouseenter', handleMouseEnter);
-      element.addEventListener('mouseleave', handleMouseLeave);
-    }
-
-    return () => {
-      if (element) {
-        element.removeEventListener('mouseenter', handleMouseEnter);
-        element.removeEventListener('mouseleave', handleMouseLeave);
-      }
-    };
-  }, [isDragging, isGameMode]);
-
-  // Exit fullscreen when switching away from game mode
-  useEffect(() => {
-    if (!isGameMode) {
-      setIsFullscreen(false);
-    }
-  }, [isGameMode]);
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -121,11 +65,6 @@ const DraggableElement = ({ element, isActive, children }: {
     }
     
     if (isGameMode) {
-      if (isVideoElement) {
-        handleVideoClick(e);
-        return;
-      }
-      
       if (hasInteraction) {
         handleInteraction();
       }
@@ -142,27 +81,6 @@ const DraggableElement = ({ element, isActive, children }: {
     }
     
     setStartPos({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleVideoClick = (e: React.MouseEvent) => {
-    if (!isGameMode) return;
-    
-    e.stopPropagation();
-    
-    if (hasInteraction) {
-      handleInteraction();
-      return;
-    }
-    
-    setIsFullscreen(!isFullscreen);
-    
-    // If going into fullscreen, try to play the video
-    if (!isFullscreen && videoRef.current) {
-      videoRef.current.play().catch(err => {
-        // Autoplay might be blocked by browser policy
-        console.log('Video autoplay blocked:', err);
-      });
-    }
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
@@ -257,6 +175,47 @@ const DraggableElement = ({ element, isActive, children }: {
     removeElement(element.id);
   };
 
+  useEffect(() => {
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  useEffect(() => {
+    const handleMouseEnter = () => {
+      if (!isGameMode) {
+        setShowControls(true);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      if (!isDragging) {
+        setShowControls(false);
+      }
+    };
+
+    const element = elementRef.current;
+    if (element) {
+      element.addEventListener('mouseenter', handleMouseEnter);
+      element.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (element) {
+        element.removeEventListener('mouseenter', handleMouseEnter);
+        element.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, [isDragging, isGameMode]);
+
   const elementStyle = getElementStyle(element, isDragging);
   const rotation = getRotation(element);
   const frameTransform = `rotate(${rotation}deg)`;
@@ -300,42 +259,10 @@ const DraggableElement = ({ element, isActive, children }: {
         onClick={handlePuzzleClick}
       />
     );
-  } else if (element.type === 'video') {
-    childContent = (
-      <video
-        ref={videoRef}
-        src={element.dataUrl || element.src}
-        className="w-full h-full object-contain"
-        autoPlay={element.videoAutoplay}
-        muted={element.videoMuted !== false} // Default to muted if not specified
-        controls={isGameMode ? element.videoControls !== false : false} // Only show controls in game mode and if not disabled
-        loop={element.videoLoop}
-        playsInline
-        onClick={isGameMode ? handleVideoClick : undefined}
-        onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
-        style={{ 
-          cursor: isGameMode ? 'pointer' : 'grab',
-          pointerEvents: isGameMode ? 'auto' : 'none' // Prevent video controls in edit mode
-        }}
-      />
-    );
-    
-    // Add fullscreen overlay icon for videos in game mode
-    if (isGameMode && !isFullscreen) {
-      childContent = (
-        <>
-          {childContent}
-          <div 
-            className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
-            onClick={handleVideoClick}
-          >
-            <div className="bg-black bg-opacity-50 rounded-full p-2">
-              <Maximize2 className="text-white h-6 w-6" />
-            </div>
-          </div>
-        </>
-      );
-    }
+  }
+
+  if (element.isHidden && !isActive) {
+    return null;
   }
 
   const renderPuzzleModal = () => {
@@ -383,35 +310,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const indicatorStyles = interactionType === 'canvasNavigation' ? 
     "absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full animate-pulse" : "";
 
-  // Render fullscreen video
-  if (isGameMode && isVideoElement && isFullscreen) {
-    return (
-      <div
-        className="fixed inset-0 z-50 bg-black flex items-center justify-center"
-        onClick={() => setIsFullscreen(false)}
-      >
-        <video
-          ref={videoRef}
-          src={element.dataUrl || element.src}
-          className="max-w-full max-h-full"
-          autoPlay={true}
-          muted={element.videoMuted !== false}
-          controls={element.videoControls !== false}
-          loop={element.videoLoop}
-          playsInline
-          onClick={(e) => e.stopPropagation()} // Prevent closing when clicking directly on video
-          style={{ width: '90%', height: '90%', objectFit: 'contain' }}
-        />
-        <button
-          className="absolute top-4 right-4 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70"
-          onClick={() => setIsFullscreen(false)}
-        >
-          <Maximize2 className="h-6 w-6" />
-        </button>
-      </div>
-    );
-  }
-
   const elementContent = (
     <div
       ref={elementRef}
@@ -420,21 +318,21 @@ const DraggableElement = ({ element, isActive, children }: {
         ...elementStyle,
         transition: isDragging ? 'none' : 'transform 0.1s ease',
         cursor: isGameMode 
-          ? (hasInteraction || isVideoElement ? 'pointer' : 'default') 
+          ? (hasInteraction ? 'pointer' : 'default') 
           : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
         willChange: isDragging ? 'transform' : 'auto',
+        opacity: element.isHidden ? 0 : 1,
         position: 'relative',
-        display: shouldRenderElement ? 'block' : 'none', // Use display:none instead of early return
       }}
       onMouseDown={handleMouseDown}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
-      onClick={isGameMode && (hasInteraction || isVideoElement) ? (e) => isVideoElement ? handleVideoClick(e) : handleInteraction() : undefined}
+      onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
       draggable={false}
       onDragStart={(e) => {
         e.preventDefault();
       }}
       onDragOver={(e) => {
-        if ((isImageElement || isPuzzleElement || isVideoElement) && !isGameMode) {
+        if ((isImageElement || isPuzzleElement) && !isGameMode) {
           e.preventDefault();
           e.stopPropagation();
         }
@@ -454,7 +352,29 @@ const DraggableElement = ({ element, isActive, children }: {
       ) : (
         <ContextMenu>
           <ContextMenuTrigger asChild>
-            {elementContent}
+            <div
+              ref={elementRef}
+              className="canvas-element"
+              style={elementStyle}
+              onMouseDown={handleMouseDown}
+              onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
+              onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+              draggable={false}
+              onDragStart={(e) => {
+                e.preventDefault();
+              }}
+              onDragOver={(e) => {
+                if ((isImageElement || isPuzzleElement) && !isGameMode) {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }
+              }}
+            >
+              {childContent}
+              {showInteractionIndicator && interactionType === 'canvasNavigation' && (
+                <div className={indicatorStyles} title="Click to navigate to another canvas"></div>
+              )}
+            </div>
           </ContextMenuTrigger>
           <ContextMenuContent>
             <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">

@@ -44,7 +44,7 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
       />
       <div 
         className="resize-handle resize-handle-visible cursor-e-resize"
-        style={{ ...handleStyle, top: '50%', right: 0, left: 'auto', transform: 'translate(0, -50%)' }}
+        style={{ ...handleStyle, top: '50%', right: 0, left: 'auto', transform: 'none' }}
         onMouseDown={(e) => onResizeStart(e, "e")}
       />
       <div 
@@ -54,7 +54,7 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
       />
       <div 
         className="resize-handle resize-handle-visible cursor-s-resize"
-        style={{ ...handleStyle, bottom: 0, left: '50%', top: 'auto', transform: 'translate(-50%, 0)' }}
+        style={{ ...handleStyle, bottom: 0, left: '50%', top: 'auto' }}
         onMouseDown={(e) => onResizeStart(e, "s")}
       />
       <div 
@@ -64,7 +64,7 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
       />
       <div 
         className="resize-handle resize-handle-visible cursor-w-resize"
-        style={{ ...handleStyle, top: '50%', left: 0, transform: 'translate(0, -50%)' }}
+        style={{ ...handleStyle, top: '50%', left: 0, transform: 'none' }}
         onMouseDown={(e) => onResizeStart(e, "w")}
       />
     </>

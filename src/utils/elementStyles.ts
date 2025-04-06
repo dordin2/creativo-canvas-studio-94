@@ -48,20 +48,18 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   // Special styles for puzzle elements
   const isPuzzleElement = element.type === 'sequencePuzzle' || element.type === 'puzzle';
   const isImageElement = element.type === 'image';
-  const isVideoElement = element.type === 'video';
   
   // Extract rotation from transform to apply it directly at the top level
   const rotation = getRotation(element);
   
-  // Use exact positioning values to avoid jumpiness during transforms
-  // Only round the values when displaying them in input fields, not in the actual styling
-  const left = element.position.x;
-  const top = element.position.y;
-  const width = element.size?.width;
-  const height = element.size?.height;
+  // Use Math.round to ensure consistent positioning
+  const left = Math.round(element.position.x);
+  const top = Math.round(element.position.y);
+  const width = element.size?.width ? Math.round(element.size.width) : undefined;
+  const height = element.size?.height ? Math.round(element.size.height) : undefined;
   
   // Create a clean object for the style to avoid reference issues
-  const style: CSSProperties & { userDrag?: string; WebkitUserDrag?: string; } = {
+  const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
     position: 'absolute',
     left,
@@ -81,10 +79,9 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     boxSizing: 'border-box',
   };
 
-  // Prevent browser's default drag behavior for image and video elements
-  if (isImageElement || isVideoElement) {
-    style.userDrag = 'none';
-    style.WebkitUserDrag = 'none'; // For Safari
+  // Prevent browser's default drag behavior for image elements
+  if (isImageElement) {
+    style.userDrag = 'none' as any;
   }
 
   return style;
