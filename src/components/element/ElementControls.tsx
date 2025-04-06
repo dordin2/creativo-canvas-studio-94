@@ -25,8 +25,9 @@ const ElementControls = ({
 }: ElementControlsProps) => {
   if (!showControls || element.type === 'background') return null;
 
-  const showResizeHandles = isActive && element.type !== 'background';
-  const showRotationHandle = isActive && element.type !== 'background';
+  // Remove the incorrect comparisons
+  const showResizeHandles = isActive;
+  const showRotationHandle = isActive;
   
   const elementDimensions = {
     width: element.size?.width || 0,
