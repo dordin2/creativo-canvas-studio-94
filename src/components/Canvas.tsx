@@ -7,6 +7,7 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
+import CanvasTabs from "./CanvasTabs";
 
 const Canvas = () => {
   const { 
@@ -345,58 +346,61 @@ const Canvas = () => {
   } : { backgroundColor: 'white' };
   
   return (
-    <div ref={parentRef} className="flex-1 flex items-center justify-center p-4 canvas-workspace relative">
-      <div className="canvas-container" style={{ 
-        transform: `scale(${zoomLevel})`, 
-        transformOrigin: 'center center', 
-        transition: 'transform 0.2s ease-out',
-        position: 'relative',
-        width: 'fit-content',
-        height: 'fit-content'
-      }}>
-        <div
-          ref={containerRef}
-          className={`relative shadow-lg rounded-lg ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
-          style={{
-            width: `${canvasDimensions.width}px`,
-            height: `${canvasDimensions.height}px`,
-            ...backgroundStyle,
-            overflow: 'hidden'
-          }}
-          onClick={handleCanvasClick}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-        >
-          {renderElements()}
+    <div ref={parentRef} className="flex-1 flex flex-col h-full">
+      <CanvasTabs />
+      <div className="flex-1 flex items-center justify-center p-4 canvas-workspace relative">
+        <div className="canvas-container" style={{ 
+          transform: `scale(${zoomLevel})`, 
+          transformOrigin: 'center center', 
+          transition: 'transform 0.2s ease-out',
+          position: 'relative',
+          width: 'fit-content',
+          height: 'fit-content'
+        }}>
+          <div
+            ref={containerRef}
+            className={`relative shadow-lg rounded-lg ${isDraggingOver ? 'ring-2 ring-primary' : ''}`}
+            style={{
+              width: `${canvasDimensions.width}px`,
+              height: `${canvasDimensions.height}px`,
+              ...backgroundStyle,
+              overflow: 'hidden'
+            }}
+            onClick={handleCanvasClick}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+          >
+            {renderElements()}
+          </div>
+          
+          <div 
+            className="element-controls-wrapper"
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: canvasDimensions.width,
+              height: canvasDimensions.height,
+              overflow: 'visible',
+              pointerEvents: 'none',
+              zIndex: 1000,
+            }}
+          />
         </div>
         
-        <div 
-          className="element-controls-wrapper"
-          style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: canvasDimensions.width,
-            height: canvasDimensions.height,
-            overflow: 'visible',
-            pointerEvents: 'none',
-            zIndex: 1000,
-          }}
-        />
-      </div>
-      
-      <div className="zoom-controls">
-        <button onClick={handleZoomOut} title="Zoom Out">
-          <Minus size={16} />
-        </button>
-        <span>{Math.round(zoomLevel * 100)}%</span>
-        <button onClick={handleZoomIn} title="Zoom In">
-          <Plus size={16} />
-        </button>
-        <button onClick={handleResetZoom} title="Reset Zoom">
-          <RotateCcw size={16} />
-        </button>
+        <div className="zoom-controls">
+          <button onClick={handleZoomOut} title="Zoom Out">
+            <Minus size={16} />
+          </button>
+          <span>{Math.round(zoomLevel * 100)}%</span>
+          <button onClick={handleZoomIn} title="Zoom In">
+            <Plus size={16} />
+          </button>
+          <button onClick={handleResetZoom} title="Reset Zoom">
+            <RotateCcw size={16} />
+          </button>
+        </div>
       </div>
     </div>
   );

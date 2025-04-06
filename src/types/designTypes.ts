@@ -80,7 +80,16 @@ export interface DesignElement {
   name?: string;
 }
 
+// New interface for Canvas
+export interface Canvas {
+  id: string;
+  name: string;
+  elements: DesignElement[];
+}
+
 export interface DesignContextType {
+  canvases: Canvas[];
+  activeCanvasIndex: number;
   elements: DesignElement[];
   activeElement: DesignElement | null;
   canvasRef: HTMLDivElement | null;
@@ -98,6 +107,9 @@ export interface DesignContextType {
   redo: () => void;
   canUndo: boolean;
   canRedo: boolean;
+  addCanvas: () => void;
+  removeCanvas: (index: number) => void;
+  setActiveCanvas: (index: number) => void;
 }
 
 // Helper function to generate unique IDs

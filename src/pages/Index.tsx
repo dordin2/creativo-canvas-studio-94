@@ -37,7 +37,7 @@ const Index = () => {
         <div className="flex-shrink-0 w-64">
           <Sidebar />
         </div>
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden flex flex-col">
           <Canvas />
         </div>
         <div className="flex-shrink-0 w-80">
