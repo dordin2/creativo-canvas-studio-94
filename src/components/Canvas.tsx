@@ -370,21 +370,8 @@ const Canvas = () => {
             onDrop={handleDrop}
           >
             {renderElements()}
+            
           </div>
-          
-          <div 
-            className="element-controls-wrapper"
-            style={{
-              position: 'absolute',
-              top: 0,
-              left: 0,
-              width: canvasDimensions.width,
-              height: canvasDimensions.height,
-              overflow: 'visible',
-              pointerEvents: 'none',
-              zIndex: 1000,
-            }}
-          />
         </div>
         
         <div className="zoom-controls">
