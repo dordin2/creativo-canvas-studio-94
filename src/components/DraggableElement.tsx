@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -30,7 +29,7 @@ const DraggableElement = ({ element, isActive, children }: {
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { updateElement, setActiveElement, removeElement, addElement } = useDesignState();
+  const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -116,6 +115,19 @@ const DraggableElement = ({ element, isActive, children }: {
     }
     else if (interactionType === 'puzzle') {
       setShowPuzzleModal(true);
+    }
+    else if (interactionType === 'canvasNavigation' && element.interaction?.targetCanvasId) {
+      // Find the index of the target canvas
+      const targetCanvasIndex = canvases.findIndex(
+        canvas => canvas.id === element.interaction?.targetCanvasId
+      );
+      
+      if (targetCanvasIndex !== -1) {
+        setActiveCanvas(targetCanvasIndex);
+        toast.success(`Navigated to ${canvases[targetCanvasIndex].name}`);
+      } else {
+        toast.error('Target canvas not found');
+      }
     }
   };
 
@@ -284,6 +296,11 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
+  // Add a small indicator for interactive elements with canvas navigation
+  const showInteractionIndicator = hasInteraction && !isActive && !isDragging;
+  const indicatorStyles = interactionType === 'canvasNavigation' ? 
+    "absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full animate-pulse" : "";
+
   return (
     <>
       <ContextMenu>
@@ -298,6 +315,7 @@ const DraggableElement = ({ element, isActive, children }: {
               cursor: isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab'),
               willChange: isDragging ? 'transform' : 'auto',
               opacity: element.isHidden ? 0 : 1, // Changed from 0.4 to 0 for complete invisibility 
+              position: 'relative', // Ensure position relative for the indicator
             }}
             onMouseDown={handleMouseDown}
             onDoubleClick={handleTextDoubleClick}
@@ -314,6 +332,9 @@ const DraggableElement = ({ element, isActive, children }: {
             }}
           >
             {childContent}
+            {showInteractionIndicator && interactionType === 'canvasNavigation' && (
+              <div className={indicatorStyles} title="Click to navigate to another canvas"></div>
+            )}
           </div>
         </ContextMenuTrigger>
         <ContextMenuContent>

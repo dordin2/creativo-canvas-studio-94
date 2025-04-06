@@ -1,6 +1,6 @@
 
 import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { Trash2, Copy, Eye, EyeOff, Zap } from "lucide-react";
+import { Trash2, Copy, Eye, EyeOff, Zap, Navigation } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
 import { Button } from "@/components/ui/button";
@@ -28,7 +28,7 @@ const ElementControls = ({
   onRotateStart,
   showControls
 }: ElementControlsProps) => {
-  const { updateElement, removeElement, addElement } = useDesignState();
+  const { updateElement, removeElement, addElement, canvases } = useDesignState();
   
   // Don't render controls at all if the element is hidden or it's the background
   if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
@@ -96,6 +96,12 @@ const ElementControls = ({
   // Check if the element is a puzzle type - don't show interactive button for puzzles
   const isPuzzleElement = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'].includes(element.type);
 
+  // Check if this element has canvas navigation interaction
+  const hasCanvasNavigation = element.interaction?.type === 'canvasNavigation';
+  const targetCanvasName = hasCanvasNavigation && element.interaction?.targetCanvasId 
+    ? canvases.find(c => c.id === element.interaction?.targetCanvasId)?.name || 'Unknown Canvas'
+    : '';
+
   return (
     <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
       <div
@@ -157,11 +163,17 @@ const ElementControls = ({
                       className={`h-8 w-8 bg-white ${isInteractive ? 'text-blue-600 border-blue-600' : ''}`}
                       onClick={handleToggleInteractive}
                     >
-                      <Zap className="h-4 w-4" />
+                      {hasCanvasNavigation ? (
+                        <Navigation className="h-4 w-4" />
+                      ) : (
+                        <Zap className="h-4 w-4" />
+                      )}
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{isInteractive ? 'Interactive (On)' : 'Interactive (Off)'}</p>
+                    {hasCanvasNavigation 
+                      ? `Canvas Navigation to: ${targetCanvasName}`
+                      : (isInteractive ? 'Interactive (On)' : 'Interactive (Off)')}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>

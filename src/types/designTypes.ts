@@ -15,7 +15,7 @@ export type ElementType =
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 export type SliderOrientation = 'horizontal' | 'vertical';
-export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound';
+export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation';
 
 export interface PuzzleConfig {
   name: string;
@@ -60,6 +60,7 @@ export interface InteractionConfig {
   message?: string;
   sound?: string;
   soundUrl?: string;
+  targetCanvasId?: string;
 }
 
 export interface DesignElement {

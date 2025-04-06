@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { AlertCircle, MessageSquare, Music, Puzzle } from "lucide-react";
+import { AlertCircle, MessageSquare, Music, Puzzle, Navigation } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PuzzleProperties from "./PuzzleProperties";
 import SequencePuzzleProperties from "./SequencePuzzleProperties";
@@ -19,7 +19,7 @@ interface InteractionPropertiesProps {
 }
 
 const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, canvases, activeCanvasIndex } = useDesignState();
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<string>("config");
   
@@ -51,6 +51,15 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
       interaction: {
         ...interactionConfig,
         message: e.target.value
+      }
+    });
+  };
+
+  const handleTargetCanvasChange = (value: string) => {
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        targetCanvasId: value
       }
     });
   };
@@ -254,9 +263,39 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
               <Music className="h-4 w-4" />
               <span>Sound</span>
             </SelectItem>
+            <SelectItem value="canvasNavigation" className="flex items-center gap-2">
+              <Navigation className="h-4 w-4" />
+              <span>Canvas Navigation</span>
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
+
+      {interactionConfig.type === 'canvasNavigation' && (
+        <div>
+          <Label>Target Canvas</Label>
+          <Select
+            value={interactionConfig.targetCanvasId || ''}
+            onValueChange={handleTargetCanvasChange}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select target canvas" />
+            </SelectTrigger>
+            <SelectContent>
+              {canvases.map((canvas, index) => (
+                index !== activeCanvasIndex && (
+                  <SelectItem key={canvas.id} value={canvas.id}>
+                    {canvas.name}
+                  </SelectItem>
+                )
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-gray-500 mt-1">
+            Select the canvas to navigate to when this element is interacted with.
+          </p>
+        </div>
+      )}
 
       {interactionConfig.type === 'puzzle' && (
         <Tabs value={activeTab} onValueChange={setActiveTab}>
