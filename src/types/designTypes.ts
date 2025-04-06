@@ -1,4 +1,3 @@
-
 export type ElementType =
   | 'rectangle'
   | 'circle'
@@ -110,6 +109,7 @@ export interface DesignContextType {
   addCanvas: () => void;
   removeCanvas: (index: number) => void;
   setActiveCanvas: (index: number) => void;
+  updateCanvasName: (id: string, newName: string) => void;
 }
 
 // Helper function to generate unique IDs

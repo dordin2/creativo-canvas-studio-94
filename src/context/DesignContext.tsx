@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { 
@@ -29,25 +28,20 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const { t } = useLanguage();
   
-  // Function to set canvas reference
   const setCanvasRef = (ref: HTMLDivElement) => {
     setCanvasRefState(ref);
   };
   
-  // Add a state change to history
   const addToHistory = useCallback((newCanvases: Canvas[]) => {
     const newHistoryIndex = historyIndex + 1;
-    // Remove any "future" states if we've gone back in history and then made a change
     const newHistory = history.slice(0, newHistoryIndex);
     newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
     setHistory(newHistory);
     setHistoryIndex(newHistoryIndex);
   }, [history, historyIndex]);
   
-  // Get current elements from active canvas
   const elements = canvases[activeCanvasIndex]?.elements || [];
   
-  // Function to update elements without adding to history (for drag operations)
   const updateElementWithoutHistory = useCallback((id: string, updates: Partial<DesignElement>) => {
     const updatedCanvases = [...canvases];
     const activeCanvas = updatedCanvases[activeCanvasIndex];
@@ -63,30 +57,25 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     
     setCanvases(updatedCanvases);
     
-    // Also update active element if it's the one being updated
     if (activeElement && activeElement.id === id) {
       setActiveElement({ ...activeElement, ...updates });
     }
   }, [canvases, activeCanvasIndex, activeElement]);
   
-  // Function to commit the current state to history (called at the end of operations)
   const commitToHistory = useCallback(() => {
     addToHistory(canvases);
   }, [canvases, addToHistory]);
   
-  // Handle image file uploads
   const handleImageUpload = (id: string, file: File) => {
     processImageUpload(file, (updatedData) => {
       updateElement(id, updatedData);
     });
   };
   
-  // Add a new element to the canvas
   const addElement = (type: ElementType, props?: any): DesignElement => {
     const position = getDefaultPosition(canvasRef);
     const newLayer = getHighestLayer(elements);
     
-    // Special handling for background element
     if (type === 'background') {
       const { elements: updatedElements, newElement } = handleBackgroundLayer(elements, props);
       
@@ -101,7 +90,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
         return newElement;
       }
       
-      // If no existing background was updated, create a new one
       const backgroundElement = createNewElement(type, position, 0, props);
       const updatedCanvases = [...canvases];
       updatedCanvases[activeCanvasIndex].elements = [...elements, backgroundElement];
@@ -113,7 +101,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
       return backgroundElement;
     }
     
-    // For all other element types
     const newElement = createNewElement(type, position, newLayer, props);
     const updatedCanvases = [...canvases];
     updatedCanvases[activeCanvasIndex].elements = [...elements, newElement];
@@ -126,7 +113,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     return newElement;
   };
   
-  // Update an existing element
   const updateElement = (id: string, updates: Partial<DesignElement>) => {
     const updatedCanvases = [...canvases];
     const activeCanvas = updatedCanvases[activeCanvasIndex];
@@ -143,13 +129,11 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setCanvases(updatedCanvases);
     addToHistory(updatedCanvases);
     
-    // Also update active element if it's the one being updated
     if (activeElement && activeElement.id === id) {
       setActiveElement({ ...activeElement, ...updates });
     }
   };
   
-  // Update element layer specifically
   const updateElementLayer = (id: string, newLayer: number) => {
     const updatedCanvases = [...canvases];
     const activeCanvas = updatedCanvases[activeCanvasIndex];
@@ -166,7 +150,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setCanvases(updatedCanvases);
     addToHistory(updatedCanvases);
     
-    // Also update active element if it's the one being updated
     if (activeElement && activeElement.id === id) {
       setActiveElement({ ...activeElement, layer: newLayer });
     }
@@ -174,7 +157,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     toast.success(`Updated layer to ${newLayer}`);
   };
   
-  // Remove an element
   const removeElement = (id: string) => {
     const updatedCanvases = [...canvases];
     const activeCanvas = updatedCanvases[activeCanvasIndex];
@@ -191,7 +173,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  // Add a new canvas
   const addCanvas = () => {
     const newCanvas: Canvas = {
       id: generateId(),
@@ -208,7 +189,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     toast.success(t('toast.success.addCanvas') || "Added new canvas");
   };
   
-  // Remove a canvas
   const removeCanvas = (index: number) => {
     if (canvases.length <= 1) {
       toast.error(t('toast.error.cannotRemoveLastCanvas') || "Cannot remove the last canvas");
@@ -220,7 +200,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     
     setCanvases(updatedCanvases);
     
-    // Adjust active canvas index if needed
     if (activeCanvasIndex >= index) {
       const newActiveIndex = Math.max(0, activeCanvasIndex - 1);
       setActiveCanvasIndex(newActiveIndex);
@@ -232,7 +211,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     toast.success(t('toast.success.removeCanvas') || "Canvas removed");
   };
   
-  // Set active canvas
   const setActiveCanvas = (index: number) => {
     if (index >= 0 && index < canvases.length) {
       setActiveCanvasIndex(index);
@@ -240,7 +218,18 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
   };
   
-  // Undo last action
+  const updateCanvasName = (id: string, newName: string) => {
+    const updatedCanvases = [...canvases];
+    const canvasIndex = updatedCanvases.findIndex(canvas => canvas.id === id);
+    
+    if (canvasIndex !== -1) {
+      updatedCanvases[canvasIndex].name = newName || updatedCanvases[canvasIndex].name;
+      setCanvases(updatedCanvases);
+      addToHistory(updatedCanvases);
+      toast.success(t('toast.success.updateCanvasName') || "Canvas name updated");
+    }
+  };
+  
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
@@ -248,7 +237,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
       setCanvases(previousState);
       setHistoryIndex(newIndex);
       
-      // Reset active element if it no longer exists
       if (activeElement) {
         const activeCanvas = previousState[activeCanvasIndex];
         if (activeCanvas) {
@@ -272,7 +260,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
-  // Redo last undone action
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
@@ -280,7 +267,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
       setCanvases(nextState);
       setHistoryIndex(newIndex);
       
-      // Update active element if needed
       if (activeElement) {
         const activeCanvas = nextState[activeCanvasIndex];
         if (activeCanvas) {
@@ -301,7 +287,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
-  // Initialize history on first render
   if (history.length === 0 && canvases.length > 0) {
     addToHistory(canvases);
   }
@@ -328,7 +313,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     canRedo: historyIndex < history.length - 1,
     addCanvas,
     removeCanvas,
-    setActiveCanvas
+    setActiveCanvas,
+    updateCanvasName
   };
   
   return (

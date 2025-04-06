@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
+import { useState } from "react";
+import { Input } from "@/components/ui/input";
 
 const CanvasTabs = () => {
   const { 
@@ -11,10 +13,18 @@ const CanvasTabs = () => {
     activeCanvasIndex, 
     setActiveCanvas, 
     addCanvas,
-    removeCanvas
+    removeCanvas,
+    updateCanvasName
   } = useDesignState();
   const { language } = useLanguage();
+  const [editingCanvasId, setEditingCanvasId] = useState<string | null>(null);
+  const [newCanvasName, setNewCanvasName] = useState<string>('');
   
+  const handleNameChange = (id: string, newName: string) => {
+    updateCanvasName(id, newName);
+    setEditingCanvasId(null);
+  };
+
   return (
     <div className={`flex items-center gap-1 p-2 overflow-x-auto ${language === 'he' ? 'rtl' : 'ltr'}`}>
       {canvases.map((canvas, index) => (
@@ -31,7 +41,35 @@ const CanvasTabs = () => {
             )}
             onClick={() => setActiveCanvas(index)}
           >
-            <span>{canvas.name}</span>
+            {editingCanvasId === canvas.id ? (
+              <form
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleNameChange(canvas.id, newCanvasName);
+                }}
+                onClick={(e) => e.stopPropagation()}
+                className="flex-1 min-w-0"
+              >
+                <Input
+                  type="text"
+                  value={newCanvasName}
+                  onChange={(e) => setNewCanvasName(e.target.value)}
+                  className="h-7 text-xs w-full"
+                  autoFocus
+                  onBlur={() => handleNameChange(canvas.id, newCanvasName || canvas.name)}
+                />
+              </form>
+            ) : (
+              <span
+                onDoubleClick={(e) => {
+                  e.stopPropagation();
+                  setEditingCanvasId(canvas.id);
+                  setNewCanvasName(canvas.name);
+                }}
+              >
+                {canvas.name}
+              </span>
+            )}
           </button>
           {canvases.length > 1 && (
             <button
