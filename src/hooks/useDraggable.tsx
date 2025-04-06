@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -109,7 +108,7 @@ export const useDraggable = (elementId: string) => {
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
     // Prevent browser's native drag behavior for images
-    if (isImageElement || isPuzzleElement) {
+    if (isImageElement) {
       e.preventDefault();
     }
     
