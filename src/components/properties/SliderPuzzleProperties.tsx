@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { DesignElement, SliderOrientation } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -13,7 +14,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { FileCheck, AlignHorizontal, AlignVertical } from "lucide-react";
+import { FileCheck, AlignHorizontalJustifyCenter, AlignVerticalJustifyCenter } from "lucide-react";
 import { toast } from "sonner";
 
 interface SliderPuzzlePropertiesProps {
@@ -164,14 +165,14 @@ const SliderPuzzleProperties: React.FC<SliderPuzzlePropertiesProps> = ({ element
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="horizontal" id="horizontal-slider" />
             <Label htmlFor="horizontal-slider" className="flex items-center">
-              <AlignHorizontal className="h-4 w-4 mr-1" />
+              <AlignHorizontalJustifyCenter className="h-4 w-4 mr-1" />
               {t('slider.horizontal')}
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="vertical" id="vertical-slider" />
             <Label htmlFor="vertical-slider" className="flex items-center">
-              <AlignVertical className="h-4 w-4 mr-1" />
+              <AlignVerticalJustifyCenter className="h-4 w-4 mr-1" />
               {t('slider.vertical')}
             </Label>
           </div>

@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { DesignElement, PuzzleType } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -13,7 +14,7 @@ import {
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Upload, Plus, Trash2, FileCheck } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck, Lock, Hash, Languages } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
