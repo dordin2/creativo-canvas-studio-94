@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, Play } from "lucide-react";
@@ -82,18 +83,19 @@ const LayersList = () => {
         break;
       case 'message':
         if (config.message) {
-          toast.custom(
+          // Fix: Use a function that returns a ReactElement instead of directly passing the ReactElement
+          toast.custom((id) => (
             <div 
+              key={id}
               className="fixed bottom-10 left-1/2 transform -translate-x-1/2 px-6 py-4 rounded-md bg-white shadow-lg font-medium text-lg z-50 text-center"
               style={{ color: config.message.color || '#000000', maxWidth: '90%' }}
             >
               {config.message.text}
-            </div>,
-            {
-              duration: config.message.duration,
-              position: 'bottom-center',
-            }
-          );
+            </div>
+          ), {
+            duration: config.message.duration,
+            position: 'bottom-center',
+          });
         }
         break;
       case 'sound':

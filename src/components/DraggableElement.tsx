@@ -71,7 +71,7 @@ const DraggableElement = ({ element, isActive, children }: {
           setMessageConfig({
             text: config.message.text,
             color: config.message.color,
-            position: config.message.position as 'top' | 'center' | 'bottom'
+            position: config.message.position as 'top' | 'center' | 'bottom' || 'bottom'
           });
           setShowMessage(true);
           setTimeout(() => {
