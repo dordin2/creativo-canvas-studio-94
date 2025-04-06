@@ -4,14 +4,21 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useDesignState } from "@/context/DesignContext";
 import { getRotation } from "@/utils/elementStyles";
+import { useState, useEffect } from "react";
 
 const RotationProperty = ({ element }: { element: DesignElement }) => {
   const { updateElement } = useDesignState();
+  const [rotation, setRotation] = useState(getRotation(element));
+
+  useEffect(() => {
+    setRotation(getRotation(element));
+  }, [element]);
 
   const handleRotationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const rotation = parseInt(e.target.value) || 0;
+    const newRotation = parseInt(e.target.value) || 0;
+    setRotation(newRotation);
     updateElement(element.id, {
-      style: { ...element.style, transform: `rotate(${rotation}deg)` }
+      style: { ...element.style, transform: `rotate(${newRotation}deg)` }
     });
   };
 
@@ -21,7 +28,7 @@ const RotationProperty = ({ element }: { element: DesignElement }) => {
       <div className="flex gap-4 items-center">
         <Input 
           type="number" 
-          value={getRotation(element)} 
+          value={rotation}
           onChange={handleRotationChange}
           min={-360}
           max={360}
