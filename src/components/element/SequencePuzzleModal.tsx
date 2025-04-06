@@ -21,7 +21,7 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   const [draggedItem, setDraggedItem] = useState<number | null>(null);
   const { t, language } = useLanguage();
   
-  // Use a ref to prevent excessive updates to the global state
+  // Use refs to prevent excessive updates to the global state
   const isInitialized = useRef(false);
   const pendingUpdate = useRef(false);
   const timeoutRef = useRef<number | null>(null);
@@ -129,18 +129,21 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   
   // Handle dragging start with custom image
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>, index: number) => {
+    // Make sure preventDefault is not called here to allow native drag
+    e.stopPropagation();
+    
     if (dragImageRef.current) {
-      // Creating a custom drag image
-      const rect = dragImageRef.current.getBoundingClientRect();
+      // Set a proper drag image to improve user experience
+      const rect = e.currentTarget.getBoundingClientRect();
       const offsetX = e.clientX - rect.left;
       const offsetY = e.clientY - rect.top;
       
-      // Use the actual image element as drag image for a natural feel
       e.dataTransfer.setDragImage(dragImageRef.current, offsetX, offsetY);
     }
     
-    // Set drag effect to move for a more natural feel
+    // Set data transfer properties
     e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', index.toString());
     
     // Store the dragged item index
     setDraggedItem(index);
@@ -152,7 +155,8 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   
   // Handle drag over to enable dropping
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
+    e.preventDefault(); // This is important to allow dropping
+    e.stopPropagation();
     e.dataTransfer.dropEffect = 'move';
     
     // Add visual indication of drop target
@@ -161,12 +165,15 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   
   // Handle drag leave to reset visual indication
   const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.stopPropagation();
     e.currentTarget.classList.remove('drag-over');
   };
   
   // Handle dropping
   const handleDrop = (e: React.DragEvent<HTMLDivElement>, targetIndex: number) => {
     e.preventDefault();
+    e.stopPropagation();
+    
     e.currentTarget.classList.remove('drag-over');
     
     if (draggedItem === null) return;
@@ -216,6 +223,9 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   
   // Handle end of drag operation
   const handleDragEnd = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     // Reset any visual states
     e.currentTarget.classList.remove('dragging');
     
@@ -286,13 +296,13 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                 {currentOrder.map((imageIndex, arrayIndex) => (
                   <div 
                     key={arrayIndex}
-                    draggable
+                    draggable="true"
                     onDragStart={(e) => handleDragStart(e, arrayIndex)}
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, arrayIndex)}
                     onDragEnd={handleDragEnd}
-                    className="relative transition-transform"
+                    className="relative transition-transform hover:z-10"
                   >
                     <div className="flex flex-col items-center">
                       <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-blue-300 rounded-md overflow-hidden cursor-grab active:cursor-grabbing hover:border-blue-500 bg-white relative">
@@ -301,7 +311,8 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
                             ref={arrayIndex === draggedItem ? dragImageRef : null}
                             src={sequencePuzzleConfig.images[imageIndex]}
                             alt={`Image ${imageIndex + 1}`}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover pointer-events-none"
+                            draggable="false"
                           />
                         )}
                         <div className="absolute top-0 left-0 bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded-br">
