@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import Header from '@/components/Header';
 import Canvas from '@/components/Canvas';
 import Sidebar from '@/components/Sidebar';

@@ -1,71 +1,75 @@
 
-import { CSSProperties } from "react";
-import { useDesignState } from "@/context/DesignContext";
+import React from 'react';
 
-interface ResizeHandlesProps {
-  show: boolean;
+export interface ResizeHandlesProps {
   onResizeStart: (e: React.MouseEvent, direction: string) => void;
+  show: boolean;
 }
 
-const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
-  const { isGameMode } = useDesignState();
+const ResizeHandles: React.FC<ResizeHandlesProps> = ({ onResizeStart, show }) => {
+  if (!show) return null;
   
-  // Don't show resize handles in game mode
-  if (!show || isGameMode) return null;
-
-  const handleStyle: CSSProperties = {
-    position: 'absolute',
-    width: '10px',
-    height: '10px',
-    background: 'white',
-    border: '2px solid #4F46E5',
-    borderRadius: '50%',
-    zIndex: 1001,
-    pointerEvents: 'auto',
-    transform: 'translate(-50%, -50%)',
+  const handleMouseDown = (e: React.MouseEvent, direction: string) => {
+    e.stopPropagation();
+    onResizeStart(e, direction);
   };
 
   return (
     <>
-      <div 
-        className="resize-handle resize-handle-visible cursor-nw-resize"
-        style={{ ...handleStyle, top: 0, left: 0, transform: 'none' }}
-        onMouseDown={(e) => onResizeStart(e, "nw")}
+      {/* Top left */}
+      <div
+        className="absolute w-2 h-2 bg-white border border-primary rounded-full cursor-nwse-resize pointer-events-auto"
+        style={{ top: -4, left: -4 }}
+        onMouseDown={(e) => handleMouseDown(e, 'tl')}
       />
-      <div 
-        className="resize-handle resize-handle-visible cursor-n-resize"
-        style={{ ...handleStyle, top: 0, left: '50%' }}
-        onMouseDown={(e) => onResizeStart(e, "n")}
+      
+      {/* Top center */}
+      <div
+        className="absolute w-2 h-2 bg-white border border-primary rounded-full cursor-ns-resize pointer-events-auto"
+        style={{ top: -4, left: 'calc(50% - 3px)' }}
+        onMouseDown={(e) => handleMouseDown(e, 'tc')}
       />
-      <div 
-        className="resize-handle resize-handle-visible cursor-ne-resize"
-        style={{ ...handleStyle, top: 0, right: 0, left: 'auto', transform: 'none' }}
-        onMouseDown={(e) => onResizeStart(e, "ne")}
+      
+      {/* Top right */}
+      <div
+        className="absolute w-2 h-2 bg-white border border-primary rounded-full cursor-nesw-resize pointer-events-auto"
+        style={{ top: -4, right: -4 }}
+        onMouseDown={(e) => handleMouseDown(e, 'tr')}
       />
-      <div 
-        className="resize-handle resize-handle-visible cursor-e-resize"
-        style={{ ...handleStyle, top: '50%', right: 0, left: 'auto', transform: 'none' }}
-        onMouseDown={(e) => onResizeStart(e, "e")}
+      
+      {/* Middle left */}
+      <div
+        className="absolute w-2 h-2 bg-white border border-primary rounded-full cursor-ew-resize pointer-events-auto"
+        style={{ top: 'calc(50% - 3px)', left: -4 }}
+        onMouseDown={(e) => handleMouseDown(e, 'ml')}
       />
-      <div 
-        className="resize-handle resize-handle-visible cursor-se-resize"
-        style={{ ...handleStyle, bottom: 0, right: 0, top: 'auto', left: 'auto', transform: 'none' }}
-        onMouseDown={(e) => onResizeStart(e, "se")}
+      
+      {/* Middle right */}
+      <div
+        className="absolute w-2 h-2 bg-white border border-primary rounded-full cursor-ew-resize pointer-events-auto"
+        style={{ top: 'calc(50% - 3px)', right: -4 }}
+        onMouseDown={(e) => handleMouseDown(e, 'mr')}
       />
-      <div 
-        className="resize-handle resize-handle-visible cursor-s-resize"
-        style={{ ...handleStyle, bottom: 0, left: '50%', top: 'auto' }}
-        onMouseDown={(e) => onResizeStart(e, "s")}
+      
+      {/* Bottom left */}
+      <div
+        className="absolute w-2 h-2 bg-white border border-primary rounded-full cursor-nesw-resize pointer-events-auto"
+        style={{ bottom: -4, left: -4 }}
+        onMouseDown={(e) => handleMouseDown(e, 'bl')}
       />
-      <div 
-        className="resize-handle resize-handle-visible cursor-sw-resize"
-        style={{ ...handleStyle, bottom: 0, left: 0, top: 'auto', transform: 'none' }}
-        onMouseDown={(e) => onResizeStart(e, "sw")}
+      
+      {/* Bottom center */}
+      <div
+        className="absolute w-2 h-2 bg-white border border-primary rounded-full cursor-ns-resize pointer-events-auto"
+        style={{ bottom: -4, left: 'calc(50% - 3px)' }}
+        onMouseDown={(e) => handleMouseDown(e, 'bc')}
       />
-      <div 
-        className="resize-handle resize-handle-visible cursor-w-resize"
-        style={{ ...handleStyle, top: '50%', left: 0, transform: 'none' }}
-        onMouseDown={(e) => onResizeStart(e, "w")}
+      
+      {/* Bottom right */}
+      <div
+        className="absolute w-2 h-2 bg-white border border-primary rounded-full cursor-nwse-resize pointer-events-auto"
+        style={{ bottom: -4, right: -4 }}
+        onMouseDown={(e) => handleMouseDown(e, 'br')}
       />
     </>
   );
