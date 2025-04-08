@@ -3,7 +3,7 @@ import React, { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Upload, X } from "lucide-react";
+import { Upload, X, Play, Pause } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface AudioUploadProps {
@@ -42,6 +42,10 @@ export const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload, initialValue
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+    if (audioRef.current) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    }
   };
 
   const handleTogglePlay = () => {
@@ -50,7 +54,9 @@ export const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload, initialValue
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play();
+      audioRef.current.play().catch(err => {
+        console.error('Audio playback error:', err);
+      });
     }
     setIsPlaying(!isPlaying);
   };
@@ -61,7 +67,7 @@ export const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload, initialValue
 
   return (
     <div className="grid gap-2">
-      <Label>{t('properties.interaction.audioFile')}</Label>
+      <Label>{t('properties.interaction.audioFile') || 'Audio File'}</Label>
       
       <div className="flex items-center gap-2">
         <Input
@@ -94,6 +100,11 @@ export const AudioUpload: React.FC<AudioUploadProps> = ({ onUpload, initialValue
                 variant="outline"
                 onClick={handleTogglePlay}
               >
+                {isPlaying ? (
+                  <Pause className="h-4 w-4 mr-1" />
+                ) : (
+                  <Play className="h-4 w-4 mr-1" />
+                )}
                 {isPlaying ? 'Pause' : 'Play'}
               </Button>
             </div>
