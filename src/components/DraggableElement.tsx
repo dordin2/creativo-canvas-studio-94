@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -29,7 +30,7 @@ const DraggableElement = ({ element, isActive, children }: {
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases, isGameMode } = useDesignState();
+  const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases, isGameMode, addToInventory } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -134,6 +135,9 @@ const DraggableElement = ({ element, isActive, children }: {
       } else {
         toast.error('Target canvas not found');
       }
+    }
+    else if (interactionType === 'addToInventory') {
+      addToInventory(element.id);
     }
   };
 
@@ -313,8 +317,15 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const showInteractionIndicator = hasInteraction && !isActive && !isDragging;
-  const indicatorStyles = interactionType === 'canvasNavigation' ? 
-    "absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full animate-pulse" : "";
+  let indicatorStyles = "";
+  
+  if (showInteractionIndicator) {
+    if (interactionType === 'canvasNavigation') {
+      indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full animate-pulse";
+    } else if (interactionType === 'addToInventory') {
+      indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full animate-pulse";
+    }
+  }
 
   const combinedStyle = {
     ...elementStyle,
@@ -348,8 +359,10 @@ const DraggableElement = ({ element, isActive, children }: {
       }}
     >
       {childContent}
-      {showInteractionIndicator && interactionType === 'canvasNavigation' && (
-        <div className={indicatorStyles} title="Click to navigate to another canvas"></div>
+      {showInteractionIndicator && (interactionType === 'canvasNavigation' || interactionType === 'addToInventory') && (
+        <div className={indicatorStyles} title={interactionType === 'canvasNavigation' 
+          ? "Click to navigate to another canvas" 
+          : "Click to add to inventory"}></div>
       )}
     </div>
   );

@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { AlertCircle, MessageSquare, Music, Puzzle, Navigation } from "lucide-react";
+import { AlertCircle, MessageSquare, Music, Puzzle, Navigation, ShoppingBasket } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PuzzleProperties from "./PuzzleProperties";
 import SequencePuzzleProperties from "./SequencePuzzleProperties";
@@ -264,6 +264,10 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
               <Navigation className="h-4 w-4" />
               <span>Canvas Navigation</span>
             </SelectItem>
+            <SelectItem value="addToInventory" className="flex items-center gap-2">
+              <ShoppingBasket className="h-4 w-4" />
+              <span>Add to Inventory</span>
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -364,6 +368,14 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
               )}
             </div>
           )}
+        </div>
+      )}
+
+      {interactionConfig.type === 'addToInventory' && (
+        <div className="p-3 bg-gray-50 rounded-md">
+          <p className="text-sm text-gray-600">
+            When this element is clicked in game mode, it will be added to the player's inventory and removed from the canvas.
+          </p>
         </div>
       )}
     </div>

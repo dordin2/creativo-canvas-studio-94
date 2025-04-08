@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { 
@@ -7,7 +6,8 @@ import {
   DesignContextType,
   Canvas,
   generateId,
-  InteractionType
+  InteractionType,
+  InventoryItem
 } from "@/types/designTypes";
 import { 
   getDefaultPosition, 
@@ -30,6 +30,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   const [history, setHistory] = useState<Canvas[][]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [isGameMode, setIsGameMode] = useState<boolean>(false);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
+  const [showInventory, setShowInventory] = useState<boolean>(false);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
@@ -41,6 +43,58 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     if (!isGameMode) {
       setActiveElement(null);
     }
+  };
+  
+  const toggleInventory = () => {
+    setShowInventory(prev => !prev);
+  };
+  
+  const addToInventory = (elementId: string) => {
+    const currentCanvas = canvases[activeCanvasIndex];
+    if (!currentCanvas) return;
+
+    const element = currentCanvas.elements.find(el => el.id === elementId);
+    if (!element) return;
+
+    setInventoryItems(prev => [
+      ...prev, 
+      { elementId, canvasId: currentCanvas.id }
+    ]);
+
+    updateElement(elementId, { 
+      isHidden: true, 
+      inInventory: true 
+    });
+
+    toast.success("Item added to inventory");
+  };
+
+  const removeFromInventory = (elementId: string) => {
+    const inventoryItem = inventoryItems.find(item => item.elementId === elementId);
+    if (!inventoryItem) return;
+
+    const canvasIndex = canvases.findIndex(canvas => canvas.id === inventoryItem.canvasId);
+    if (canvasIndex === -1) return;
+
+    const updatedCanvases = [...canvases];
+    const canvas = updatedCanvases[canvasIndex];
+    
+    const elementIndex = canvas.elements.findIndex(el => el.id === elementId);
+    if (elementIndex === -1) return;
+    
+    const updatedElements = [...canvas.elements];
+    updatedElements[elementIndex] = {
+      ...updatedElements[elementIndex],
+      isHidden: false,
+      inInventory: false
+    };
+    
+    canvas.elements = updatedElements;
+    setCanvases(updatedCanvases);
+    
+    setInventoryItems(prev => prev.filter(item => item.elementId !== elementId));
+    
+    toast.success("Item removed from inventory");
   };
   
   const addToHistory = useCallback((newCanvases: Canvas[]) => {
@@ -395,7 +449,10 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     activeElement,
     canvasRef,
     isGameMode,
+    inventoryItems,
+    showInventory,
     toggleGameMode,
+    toggleInventory,
     setCanvasRef,
     addElement,
     updateElement,
@@ -416,7 +473,9 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     updateCanvasName,
     duplicateCanvas,
     reorderCanvases,
-    moveElementToCanvas
+    moveElementToCanvas,
+    addToInventory,
+    removeFromInventory
   };
   
   return (

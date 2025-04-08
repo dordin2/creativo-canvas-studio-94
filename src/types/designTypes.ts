@@ -18,7 +18,7 @@ export type ElementType =
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 export type SliderOrientation = 'horizontal' | 'vertical';
-export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation';
+export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation' | 'addToInventory';
 export type MessagePosition = 'bottom' | 'top';
 
 export interface PuzzleConfig {
@@ -97,12 +97,18 @@ export interface DesignElement {
   isHidden?: boolean;
   name?: string;
   interaction?: InteractionConfig;
+  inInventory?: boolean;
 }
 
 export interface Canvas {
   id: string;
   name: string;
   elements: DesignElement[];
+}
+
+export interface InventoryItem {
+  elementId: string;
+  canvasId: string;
 }
 
 export interface DesignContextType {
@@ -112,7 +118,10 @@ export interface DesignContextType {
   activeElement: DesignElement | null;
   canvasRef: HTMLDivElement | null;
   isGameMode: boolean;
+  inventoryItems: InventoryItem[];
+  showInventory: boolean;
   toggleGameMode: () => void;
+  toggleInventory: () => void;
   setCanvasRef: (ref: HTMLDivElement) => void;
   addElement: (type: ElementType, props?: any) => DesignElement;
   updateElement: (id: string, updates: Partial<DesignElement>) => void;
@@ -134,6 +143,8 @@ export interface DesignContextType {
   duplicateCanvas: (index: number) => void;
   reorderCanvases: (sourceIndex: number, targetIndex: number) => void;
   moveElementToCanvas: (elementId: string, targetCanvasIndex: number) => void;
+  addToInventory: (elementId: string) => void;
+  removeFromInventory: (elementId: string) => void;
 }
 
 export const generateId = (): string => {

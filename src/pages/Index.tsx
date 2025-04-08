@@ -6,6 +6,8 @@ import Canvas from "@/components/Canvas";
 import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
 import { useDesignState } from "@/context/DesignContext";
+import InventoryIcon from "@/components/inventory/InventoryIcon";
+import InventoryPanel from "@/components/inventory/InventoryPanel";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -49,7 +51,11 @@ const Index = () => {
               <Canvas />
             </>
           ) : (
-            <Canvas />
+            <>
+              <Canvas />
+              <InventoryIcon />
+              <InventoryPanel />
+            </>
           )}
         </div>
         {!isGameMode && (
