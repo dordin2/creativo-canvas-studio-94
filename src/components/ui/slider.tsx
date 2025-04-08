@@ -12,7 +12,7 @@ const Slider = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full touch-none select-none items-center",
-      orientation === "vertical" && "h-full flex-col justify-end", // Removed padding that was causing alignment issues
+      orientation === "vertical" && "h-full flex-col justify-end", // Vertical container
       className
     )}
     {...props}
@@ -20,20 +20,20 @@ const Slider = React.forwardRef<
     <SliderPrimitive.Track 
       className={cn(
         "relative h-2 w-full grow overflow-hidden rounded-full bg-secondary",
-        orientation === "vertical" && "h-full w-2" // Ensure correct dimensions for vertical track
+        orientation === "vertical" && "h-full w-2" // Vertical track dimensions
       )}
     >
       <SliderPrimitive.Range 
         className={cn(
           "absolute h-full bg-gradient-to-r from-canvas-purple to-canvas-indigo",
-          orientation === "vertical" && "w-full bg-gradient-to-t from-canvas-purple to-canvas-indigo" // Keep vertical gradient
+          orientation === "vertical" && "w-full bg-gradient-to-t from-canvas-purple to-canvas-indigo" // Vertical gradient
         )} 
       />
     </SliderPrimitive.Track>
     <SliderPrimitive.Thumb 
       className={cn(
         "block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 transition-transform",
-        orientation === "vertical" && "left-1/2 -translate-x-1/2" // Fix vertical thumb positioning
+        orientation === "vertical" && "absolute left-1/2 -translate-x-1/2" // Position thumb horizontally centered but allow vertical movement
       )}
     />
   </SliderPrimitive.Root>
