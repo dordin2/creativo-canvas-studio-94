@@ -4,6 +4,7 @@ import { Text, Image, Square, Circle, Triangle, Lock, Hash, Languages, MoveHoriz
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 const Sidebar = () => {
   const {
     addElement
@@ -103,6 +104,7 @@ const Sidebar = () => {
       }
     });
   };
+
   return <div className={`sidebar-panel border-r flex flex-col ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <Tabs defaultValue="elements" className="flex-1 flex flex-col">
         <TabsList className="grid grid-cols-3 mx-2 mt-2">
@@ -187,6 +189,10 @@ const Sidebar = () => {
                     <SlidersHorizontal className="h-4 w-4 mr-2 text-purple-600" />
                     {language === 'en' ? 'Horizontal Sliders' : 'מחוונים אופקיים'}
                   </Button>
+                  <Button variant="outline" className="justify-start" onClick={handleVerticalSliderPuzzleClick}>
+                    <SlidersVertical className="h-4 w-4 mr-2 text-purple-600" />
+                    {language === 'en' ? 'Vertical Sliders' : 'מחוונים אנכיים'}
+                  </Button>
                 </div>
               </PopoverContent>
             </Popover>
@@ -233,4 +239,5 @@ const Sidebar = () => {
       </Tabs>
     </div>;
 };
+
 export default Sidebar;

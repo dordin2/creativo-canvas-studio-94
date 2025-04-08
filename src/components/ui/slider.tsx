@@ -7,23 +7,33 @@ import { cn } from "@/lib/utils"
 const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
->(({ className, ...props }, ref) => (
+>(({ className, orientation = "horizontal", ...props }, ref) => (
   <SliderPrimitive.Root
     ref={ref}
     className={cn(
-      "relative flex w-full touch-none select-none items-center",
+      "relative flex touch-none select-none",
+      orientation === "horizontal" 
+        ? "w-full items-center" 
+        : "h-full flex-col items-center",
       className
     )}
+    orientation={orientation}
     {...props}
   >
     <SliderPrimitive.Track 
       className={cn(
-        "relative h-2 w-full grow overflow-hidden rounded-full bg-secondary"
+        "relative overflow-hidden rounded-full bg-secondary",
+        orientation === "horizontal" 
+          ? "h-2 w-full grow" 
+          : "w-2 h-full grow"
       )}
     >
       <SliderPrimitive.Range 
         className={cn(
-          "absolute h-full bg-gradient-to-r from-canvas-purple to-canvas-indigo"
+          "absolute bg-gradient-to-r from-canvas-purple to-canvas-indigo",
+          orientation === "horizontal"
+            ? "h-full"
+            : "w-full"
         )} 
       />
     </SliderPrimitive.Track>

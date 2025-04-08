@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { DesignElement } from "@/context/DesignContext";
 import { SliderPuzzleModal } from "./SliderPuzzleModal";
-import { Sliders } from "lucide-react";
+import { Sliders, SlidersHorizontal, SlidersVertical } from "lucide-react";
 
 interface SliderPuzzleElementProps {
   element: DesignElement;
@@ -23,20 +23,38 @@ const SliderPuzzleElement: React.FC<SliderPuzzleElementProps> = ({ element, onCl
   
   // Create preview of the sliders
   const renderSliderPreview = () => {
-    return (
-      <div className="flex flex-col gap-3 w-full px-4">
-        {Array(config.sliderCount).fill(0).map((_, index) => (
-          <div key={index} className="w-full h-2 bg-blue-100 rounded-full relative overflow-hidden">
-            <div 
-              className="absolute h-full bg-blue-500 rounded-full"
-              style={{ 
-                width: `${(config.currentValues[index] / config.maxValue) * 100}%`
-              }}
-            />
-          </div>
-        ))}
-      </div>
-    );
+    if (config.orientation === 'horizontal') {
+      return (
+        <div className="flex flex-col gap-3 w-full px-4">
+          {Array(config.sliderCount).fill(0).map((_, index) => (
+            <div key={index} className="w-full h-2 bg-blue-100 rounded-full relative overflow-hidden">
+              <div 
+                className="absolute h-full bg-blue-500 rounded-full"
+                style={{ 
+                  width: `${(config.currentValues[index] / config.maxValue) * 100}%`
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      );
+    } else {
+      // Vertical slider preview
+      return (
+        <div className="flex h-full justify-around px-2">
+          {Array(config.sliderCount).fill(0).map((_, index) => (
+            <div key={index} className="h-full w-2 bg-blue-100 rounded-full relative overflow-hidden">
+              <div 
+                className="absolute w-full bg-blue-500 rounded-full bottom-0"
+                style={{ 
+                  height: `${(config.currentValues[index] / config.maxValue) * 100}%`
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      );
+    }
   };
   
   return (
@@ -47,7 +65,11 @@ const SliderPuzzleElement: React.FC<SliderPuzzleElementProps> = ({ element, onCl
       >
         <div className="flex justify-between items-center mb-2 px-2">
           <h3 className="text-sm font-medium">{config.name}</h3>
-          <Sliders className="h-4 w-4 text-blue-600" />
+          {config.orientation === 'horizontal' ? (
+            <SlidersHorizontal className="h-4 w-4 text-blue-600" />
+          ) : (
+            <SlidersVertical className="h-4 w-4 text-purple-600" />
+          )}
         </div>
         
         <div className="flex-1 flex items-center justify-center">
