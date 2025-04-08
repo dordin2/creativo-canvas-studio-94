@@ -40,7 +40,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const [showControls, setShowControls] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showPuzzleModal, setShowPuzzleModal] = useState(false);
-  const [elementBoundingRect, setElementBoundingRect] = useState<DOMRect | null>(null);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -109,10 +108,6 @@ const DraggableElement = ({ element, isActive, children }: {
 
   const handleInteraction = () => {
     if (!hasInteraction) return;
-    
-    if (elementRef.current && interactionType === 'message') {
-      setElementBoundingRect(elementRef.current.getBoundingClientRect());
-    }
     
     if (interactionType === 'message' && element.interaction?.message) {
       setShowMessageModal(true);
@@ -433,7 +428,6 @@ const DraggableElement = ({ element, isActive, children }: {
           onClose={() => setShowMessageModal(false)}
           message={element.interaction?.message || ''}
           position={messagePosition}
-          elementRect={elementBoundingRect}
         />
       )}
       
