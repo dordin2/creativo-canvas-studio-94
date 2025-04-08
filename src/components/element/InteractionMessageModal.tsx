@@ -22,9 +22,9 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
   const getPositionClasses = () => {
     switch (messageBoxSettings.position) {
       case 'top':
-        return 'top-[20%] translate-y-0';
+        return 'top-4 translate-y-0';
       case 'bottom':
-        return 'bottom-[20%] translate-y-0';
+        return 'bottom-4 translate-y-0';
       case 'center':
       default:
         return 'top-[50%] translate-y-[-50%]';
@@ -34,12 +34,15 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent 
-        className={`left-[50%] translate-x-[-50%] ${getPositionClasses()} rounded-lg`}
+        className={`left-[50%] translate-x-[-50%] ${getPositionClasses()} rounded-lg shadow-lg absolute overflow-visible`}
         style={{
           maxWidth: `${messageBoxSettings.width}px`,
           width: `${messageBoxSettings.width}px`,
           backgroundColor: messageBoxSettings.backgroundColor,
-          color: messageBoxSettings.textColor
+          color: messageBoxSettings.textColor,
+          // Remove the modal overlay background to make it non-blocking
+          position: 'fixed',
+          zIndex: 50
         }}
       >
         <DialogHeader>
