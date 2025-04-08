@@ -1,374 +1,253 @@
-
-import React, { useState } from "react";
-import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { InteractionType, PuzzleType } from "@/types/designTypes";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { AlertCircle, MessageSquare, Music, Puzzle, Navigation } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { UploadButton } from "../ui/upload-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import PuzzleProperties from "./PuzzleProperties";
-import SequencePuzzleProperties from "./SequencePuzzleProperties";
-import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
-import SliderPuzzleProperties from "./SliderPuzzleProperties";
+import { Separator } from "@/components/ui/separator";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { Slider } from "@/components/ui/slider";
+import { PuzzleProperties } from "./PuzzleProperties";
+import { SequencePuzzleProperties } from "./SequencePuzzleProperties";
+import { processImageUpload } from "@/utils/imageUploader";
+import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { AudioUpload } from "./AudioUpload";
+import { SliderPuzzleProperties } from "./SliderPuzzleProperties";
+import { ClickSequencePuzzleProperties } from "./ClickSequencePuzzleProperties";
 
 interface InteractionPropertiesProps {
   element: DesignElement;
 }
 
-const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }) => {
-  const { updateElement, canvases, activeCanvasIndex } = useDesignState();
-  const [audioFile, setAudioFile] = useState<File | null>(null);
-  const [activeTab, setActiveTab] = useState<string>("config");
+export const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }) => {
+  const { updateElement, canvases } = useDesignState();
+  const { t, language } = useLanguage();
+  const [interactionType, setInteractionType] = useState<string>(element.interaction?.type || 'none');
+  const [message, setMessage] = useState<string>(element.interaction?.message || '');
+  const [messageDuration, setMessageDuration] = useState<number>(element.interaction?.messageDuration || 5000);
+  const [targetCanvasId, setTargetCanvasId] = useState<string>(element.interaction?.targetCanvasId || '');
+  const [puzzleTab, setPuzzleTab] = useState<string>(element.interaction?.puzzleType || 'puzzle');
   
-  const interactionConfig = element.interaction || { 
-    type: 'none',
-    message: '',
-    sound: '',
-    puzzleType: 'puzzle',
-    puzzleConfig: {
-      name: 'Puzzle',
-      type: 'image' as PuzzleType,
-      placeholders: 3,
-      images: [],
-      solution: []
+  useEffect(() => {
+    setInteractionType(element.interaction?.type || 'none');
+    setMessage(element.interaction?.message || '');
+    setMessageDuration(element.interaction?.messageDuration || 5000);
+    setTargetCanvasId(element.interaction?.targetCanvasId || '');
+    setPuzzleTab(element.interaction?.puzzleType || 'puzzle');
+  }, [element.interaction]);
+
+  const handleTypeChange = (value: string) => {
+    setInteractionType(value);
+    
+    if (value === 'none') {
+      updateElement(element.id, {
+        interaction: {
+          type: 'none'
+        }
+      });
+    } else if (value === 'message') {
+      updateElement(element.id, {
+        interaction: {
+          type: 'message',
+          message: message,
+          messageDuration: messageDuration
+        }
+      });
+    } else if (value === 'sound') {
+      updateElement(element.id, {
+        interaction: {
+          type: 'sound',
+          soundUrl: element.interaction?.soundUrl || ''
+        }
+      });
+    } else if (value === 'canvasNavigation') {
+      updateElement(element.id, {
+        interaction: {
+          type: 'canvasNavigation',
+          targetCanvasId: targetCanvasId
+        }
+      });
+    } else if (value === 'puzzle') {
+      updateElement(element.id, {
+        interaction: {
+          type: 'puzzle',
+          puzzleType: element.interaction?.puzzleType || 'puzzle',
+          puzzleConfig: element.interaction?.puzzleConfig,
+          sequencePuzzleConfig: element.interaction?.sequencePuzzleConfig,
+          sliderPuzzleConfig: element.interaction?.sliderPuzzleConfig,
+          clickSequencePuzzleConfig: element.interaction?.clickSequencePuzzleConfig,
+        }
+      });
     }
   };
 
-  const handleTypeChange = (value: string) => {
-    updateElement(element.id, {
-      interaction: {
-        ...interactionConfig,
-        type: value as InteractionType
-      }
-    });
-  };
-
   const handleMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newMessage = e.target.value;
+    setMessage(newMessage);
+    
     updateElement(element.id, {
       interaction: {
-        ...interactionConfig,
-        message: e.target.value
+        ...element.interaction,
+        type: 'message',
+        message: newMessage,
+        messageDuration: messageDuration
+      }
+    });
+  };
+  
+  const handleMessageDurationChange = (value: number[]) => {
+    const newDuration = value[0];
+    setMessageDuration(newDuration);
+    
+    updateElement(element.id, {
+      interaction: {
+        ...element.interaction,
+        type: 'message',
+        message: message,
+        messageDuration: newDuration
       }
     });
   };
 
-  const handleTargetCanvasChange = (value: string) => {
+  const handleSoundUpload = (url: string) => {
     updateElement(element.id, {
       interaction: {
-        ...interactionConfig,
+        ...element.interaction,
+        type: 'sound',
+        soundUrl: url
+      }
+    });
+  };
+
+  const handleCanvasChange = (value: string) => {
+    setTargetCanvasId(value);
+    updateElement(element.id, {
+      interaction: {
+        ...element.interaction,
+        type: 'canvasNavigation',
         targetCanvasId: value
       }
     });
   };
 
-  const handlePuzzleTypeChange = (value: string) => {
-    let newConfig = { ...interactionConfig };
-    
-    if (value === 'puzzle') {
-      newConfig.puzzleType = 'puzzle';
-      if (!element.puzzleConfig) {
-        newConfig.puzzleConfig = {
-          name: 'Puzzle',
-          type: 'image',
-          placeholders: 3,
-          images: [],
-          solution: []
-        };
-      } else {
-        newConfig.puzzleConfig = { ...element.puzzleConfig };
-      }
-    } 
-    else if (value === 'sequencePuzzle') {
-      newConfig.puzzleType = 'sequencePuzzle';
-      if (!element.sequencePuzzleConfig) {
-        newConfig.sequencePuzzleConfig = {
-          name: 'Sequence Puzzle',
-          images: [],
-          solution: [],
-          currentOrder: []
-        };
-      } else {
-        newConfig.sequencePuzzleConfig = { ...element.sequencePuzzleConfig };
-      }
-    } 
-    else if (value === 'clickSequencePuzzle') {
-      newConfig.puzzleType = 'clickSequencePuzzle';
-      if (!element.clickSequencePuzzleConfig) {
-        newConfig.clickSequencePuzzleConfig = {
-          name: 'Click Sequence Puzzle',
-          images: [],
-          solution: [],
-          clickedIndices: []
-        };
-      } else {
-        newConfig.clickSequencePuzzleConfig = { ...element.clickSequencePuzzleConfig };
-      }
-    } 
-    else if (value === 'sliderPuzzle') {
-      newConfig.puzzleType = 'sliderPuzzle';
-      if (!element.sliderPuzzleConfig) {
-        newConfig.sliderPuzzleConfig = {
-          name: 'Slider Puzzle',
-          orientation: 'horizontal',
-          sliderCount: 3,
-          solution: [5, 2, 8],
-          currentValues: [0, 0, 0],
-          maxValue: 10
-        };
-      } else {
-        newConfig.sliderPuzzleConfig = { ...element.sliderPuzzleConfig };
-      }
-    }
-
+  const handlePuzzleTabChange = (value: string) => {
+    setPuzzleTab(value);
     updateElement(element.id, {
-      interaction: newConfig
+      interaction: {
+        ...element.interaction,
+        type: 'puzzle',
+        puzzleType: value,
+      }
     });
   };
 
-  const handleSoundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    if (!file.type.startsWith('audio/')) {
-      toast.error('Please upload a valid audio file');
-      return;
-    }
-    
-    setAudioFile(file);
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      if (event.target?.result) {
-        updateElement(element.id, {
-          interaction: {
-            ...interactionConfig,
-            sound: file.name,
-            soundUrl: event.target.result as string
-          }
-        });
-        toast.success('Sound uploaded successfully');
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  // Creates an element object that resembles a real puzzle element for the puzzle property components
-  const createPuzzleElementProxy = () => {
-    const baseElement = { ...element };
-    
-    if (interactionConfig.puzzleType === 'puzzle' && interactionConfig.puzzleConfig) {
-      baseElement.puzzleConfig = interactionConfig.puzzleConfig;
-    } 
-    else if (interactionConfig.puzzleType === 'sequencePuzzle' && interactionConfig.sequencePuzzleConfig) {
-      baseElement.sequencePuzzleConfig = interactionConfig.sequencePuzzleConfig;
-    }
-    else if (interactionConfig.puzzleType === 'clickSequencePuzzle' && interactionConfig.clickSequencePuzzleConfig) {
-      baseElement.clickSequencePuzzleConfig = interactionConfig.clickSequencePuzzleConfig;
-    }
-    else if (interactionConfig.puzzleType === 'sliderPuzzle' && interactionConfig.sliderPuzzleConfig) {
-      baseElement.sliderPuzzleConfig = interactionConfig.sliderPuzzleConfig;
-    }
-    
-    return baseElement;
-  };
-
-  // Function to handle updates from child puzzle components
-  const handlePuzzleConfigUpdate = (configType: string, config: any) => {
-    let updatedInteraction = { ...interactionConfig };
-    
-    if (configType === 'puzzleConfig') {
-      updatedInteraction.puzzleConfig = config;
-    } 
-    else if (configType === 'sequencePuzzleConfig') {
-      updatedInteraction.sequencePuzzleConfig = config;
-    }
-    else if (configType === 'clickSequencePuzzleConfig') {
-      updatedInteraction.clickSequencePuzzleConfig = config;
-    }
-    else if (configType === 'sliderPuzzleConfig') {
-      updatedInteraction.sliderPuzzleConfig = config;
-    }
-    
-    updateElement(element.id, {
-      interaction: updatedInteraction
-    });
-  };
-
-  // Get the appropriate puzzle component based on the puzzle type
-  const getPuzzleConfigComponent = () => {
-    const puzzleType = interactionConfig.puzzleType || 'puzzle';
-    const proxyElement = createPuzzleElementProxy();
-    
-    switch (puzzleType) {
-      case 'puzzle':
-        return (
-          <PuzzleProperties 
-            element={proxyElement} 
-            onUpdateConfig={(config) => handlePuzzleConfigUpdate('puzzleConfig', config)} 
-          />
-        );
-      case 'sequencePuzzle':
-        return (
-          <SequencePuzzleProperties 
-            element={proxyElement} 
-            onUpdateConfig={(config) => handlePuzzleConfigUpdate('sequencePuzzleConfig', config)} 
-          />
-        );
-      case 'clickSequencePuzzle':
-        return (
-          <ClickSequencePuzzleProperties 
-            element={proxyElement} 
-            onUpdateConfig={(config) => handlePuzzleConfigUpdate('clickSequencePuzzleConfig', config)} 
-          />
-        );
-      case 'sliderPuzzle':
-        return (
-          <SliderPuzzleProperties 
-            element={proxyElement} 
-            onUpdateConfig={(config) => handlePuzzleConfigUpdate('sliderPuzzleConfig', config)} 
-          />
-        );
-      default:
-        return <div>Select a puzzle type to configure</div>;
-    }
-  };
+  const canvasOptions = canvases.map((canvas) => ({
+    label: canvas.name,
+    value: canvas.id,
+  }));
 
   return (
-    <div className="space-y-4">
-      <div>
-        <Label>Interaction Type</Label>
-        <Select 
-          value={interactionConfig.type} 
-          onValueChange={handleTypeChange}
-        >
-          <SelectTrigger>
-            <SelectValue placeholder="Select interaction type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="none" className="flex items-center gap-2">
-              <AlertCircle className="h-4 w-4" />
-              <span>None</span>
-            </SelectItem>
-            <SelectItem value="puzzle" className="flex items-center gap-2">
-              <Puzzle className="h-4 w-4" />
-              <span>Puzzle</span>
-            </SelectItem>
-            <SelectItem value="message" className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4" />
-              <span>Message</span>
-            </SelectItem>
-            <SelectItem value="sound" className="flex items-center gap-2">
-              <Music className="h-4 w-4" />
-              <span>Sound</span>
-            </SelectItem>
-            <SelectItem value="canvasNavigation" className="flex items-center gap-2">
-              <Navigation className="h-4 w-4" />
-              <span>Canvas Navigation</span>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {interactionConfig.type === 'canvasNavigation' && (
-        <div>
-          <Label>Target Canvas</Label>
-          <Select
-            value={interactionConfig.targetCanvasId || ''}
-            onValueChange={handleTargetCanvasChange}
-          >
+    <div className="p-4">
+      <h3 className="text-lg font-semibold mb-2">{t('properties.interaction.title')}</h3>
+      
+      <div className="grid gap-4">
+        <div className="grid gap-2">
+          <Label htmlFor="interactionType">{t('properties.interaction.type')}</Label>
+          <Select value={interactionType} onValueChange={handleTypeChange}>
             <SelectTrigger>
-              <SelectValue placeholder="Select target canvas" />
+              <SelectValue placeholder={t('properties.interaction.selectType')} />
             </SelectTrigger>
             <SelectContent>
-              {canvases.map((canvas, index) => (
-                index !== activeCanvasIndex && (
-                  <SelectItem key={canvas.id} value={canvas.id}>
-                    {canvas.name}
-                  </SelectItem>
-                )
-              ))}
+              <SelectItem value="none">{t('properties.interaction.none')}</SelectItem>
+              <SelectItem value="message">{t('properties.interaction.message')}</SelectItem>
+              <SelectItem value="sound">{t('properties.interaction.sound')}</SelectItem>
+              <SelectItem value="canvasNavigation">{t('properties.interaction.canvasNavigation')}</SelectItem>
+              <SelectItem value="puzzle">{t('properties.interaction.puzzle')}</SelectItem>
             </SelectContent>
           </Select>
-          <p className="text-xs text-gray-500 mt-1">
-            Select the canvas to navigate to when this element is interacted with.
-          </p>
         </div>
-      )}
-
-      {interactionConfig.type === 'puzzle' && (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full">
-            <TabsTrigger value="config">Basic Config</TabsTrigger>
-            <TabsTrigger value="advanced">Puzzle Setup</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="config" className="space-y-4">
-            <div>
-              <Label>Puzzle Type</Label>
-              <Select
-                value={interactionConfig.puzzleType || 'puzzle'}
-                onValueChange={handlePuzzleTypeChange}
-              >
+        
+        {interactionType === 'message' && (
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="message">{t('properties.interaction.messageText')}</Label>
+              <textarea
+                id="message"
+                className="resize-none min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                value={message}
+                onChange={handleMessageChange}
+                placeholder={t('properties.interaction.messagePlaceholder')}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <Label htmlFor="messageDuration">
+                {t('properties.interaction.messageDuration')} ({(messageDuration / 1000).toFixed(1)} {t('properties.interaction.seconds')})
+              </Label>
+              <Slider
+                id="messageDuration"
+                defaultValue={[messageDuration]}
+                max={10000}
+                min={1000}
+                step={500}
+                onValueChange={handleMessageDurationChange}
+              />
+            </div>
+          </div>
+        )}
+        
+        {interactionType === 'sound' && (
+          <div className="grid gap-4">
+            <AudioUpload onUpload={handleSoundUpload} initialValue={element.interaction?.soundUrl || ''} />
+          </div>
+        )}
+        
+        {interactionType === 'canvasNavigation' && (
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Label htmlFor="targetCanvas">{t('properties.interaction.targetCanvas')}</Label>
+              <Select value={targetCanvasId} onValueChange={handleCanvasChange}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select puzzle type" />
+                  <SelectValue placeholder={t('properties.interaction.selectCanvas')} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="puzzle">Regular Puzzle</SelectItem>
-                  <SelectItem value="sequencePuzzle">Sequence Puzzle</SelectItem>
-                  <SelectItem value="clickSequencePuzzle">Click Sequence Puzzle</SelectItem>
-                  <SelectItem value="sliderPuzzle">Slider Puzzle</SelectItem>
+                  {canvasOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-gray-500 mt-1">
-                Select the puzzle type, then go to the "Puzzle Setup" tab to configure it.
-              </p>
             </div>
-          </TabsContent>
-          
-          <TabsContent value="advanced">
-            {getPuzzleConfigComponent()}
-          </TabsContent>
-        </Tabs>
-      )}
-
-      {interactionConfig.type === 'message' && (
-        <div>
-          <Label>Message Text</Label>
-          <Textarea
-            value={interactionConfig.message || ''}
-            onChange={handleMessageChange}
-            placeholder="Enter your message here..."
-            className="min-h-[100px]"
-          />
-        </div>
-      )}
-
-      {interactionConfig.type === 'sound' && (
-        <div className="space-y-2">
-          <Label>Upload Sound</Label>
-          <Input 
-            type="file" 
-            accept="audio/*" 
-            onChange={handleSoundUpload}
-          />
-          {interactionConfig.sound && (
-            <div className="mt-2">
-              <p className="text-sm">Current sound: {interactionConfig.sound}</p>
-              {interactionConfig.soundUrl && (
-                <audio 
-                  controls 
-                  src={interactionConfig.soundUrl} 
-                  className="mt-2 w-full" 
-                />
-              )}
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+        
+        {interactionType === 'puzzle' && (
+          <div className="grid gap-4">
+            <Tabs defaultValue={puzzleTab} className="w-full" onValueChange={handlePuzzleTabChange}>
+              <TabsList>
+                <TabsTrigger value="puzzle">{t('properties.puzzle.puzzle')}</TabsTrigger>
+                <TabsTrigger value="sequencePuzzle">{t('properties.puzzle.sequencePuzzle')}</TabsTrigger>
+                <TabsTrigger value="sliderPuzzle">{t('properties.puzzle.sliderPuzzle')}</TabsTrigger>
+                <TabsTrigger value="clickSequencePuzzle">{t('properties.puzzle.clickSequencePuzzle')}</TabsTrigger>
+              </TabsList>
+              <TabsContent value="puzzle">
+                <PuzzleProperties element={element} />
+              </TabsContent>
+              <TabsContent value="sequencePuzzle">
+                <SequencePuzzleProperties element={element} />
+              </TabsContent>
+              <TabsContent value="sliderPuzzle">
+                <SliderPuzzleProperties element={element} />
+              </TabsContent>
+              <TabsContent value="clickSequencePuzzle">
+                <ClickSequencePuzzleProperties element={element} />
+              </TabsContent>
+            </Tabs>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
-
-export default InteractionProperties;

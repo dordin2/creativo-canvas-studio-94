@@ -65,6 +65,19 @@ export interface InteractionConfig {
   targetCanvasId?: string;
 }
 
+export interface DesignElementInteraction {
+  type: 'none' | 'message' | 'sound' | 'canvasNavigation' | 'puzzle';
+  message?: string;
+  messageDuration?: number;
+  soundUrl?: string;
+  targetCanvasId?: string;
+  puzzleType?: 'puzzle' | 'sequencePuzzle' | 'sliderPuzzle' | 'clickSequencePuzzle';
+  puzzleConfig?: PuzzleConfig;
+  sequencePuzzleConfig?: SequencePuzzleConfig;
+  sliderPuzzleConfig?: SliderPuzzleConfig;
+  clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
+}
+
 export interface DesignElement {
   id: string;
   type: ElementType;
