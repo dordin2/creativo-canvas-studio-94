@@ -1,4 +1,3 @@
-
 import { CSSProperties } from "react";
 
 export type ElementType =
@@ -55,29 +54,15 @@ export interface SliderPuzzleConfig {
 
 export interface InteractionConfig {
   type: InteractionType;
-  puzzleType?: string; // Changed from ElementType to string to support "puzzle" value
+  puzzleType?: ElementType;
   puzzleConfig?: PuzzleConfig;
   sequencePuzzleConfig?: SequencePuzzleConfig;
   clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
   sliderPuzzleConfig?: SliderPuzzleConfig;
   message?: string;
-  messageDuration?: number; // Added this property
   sound?: string;
   soundUrl?: string;
   targetCanvasId?: string;
-}
-
-export interface DesignElementInteraction {
-  type: 'none' | 'message' | 'sound' | 'canvasNavigation' | 'puzzle';
-  message?: string;
-  messageDuration?: number;
-  soundUrl?: string;
-  targetCanvasId?: string;
-  puzzleType?: 'puzzle' | 'sequencePuzzle' | 'sliderPuzzle' | 'clickSequencePuzzle';
-  puzzleConfig?: PuzzleConfig;
-  sequencePuzzleConfig?: SequencePuzzleConfig;
-  sliderPuzzleConfig?: SliderPuzzleConfig;
-  clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
 }
 
 export interface DesignElement {

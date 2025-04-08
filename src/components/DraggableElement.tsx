@@ -110,11 +110,6 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (interactionType === 'message' && element.interaction?.message) {
       setShowMessageModal(true);
-      
-      const messageDuration = element.interaction.messageDuration || 5000;
-      setTimeout(() => {
-        setShowMessageModal(false);
-      }, messageDuration);
     } 
     else if (interactionType === 'sound' && element.interaction?.soundUrl) {
       if (audioRef.current) {
@@ -431,7 +426,6 @@ const DraggableElement = ({ element, isActive, children }: {
           isOpen={showMessageModal}
           onClose={() => setShowMessageModal(false)}
           message={element.interaction?.message || ''}
-          duration={element.interaction?.messageDuration || 5000}
         />
       )}
       

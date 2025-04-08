@@ -10,8 +10,7 @@ import PuzzleProperties from "./PuzzleProperties";
 import SequencePuzzleProperties from "./SequencePuzzleProperties";
 import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
 import SliderPuzzleProperties from "./SliderPuzzleProperties";
-import { InteractionProperties } from "./InteractionProperties";
-import NotificationSettings from "./NotificationSettings";
+import InteractionProperties from "./InteractionProperties";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ElementPropertiesProps {
@@ -26,31 +25,11 @@ const ElementProperties = ({ element }: ElementPropertiesProps) => {
   // Don't show interaction properties for puzzle elements and backgrounds
   const canHaveInteraction = !puzzleElements.includes(element.type) && element.type !== 'background';
   
-  // Element is a background - show notification settings
-  const isBackground = element.type === 'background';
-  
   return (
     <div className="properties-panel p-4 space-y-6">
       <h2 className="text-lg font-semibold mb-4">Properties</h2>
       
-      {isBackground ? (
-        <Tabs defaultValue="properties">
-          <TabsList className="w-full">
-            <TabsTrigger value="properties" className="flex-1">Properties</TabsTrigger>
-            <TabsTrigger value="notifications" className="flex-1">Notifications</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="properties" className="space-y-6 pt-4">
-            <PositionProperties element={element} />
-            {element.size && <RotationProperty element={element} />}
-            <LayerProperties element={element} />
-          </TabsContent>
-          
-          <TabsContent value="notifications" className="space-y-6 pt-4">
-            <NotificationSettings />
-          </TabsContent>
-        </Tabs>
-      ) : canHaveInteraction ? (
+      {canHaveInteraction ? (
         <Tabs defaultValue="properties">
           <TabsList className="w-full">
             <TabsTrigger value="properties" className="flex-1">Properties</TabsTrigger>

@@ -8,7 +8,6 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import GameModeToggle from "./GameModeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LayersList from "./LayersList";
-import NotificationSettingsDialog from "./NotificationSettingsDialog";
 
 const Header = () => {
   const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
@@ -102,7 +101,6 @@ const Header = () => {
             <Redo className="h-4 w-4" />
           </Button>
           <div className="w-px h-6 bg-gray-200 mx-1"></div>
-          <NotificationSettingsDialog />
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" className="gap-2 hover:bg-gray-50">
