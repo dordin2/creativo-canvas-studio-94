@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDesignState, DesignElement } from '@/context/DesignContext';
 import { X } from 'lucide-react';
 
@@ -11,16 +11,101 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
   const { removeFromInventory, setDraggedInventoryItem, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   
+  // Track globally if any item is being dragged to change cursor back on document
+  useEffect(() => {
+    if (isDragging) {
+      // Add dragging classes for styling
+      document.body.classList.add('inventory-dragging');
+      
+      // Create and apply a custom cursor with item preview
+      const cursorPreview = document.createElement('div');
+      cursorPreview.id = 'cursor-preview';
+      cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-75 w-10 h-10 flex items-center justify-center';
+      document.body.appendChild(cursorPreview);
+      
+      // Add content to the cursor preview based on element type
+      let previewContent = '';
+      
+      switch (element.type) {
+        case 'rectangle':
+          previewContent = `<div class="h-full w-full" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}; border-radius: ${element.style?.borderRadius || '4px'}"></div>`;
+          break;
+          
+        case 'circle':
+          previewContent = `<div class="h-full w-full rounded-full" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}"></div>`;
+          break;
+          
+        case 'triangle':
+          previewContent = `<div style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 30px solid ${element.style?.backgroundColor || '#8B5CF6'}; background-color: transparent;"></div>`;
+          break;
+          
+        case 'image':
+          previewContent = element.dataUrl 
+            ? `<img src="${element.dataUrl}" alt="Item" class="w-full h-full object-contain" />` 
+            : element.src 
+              ? `<img src="${element.src}" alt="Item" class="w-full h-full object-contain" />` 
+              : `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-400">No image</div>`;
+          break;
+          
+        case 'heading':
+        case 'subheading':
+        case 'paragraph':
+          previewContent = `<div class="w-full h-full flex items-center justify-center text-xs overflow-hidden">${element.content?.substring(0, 5) || 'Text'}...</div>`;
+          break;
+          
+        default:
+          previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-400">Item</div>`;
+      }
+      
+      cursorPreview.innerHTML = previewContent;
+      
+      // Move custom cursor with mouse
+      const movePreview = (e: MouseEvent) => {
+        if (cursorPreview) {
+          cursorPreview.style.left = `${e.clientX + 5}px`;
+          cursorPreview.style.top = `${e.clientY + 5}px`;
+        }
+      };
+      
+      document.addEventListener('mousemove', movePreview);
+      
+      // Handle drag end by listening for mouseup globally
+      const handleMouseUp = () => {
+        setIsDragging(false);
+        setDraggedInventoryItem(null);
+        document.body.classList.remove('inventory-dragging');
+        document.removeEventListener('mousemove', movePreview);
+        document.removeEventListener('mouseup', handleMouseUp);
+        
+        if (cursorPreview && cursorPreview.parentNode) {
+          cursorPreview.parentNode.removeChild(cursorPreview);
+        }
+      };
+      
+      document.addEventListener('mouseup', handleMouseUp);
+      
+      return () => {
+        document.body.classList.remove('inventory-dragging');
+        document.removeEventListener('mousemove', movePreview);
+        document.removeEventListener('mouseup', handleMouseUp);
+        
+        if (cursorPreview && cursorPreview.parentNode) {
+          cursorPreview.parentNode.removeChild(cursorPreview);
+        }
+      };
+    }
+  }, [isDragging, element, setDraggedInventoryItem]);
+  
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     if (!isGameMode) return;
     
-    // Set a ghost drag image
+    // Set a transparent drag image
     const ghost = document.createElement('div');
-    ghost.style.width = '40px';
-    ghost.style.height = '40px';
+    ghost.style.width = '1px';
+    ghost.style.height = '1px';
     ghost.style.background = 'transparent';
     document.body.appendChild(ghost);
-    e.dataTransfer.setDragImage(ghost, 20, 20);
+    e.dataTransfer.setDragImage(ghost, 0, 0);
     
     // Set dragged data
     e.dataTransfer.setData('application/inventory-item', element.id);
@@ -113,7 +198,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
   
   return (
     <div 
-      className={`relative bg-gray-50 border rounded-md p-1 h-20 flex items-center justify-center shadow-sm group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      className={`relative bg-gray-50 border rounded-md p-1 h-20 flex items-center justify-center shadow-sm group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''} ${isDragging ? 'invisible' : ''}`}
       draggable={isGameMode}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}

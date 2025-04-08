@@ -97,6 +97,26 @@
     font-family: 'Inter', sans-serif;
   }
 
+  /* Custom inventory drag cursor styles */
+  body.inventory-dragging {
+    cursor: none !important;
+  }
+
+  body.inventory-dragging * {
+    cursor: none !important;
+  }
+
+  #cursor-preview {
+    pointer-events: none;
+    position: fixed;
+    z-index: 10000;
+    transform-origin: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  /* Canvas element styles */
   .canvas-element {
     @apply cursor-move transition-transform duration-150 relative shadow-element hover:shadow-glow;
     will-change: transform, left, top;
