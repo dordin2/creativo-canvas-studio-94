@@ -8,7 +8,7 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElementWithoutHistory, commitToHistory, elements } = useDesignState();
+  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
@@ -24,6 +24,39 @@ export const useDraggable = (elementId: string) => {
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
   const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
   const isImageElement = currentElement?.type === 'image';
+
+  // Handle drops from inventory items
+  useEffect(() => {
+    if (!currentElement) return;
+    
+    const handleDragOver = (e: DragEvent) => {
+      if (draggedInventoryItem && currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
+        e.preventDefault();
+      }
+    };
+    
+    const handleDrop = (e: DragEvent) => {
+      if (!draggedInventoryItem) return;
+      
+      e.preventDefault();
+      
+      // Check if this element can interact with the dragged item
+      if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
+        handleItemCombination(draggedInventoryItem.id, elementId);
+      }
+    };
+    
+    const element = document.getElementById(`element-${elementId}`);
+    if (element) {
+      element.addEventListener('dragover', handleDragOver);
+      element.addEventListener('drop', handleDrop);
+      
+      return () => {
+        element.removeEventListener('dragover', handleDragOver);
+        element.removeEventListener('drop', handleDrop);
+      };
+    }
+  }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

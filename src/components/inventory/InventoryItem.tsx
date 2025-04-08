@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useDesignState, DesignElement } from '@/context/DesignContext';
-import { X } from 'lucide-react';
+import { X, Image } from 'lucide-react';
 
 interface InventoryItemProps {
   element: DesignElement;
@@ -20,7 +20,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       // Create and apply a custom cursor with item preview
       const cursorPreview = document.createElement('div');
       cursorPreview.id = 'cursor-preview';
-      cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-75 w-10 h-10 flex items-center justify-center';
+      cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-75 w-12 h-12 flex items-center justify-center bg-white rounded-md shadow-md';
       document.body.appendChild(cursorPreview);
       
       // Add content to the cursor preview based on element type
@@ -28,11 +28,11 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       
       switch (element.type) {
         case 'rectangle':
-          previewContent = `<div class="h-full w-full" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}; border-radius: ${element.style?.borderRadius || '4px'}"></div>`;
+          previewContent = `<div class="h-10 w-10" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}; border-radius: ${element.style?.borderRadius || '4px'}"></div>`;
           break;
           
         case 'circle':
-          previewContent = `<div class="h-full w-full rounded-full" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}"></div>`;
+          previewContent = `<div class="h-10 w-10 rounded-full" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}"></div>`;
           break;
           
         case 'triangle':
@@ -40,21 +40,31 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
           break;
           
         case 'image':
-          previewContent = element.dataUrl 
-            ? `<img src="${element.dataUrl}" alt="Item" class="w-full h-full object-contain" />` 
-            : element.src 
-              ? `<img src="${element.src}" alt="Item" class="w-full h-full object-contain" />` 
-              : `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-400">No image</div>`;
+          if (element.dataUrl) {
+            previewContent = `<img src="${element.dataUrl}" alt="Item" class="w-full h-full object-contain" />`;
+          } else if (element.src) {
+            previewContent = `<img src="${element.src}" alt="Item" class="w-full h-full object-contain" />`;
+          } else {
+            previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></div>`;
+          }
           break;
           
         case 'heading':
         case 'subheading':
         case 'paragraph':
-          previewContent = `<div class="w-full h-full flex items-center justify-center text-xs overflow-hidden">${element.content?.substring(0, 5) || 'Text'}...</div>`;
+          previewContent = `<div class="w-full h-full flex items-center justify-center text-xs overflow-hidden font-semibold">${element.content?.substring(0, 5) || 'Text'}...</div>`;
+          break;
+          
+        case 'puzzle':
+        case 'sequencePuzzle':
+        case 'sliderPuzzle':
+          previewContent = `<div class="w-full h-full flex items-center justify-center">
+            <div class="h-8 w-8 bg-canvas-purple rounded-md flex items-center justify-center text-white text-xs">Puzzle</div>
+          </div>`;
           break;
           
         default:
-          previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-400">Item</div>`;
+          previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-medium">Item</div>`;
       }
       
       cursorPreview.innerHTML = previewContent;
@@ -62,8 +72,8 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       // Move custom cursor with mouse
       const movePreview = (e: MouseEvent) => {
         if (cursorPreview) {
-          cursorPreview.style.left = `${e.clientX + 5}px`;
-          cursorPreview.style.top = `${e.clientY + 5}px`;
+          cursorPreview.style.left = `${e.clientX + 10}px`;
+          cursorPreview.style.top = `${e.clientY + 10}px`;
         }
       };
       
@@ -114,6 +124,13 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
     // Update state
     setIsDragging(true);
     setDraggedInventoryItem(element);
+    
+    // Remove ghost element after a short delay
+    setTimeout(() => {
+      if (ghost.parentNode) {
+        ghost.parentNode.removeChild(ghost);
+      }
+    }, 100);
   };
   
   const handleDragEnd = () => {
@@ -198,7 +215,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
   
   return (
     <div 
-      className={`relative bg-gray-50 border rounded-md p-1 h-20 flex items-center justify-center shadow-sm group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''} ${isDragging ? 'invisible' : ''}`}
+      className={`relative bg-gray-50 border rounded-md p-1 h-20 flex items-center justify-center shadow-sm group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''} ${isDragging ? 'opacity-30' : ''}`}
       draggable={isGameMode}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
@@ -212,7 +229,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
         </button>
       </div>
       
-      <div className={`w-full h-full overflow-hidden flex items-center justify-center ${isDragging ? 'opacity-50' : ''}`}>
+      <div className={`w-full h-full overflow-hidden flex items-center justify-center`}>
         {renderThumbnail()}
       </div>
     </div>
