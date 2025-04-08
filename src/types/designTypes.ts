@@ -9,6 +9,7 @@ export type ElementType =
   | 'subheading'
   | 'paragraph'
   | 'image'
+  | 'video'
   | 'background'
   | 'puzzle'
   | 'sequencePuzzle'
@@ -94,6 +95,10 @@ export interface DesignElement {
   isHidden?: boolean;
   name?: string;
   interaction?: InteractionConfig;
+  videoAutoplay?: boolean;
+  videoMuted?: boolean;
+  videoControls?: boolean;
+  videoLoop?: boolean;
 }
 
 export interface Canvas {
@@ -120,6 +125,7 @@ export interface DesignContextType {
   updateElementLayer: (id: string, newLayer: number) => void;
   getHighestLayer: () => number;
   handleImageUpload: (id: string, file: File) => void;
+  handleVideoUpload: (id: string, file: File) => void;
   undo: () => void;
   redo: () => void;
   canUndo: boolean;

@@ -3,6 +3,7 @@ import { DesignElement } from "@/context/DesignContext";
 import TextProperties from "./TextProperties";
 import ShapeProperties from "./ShapeProperties";
 import ImageProperties from "./ImageProperties";
+import VideoProperties from "./VideoProperties";
 import LayerProperties from "./LayerProperties";
 import PositionProperties from "./PositionProperties";
 import RotationProperty from "./RotationProperty";
@@ -47,6 +48,8 @@ const ElementProperties = ({ element }: ElementPropertiesProps) => {
             
             {element.type === 'image' && <ImageProperties element={element} />}
             
+            {element.type === 'video' && <VideoProperties element={element} />}
+            
             <LayerProperties element={element} />
           </TabsContent>
           
@@ -65,6 +68,8 @@ const ElementProperties = ({ element }: ElementPropertiesProps) => {
           {shapeElements.includes(element.type) && <ShapeProperties element={element} />}
           
           {element.type === 'image' && <ImageProperties element={element} />}
+          
+          {element.type === 'video' && <VideoProperties element={element} />}
           
           {element.type === 'puzzle' && <PuzzleProperties element={element} />}
           

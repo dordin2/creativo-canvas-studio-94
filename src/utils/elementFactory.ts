@@ -1,4 +1,3 @@
-
 import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
 // Default positions for new elements
@@ -101,6 +100,21 @@ export const createNewElement = (
         originalSize: { width: 200, height: 150 }, // Default original size
         style: { transform: 'rotate(0deg)' },
         layer
+      };
+      
+    case 'video':
+      return {
+        id: generateId(),
+        type,
+        position,
+        size: { width: 320, height: 180 }, // 16:9 aspect ratio by default
+        originalSize: { width: 320, height: 180 }, // Default original size
+        style: { transform: 'rotate(0deg)' },
+        layer,
+        videoAutoplay: false,
+        videoMuted: true,
+        videoControls: true,
+        videoLoop: false
       };
       
     case 'background':

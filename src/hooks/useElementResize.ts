@@ -19,17 +19,18 @@ export const useElementResize = (element: DesignElement) => {
     setResizeDirection(direction);
     setStartPos({ x: e.clientX, y: e.clientY });
     
+    // Use exact values without rounding during calculations to avoid jumpiness
     const width = element.size?.width || 100;
     const height = element.size?.height || 100;
     
     setStartSize({
-      width: Math.round(width),
-      height: Math.round(height)
+      width: width,
+      height: height
     });
     
     setStartPosition({
-      x: Math.round(element.position.x),
-      y: Math.round(element.position.y)
+      x: element.position.x,
+      y: element.position.y
     });
     
     if (element.type === 'image') {
@@ -40,7 +41,8 @@ export const useElementResize = (element: DesignElement) => {
   };
 
   const updateElementSize = (newWidth: number, newHeight: number, newX: number, newY: number) => {
-    // Round values to eliminate sub-pixel rendering issues that cause jumping
+    // Only round at the very end when updating the element
+    // This prevents cumulative rounding errors during resize operations
     updateElement(element.id, {
       size: { 
         width: Math.round(newWidth), 
@@ -56,6 +58,7 @@ export const useElementResize = (element: DesignElement) => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizing && resizeDirection) {
+        // Calculate exact deltas without rounding
         const deltaX = e.clientX - startPos.x;
         const deltaY = e.clientY - startPos.y;
         
@@ -68,6 +71,7 @@ export const useElementResize = (element: DesignElement) => {
         let newY = startPosition.y;
         
         // Calculate new dimensions and position based on resize direction
+        // using the exact values without premature rounding
         if (resizeDirection.includes('e')) {
           newWidth = Math.max(20, startSize.width + deltaX);
         }
@@ -157,7 +161,7 @@ export const useElementResize = (element: DesignElement) => {
           }
         }
         
-        // Update element with both new size and position in a single update
+        // Only round at the very end when updating the UI
         updateElementSize(newWidth, newHeight, newX, newY);
       }
     };

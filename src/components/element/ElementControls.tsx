@@ -31,18 +31,18 @@ const ElementControls = ({
 }: ElementControlsProps) => {
   const { updateElement, removeElement, addElement, canvases } = useDesignState();
   
-  // Don't render controls at all if the element is hidden or it's the background
-  if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
+  // Don't render controls at all if it's the background
+  if ((!showControls && !isActive) || element.type === 'background') {
     return null;
   }
 
   const showResizeHandles = isActive;
   const showRotationHandle = isActive;
   
-  // Round dimensions to ensure consistency with the element
+  // Use exact dimensions to ensure consistency
   const elementDimensions = {
-    width: element.size?.width ? Math.round(element.size.width) : 0,
-    height: element.size?.height ? Math.round(element.size.height) : 0
+    width: element.size?.width || 0,
+    height: element.size?.height || 0
   };
 
   const handleDuplicate = (e: React.MouseEvent) => {
@@ -107,15 +107,11 @@ const ElementControls = ({
   // Get the current rotation directly from the element style for consistent transforms
   const rotation = getRotation(element);
   
-  // Use exact positioning with Math.round to ensure consistency
-  const posX = Math.round(element.position.x);
-  const posY = Math.round(element.position.y);
-  
-  // Apply the same transformation to the frame as the element has
+  // Apply the same positioning as the element itself without any adjustments
   const frameStyle = {
     position: 'absolute' as const,
-    left: posX,
-    top: posY,
+    left: element.position.x,
+    top: element.position.y,
     width: elementDimensions.width,
     height: elementDimensions.height,
     transform: `rotate(${rotation}deg)`,
@@ -137,8 +133,8 @@ const ElementControls = ({
       <div 
         style={{
           position: 'absolute',
-          left: posX,
-          top: posY,
+          left: element.position.x,
+          top: element.position.y,
           width: elementDimensions.width,
           height: elementDimensions.height,
           transform: `rotate(${rotation}deg)`,
@@ -223,9 +219,9 @@ const ElementControls = ({
                     onClick={handleToggleVisibility}
                   >
                     {isVisible ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
                       <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
                     )}
                   </Button>
                 </TooltipTrigger>
