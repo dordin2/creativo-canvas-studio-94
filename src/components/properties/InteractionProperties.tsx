@@ -1,20 +1,20 @@
+
 import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UploadButton } from "../ui/upload-button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { PuzzleProperties } from "./PuzzleProperties";
-import { SequencePuzzleProperties } from "./SequencePuzzleProperties";
+import PuzzleProperties from "./PuzzleProperties";
+import SequencePuzzleProperties from "./SequencePuzzleProperties";
 import { processImageUpload } from "@/utils/imageUploader";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { AudioUpload } from "./AudioUpload";
-import { SliderPuzzleProperties } from "./SliderPuzzleProperties";
-import { ClickSequencePuzzleProperties } from "./ClickSequencePuzzleProperties";
+import AudioUpload from "./AudioUpload";
+import SliderPuzzleProperties from "./SliderPuzzleProperties";
+import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
 
 interface InteractionPropertiesProps {
   element: DesignElement;
@@ -251,3 +251,5 @@ export const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ el
     </div>
   );
 };
+
+export default InteractionProperties;
