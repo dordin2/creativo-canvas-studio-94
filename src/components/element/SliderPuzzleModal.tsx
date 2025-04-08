@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -67,11 +66,11 @@ export const SliderPuzzleModal: React.FC<SliderPuzzleModalProps> = ({ element, i
         
         <div className="py-4">
           {config.orientation === 'vertical' ? (
-            <div className="flex justify-center items-center gap-8 h-64">
+            <div className="flex justify-center items-end gap-8 h-64">
               {sliderValues.map((value, index) => (
                 <div key={index} className="h-full flex flex-col items-center gap-2">
                   <span className="text-sm text-center">{value}</span>
-                  <div className="flex-1 w-2 relative">
+                  <div className="flex-1 flex items-center relative w-10">
                     <Slider
                       orientation="vertical"
                       value={[value]}

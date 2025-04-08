@@ -25,7 +25,7 @@ const SliderPuzzleElement: React.FC<SliderPuzzleElementProps> = ({ element, onCl
   const renderSliderPreview = () => {
     if (config.orientation === 'vertical') {
       return (
-        <div className="flex h-full gap-3 py-4 justify-center">
+        <div className="flex h-full gap-3 py-4 justify-center items-end">
           {Array(config.sliderCount).fill(0).map((_, index) => (
             <div key={index} className="h-full w-2 bg-blue-100 rounded-full relative overflow-hidden">
               <div 
