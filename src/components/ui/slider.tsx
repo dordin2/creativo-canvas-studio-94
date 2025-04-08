@@ -12,7 +12,7 @@ const Slider = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full touch-none select-none items-center",
-      orientation === "vertical" && "h-full flex-col justify-end py-4", // Changed justify-center to justify-end for proper alignment
+      orientation === "vertical" && "h-full flex-col justify-end", // Removed padding that was causing alignment issues
       className
     )}
     {...props}
@@ -20,17 +20,22 @@ const Slider = React.forwardRef<
     <SliderPrimitive.Track 
       className={cn(
         "relative h-2 w-full grow overflow-hidden rounded-full bg-secondary",
-        orientation === "vertical" && "h-full w-2"
+        orientation === "vertical" && "h-full w-2" // Ensure correct dimensions for vertical track
       )}
     >
       <SliderPrimitive.Range 
         className={cn(
           "absolute h-full bg-gradient-to-r from-canvas-purple to-canvas-indigo",
-          orientation === "vertical" && "w-full bg-gradient-to-t from-canvas-purple to-canvas-indigo" // Added bg-gradient-to-t for vertical gradient direction
+          orientation === "vertical" && "w-full bg-gradient-to-t from-canvas-purple to-canvas-indigo" // Keep vertical gradient
         )} 
       />
     </SliderPrimitive.Track>
-    <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 transition-transform" />
+    <SliderPrimitive.Thumb 
+      className={cn(
+        "block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 transition-transform",
+        orientation === "vertical" && "left-1/2 -translate-x-1/2" // Fix vertical thumb positioning
+      )}
+    />
   </SliderPrimitive.Root>
 ))
 Slider.displayName = SliderPrimitive.Root.displayName

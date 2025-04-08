@@ -71,7 +71,7 @@ export const SliderPuzzleModal: React.FC<SliderPuzzleModalProps> = ({ element, i
               {sliderValues.map((value, index) => (
                 <div key={index} className="h-full flex flex-col items-center gap-2">
                   <span className="text-sm text-center">{value}</span>
-                  <div className="flex-1 relative">
+                  <div className="flex-1 w-2 relative">
                     <Slider
                       orientation="vertical"
                       value={[value]}
