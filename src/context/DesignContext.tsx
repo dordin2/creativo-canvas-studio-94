@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode, useCallback } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { 
   ElementType, 
@@ -32,6 +32,10 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   const [isGameMode, setIsGameMode] = useState<boolean>(false);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [showInventory, setShowInventory] = useState<boolean>(false);
+  const [gameModeState, setGameModeState] = useState<{
+    canvases: Canvas[],
+    inventoryItems: InventoryItem[]
+  } | null>(null);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
@@ -39,11 +43,36 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const toggleGameMode = () => {
+    if (isGameMode) {
+      // Switching from game mode to edit mode
+      // Restore the canvas state from before game mode
+      if (gameModeState) {
+        setCanvases(gameModeState.canvases);
+        setInventoryItems([]);
+      }
+    } else {
+      // Switching to game mode
+      // Save the current state to be restored later
+      setGameModeState({
+        canvases: JSON.parse(JSON.stringify(canvases)),
+        inventoryItems: JSON.parse(JSON.stringify(inventoryItems))
+      });
+    }
+    
     setIsGameMode(prev => !prev);
-    if (!isGameMode) {
+    if (isGameMode) {
+      // Reset active element when exiting game mode
       setActiveElement(null);
     }
   };
+  
+  // When returning to game mode, restore inventory items from last game session
+  useEffect(() => {
+    if (isGameMode && gameModeState) {
+      // Restore inventory items from previous game session
+      setInventoryItems(gameModeState.inventoryItems);
+    }
+  }, [isGameMode, gameModeState]);
   
   const toggleInventory = () => {
     setShowInventory(prev => !prev);

@@ -26,7 +26,11 @@ const GameModeToggle = () => {
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">
-          <p>{isGameMode ? 'Exit Game Mode' : 'Enter Game Mode'}</p>
+          <p>
+            {isGameMode 
+              ? 'Exit Game Mode (Game state will be preserved)' 
+              : 'Enter Game Mode (Inventory items will be remembered)'}
+          </p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>
