@@ -15,7 +15,7 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
   isOpen, 
   onClose, 
   message,
-  position = 'bottom',
+  position = 'top', // Default to top now
   elementRect
 }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -51,22 +51,27 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
       };
     }
     
+    // Calculate the center of the element
     const centerX = elementRect.left + elementRect.width / 2;
+    
+    // Position exactly at the top/bottom of the element (not with offset)
     const positionY = position === 'bottom' 
-      ? elementRect.bottom + 10 // 10px below element
-      : elementRect.top - 10;   // 10px above element
+      ? elementRect.bottom // Exactly at the bottom of element
+      : elementRect.top;   // Exactly at the top of element
     
     return {
       left: `${centerX}px`,
       transform: 'translateX(-50%)',
+      // For top position, place the bottom of the bubble at the element top
+      // For bottom position, place the top of the bubble at the element bottom
       [position === 'bottom' ? 'top' : 'bottom']: `calc(100% - ${positionY}px)`
     };
   };
   
   const positionStyles = getPositionStyles();
-  const bubblePosition = elementRect ? 
-    (position === 'bottom' ? '-bottom-1' : '-top-1') : 
-    (position === 'bottom' ? 'bottom-0' : 'top-0');
+  
+  // Calculate the proper position for the bubble pointer triangle
+  const bubblePosition = position === 'bottom' ? '-bottom-1' : '-top-1';
   const bubbleRotation = position === 'bottom' ? 'rotate-45' : '-rotate-135';
   
   return (

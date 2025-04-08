@@ -110,7 +110,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const handleInteraction = () => {
     if (!hasInteraction) return;
     
-    if (elementRef.current && interactionType === 'message') {
+    if (elementRef.current) {
       setElementBoundingRect(elementRef.current.getBoundingClientRect());
     }
     
@@ -432,7 +432,7 @@ const DraggableElement = ({ element, isActive, children }: {
           isOpen={showMessageModal}
           onClose={() => setShowMessageModal(false)}
           message={element.interaction?.message || ''}
-          position={messagePosition}
+          position="top"
           elementRect={elementBoundingRect}
         />
       )}
