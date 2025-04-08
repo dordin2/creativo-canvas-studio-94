@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useDesignState, DesignElement } from '@/context/DesignContext';
 import { X } from 'lucide-react';
 
@@ -8,7 +8,33 @@ interface InventoryItemProps {
 }
 
 const InventoryItem = ({ element }: InventoryItemProps) => {
-  const { removeFromInventory } = useDesignState();
+  const { removeFromInventory, setDraggedInventoryItem, isGameMode } = useDesignState();
+  const [isDragging, setIsDragging] = useState(false);
+  
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!isGameMode) return;
+    
+    // Set a ghost drag image
+    const ghost = document.createElement('div');
+    ghost.style.width = '40px';
+    ghost.style.height = '40px';
+    ghost.style.background = 'transparent';
+    document.body.appendChild(ghost);
+    e.dataTransfer.setDragImage(ghost, 20, 20);
+    
+    // Set dragged data
+    e.dataTransfer.setData('application/inventory-item', element.id);
+    e.dataTransfer.effectAllowed = 'move';
+    
+    // Update state
+    setIsDragging(true);
+    setDraggedInventoryItem(element);
+  };
+  
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    setDraggedInventoryItem(null);
+  };
   
   const renderThumbnail = () => {
     switch (element.type) {
@@ -86,7 +112,12 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
   };
   
   return (
-    <div className="relative bg-gray-50 border rounded-md p-1 h-20 flex items-center justify-center shadow-sm group">
+    <div 
+      className={`relative bg-gray-50 border rounded-md p-1 h-20 flex items-center justify-center shadow-sm group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''}`}
+      draggable={isGameMode}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+    >
       <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button 
           onClick={() => removeFromInventory(element.id)}
@@ -96,7 +127,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
         </button>
       </div>
       
-      <div className="w-full h-full overflow-hidden flex items-center justify-center">
+      <div className={`w-full h-full overflow-hidden flex items-center justify-center ${isDragging ? 'opacity-50' : ''}`}>
         {renderThumbnail()}
       </div>
     </div>

@@ -5,8 +5,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { AlertCircle, MessageSquare, Music, Puzzle, Navigation, ShoppingBasket } from "lucide-react";
+import { AlertCircle, MessageSquare, Music, Puzzle, Navigation, ShoppingBasket, Combine } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PuzzleProperties from "./PuzzleProperties";
 import SequencePuzzleProperties from "./SequencePuzzleProperties";
@@ -18,7 +19,7 @@ interface InteractionPropertiesProps {
 }
 
 const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }) => {
-  const { updateElement, canvases, activeCanvasIndex } = useDesignState();
+  const { updateElement, canvases, activeCanvasIndex, elements } = useDesignState();
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<string>("config");
   
@@ -34,7 +35,8 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
       placeholders: 3,
       images: [],
       solution: []
-    }
+    },
+    canCombineWith: []
   };
 
   const handleTypeChange = (value: string) => {
@@ -154,6 +156,20 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     reader.readAsDataURL(file);
   };
 
+  const handleToggleCombinableItem = (itemId: string) => {
+    const currentItems = interactionConfig.canCombineWith || [];
+    const newItems = currentItems.includes(itemId)
+      ? currentItems.filter(id => id !== itemId)
+      : [...currentItems, itemId];
+    
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        canCombineWith: newItems
+      }
+    });
+  };
+
   const createPuzzleElementProxy = () => {
     const baseElement = { ...element };
     
@@ -232,6 +248,22 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     }
   };
 
+  const getCombinableElements = () => {
+    const currentCanvasElements = elements.filter(el => 
+      el.id !== element.id && 
+      (el.interaction?.type === 'addToInventory' || el.inInventory)
+    );
+    
+    const otherCanvasElements = canvases.flatMap((canvas, index) => {
+      if (index === activeCanvasIndex) return [];
+      return canvas.elements.filter(el => 
+        el.interaction?.type === 'addToInventory' || el.inInventory
+      );
+    });
+    
+    return [...currentCanvasElements, ...otherCanvasElements];
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -268,6 +300,13 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
               <ShoppingBasket className="h-4 w-4" />
               <span>Add to Inventory</span>
             </SelectItem>
+            <SelectItem value="combinable" className="flex items-center gap-2">
+              <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M14 10l-2-2m0 0l-2 2m2-2v4M8 18l-2 2m0 0l-2-2m2 2v-4M20 9h-2.5a1.5 1.5 0 0 1 0-3h1a1.5 1.5 0 0 0 0-3H16" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                <path d="M4 9h2.5a1.5 1.5 0 0 0 0-3h-1a1.5 1.5 0 0 1 0-3H8M16 18h1a1.5 1.5 0 0 0 0-3h-1a1.5 1.5 0 0 1 0-3H14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+              <span>Combinable</span>
+            </SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -295,6 +334,47 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
           <p className="text-xs text-gray-500 mt-1">
             Select the canvas to navigate to when this element is interacted with.
           </p>
+        </div>
+      )}
+
+      {interactionConfig.type === 'combinable' && (
+        <div className="space-y-4">
+          <Label>Combinable with these items:</Label>
+          <div className="space-y-2 max-h-64 overflow-y-auto p-2 border rounded-md">
+            {getCombinableElements().length > 0 ? (
+              getCombinableElements().map(item => (
+                <div key={item.id} className="flex items-center space-x-2">
+                  <Checkbox 
+                    id={`item-${item.id}`}
+                    checked={(interactionConfig.canCombineWith || []).includes(item.id)}
+                    onCheckedChange={() => handleToggleCombinableItem(item.id)}
+                  />
+                  <Label htmlFor={`item-${item.id}`} className="cursor-pointer">
+                    {item.name || `${item.type} (${item.id.slice(0, 4)})`}
+                  </Label>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-gray-500 py-2">
+                No items available. Create items with "Add to Inventory" interaction first.
+              </p>
+            )}
+          </div>
+          <div className="p-3 bg-gray-50 rounded-md">
+            <p className="text-sm text-gray-600">
+              When an inventory item is dragged and dropped onto this element, the item will be removed from the inventory
+              and a success message will be shown.
+            </p>
+          </div>
+          <div>
+            <Label>Success Message</Label>
+            <Textarea
+              value={interactionConfig.message || ''}
+              onChange={handleMessageChange}
+              placeholder="Enter message to show when items are combined..."
+              className="min-h-[80px]"
+            />
+          </div>
         </div>
       )}
 

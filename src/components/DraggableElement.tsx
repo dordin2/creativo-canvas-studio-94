@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -30,7 +29,21 @@ const DraggableElement = ({ element, isActive, children }: {
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases, isGameMode, addToInventory, inventoryItems } = useDesignState();
+  const { 
+    updateElement, 
+    setActiveElement, 
+    removeElement, 
+    addElement, 
+    setActiveCanvas, 
+    canvases, 
+    isGameMode, 
+    addToInventory, 
+    inventoryItems,
+    draggedInventoryItem,
+    setDraggedInventoryItem,
+    handleItemCombination
+  } = useDesignState();
+  
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -41,6 +54,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const [showControls, setShowControls] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showPuzzleModal, setShowPuzzleModal] = useState(false);
+  const [isDropTarget, setIsDropTarget] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -56,7 +70,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
   
-  // Check if element is in inventory
   const isInInventory = element.inInventory || inventoryItems.some(item => item.elementId === element.id);
   
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -182,6 +195,31 @@ const DraggableElement = ({ element, isActive, children }: {
     removeElement(element.id);
   };
 
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!isGameMode || !draggedInventoryItem) return;
+    
+    if (element.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
+      e.preventDefault();
+      setIsDropTarget(true);
+    }
+  };
+  
+  const handleDragLeave = () => {
+    setIsDropTarget(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    if (!isGameMode || !draggedInventoryItem) {
+      setIsDropTarget(false);
+      return;
+    }
+    
+    e.preventDefault();
+    setIsDropTarget(false);
+    
+    handleItemCombination(draggedInventoryItem.id, element.id);
+  };
+
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false);
@@ -274,7 +312,6 @@ const DraggableElement = ({ element, isActive, children }: {
     );
   }
 
-  // If element is in inventory or hidden and not active in edit mode, don't render it
   if ((isInInventory || element.isHidden) && !isActive) {
     return null;
   }
@@ -328,10 +365,11 @@ const DraggableElement = ({ element, isActive, children }: {
       indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full animate-pulse";
     } else if (interactionType === 'addToInventory') {
       indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full animate-pulse";
+    } else if (interactionType === 'combinable') {
+      indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-purple-500 rounded-full animate-pulse";
     }
   }
 
-  // First define combinedStyle, then use it
   const combinedStyle = {
     ...elementStyle,
     zIndex: element.layer,
@@ -342,9 +380,9 @@ const DraggableElement = ({ element, isActive, children }: {
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute' as 'absolute',
-    // Remove any border in game mode
-    border: isGameMode ? 'none' : elementStyle.border,
-    outline: isGameMode ? 'none' : elementStyle.outline,
+    border: isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border,
+    outline: isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline,
+    boxShadow: isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow,
   };
 
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
@@ -359,18 +397,21 @@ const DraggableElement = ({ element, isActive, children }: {
       onDragStart={(e) => {
         e.preventDefault();
       }}
-      onDragOver={(e) => {
-        if ((isImageElement || isPuzzleElement) && !isGameMode) {
-          e.preventDefault();
-          e.stopPropagation();
-        }
-      }}
+      onDragOver={isGameMode ? handleDragOver : undefined}
+      onDragLeave={isGameMode ? handleDragLeave : undefined}
+      onDrop={isGameMode ? handleDrop : undefined}
     >
       {childContent}
-      {showInteractionIndicator && (interactionType === 'canvasNavigation' || interactionType === 'addToInventory') && (
-        <div className={indicatorStyles} title={interactionType === 'canvasNavigation' 
-          ? "Click to navigate to another canvas" 
-          : "Click to add to inventory"}></div>
+      {showInteractionIndicator && (
+        <div className={indicatorStyles} title={
+          interactionType === 'canvasNavigation' 
+            ? "Click to navigate to another canvas" 
+            : interactionType === 'addToInventory'
+              ? "Click to add to inventory"
+              : interactionType === 'combinable'
+                ? "Can be combined with inventory items"
+                : ""
+        }></div>
       )}
     </div>
   );

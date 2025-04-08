@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { 
@@ -32,6 +33,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   const [isGameMode, setIsGameMode] = useState<boolean>(false);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [showInventory, setShowInventory] = useState<boolean>(false);
+  const [draggedInventoryItem, setDraggedInventoryItem] = useState<DesignElement | null>(null);
   const [gameModeState, setGameModeState] = useState<{
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
@@ -124,6 +126,45 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setInventoryItems(prev => prev.filter(item => item.elementId !== elementId));
     
     toast.success("Item removed from inventory");
+  };
+  
+  const handleItemCombination = (inventoryItemId: string, targetElementId: string) => {
+    // Find the dragged inventory item
+    const inventoryElement = getElementFromInventory(inventoryItemId);
+    if (!inventoryElement) return;
+    
+    // Find the target element
+    const currentCanvas = canvases[activeCanvasIndex];
+    if (!currentCanvas) return;
+    
+    const targetElement = currentCanvas.elements.find(el => el.id === targetElementId);
+    if (!targetElement) return;
+    
+    // Check if the target can accept this inventory item
+    if (!targetElement.interaction?.canCombineWith?.includes(inventoryItemId)) {
+      toast.error("These items cannot be combined");
+      return;
+    }
+    
+    // Show success message if defined
+    if (targetElement.interaction.message) {
+      toast.success(targetElement.interaction.message);
+    } else {
+      toast.success("Items combined successfully!");
+    }
+    
+    // Remove the item from inventory
+    removeFromInventory(inventoryItemId);
+  };
+  
+  const getElementFromInventory = (elementId: string): DesignElement | null => {
+    const inventoryItem = inventoryItems.find(item => item.elementId === elementId);
+    if (!inventoryItem) return null;
+    
+    const canvas = canvases.find(c => c.id === inventoryItem.canvasId);
+    if (!canvas) return null;
+    
+    return canvas.elements.find(el => el.id === elementId) || null;
   };
   
   const addToHistory = useCallback((newCanvases: Canvas[]) => {
@@ -480,6 +521,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     isGameMode,
     inventoryItems,
     showInventory,
+    draggedInventoryItem,
     toggleGameMode,
     toggleInventory,
     setCanvasRef,
@@ -504,7 +546,9 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     reorderCanvases,
     moveElementToCanvas,
     addToInventory,
-    removeFromInventory
+    removeFromInventory,
+    setDraggedInventoryItem,
+    handleItemCombination
   };
   
   return (

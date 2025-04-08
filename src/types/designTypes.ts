@@ -18,7 +18,7 @@ export type ElementType =
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 export type SliderOrientation = 'horizontal' | 'vertical';
-export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation' | 'addToInventory';
+export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation' | 'addToInventory' | 'combinable';
 export type MessagePosition = 'bottom' | 'top';
 
 export interface PuzzleConfig {
@@ -66,6 +66,7 @@ export interface InteractionConfig {
   sound?: string;
   soundUrl?: string;
   targetCanvasId?: string;
+  canCombineWith?: string[]; // IDs of items that can be combined with this element
 }
 
 export interface DesignElement {
@@ -120,6 +121,7 @@ export interface DesignContextType {
   isGameMode: boolean;
   inventoryItems: InventoryItem[];
   showInventory: boolean;
+  draggedInventoryItem: DesignElement | null;
   toggleGameMode: () => void;
   toggleInventory: () => void;
   setCanvasRef: (ref: HTMLDivElement) => void;
@@ -145,6 +147,8 @@ export interface DesignContextType {
   moveElementToCanvas: (elementId: string, targetCanvasIndex: number) => void;
   addToInventory: (elementId: string) => void;
   removeFromInventory: (elementId: string) => void;
+  setDraggedInventoryItem: (element: DesignElement | null) => void;
+  handleItemCombination: (inventoryItemId: string, targetElementId: string) => void;
 }
 
 export const generateId = (): string => {
