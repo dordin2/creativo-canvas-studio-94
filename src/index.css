@@ -142,6 +142,12 @@
     @apply outline outline-2 outline-canvas-purple/40;
   }
   
+  /* Drop target styling */
+  .canvas-element.drop-target {
+    @apply outline-2 outline outline-canvas-purple ring-2 ring-canvas-purple;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+  }
+  
   /* Canvas container to manage overflow behavior */
   .canvas-container {
     position: relative;

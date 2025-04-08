@@ -195,31 +195,6 @@ const DraggableElement = ({ element, isActive, children }: {
     removeElement(element.id);
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    if (!isGameMode || !draggedInventoryItem) return;
-    
-    if (element.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-      e.preventDefault();
-      setIsDropTarget(true);
-    }
-  };
-  
-  const handleDragLeave = () => {
-    setIsDropTarget(false);
-  };
-  
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    if (!isGameMode || !draggedInventoryItem) {
-      setIsDropTarget(false);
-      return;
-    }
-    
-    e.preventDefault();
-    setIsDropTarget(false);
-    
-    handleItemCombination(draggedInventoryItem.id, element.id);
-  };
-
   useEffect(() => {
     const handleMouseUp = () => {
       setIsDragging(false);
@@ -261,6 +236,72 @@ const DraggableElement = ({ element, isActive, children }: {
     };
   }, [isDragging, isGameMode]);
   
+  useEffect(() => {
+    const handleCustomDragOver = (e: CustomEvent) => {
+      if (!isGameMode || !draggedInventoryItem) return;
+      
+      const rect = elementRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const x = e.detail.clientX;
+      const y = e.detail.clientY;
+      
+      const isMouseOver = 
+        x >= rect.left && 
+        x <= rect.right && 
+        y >= rect.top && 
+        y <= rect.bottom;
+      
+      if (isMouseOver) {
+        if (element.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
+          setIsDropTarget(true);
+        }
+      } else {
+        setIsDropTarget(false);
+      }
+    };
+    
+    const handleCustomDrop = (e: CustomEvent) => {
+      if (!isGameMode || !draggedInventoryItem) {
+        setIsDropTarget(false);
+        return;
+      }
+      
+      const rect = elementRef.current?.getBoundingClientRect();
+      if (!rect) {
+        setIsDropTarget(false);
+        return;
+      }
+      
+      const x = e.detail.clientX;
+      const y = e.detail.clientY;
+      
+      const isDroppedOverThis = 
+        x >= rect.left && 
+        x <= rect.right && 
+        y >= rect.top && 
+        y <= rect.bottom;
+      
+      if (isDroppedOverThis) {
+        if (element.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
+          handleItemCombination(draggedInventoryItem.id, element.id);
+        }
+      }
+      
+      setIsDropTarget(false);
+    };
+    
+    if (isGameMode) {
+      document.addEventListener('custom-drag-over', handleCustomDragOver as EventListener);
+      document.addEventListener('custom-drop', handleCustomDrop as EventListener);
+    }
+    
+    return () => {
+      document.removeEventListener('custom-drag-over', handleCustomDragOver as EventListener);
+      document.removeEventListener('custom-drop', handleCustomDrop as EventListener);
+    };
+  }, [isGameMode, draggedInventoryItem, element.id, element.interaction?.canCombineWith, handleItemCombination]);
+
   useEffect(() => {
     if (showMessageModal) {
       // Message is auto-closed in the InteractionMessageModal component
@@ -387,19 +428,13 @@ const DraggableElement = ({ element, isActive, children }: {
 
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
     <div
+      id={`element-${element.id}`}
       ref={ref}
-      className="canvas-element"
+      className={`canvas-element ${isDropTarget ? 'drop-target' : ''}`}
       style={combinedStyle}
       onMouseDown={handleMouseDown}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
-      draggable={false}
-      onDragStart={(e) => {
-        e.preventDefault();
-      }}
-      onDragOver={isGameMode ? handleDragOver : undefined}
-      onDragLeave={isGameMode ? handleDragLeave : undefined}
-      onDrop={isGameMode ? handleDrop : undefined}
     >
       {childContent}
       {showInteractionIndicator && (

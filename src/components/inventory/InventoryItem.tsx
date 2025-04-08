@@ -1,7 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useDesignState, DesignElement } from '@/context/DesignContext';
-import { X, Image } from 'lucide-react';
+import { X } from 'lucide-react';
 
 interface InventoryItemProps {
   element: DesignElement;
@@ -10,8 +10,10 @@ interface InventoryItemProps {
 const InventoryItem = ({ element }: InventoryItemProps) => {
   const { removeFromInventory, setDraggedInventoryItem, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
+  const dragStartPosition = useRef<{ x: number, y: number } | null>(null);
+  const cursorPreviewRef = useRef<HTMLDivElement | null>(null);
   
-  // Track globally if any item is being dragged to change cursor back on document
+  // Handle custom drag and drop
   useEffect(() => {
     if (isDragging) {
       // Add dragging classes for styling
@@ -22,6 +24,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       cursorPreview.id = 'cursor-preview';
       cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-75 w-12 h-12 flex items-center justify-center bg-white rounded-md shadow-md';
       document.body.appendChild(cursorPreview);
+      cursorPreviewRef.current = cursorPreview;
       
       // Add content to the cursor preview based on element type
       let previewContent = '';
@@ -69,73 +72,83 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       
       cursorPreview.innerHTML = previewContent;
       
-      // Move custom cursor with mouse
-      const movePreview = (e: MouseEvent) => {
+      // Move custom cursor with mouse and fire custom events for potential drop targets
+      const handleMouseMove = (e: MouseEvent) => {
         if (cursorPreview) {
           cursorPreview.style.left = `${e.clientX + 10}px`;
           cursorPreview.style.top = `${e.clientY + 10}px`;
+          
+          // Dispatch a custom event for potential drop targets
+          const dragOverEvent = new CustomEvent('custom-drag-over', {
+            detail: {
+              clientX: e.clientX,
+              clientY: e.clientY,
+              elementId: element.id
+            }
+          });
+          document.dispatchEvent(dragOverEvent);
         }
       };
       
-      document.addEventListener('mousemove', movePreview);
-      
       // Handle drag end by listening for mouseup globally
-      const handleMouseUp = () => {
+      const handleMouseUp = (e: MouseEvent) => {
+        // Dispatch custom drop event with mouse coordinates
+        const dropEvent = new CustomEvent('custom-drop', {
+          detail: {
+            clientX: e.clientX,
+            clientY: e.clientY,
+            elementId: element.id
+          }
+        });
+        document.dispatchEvent(dropEvent);
+        
         setIsDragging(false);
         setDraggedInventoryItem(null);
         document.body.classList.remove('inventory-dragging');
-        document.removeEventListener('mousemove', movePreview);
+        document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
         
         if (cursorPreview && cursorPreview.parentNode) {
           cursorPreview.parentNode.removeChild(cursorPreview);
+          cursorPreviewRef.current = null;
         }
       };
       
+      document.addEventListener('mousemove', handleMouseMove);
       document.addEventListener('mouseup', handleMouseUp);
+      
+      // Set initial position of cursor preview
+      if (dragStartPosition.current && cursorPreview) {
+        cursorPreview.style.left = `${dragStartPosition.current.x + 10}px`;
+        cursorPreview.style.top = `${dragStartPosition.current.y + 10}px`;
+      }
       
       return () => {
         document.body.classList.remove('inventory-dragging');
-        document.removeEventListener('mousemove', movePreview);
+        document.removeEventListener('mousemove', handleMouseMove);
         document.removeEventListener('mouseup', handleMouseUp);
         
         if (cursorPreview && cursorPreview.parentNode) {
           cursorPreview.parentNode.removeChild(cursorPreview);
+          cursorPreviewRef.current = null;
         }
       };
     }
   }, [isDragging, element, setDraggedInventoryItem]);
   
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleMouseDown = (e: React.MouseEvent) => {
     if (!isGameMode) return;
     
-    // Set a transparent drag image
-    const ghost = document.createElement('div');
-    ghost.style.width = '1px';
-    ghost.style.height = '1px';
-    ghost.style.background = 'transparent';
-    document.body.appendChild(ghost);
-    e.dataTransfer.setDragImage(ghost, 0, 0);
+    // Prevent default to avoid browser's native drag behavior
+    e.preventDefault();
+    e.stopPropagation();
     
-    // Set dragged data
-    e.dataTransfer.setData('application/inventory-item', element.id);
-    e.dataTransfer.effectAllowed = 'move';
+    // Save start position for dragging
+    dragStartPosition.current = { x: e.clientX, y: e.clientY };
     
-    // Update state
+    // Set dragging state and update context
     setIsDragging(true);
     setDraggedInventoryItem(element);
-    
-    // Remove ghost element after a short delay
-    setTimeout(() => {
-      if (ghost.parentNode) {
-        ghost.parentNode.removeChild(ghost);
-      }
-    }, 100);
-  };
-  
-  const handleDragEnd = () => {
-    setIsDragging(false);
-    setDraggedInventoryItem(null);
   };
   
   const renderThumbnail = () => {
@@ -216,9 +229,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
   return (
     <div 
       className={`relative bg-gray-50 border rounded-md p-1 h-20 flex items-center justify-center shadow-sm group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''} ${isDragging ? 'opacity-30' : ''}`}
-      draggable={isGameMode}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
+      onMouseDown={handleMouseDown}
     >
       <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button 

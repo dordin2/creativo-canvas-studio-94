@@ -29,33 +29,87 @@ export const useDraggable = (elementId: string) => {
   useEffect(() => {
     if (!currentElement) return;
     
-    const handleDragOver = (e: DragEvent) => {
+    const handleDragOver = (e: MouseEvent) => {
       if (draggedInventoryItem && currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-        e.preventDefault();
+        // Make the element a drop target
+        const element = document.getElementById(`element-${elementId}`);
+        if (element) {
+          element.classList.add('drop-target');
+        }
       }
     };
     
-    const handleDrop = (e: DragEvent) => {
+    const handleDragLeave = () => {
+      const element = document.getElementById(`element-${elementId}`);
+      if (element) {
+        element.classList.remove('drop-target');
+      }
+    };
+    
+    // This will be called when another element is being custom-dragged over this element
+    const handleCustomDragOver = (e: CustomEvent) => {
       if (!draggedInventoryItem) return;
       
-      e.preventDefault();
+      // Check if the mouse is over this element
+      const element = document.getElementById(`element-${elementId}`);
+      if (!element) return;
       
-      // Check if this element can interact with the dragged item
-      if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-        handleItemCombination(draggedInventoryItem.id, elementId);
+      const rect = element.getBoundingClientRect();
+      const x = e.detail.clientX;
+      const y = e.detail.clientY;
+      
+      // Check if the mouse is over this element
+      if (
+        x >= rect.left && 
+        x <= rect.right && 
+        y >= rect.top && 
+        y <= rect.bottom
+      ) {
+        // Check if this element can interact with the dragged item
+        if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
+          element.classList.add('drop-target');
+        }
+      } else {
+        element.classList.remove('drop-target');
       }
     };
     
-    const element = document.getElementById(`element-${elementId}`);
-    if (element) {
-      element.addEventListener('dragover', handleDragOver);
-      element.addEventListener('drop', handleDrop);
+    // This will be called when a custom drag operation ends over this element
+    const handleCustomDrop = (e: CustomEvent) => {
+      if (!draggedInventoryItem) return;
       
-      return () => {
-        element.removeEventListener('dragover', handleDragOver);
-        element.removeEventListener('drop', handleDrop);
-      };
-    }
+      const element = document.getElementById(`element-${elementId}`);
+      if (!element) return;
+      
+      const rect = element.getBoundingClientRect();
+      const x = e.detail.clientX;
+      const y = e.detail.clientY;
+      
+      // Check if the drop happened over this element
+      if (
+        x >= rect.left && 
+        x <= rect.right && 
+        y >= rect.top && 
+        y <= rect.bottom
+      ) {
+        // Check if this element can interact with the dragged item
+        if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
+          handleItemCombination(draggedInventoryItem.id, elementId);
+        }
+      }
+      
+      // Remove the drop-target class
+      element.classList.remove('drop-target');
+    };
+    
+    // Listen for custom events for drag-and-drop
+    document.addEventListener('custom-drag-over', handleCustomDragOver as EventListener);
+    document.addEventListener('custom-drop', handleCustomDrop as EventListener);
+    
+    return () => {
+      document.removeEventListener('custom-drag-over', handleCustomDragOver as EventListener);
+      document.removeEventListener('custom-drop', handleCustomDrop as EventListener);
+    };
   }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
 
   useEffect(() => {
