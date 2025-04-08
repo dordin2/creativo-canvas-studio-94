@@ -331,6 +331,7 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }
 
+  // First define combinedStyle, then use it
   const combinedStyle = {
     ...elementStyle,
     zIndex: element.layer,
@@ -342,8 +343,8 @@ const DraggableElement = ({ element, isActive, children }: {
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute' as 'absolute',
     // Remove any border in game mode
-    border: isGameMode ? 'none' : combinedStyle.border,
-    outline: isGameMode ? 'none' : combinedStyle.outline,
+    border: isGameMode ? 'none' : elementStyle.border,
+    outline: isGameMode ? 'none' : elementStyle.outline,
   };
 
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
