@@ -55,15 +55,6 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     });
   };
 
-  const handleMessagePositionChange = (value: string) => {
-    updateElement(element.id, {
-      interaction: {
-        ...interactionConfig,
-        messagePosition: value as MessagePosition
-      }
-    });
-  };
-
   const handleTargetCanvasChange = (value: string) => {
     updateElement(element.id, {
       interaction: {
@@ -341,21 +332,6 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
 
       {interactionConfig.type === 'message' && (
         <div className="space-y-4">
-          <div>
-            <Label>Message Position</Label>
-            <Select
-              value={interactionConfig.messagePosition || 'top'}
-              onValueChange={handleMessagePositionChange}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select message position" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="top">Top</SelectItem>
-                <SelectItem value="bottom">Bottom</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
           <div>
             <Label>Message Text</Label>
             <Textarea
