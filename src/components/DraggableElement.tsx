@@ -54,7 +54,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
-  
+
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
@@ -215,12 +215,6 @@ const DraggableElement = ({ element, isActive, children }: {
       }
     };
   }, [isDragging, isGameMode]);
-  
-  useEffect(() => {
-    if (showMessageModal) {
-      // Message is auto-closed in the InteractionMessageModal component
-    }
-  }, [showMessageModal]);
 
   const elementStyle = getElementStyle(element, isDragging);
   const rotation = getRotation(element);

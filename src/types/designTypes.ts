@@ -1,4 +1,3 @@
-
 import { CSSProperties } from "react";
 
 export type ElementType =
@@ -19,7 +18,6 @@ export type ElementType =
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 export type SliderOrientation = 'horizontal' | 'vertical';
 export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation';
-export type MessagePosition = 'bottom' | 'top';
 
 export interface PuzzleConfig {
   name: string;
@@ -62,7 +60,6 @@ export interface InteractionConfig {
   clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
   sliderPuzzleConfig?: SliderPuzzleConfig;
   message?: string;
-  messagePosition?: MessagePosition;
   sound?: string;
   soundUrl?: string;
   targetCanvasId?: string;
