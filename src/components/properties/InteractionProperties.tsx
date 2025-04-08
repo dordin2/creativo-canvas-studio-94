@@ -1,7 +1,6 @@
-
 import React, { useState } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { InteractionType, PuzzleType } from "@/types/designTypes";
+import { InteractionType, PuzzleType, MessagePosition } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -28,6 +27,7 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     message: '',
     sound: '',
     puzzleType: 'puzzle',
+    messagePosition: 'bottom' as MessagePosition,
     puzzleConfig: {
       name: 'Puzzle',
       type: 'image' as PuzzleType,
@@ -51,6 +51,15 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
       interaction: {
         ...interactionConfig,
         message: e.target.value
+      }
+    });
+  };
+
+  const handleMessagePositionChange = (value: string) => {
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        messagePosition: value as MessagePosition
       }
     });
   };
@@ -154,7 +163,6 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     reader.readAsDataURL(file);
   };
 
-  // Creates an element object that resembles a real puzzle element for the puzzle property components
   const createPuzzleElementProxy = () => {
     const baseElement = { ...element };
     
@@ -174,7 +182,6 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     return baseElement;
   };
 
-  // Function to handle updates from child puzzle components
   const handlePuzzleConfigUpdate = (configType: string, config: any) => {
     let updatedInteraction = { ...interactionConfig };
     
@@ -196,7 +203,6 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     });
   };
 
-  // Get the appropriate puzzle component based on the puzzle type
   const getPuzzleConfigComponent = () => {
     const puzzleType = interactionConfig.puzzleType || 'puzzle';
     const proxyElement = createPuzzleElementProxy();
@@ -334,14 +340,31 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
       )}
 
       {interactionConfig.type === 'message' && (
-        <div>
-          <Label>Message Text</Label>
-          <Textarea
-            value={interactionConfig.message || ''}
-            onChange={handleMessageChange}
-            placeholder="Enter your message here..."
-            className="min-h-[100px]"
-          />
+        <div className="space-y-4">
+          <div>
+            <Label>Message Position</Label>
+            <Select
+              value={interactionConfig.messagePosition || 'bottom'}
+              onValueChange={handleMessagePositionChange}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select message position" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="bottom">Bottom</SelectItem>
+                <SelectItem value="top">Top</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label>Message Text</Label>
+            <Textarea
+              value={interactionConfig.message || ''}
+              onChange={handleMessageChange}
+              placeholder="Enter your message here..."
+              className="min-h-[100px]"
+            />
+          </div>
         </div>
       )}
 

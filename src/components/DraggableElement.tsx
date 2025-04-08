@@ -54,6 +54,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
+  const messagePosition = element.interaction?.messagePosition || 'bottom';
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -426,6 +427,7 @@ const DraggableElement = ({ element, isActive, children }: {
           isOpen={showMessageModal}
           onClose={() => setShowMessageModal(false)}
           message={element.interaction?.message || ''}
+          position={messagePosition}
         />
       )}
       
