@@ -66,24 +66,19 @@ export const SliderPuzzleModal: React.FC<SliderPuzzleModalProps> = ({ element, i
         </DialogHeader>
         
         <div className="py-4">
-          <div className={`space-y-6 ${config.orientation === 'vertical' ? 'flex justify-around' : ''}`}>
+          <div className={`space-y-6 ${config.orientation === 'vertical' ? 'flex justify-center gap-8 h-64' : ''}`}>
             {sliderValues.map((value, index) => (
-              <div 
-                key={index} 
-                className={`
-                  ${config.orientation === 'horizontal' ? 'flex items-center gap-4' : 'flex flex-col items-center gap-4 h-64'}
-                `}
-              >
+              <div key={index} className={`${config.orientation === 'vertical' ? 'h-full flex flex-col gap-2' : 'flex items-center gap-4'}`}>
                 <span className="text-sm w-8 text-center">{value}</span>
-                <div className={config.orientation === 'horizontal' ? 'flex-1' : 'h-full'}>
+                <div className={config.orientation === 'vertical' ? 'flex-1 flex justify-center' : 'flex-1'}>
                   <Slider
+                    orientation={config.orientation}
                     value={[value]}
                     min={0}
                     max={config.maxValue}
                     step={1}
                     onValueChange={(newValue) => handleSliderChange(newValue, index)}
-                    className={config.orientation === 'vertical' ? 'h-full flex-col' : 'w-full'}
-                    orientation={config.orientation}
+                    className={config.orientation === 'vertical' ? 'h-full' : 'w-full'}
                   />
                 </div>
               </div>

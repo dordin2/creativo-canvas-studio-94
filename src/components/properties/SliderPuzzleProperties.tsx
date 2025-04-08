@@ -55,22 +55,6 @@ const SliderPuzzleProperties: React.FC<SliderPuzzlePropertiesProps> = ({ element
   };
   
   const handleOrientationChange = (orientation: SliderOrientation) => {
-    // Update the element size based on orientation
-    let newSize = { ...element.size };
-    if (orientation === 'horizontal' && element.size) {
-      // Make width larger than height for horizontal
-      if (element.size.width < element.size.height) {
-        newSize = { width: element.size.height, height: element.size.width };
-        updateElement(element.id, { size: newSize });
-      }
-    } else if (orientation === 'vertical' && element.size) {
-      // Make height larger than width for vertical
-      if (element.size.width > element.size.height) {
-        newSize = { width: element.size.height, height: element.size.width };
-        updateElement(element.id, { size: newSize });
-      }
-    }
-    
     setLocalPuzzleConfig(prev => ({
       ...prev,
       orientation
@@ -147,23 +131,8 @@ const SliderPuzzleProperties: React.FC<SliderPuzzlePropertiesProps> = ({ element
       return;
     }
     
-    // Update element size based on orientation if needed
-    let newSize = { ...element.size };
-    if (localPuzzleConfig.orientation === 'horizontal' && element.size) {
-      // For horizontal, prefer wider than tall
-      if (element.size.width < element.size.height) {
-        newSize = { width: element.size.height, height: element.size.width };
-      }
-    } else if (localPuzzleConfig.orientation === 'vertical' && element.size) {
-      // For vertical, prefer taller than wide
-      if (element.size.width > element.size.height) {
-        newSize = { width: element.size.height, height: element.size.width };
-      }
-    }
-    
     updateElement(element.id, {
-      sliderPuzzleConfig: localPuzzleConfig,
-      size: newSize
+      sliderPuzzleConfig: localPuzzleConfig
     });
     
     if (onUpdateConfig) {

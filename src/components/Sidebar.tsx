@@ -1,24 +1,42 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Text, Image, Square, Circle, Triangle, Lock, Hash, Languages, MoveHorizontal, MousePointerClick, SlidersHorizontal, SlidersVertical } from "lucide-react";
+import { 
+  Text, 
+  Image, 
+  Square, 
+  Circle, 
+  Triangle, 
+  Lock, 
+  Hash,
+  Languages,
+  MoveHorizontal,
+  MousePointerClick,
+  SlidersHorizontal,
+  SlidersVertical
+} from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const Sidebar = () => {
-  const {
-    addElement
-  } = useDesignState();
-  const {
-    t,
-    language
-  } = useLanguage();
+  const { addElement } = useDesignState();
+  const { t, language } = useLanguage();
 
   // Color swatches for backgrounds
-  const colorSwatches = ["#FFFFFF", "#F3F4F6", "#E5E7EB", "#D1D5DB", "#FEE2E2", "#FEE7AA", "#D1FAE5", "#DBEAFE", "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"];
+  const colorSwatches = [
+    "#FFFFFF", "#F3F4F6", "#E5E7EB", "#D1D5DB",
+    "#FEE2E2", "#FEE7AA", "#D1FAE5", "#DBEAFE",
+    "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"
+  ];
 
   // Pre-defined gradient backgrounds
-  const gradients = ["linear-gradient(to right, #fc466b, #3f5efb)", "linear-gradient(to right, #8a2387, #e94057, #f27121)", "linear-gradient(to right, #00b09b, #96c93d)", "linear-gradient(to right, #ff9966, #ff5e62)", "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"];
+  const gradients = [
+    "linear-gradient(to right, #fc466b, #3f5efb)",
+    "linear-gradient(to right, #8a2387, #e94057, #f27121)",
+    "linear-gradient(to right, #00b09b, #96c93d)",
+    "linear-gradient(to right, #ff9966, #ff5e62)",
+    "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"
+  ];
 
   // Handle puzzle options
   const handleImagePuzzleClick = () => {
@@ -32,6 +50,7 @@ const Sidebar = () => {
       }
     });
   };
+
   const handleNumberPuzzleClick = () => {
     addElement('puzzle', {
       puzzleConfig: {
@@ -44,6 +63,7 @@ const Sidebar = () => {
       }
     });
   };
+
   const handleAlphabetPuzzleClick = () => {
     addElement('puzzle', {
       puzzleConfig: {
@@ -56,6 +76,7 @@ const Sidebar = () => {
       }
     });
   };
+
   const handleSequencePuzzleClick = () => {
     addElement('sequencePuzzle', {
       name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
@@ -67,6 +88,7 @@ const Sidebar = () => {
       }
     });
   };
+  
   const handleClickSequencePuzzleClick = () => {
     addElement('clickSequencePuzzle', {
       name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
@@ -78,6 +100,7 @@ const Sidebar = () => {
       }
     });
   };
+
   const handleHorizontalSliderPuzzleClick = () => {
     addElement('sliderPuzzle', {
       name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
@@ -91,6 +114,7 @@ const Sidebar = () => {
       }
     });
   };
+
   const handleVerticalSliderPuzzleClick = () => {
     addElement('sliderPuzzle', {
       name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
@@ -105,7 +129,8 @@ const Sidebar = () => {
     });
   };
 
-  return <div className={`sidebar-panel border-r flex flex-col ${language === 'he' ? 'rtl' : 'ltr'}`}>
+  return (
+    <div className={`sidebar-panel border-r flex flex-col ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <Tabs defaultValue="elements" className="flex-1 flex flex-col">
         <TabsList className="grid grid-cols-3 mx-2 mt-2">
           <TabsTrigger value="elements">{t('sidebar.elements')}</TabsTrigger>
@@ -116,19 +141,23 @@ const Sidebar = () => {
         <TabsContent value="elements" className="flex-1 overflow-auto p-4">
           <h3 className="text-sm font-medium mb-3">{t('sidebar.shapes')}</h3>
           <div className="grid grid-cols-2 gap-2 mb-6">
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" onClick={() => addElement('rectangle')}>
+            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" 
+                    onClick={() => addElement('rectangle')}>
               <Square className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.rectangle')}</span>
             </Button>
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" onClick={() => addElement('circle')}>
+            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
+                    onClick={() => addElement('circle')}>
               <Circle className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.circle')}</span>
             </Button>
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" onClick={() => addElement('triangle')}>
+            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
+                    onClick={() => addElement('triangle')}>
               <Triangle className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.triangle')}</span>
             </Button>
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" onClick={() => addElement('line')}>
+            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
+                    onClick={() => addElement('line')}>
               <div className="w-5 h-0.5 bg-current"></div>
               <span className="text-xs">{t('sidebar.line')}</span>
             </Button>
@@ -136,7 +165,8 @@ const Sidebar = () => {
           
           <h3 className="text-sm font-medium mb-3">{t('sidebar.media')}</h3>
           <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" onClick={() => addElement('image')}>
+            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
+                    onClick={() => addElement('image')}>
               <Image className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.image')}</span>
             </Button>
@@ -150,15 +180,27 @@ const Sidebar = () => {
               </PopoverTrigger>
               <PopoverContent className="w-60 p-2">
                 <div className="grid gap-2">
-                  <Button variant="outline" className="justify-start" onClick={handleImagePuzzleClick}>
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleImagePuzzleClick}
+                  >
                     <Lock className="h-4 w-4 mr-2" />
                     {t('sidebar.image.puzzle')}
                   </Button>
-                  <Button variant="outline" className="justify-start" onClick={handleNumberPuzzleClick}>
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleNumberPuzzleClick}
+                  >
                     <Hash className="h-4 w-4 mr-2" />
                     {t('sidebar.number.lock')}
                   </Button>
-                  <Button variant="outline" className="justify-start" onClick={handleAlphabetPuzzleClick}>
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleAlphabetPuzzleClick}
+                  >
                     <Languages className="h-4 w-4 mr-2" />
                     {t('sidebar.alphabet.lock')}
                   </Button>
@@ -166,12 +208,20 @@ const Sidebar = () => {
               </PopoverContent>
             </Popover>
             
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" onClick={handleSequencePuzzleClick}>
+            <Button 
+              variant="outline" 
+              className="h-14 flex flex-col gap-1 items-center justify-center"
+              onClick={handleSequencePuzzleClick}
+            >
               <MoveHorizontal className="h-5 w-5 text-blue-600" />
               <span className="text-xs">{language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף'}</span>
             </Button>
             
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" onClick={handleClickSequencePuzzleClick}>
+            <Button 
+              variant="outline" 
+              className="h-14 flex flex-col gap-1 items-center justify-center"
+              onClick={handleClickSequencePuzzleClick}
+            >
               <MousePointerClick className="h-5 w-5 text-green-600" />
               <span className="text-xs">{language === 'en' ? 'Click Sequence' : 'רצף קליקים'}</span>
             </Button>
@@ -185,11 +235,19 @@ const Sidebar = () => {
               </PopoverTrigger>
               <PopoverContent className="w-60 p-2">
                 <div className="grid gap-2">
-                  <Button variant="outline" className="justify-start" onClick={handleHorizontalSliderPuzzleClick}>
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleHorizontalSliderPuzzleClick}
+                  >
                     <SlidersHorizontal className="h-4 w-4 mr-2 text-purple-600" />
                     {language === 'en' ? 'Horizontal Sliders' : 'מחוונים אופקיים'}
                   </Button>
-                  <Button variant="outline" className="justify-start" onClick={handleVerticalSliderPuzzleClick}>
+                  <Button
+                    variant="outline" 
+                    className="justify-start"
+                    onClick={handleVerticalSliderPuzzleClick}
+                  >
                     <SlidersVertical className="h-4 w-4 mr-2 text-purple-600" />
                     {language === 'en' ? 'Vertical Sliders' : 'מחוונים אנכיים'}
                   </Button>
@@ -220,24 +278,33 @@ const Sidebar = () => {
         <TabsContent value="background" className="flex-1 overflow-auto p-4">
           <h3 className="text-sm font-medium mb-3">{t('sidebar.solid.colors')}</h3>
           <div className="grid grid-cols-4 gap-2 mb-6">
-            {colorSwatches.map((color, index) => <button key={index} className="w-12 h-12 rounded border hover:scale-105 transition-transform" style={{
-            backgroundColor: color
-          }} onClick={() => addElement('background', {
-            color
-          })} aria-label={`Background color ${color}`} />)}
+            {colorSwatches.map((color, index) => (
+              <button
+                key={index}
+                className="w-12 h-12 rounded border hover:scale-105 transition-transform"
+                style={{ backgroundColor: color }}
+                onClick={() => addElement('background', { color })}
+                aria-label={`Background color ${color}`}
+              />
+            ))}
           </div>
           
           <h3 className="text-sm font-medium mb-3">{t('sidebar.gradients')}</h3>
           <div className="grid grid-cols-2 gap-2">
-            {gradients.map((gradient, index) => <button key={index} className="w-full h-12 rounded border hover:scale-105 transition-transform" style={{
-            background: gradient
-          }} onClick={() => addElement('background', {
-            gradient
-          })} aria-label={`Gradient background ${index + 1}`} />)}
+            {gradients.map((gradient, index) => (
+              <button
+                key={index}
+                className="w-full h-12 rounded border hover:scale-105 transition-transform"
+                style={{ background: gradient }}
+                onClick={() => addElement('background', { gradient })}
+                aria-label={`Gradient background ${index + 1}`}
+              />
+            ))}
           </div>
         </TabsContent>
       </Tabs>
-    </div>;
+    </div>
+  );
 };
 
 export default Sidebar;
