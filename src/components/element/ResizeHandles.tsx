@@ -22,49 +22,48 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
     borderRadius: '50%',
     zIndex: 1001,
     pointerEvents: 'auto',
-    transform: 'translate(-50%, -50%)',
   };
 
   return (
     <>
       <div 
         className="resize-handle resize-handle-visible cursor-nw-resize"
-        style={{ ...handleStyle, top: 0, left: 0, transform: 'none' }}
+        style={{ ...handleStyle, top: '0px', left: '0px', transform: 'translate(-50%, -50%)' }}
         onMouseDown={(e) => onResizeStart(e, "nw")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-n-resize"
-        style={{ ...handleStyle, top: 0, left: '50%' }}
+        style={{ ...handleStyle, top: '0px', left: '50%', transform: 'translate(-50%, -50%)' }}
         onMouseDown={(e) => onResizeStart(e, "n")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-ne-resize"
-        style={{ ...handleStyle, top: 0, right: 0, left: 'auto', transform: 'none' }}
+        style={{ ...handleStyle, top: '0px', right: '0px', left: 'auto', transform: 'translate(50%, -50%)' }}
         onMouseDown={(e) => onResizeStart(e, "ne")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-e-resize"
-        style={{ ...handleStyle, top: '50%', right: 0, left: 'auto', transform: 'translate(0, -50%)' }}
+        style={{ ...handleStyle, top: '50%', right: '0px', left: 'auto', transform: 'translate(50%, -50%)' }}
         onMouseDown={(e) => onResizeStart(e, "e")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-se-resize"
-        style={{ ...handleStyle, bottom: 0, right: 0, top: 'auto', left: 'auto', transform: 'none' }}
+        style={{ ...handleStyle, bottom: '0px', right: '0px', top: 'auto', left: 'auto', transform: 'translate(50%, 50%)' }}
         onMouseDown={(e) => onResizeStart(e, "se")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-s-resize"
-        style={{ ...handleStyle, bottom: 0, left: '50%', top: 'auto', transform: 'translate(-50%, 0)' }}
+        style={{ ...handleStyle, bottom: '0px', left: '50%', top: 'auto', transform: 'translate(-50%, 50%)' }}
         onMouseDown={(e) => onResizeStart(e, "s")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-sw-resize"
-        style={{ ...handleStyle, bottom: 0, left: 0, top: 'auto', transform: 'none' }}
+        style={{ ...handleStyle, bottom: '0px', left: '0px', top: 'auto', transform: 'translate(-50%, 50%)' }}
         onMouseDown={(e) => onResizeStart(e, "sw")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-w-resize"
-        style={{ ...handleStyle, top: '50%', left: 0, transform: 'translate(0, -50%)' }}
+        style={{ ...handleStyle, top: '50%', left: '0px', transform: 'translate(-50%, -50%)' }}
         onMouseDown={(e) => onResizeStart(e, "w")}
       />
     </>

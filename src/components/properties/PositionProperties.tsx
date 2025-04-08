@@ -15,7 +15,7 @@ const PositionProperties = ({
     updateElement(element.id, {
       position: {
         ...element.position,
-        x: Number(e.target.value)
+        x: Math.round(Number(e.target.value))
       }
     });
   };
@@ -24,7 +24,7 @@ const PositionProperties = ({
     updateElement(element.id, {
       position: {
         ...element.position,
-        y: Number(e.target.value)
+        y: Math.round(Number(e.target.value))
       }
     });
   };
@@ -35,7 +35,7 @@ const PositionProperties = ({
     updateElement(element.id, {
       size: {
         ...element.size,
-        width: Number(e.target.value)
+        width: Math.round(Number(e.target.value))
       }
     });
   };
@@ -46,16 +46,10 @@ const PositionProperties = ({
     updateElement(element.id, {
       size: {
         ...element.size,
-        height: Number(e.target.value)
+        height: Math.round(Number(e.target.value))
       }
     });
   };
-  
-  // Round values only for display in the inputs
-  const displayX = Math.round(element.position.x);
-  const displayY = Math.round(element.position.y);
-  const displayWidth = element.size ? Math.round(element.size.width) : 0;
-  const displayHeight = element.size ? Math.round(element.size.height) : 0;
   
   return (
     <div className="space-y-4">
@@ -65,7 +59,7 @@ const PositionProperties = ({
           <Input
             id="position-x"
             type="number"
-            value={displayX}
+            value={Math.round(element.position.x)}
             onChange={handleXChange}
           />
         </div>
@@ -74,7 +68,7 @@ const PositionProperties = ({
           <Input
             id="position-y"
             type="number"
-            value={displayY}
+            value={Math.round(element.position.y)}
             onChange={handleYChange}
           />
         </div>
@@ -87,7 +81,7 @@ const PositionProperties = ({
             <Input
               id="size-width"
               type="number"
-              value={displayWidth}
+              value={Math.round(element.size.width)}
               onChange={handleWidthChange}
             />
           </div>
@@ -96,7 +90,7 @@ const PositionProperties = ({
             <Input
               id="size-height"
               type="number"
-              value={displayHeight}
+              value={Math.round(element.size.height)}
               onChange={handleHeightChange}
             />
           </div>
