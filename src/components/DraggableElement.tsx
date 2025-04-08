@@ -325,7 +325,7 @@ const DraggableElement = ({ element, isActive, children }: {
       : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
-    position: 'relative',
+    position: 'absolute' as 'absolute',
   };
 
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
