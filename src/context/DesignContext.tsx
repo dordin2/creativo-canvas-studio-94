@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { toast } from "sonner";
 import { 
@@ -6,8 +7,7 @@ import {
   DesignContextType,
   Canvas,
   generateId,
-  InteractionType,
-  MessageBoxSettings
+  InteractionType
 } from "@/types/designTypes";
 import { 
   getDefaultPosition, 
@@ -30,22 +30,8 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   const [history, setHistory] = useState<Canvas[][]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [isGameMode, setIsGameMode] = useState<boolean>(false);
-  const [messageBoxSettings, setMessageBoxSettings] = useState<MessageBoxSettings>({
-    width: 450,
-    fontSize: 16,
-    position: 'center',
-    backgroundColor: '#ffffff',
-    textColor: '#000000',
-  });
   const { t } = useLanguage();
   
-  const updateMessageBoxSettings = useCallback((settings: Partial<MessageBoxSettings>) => {
-    setMessageBoxSettings(prevSettings => ({
-      ...prevSettings,
-      ...settings
-    }));
-  }, []);
-
   const setCanvasRef = (ref: HTMLDivElement) => {
     setCanvasRefState(ref);
   };
@@ -409,8 +395,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     activeElement,
     canvasRef,
     isGameMode,
-    messageBoxSettings,
-    updateMessageBoxSettings,
     toggleGameMode,
     setCanvasRef,
     addElement,
