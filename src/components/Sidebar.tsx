@@ -187,10 +187,6 @@ const Sidebar = () => {
                     <SlidersHorizontal className="h-4 w-4 mr-2 text-purple-600" />
                     {language === 'en' ? 'Horizontal Sliders' : 'מחוונים אופקיים'}
                   </Button>
-                  <Button variant="outline" onClick={handleVerticalSliderPuzzleClick} className="\u05EA\u05DE\u05D7\u05E7 \u05D0\u05EA \u05D6\u05D4 \u05DE\u05D4\u05E8\u05E9\u05D9\u05DE\u05D4 \n">
-                    <SlidersVertical className="h-4 w-4 mr-2 text-purple-600" />
-                    {language === 'en' ? 'Vertical Sliders' : 'מחוונים אנכיים'}
-                  </Button>
                 </div>
               </PopoverContent>
             </Popover>
