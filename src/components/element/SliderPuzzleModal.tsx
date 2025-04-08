@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -65,44 +66,23 @@ export const SliderPuzzleModal: React.FC<SliderPuzzleModalProps> = ({ element, i
         </DialogHeader>
         
         <div className="py-4">
-          {config.orientation === 'vertical' ? (
-            <div className="flex justify-center items-end gap-8 h-64">
-              {sliderValues.map((value, index) => (
-                <div key={index} className="h-full flex flex-col items-center gap-2">
-                  <span className="text-sm text-center">{value}</span>
-                  <div className="flex-1 flex items-center relative w-10">
-                    <Slider
-                      orientation="vertical"
-                      value={[value]}
-                      min={0}
-                      max={config.maxValue}
-                      step={1}
-                      onValueChange={(newValue) => handleSliderChange(newValue, index)}
-                      className="h-full"
-                    />
-                  </div>
+          <div className="space-y-6">
+            {sliderValues.map((value, index) => (
+              <div key={index} className="flex items-center gap-4">
+                <span className="text-sm w-8 text-center">{value}</span>
+                <div className="flex-1">
+                  <Slider
+                    value={[value]}
+                    min={0}
+                    max={config.maxValue}
+                    step={1}
+                    onValueChange={(newValue) => handleSliderChange(newValue, index)}
+                    className="w-full"
+                  />
                 </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {sliderValues.map((value, index) => (
-                <div key={index} className="flex items-center gap-4">
-                  <span className="text-sm w-8 text-center">{value}</span>
-                  <div className="flex-1">
-                    <Slider
-                      value={[value]}
-                      min={0}
-                      max={config.maxValue}
-                      step={1}
-                      onValueChange={(newValue) => handleSliderChange(newValue, index)}
-                      className="w-full"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+              </div>
+            ))}
+          </div>
           
           {isCorrect === true && (
             <div className="mt-4 p-2 rounded-lg text-center bg-green-100 text-green-800">

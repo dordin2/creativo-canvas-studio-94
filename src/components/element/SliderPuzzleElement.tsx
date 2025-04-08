@@ -23,37 +23,20 @@ const SliderPuzzleElement: React.FC<SliderPuzzleElementProps> = ({ element, onCl
   
   // Create preview of the sliders
   const renderSliderPreview = () => {
-    if (config.orientation === 'vertical') {
-      return (
-        <div className="flex h-full gap-3 py-4 justify-center items-end">
-          {Array(config.sliderCount).fill(0).map((_, index) => (
-            <div key={index} className="h-full w-2 bg-blue-100 rounded-full relative overflow-hidden">
-              <div 
-                className="absolute w-full bg-blue-500 rounded-full bottom-0"
-                style={{ 
-                  height: `${(config.currentValues[index] / config.maxValue) * 100}%`
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      );
-    } else {
-      return (
-        <div className="flex flex-col gap-3 w-full px-4">
-          {Array(config.sliderCount).fill(0).map((_, index) => (
-            <div key={index} className="w-full h-2 bg-blue-100 rounded-full relative overflow-hidden">
-              <div 
-                className="absolute h-full bg-blue-500 rounded-full"
-                style={{ 
-                  width: `${(config.currentValues[index] / config.maxValue) * 100}%`
-                }}
-              />
-            </div>
-          ))}
-        </div>
-      );
-    }
+    return (
+      <div className="flex flex-col gap-3 w-full px-4">
+        {Array(config.sliderCount).fill(0).map((_, index) => (
+          <div key={index} className="w-full h-2 bg-blue-100 rounded-full relative overflow-hidden">
+            <div 
+              className="absolute h-full bg-blue-500 rounded-full"
+              style={{ 
+                width: `${(config.currentValues[index] / config.maxValue) * 100}%`
+              }}
+            />
+          </div>
+        ))}
+      </div>
+    );
   };
   
   return (
