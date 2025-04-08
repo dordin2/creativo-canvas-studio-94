@@ -6,9 +6,10 @@ import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const InventoryPanel = () => {
-  const { showInventory, inventoryItems, toggleInventory, canvases } = useDesignState();
+  const { showInventory, inventoryItems, toggleInventory, canvases, isGameMode } = useDesignState();
   
-  if (!showInventory) return null;
+  // Only show in game mode and when inventory is open
+  if (!isGameMode || !showInventory) return null;
   
   const getElement = (elementId: string, canvasId: string) => {
     const canvas = canvases.find(c => c.id === canvasId);
@@ -18,7 +19,7 @@ const InventoryPanel = () => {
   };
   
   return (
-    <div className="fixed top-16 right-4 z-50 bg-white rounded-lg shadow-xl w-80 max-h-[70vh] overflow-hidden flex flex-col animate-fade-in">
+    <div className="fixed top-16 right-4 z-[9999] bg-white rounded-lg shadow-xl w-80 max-h-[70vh] overflow-hidden flex flex-col animate-fade-in">
       <div className="p-3 bg-canvas-purple text-white flex justify-between items-center">
         <h3 className="font-semibold">Inventory</h3>
         <button 

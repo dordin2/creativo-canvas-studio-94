@@ -30,7 +30,7 @@ const DraggableElement = ({ element, isActive, children }: {
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases, isGameMode, addToInventory } = useDesignState();
+  const { updateElement, setActiveElement, removeElement, addElement, setActiveCanvas, canvases, isGameMode, addToInventory, inventoryItems } = useDesignState();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -55,6 +55,9 @@ const DraggableElement = ({ element, isActive, children }: {
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
+  
+  // Check if element is in inventory
+  const isInInventory = element.inInventory || inventoryItems.some(item => item.elementId === element.id);
   
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -271,7 +274,8 @@ const DraggableElement = ({ element, isActive, children }: {
     );
   }
 
-  if (element.isHidden && !isActive) {
+  // If element is in inventory or hidden and not active in edit mode, don't render it
+  if ((isInInventory || element.isHidden) && !isActive) {
     return null;
   }
 
@@ -316,7 +320,7 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  const showInteractionIndicator = hasInteraction && !isActive && !isDragging;
+  const showInteractionIndicator = hasInteraction && !isActive && !isDragging && !isGameMode;
   let indicatorStyles = "";
   
   if (showInteractionIndicator) {
@@ -337,6 +341,9 @@ const DraggableElement = ({ element, isActive, children }: {
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute' as 'absolute',
+    // Remove any border in game mode
+    border: isGameMode ? 'none' : combinedStyle.border,
+    outline: isGameMode ? 'none' : combinedStyle.outline,
   };
 
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
