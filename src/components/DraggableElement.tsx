@@ -40,6 +40,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const [showControls, setShowControls] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showPuzzleModal, setShowPuzzleModal] = useState(false);
+  const [elementRect, setElementRect] = useState<DOMRect | null>(null);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -54,7 +55,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
-  const messagePosition = element.interaction?.messagePosition || 'bottom';
+  const messagePosition = element.interaction?.messagePosition || 'top';
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -108,6 +109,10 @@ const DraggableElement = ({ element, isActive, children }: {
 
   const handleInteraction = () => {
     if (!hasInteraction) return;
+    
+    if (elementRef.current) {
+      setElementRect(elementRef.current.getBoundingClientRect());
+    }
     
     if (interactionType === 'message' && element.interaction?.message) {
       setShowMessageModal(true);
@@ -216,6 +221,12 @@ const DraggableElement = ({ element, isActive, children }: {
       }
     };
   }, [isDragging, isGameMode]);
+  
+  useEffect(() => {
+    if (showMessageModal) {
+      // Message is auto-closed in the InteractionMessageModal component
+    }
+  }, [showMessageModal]);
 
   const elementStyle = getElementStyle(element, isDragging);
   const rotation = getRotation(element);
@@ -428,6 +439,7 @@ const DraggableElement = ({ element, isActive, children }: {
           onClose={() => setShowMessageModal(false)}
           message={element.interaction?.message || ''}
           position={messagePosition}
+          elementRect={elementRect}
         />
       )}
       

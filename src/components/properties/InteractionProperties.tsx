@@ -27,7 +27,7 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     message: '',
     sound: '',
     puzzleType: 'puzzle',
-    messagePosition: 'bottom' as MessagePosition,
+    messagePosition: 'top' as MessagePosition,
     puzzleConfig: {
       name: 'Puzzle',
       type: 'image' as PuzzleType,
@@ -344,15 +344,15 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
           <div>
             <Label>Message Position</Label>
             <Select
-              value={interactionConfig.messagePosition || 'bottom'}
+              value={interactionConfig.messagePosition || 'top'}
               onValueChange={handleMessagePositionChange}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select message position" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="bottom">Bottom</SelectItem>
                 <SelectItem value="top">Top</SelectItem>
+                <SelectItem value="bottom">Bottom</SelectItem>
               </SelectContent>
             </Select>
           </div>

@@ -8,19 +8,28 @@ interface InteractionMessageModalProps {
   onClose: () => void;
   message: string;
   position?: 'bottom' | 'top';
+  elementRect?: DOMRect | null;
 }
 
 const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({ 
   isOpen, 
   onClose, 
   message,
-  position = 'bottom'
+  position = 'top',
+  elementRect
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
+      
+      // Auto-close after 3 seconds
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => {
         setIsVisible(false);
@@ -28,16 +37,51 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, onClose]);
   
   if (!isVisible && !isOpen) return null;
   
+  // Calculate position based on element rectangle
+  let style: React.CSSProperties = {
+    position: 'fixed',
+    left: '50%',
+    transform: 'translateX(-50%)',
+    zIndex: 30,
+    maxWidth: '20rem',
+    width: '100%',
+    padding: '0 1rem'
+  };
+  
+  // If we have elementRect, position directly above or below the element
+  if (elementRect) {
+    const elementCenterX = elementRect.left + elementRect.width / 2;
+    
+    if (position === 'top') {
+      style = {
+        ...style,
+        left: `${elementCenterX}px`,
+        top: `${elementRect.top - 10}px`
+      };
+    } else {
+      style = {
+        ...style,
+        left: `${elementCenterX}px`,
+        top: `${elementRect.bottom + 10}px`
+      };
+    }
+  } else {
+    // Fallback to default positioning
+    style = {
+      ...style,
+      [position === 'bottom' ? 'bottom' : 'top']: '2rem'
+    };
+  }
+  
   return (
     <div 
-      className={`fixed left-1/2 transform -translate-x-1/2 z-30 max-w-md w-full px-4
-        ${position === 'bottom' ? 'bottom-8' : 'top-8'}
-        ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
-        transition-all duration-300 ease-in-out`}
+      className={`transition-all duration-300 ease-in-out
+        ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}`}
+      style={style}
     >
       <div className="bg-black/80 text-white rounded-lg p-4 shadow-lg border border-gray-700 relative">
         <Button 
@@ -57,7 +101,7 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
         </div>
         
         {/* Triangle pointer at the bottom */}
-        <div className="absolute left-1/2 bottom-0 w-4 h-4 bg-black/80 transform -translate-x-1/2 translate-y-1/2 rotate-45 border-r border-b border-gray-700"></div>
+        <div className={`absolute left-1/2 ${position === 'top' ? 'bottom-0 rotate-45 translate-y-1/2' : 'top-0 -rotate-135 -translate-y-1/2'} w-4 h-4 bg-black/80 transform -translate-x-1/2 border-r border-b border-gray-700`}></div>
       </div>
     </div>
   );
