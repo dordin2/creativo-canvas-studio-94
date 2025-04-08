@@ -316,20 +316,23 @@ const DraggableElement = ({ element, isActive, children }: {
   const indicatorStyles = interactionType === 'canvasNavigation' ? 
     "absolute bottom-0 right-0 w-3 h-3 bg-blue-500 rounded-full animate-pulse" : "";
 
+  const combinedStyle = {
+    ...elementStyle,
+    zIndex: element.layer,
+    transition: isDragging ? 'none' : 'transform 0.1s ease',
+    cursor: isGameMode 
+      ? (hasInteraction ? 'pointer' : 'default') 
+      : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
+    willChange: isDragging ? 'transform' : 'auto',
+    opacity: element.isHidden ? 0 : 1,
+    position: 'relative',
+  };
+
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
     <div
       ref={ref}
       className="canvas-element"
-      style={{
-        ...elementStyle,
-        transition: isDragging ? 'none' : 'transform 0.1s ease',
-        cursor: isGameMode 
-          ? (hasInteraction ? 'pointer' : 'default') 
-          : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
-        willChange: isDragging ? 'transform' : 'auto',
-        opacity: element.isHidden ? 0 : 1,
-        position: 'relative',
-      }}
+      style={combinedStyle}
       onMouseDown={handleMouseDown}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}

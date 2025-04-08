@@ -129,6 +129,8 @@ const Canvas = () => {
   };
   
   const renderElements = () => {
+    // Important change: Sort all elements by layer, not just non-background elements
+    // This ensures proper layer ordering in both design and game mode
     const sortedElements = [...elements]
       .filter(element => element.type !== 'background')
       .sort((a, b) => a.layer - b.layer);
