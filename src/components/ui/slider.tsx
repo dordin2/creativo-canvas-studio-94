@@ -12,7 +12,7 @@ const Slider = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full touch-none select-none items-center",
-      orientation === "vertical" && "h-full flex-col justify-center py-4", // Add padding for vertical sliders
+      orientation === "vertical" && "h-full flex-col justify-end py-4", // Changed justify-center to justify-end for proper alignment
       className
     )}
     {...props}
@@ -26,7 +26,7 @@ const Slider = React.forwardRef<
       <SliderPrimitive.Range 
         className={cn(
           "absolute h-full bg-gradient-to-r from-canvas-purple to-canvas-indigo",
-          orientation === "vertical" && "h-full w-full"
+          orientation === "vertical" && "w-full bg-gradient-to-t from-canvas-purple to-canvas-indigo" // Added bg-gradient-to-t for vertical gradient direction
         )} 
       />
     </SliderPrimitive.Track>
