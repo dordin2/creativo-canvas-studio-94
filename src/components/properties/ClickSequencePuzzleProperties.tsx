@@ -1,3 +1,4 @@
+
 import React, { useState, useRef } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Upload, Plus, Trash2, FileCheck } from "lucide-react";
+import { Upload, Plus, Trash2, FileCheck, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
 
 const PLACEHOLDER_IMAGES = [
@@ -45,9 +46,15 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
   
   const handleAddImage = () => {
     if (selectedImage && !localPuzzleConfig.images.includes(selectedImage)) {
+      const newImages = [...localPuzzleConfig.images, selectedImage];
+      // Default solution is sequential, adding a new image to the end of the solution
+      const newSolution = [...localPuzzleConfig.solution];
+      newSolution.push(newImages.length - 1);
+      
       setLocalPuzzleConfig(prev => ({
         ...prev,
-        images: [...prev.images, selectedImage]
+        images: newImages,
+        solution: newSolution
       }));
       setSelectedImage("");
     }
@@ -57,20 +64,41 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
     const newImages = [...localPuzzleConfig.images];
     newImages.splice(index, 1);
     
+    // Update solution indices to maintain valid references
+    const newSolution = localPuzzleConfig.solution
+      .filter(solutionValue => solutionValue !== index) // Remove the deleted image from solution
+      .map(solutionValue => solutionValue > index ? solutionValue - 1 : solutionValue); // Adjust indices
+    
     setLocalPuzzleConfig(prev => ({
       ...prev,
       images: newImages,
-      solution: prev.solution.map(solIndex => {
-        if (solIndex === index) return 0;
-        if (solIndex > index) return solIndex - 1;
-        return solIndex;
-      })
+      solution: newSolution,
+      clickedIndices: prev.clickedIndices.filter(idx => 
+        idx !== index).map(idx => idx > index ? idx - 1 : idx)
     }));
   };
   
-  const handleSolutionChange = (index: number, value: string) => {
+  const handleMoveImageUp = (index: number) => {
+    if (index === 0) return; // Already at the top
+    
     const newSolution = [...localPuzzleConfig.solution];
-    newSolution[index] = parseInt(value);
+    
+    // Swap the images in the solution array
+    [newSolution[index], newSolution[index - 1]] = [newSolution[index - 1], newSolution[index]];
+    
+    setLocalPuzzleConfig(prev => ({
+      ...prev,
+      solution: newSolution
+    }));
+  };
+  
+  const handleMoveImageDown = (index: number) => {
+    if (index === localPuzzleConfig.solution.length - 1) return; // Already at the bottom
+    
+    const newSolution = [...localPuzzleConfig.solution];
+    
+    // Swap the images in the solution array
+    [newSolution[index], newSolution[index + 1]] = [newSolution[index + 1], newSolution[index]];
     
     setLocalPuzzleConfig(prev => ({
       ...prev,
@@ -92,9 +120,13 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
     reader.onload = (event) => {
       if (event.target?.result) {
         const imageDataUrl = event.target.result.toString();
+        const newImages = [...localPuzzleConfig.images, imageDataUrl];
+        const newSolution = [...localPuzzleConfig.solution, newImages.length - 1];
+        
         setLocalPuzzleConfig(prev => ({
           ...prev,
-          images: [...prev.images, imageDataUrl]
+          images: newImages,
+          solution: newSolution
         }));
         toast.success(t('toast.success.upload'));
       }
@@ -201,6 +233,55 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
           </div>
         </div>
         
+        <div className="mt-4">
+          <Label className="mb-2 block">
+            {language === 'en' ? 'Click Sequence Order (correct solution)' : 'סדר הלחיצות (פתרון נכון)'}
+          </Label>
+          <div className="space-y-2">
+            {localPuzzleConfig.solution.map((imageIndex, solutionPosition) => (
+              <div key={solutionPosition} className="flex items-center gap-2 bg-gray-50 p-2 rounded">
+                <div className="flex-shrink-0 w-10 h-10 bg-white border rounded overflow-hidden">
+                  {localPuzzleConfig.images[imageIndex] && (
+                    <img 
+                      src={localPuzzleConfig.images[imageIndex]} 
+                      alt={`Image ${imageIndex + 1}`} 
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="flex-grow">
+                  <div className="text-sm font-medium">
+                    {language === 'en' ? `Step ${solutionPosition + 1}` : `שלב ${solutionPosition + 1}`}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {language === 'en' ? `Image ${imageIndex + 1}` : `תמונה ${imageIndex + 1}`}
+                  </div>
+                </div>
+                <div className="flex space-x-1">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => handleMoveImageUp(solutionPosition)}
+                    disabled={solutionPosition === 0}
+                  >
+                    <ArrowUp className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-7 w-7"
+                    onClick={() => handleMoveImageDown(solutionPosition)}
+                    disabled={solutionPosition === localPuzzleConfig.solution.length - 1}
+                  >
+                    <ArrowDown className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+        
         <div className="grid grid-cols-3 gap-2 mt-3">
           {localPuzzleConfig.images.map((img, idx) => (
             <div key={idx} className="relative group">
@@ -227,25 +308,6 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
             {t('puzzle.add.images')}
           </div>
         )}
-      </div>
-      
-      <div>
-        <Label>{t('puzzle.solution')}</Label>
-        <div className="space-y-2 mt-2">
-          {Array.from({ length: localPuzzleConfig.images.length }).map((_, idx) => (
-            <div key={idx} className="flex items-center gap-2">
-              <span className="text-sm font-medium w-24">
-                {`${t('puzzle.step')} ${idx + 1}:`}
-              </span>
-              <Input
-                type="number"
-                value={localPuzzleConfig.solution[idx]?.toString() || ""}
-                onChange={(e) => handleSolutionChange(idx, e.target.value)}
-                className="flex-1"
-              />
-            </div>
-          ))}
-        </div>
       </div>
       
       <div className="flex gap-2 pt-3">
