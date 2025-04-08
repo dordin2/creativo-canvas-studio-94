@@ -6,12 +6,13 @@ import Canvas from "@/components/Canvas";
 import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
 import { useDesignState } from "@/context/DesignContext";
-import InventoryIcon from "@/components/inventory/InventoryIcon";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft } from "lucide-react";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const { isGameMode } = useDesignState();
+  const { isGameMode, toggleGameMode } = useDesignState();
 
   useEffect(() => {
     // Simulate loading resources
@@ -60,7 +61,21 @@ const Index = () => {
           </div>
         )}
       </div>
-      {isGameMode && <InventoryPanel />}
+      {isGameMode && (
+        <>
+          <InventoryPanel />
+          <div className="absolute bottom-4 left-4 z-[100]">
+            <Button 
+              variant="secondary" 
+              className="shadow-md bg-white hover:bg-gray-100"
+              onClick={toggleGameMode}
+            >
+              <ChevronLeft className="mr-1" />
+              Exit Game Mode
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
