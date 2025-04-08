@@ -8,19 +8,28 @@ interface InteractionMessageModalProps {
   onClose: () => void;
   message: string;
   position?: 'bottom' | 'top';
+  elementRect?: DOMRect | null;
 }
 
 const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({ 
   isOpen, 
   onClose, 
   message,
-  position = 'bottom'
+  position = 'bottom',
+  elementRect
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   
   useEffect(() => {
     if (isOpen) {
       setIsVisible(true);
+      
+      // Auto close after 3 seconds
+      const timer = setTimeout(() => {
+        onClose();
+      }, 3000);
+      
+      return () => clearTimeout(timer);
     } else {
       const timer = setTimeout(() => {
         setIsVisible(false);
@@ -28,16 +37,46 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [isOpen]);
+  }, [isOpen, onClose]);
   
   if (!isVisible && !isOpen) return null;
   
+  // Get position styles based on the element's rect
+  const getPositionStyles = () => {
+    if (!elementRect) {
+      return {
+        left: '50%',
+        transform: 'translateX(-50%)',
+        [position === 'bottom' ? 'bottom' : 'top']: '8rem'
+      };
+    }
+    
+    const centerX = elementRect.left + elementRect.width / 2;
+    const positionY = position === 'bottom' 
+      ? elementRect.bottom + 10 // 10px below element
+      : elementRect.top - 10;   // 10px above element
+    
+    return {
+      left: `${centerX}px`,
+      transform: 'translateX(-50%)',
+      [position === 'bottom' ? 'top' : 'bottom']: `calc(100% - ${positionY}px)`
+    };
+  };
+  
+  const positionStyles = getPositionStyles();
+  const bubblePosition = elementRect ? 
+    (position === 'bottom' ? '-bottom-1' : '-top-1') : 
+    (position === 'bottom' ? 'bottom-0' : 'top-0');
+  const bubbleRotation = position === 'bottom' ? 'rotate-45' : '-rotate-135';
+  
   return (
     <div 
-      className={`fixed left-1/2 transform -translate-x-1/2 z-30 max-w-md w-full px-4
-        ${position === 'bottom' ? 'bottom-8' : 'top-8'}
-        ${isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-8'}
-        transition-all duration-300 ease-in-out`}
+      className="fixed z-30 max-w-md w-full px-4"
+      style={{
+        ...positionStyles,
+        opacity: isOpen ? 1 : 0,
+        transition: 'opacity 0.3s ease-in-out'
+      }}
     >
       <div className="bg-black/80 text-white rounded-lg p-4 shadow-lg border border-gray-700 relative">
         <Button 
@@ -56,8 +95,8 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
           </div>
         </div>
         
-        {/* Triangle pointer at the bottom */}
-        <div className="absolute left-1/2 bottom-0 w-4 h-4 bg-black/80 transform -translate-x-1/2 translate-y-1/2 rotate-45 border-r border-b border-gray-700"></div>
+        {/* Triangle pointer */}
+        <div className={`absolute left-1/2 ${bubblePosition} w-4 h-4 bg-black/80 transform -translate-x-1/2 ${bubbleRotation} border-r border-b border-gray-700`}></div>
       </div>
     </div>
   );
