@@ -1,17 +1,20 @@
 
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo, Layers } from "lucide-react";
+import { Download, Share, Undo, Redo, Layers, Settings } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
+import { useState } from "react";
 import LanguageSwitcher from "./LanguageSwitcher";
 import GameModeToggle from "./GameModeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LayersList from "./LayersList";
+import MessageBoxSettingsDialog from "./MessageBoxSettingsDialog";
 
 const Header = () => {
   const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
   const { t, language } = useLanguage();
+  const [isMessageBoxSettingsOpen, setIsMessageBoxSettingsOpen] = useState(false);
 
   const handleDownload = () => {
     if (!canvasRef) return;
@@ -101,6 +104,15 @@ const Header = () => {
             <Redo className="h-4 w-4" />
           </Button>
           <div className="w-px h-6 bg-gray-200 mx-1"></div>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setIsMessageBoxSettingsOpen(true)}
+            title="Message Box Settings"
+            className="hover:bg-gray-50"
+          >
+            <Settings className="h-4 w-4" />
+          </Button>
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" className="gap-2 hover:bg-gray-50">
@@ -125,6 +137,11 @@ const Header = () => {
           </Button>
         </div>
       </div>
+      
+      <MessageBoxSettingsDialog 
+        isOpen={isMessageBoxSettingsOpen}
+        onClose={() => setIsMessageBoxSettingsOpen(false)}
+      />
     </header>
   );
 };

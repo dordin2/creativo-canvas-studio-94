@@ -1,3 +1,4 @@
+
 import { CSSProperties } from "react";
 
 export type ElementType =
@@ -18,6 +19,14 @@ export type ElementType =
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 export type SliderOrientation = 'horizontal' | 'vertical';
 export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation';
+
+export interface MessageBoxSettings {
+  width: number;
+  fontSize: number;
+  position: 'center' | 'top' | 'bottom';
+  backgroundColor: string;
+  textColor: string;
+}
 
 export interface PuzzleConfig {
   name: string;
@@ -109,6 +118,8 @@ export interface DesignContextType {
   activeElement: DesignElement | null;
   canvasRef: HTMLDivElement | null;
   isGameMode: boolean;
+  messageBoxSettings: MessageBoxSettings;
+  updateMessageBoxSettings: (settings: Partial<MessageBoxSettings>) => void;
   toggleGameMode: () => void;
   setCanvasRef: (ref: HTMLDivElement) => void;
   addElement: (type: ElementType, props?: any) => DesignElement;
