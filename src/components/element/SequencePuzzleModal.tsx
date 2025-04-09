@@ -27,8 +27,7 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   const isInitialized = useRef(false);
   const pendingUpdate = useRef(false);
   const timeoutRef = useRef<number | null>(null);
-  const draggedItemRef = useRef<HTMLDivElement | null>(null);
-  const dragPreviewRef = useRef<HTMLDivElement | null>(null);
+  const cursorPreviewRef = useRef<HTMLDivElement | null>(null);
   
   const sequencePuzzleConfig = element.sequencePuzzleConfig || {
     name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
@@ -114,20 +113,75 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
   
   // Setup and cleanup drag preview element
   useEffect(() => {
-    // Create cursor preview element
-    const preview = document.createElement('div');
-    preview.id = 'sequence-item-preview';
-    preview.style.display = 'none';
-    document.body.appendChild(preview);
-    dragPreviewRef.current = preview;
+    // Clean up on unmount
+    return () => {
+      if (timeoutRef.current !== null) {
+        window.clearTimeout(timeoutRef.current);
+      }
+      
+      // Remove the preview element if it exists
+      if (cursorPreviewRef.current && cursorPreviewRef.current.parentNode) {
+        cursorPreviewRef.current.parentNode.removeChild(cursorPreviewRef.current);
+      }
+    };
+  }, []);
+  
+  // Custom drag handling with cursor preview
+  useEffect(() => {
+    if (!isDragging || draggedItem === null) return;
+    
+    // Create cursor preview element if it doesn't exist
+    if (!cursorPreviewRef.current) {
+      const preview = document.createElement('div');
+      preview.id = 'sequence-item-preview';
+      preview.style.position = 'fixed';
+      preview.style.pointerEvents = 'none';
+      preview.style.zIndex = '10000';
+      preview.style.width = '100px';
+      preview.style.height = '100px';
+      preview.style.opacity = '0.9';
+      preview.style.borderRadius = '4px';
+      preview.style.overflow = 'hidden';
+      preview.style.boxShadow = '0 4px 8px rgba(0, 0, 0, 0.1)';
+      preview.style.transform = 'translate(-50%, -50%)';
+      preview.style.display = 'flex';
+      preview.style.alignItems = 'center';
+      preview.style.justifyContent = 'center';
+      preview.style.backgroundColor = 'white';
+      document.body.appendChild(preview);
+      cursorPreviewRef.current = preview;
+      
+      // Add the image to the preview
+      if (sequencePuzzleConfig.images[currentOrder[draggedItem]]) {
+        const img = document.createElement('img');
+        img.src = sequencePuzzleConfig.images[currentOrder[draggedItem]];
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '100%';
+        img.style.objectFit = 'contain';
+        cursorPreviewRef.current.appendChild(img);
+        
+        // Add position indicator
+        const indicator = document.createElement('div');
+        indicator.style.position = 'absolute';
+        indicator.style.top = '0';
+        indicator.style.left = '0';
+        indicator.style.backgroundColor = '#3b82f6';
+        indicator.style.color = 'white';
+        indicator.style.fontSize = '12px';
+        indicator.style.padding = '2px 6px';
+        indicator.style.borderBottomRightRadius = '4px';
+        indicator.textContent = `${draggedItem + 1}`;
+        cursorPreviewRef.current.appendChild(indicator);
+      }
+    }
     
     // Mouse move handler for drag preview
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || draggedItem === null || !dragPreviewRef.current) return;
+      if (!isDragging || draggedItem === null || !cursorPreviewRef.current) return;
       
-      // Position the preview at the cursor with a slight offset
-      dragPreviewRef.current.style.left = `${e.clientX - 20}px`;
-      dragPreviewRef.current.style.top = `${e.clientY - 20}px`;
+      // Position the preview at the cursor
+      cursorPreviewRef.current.style.left = `${e.clientX}px`;
+      cursorPreviewRef.current.style.top = `${e.clientY}px`;
       
       // Find what we're hovering over for drop detection
       const elementsUnderCursor = document.elementsFromPoint(e.clientX, e.clientY);
@@ -211,21 +265,20 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
       }
       
       // Clean up after drag ends
-      if (draggedItemRef.current) {
-        draggedItemRef.current.classList.remove('dragging');
-        draggedItemRef.current = null;
-      }
-      
-      // Hide the drag preview
-      if (dragPreviewRef.current) {
-        dragPreviewRef.current.style.display = 'none';
-        dragPreviewRef.current.innerHTML = '';
-      }
+      document.querySelectorAll('.sequence-item.dragging').forEach(el => {
+        el.classList.remove('dragging');
+      });
       
       // Remove all drop target styling
       document.querySelectorAll('.drop-target').forEach(el => {
         el.classList.remove('drop-target');
       });
+      
+      // Remove the cursor preview
+      if (cursorPreviewRef.current && cursorPreviewRef.current.parentNode) {
+        cursorPreviewRef.current.parentNode.removeChild(cursorPreviewRef.current);
+        cursorPreviewRef.current = null;
+      }
       
       // Reset drag state
       setIsDragging(false);
@@ -233,26 +286,21 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     };
     
     // Add event listeners
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-    }
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
     
-    // Clean up event listeners and cursor preview on unmount
+    // Cleanup event listeners on unmount or when dragging stops
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
       
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-      }
-      
-      // Remove the preview element on unmount
-      if (dragPreviewRef.current) {
-        document.body.removeChild(dragPreviewRef.current);
+      // Remove the preview element if it exists
+      if (cursorPreviewRef.current && cursorPreviewRef.current.parentNode) {
+        cursorPreviewRef.current.parentNode.removeChild(cursorPreviewRef.current);
+        cursorPreviewRef.current = null;
       }
     };
-  }, [isDragging, draggedItem, element.id, updateElement, currentOrder, sequencePuzzleConfig]);
+  }, [isDragging, draggedItem, currentOrder, sequencePuzzleConfig, element.id, updateElement]);
   
   // Helper function to shuffle an array
   const shuffleArray = (array: number[]): number[] => {
@@ -269,8 +317,8 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     e.stopPropagation();
     
     // Set the item as dragging
-    draggedItemRef.current = e.currentTarget as HTMLDivElement;
-    draggedItemRef.current.classList.add('dragging');
+    const target = e.currentTarget as HTMLDivElement;
+    target.classList.add('dragging');
     
     // Store starting position for calculations
     setDragStartPos({ x: e.clientX, y: e.clientY });
@@ -278,27 +326,6 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
     // Set drag state
     setDraggedItem(index);
     setIsDragging(true);
-    
-    // Create a clone of the element for the drag preview
-    if (dragPreviewRef.current) {
-      const imageElement = draggedItemRef.current.querySelector('img');
-      if (imageElement) {
-        const clone = document.createElement('img');
-        clone.src = imageElement.src;
-        clone.style.width = '100%';
-        clone.style.height = '100%';
-        clone.style.objectFit = 'contain';
-        
-        // Clear and add the new preview content
-        dragPreviewRef.current.innerHTML = '';
-        dragPreviewRef.current.appendChild(clone);
-        dragPreviewRef.current.style.display = 'flex';
-        
-        // Position initially at cursor location
-        dragPreviewRef.current.style.left = `${e.clientX - 20}px`;
-        dragPreviewRef.current.style.top = `${e.clientY - 20}px`;
-      }
-    }
   };
   
   // Reset the puzzle
@@ -332,6 +359,30 @@ const SequencePuzzleModal: React.FC<SequencePuzzleModalProps> = ({ isOpen, onClo
       }, 300);
     }
   };
+  
+  // Add a small amount of CSS to the document head for styling the draggable items
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      .sequence-item {
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      }
+      .sequence-item.dragging {
+        opacity: 0.5;
+        z-index: 1;
+      }
+      .sequence-item.drop-target {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+        transform: scale(1.05);
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {

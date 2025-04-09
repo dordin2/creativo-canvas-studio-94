@@ -11,6 +11,7 @@ import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
 import SliderPuzzleProperties from "./SliderPuzzleProperties";
 import InteractionProperties from "./InteractionProperties";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useEffect } from "react";
 
 interface ElementPropertiesProps {
   element: DesignElement;
@@ -23,6 +24,37 @@ const ElementProperties = ({ element }: ElementPropertiesProps) => {
   
   // Don't show interaction properties for puzzle elements and backgrounds
   const canHaveInteraction = !puzzleElements.includes(element.type) && element.type !== 'background';
+  
+  // Add global CSS for drag operations
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.id = 'global-drag-styles';
+    styleElement.textContent = `
+      body.inventory-dragging,
+      body.sequence-dragging {
+        cursor: none !important;
+      }
+      
+      #sequence-item-preview {
+        position: fixed;
+        pointer-events: none;
+        z-index: 10000;
+        opacity: 0.9;
+        border-radius: 4px;
+        overflow: hidden;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+    `;
+    
+    // Only add if it doesn't exist yet
+    if (!document.getElementById('global-drag-styles')) {
+      document.head.appendChild(styleElement);
+    }
+    
+    return () => {
+      // We don't remove it on unmount because other components might need it
+    };
+  }, []);
   
   // Common properties that appear in both tabs and non-tabs view
   const renderCommonProperties = () => (
