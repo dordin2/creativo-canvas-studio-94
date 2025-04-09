@@ -1,4 +1,3 @@
-
 import { DesignElement } from "@/context/DesignContext";
 import TextProperties from "./TextProperties";
 import ShapeProperties from "./ShapeProperties";
@@ -10,7 +9,6 @@ import SequencePuzzleProperties from "./SequencePuzzleProperties";
 import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
 import SliderPuzzleProperties from "./SliderPuzzleProperties";
 import InteractionProperties from "./InteractionProperties";
-import InteractionSequenceProperties from "./InteractionSequenceProperties";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface ElementPropertiesProps {

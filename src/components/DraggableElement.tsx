@@ -1,5 +1,7 @@
+
 import { useRef, useState, useEffect } from "react";
-import { DesignElement, InteractionAction, useDesignState } from "@/context/DesignContext";
+import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { InteractionAction } from "@/types/designTypes"; // Fixed import
 import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
 import { useElementRotation } from "@/hooks/useElementRotation";
