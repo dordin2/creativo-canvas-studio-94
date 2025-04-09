@@ -7,7 +7,8 @@ import {
   Canvas,
   generateId,
   InteractionType,
-  InventoryItem
+  InventoryItem,
+  CombinationResultType
 } from "@/types/designTypes";
 import { 
   getDefaultPosition, 
@@ -135,7 +136,53 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
-    if (targetElement.interaction.message) {
+    const combinationResult = targetElement.interaction.combinationResult;
+    
+    if (combinationResult) {
+      switch (combinationResult.type) {
+        case 'message':
+          if (combinationResult.message) {
+            toast.success(combinationResult.message);
+          } else {
+            toast.success("Items combined successfully!");
+          }
+          break;
+          
+        case 'sound':
+          if (combinationResult.soundUrl) {
+            const audio = new Audio(combinationResult.soundUrl);
+            audio.play().catch(err => {
+              console.error('Audio playback error:', err);
+              toast.error('Could not play sound');
+            });
+          }
+          toast.success("Items combined successfully!");
+          break;
+          
+        case 'canvasNavigation':
+          if (combinationResult.targetCanvasId) {
+            const targetCanvasIndex = canvases.findIndex(
+              canvas => canvas.id === combinationResult.targetCanvasId
+            );
+            
+            if (targetCanvasIndex !== -1) {
+              setActiveCanvas(targetCanvasIndex);
+              toast.success(`Navigated to ${canvases[targetCanvasIndex].name}`);
+            } else {
+              toast.error('Target canvas not found');
+            }
+          }
+          break;
+          
+        case 'puzzle':
+          toast.info("Puzzle unlocked!");
+          break;
+          
+        default:
+          toast.success("Items combined successfully!");
+          break;
+      }
+    } else if (targetElement.interaction.message) {
       toast.success(targetElement.interaction.message);
     } else {
       toast.success("Items combined successfully!");

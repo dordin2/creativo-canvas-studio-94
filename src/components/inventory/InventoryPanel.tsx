@@ -50,6 +50,9 @@ const InventoryPanel = () => {
           })
         )}
       </div>
+      <div className="p-3 bg-gray-50 border-t text-xs text-gray-500">
+        <p>Drag and drop items onto combinable elements to use them</p>
+      </div>
     </div>
   );
 };

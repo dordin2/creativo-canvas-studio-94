@@ -19,6 +19,7 @@ export type PuzzleType = 'image' | 'number' | 'alphabet';
 export type SliderOrientation = 'horizontal' | 'vertical';
 export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation' | 'addToInventory' | 'combinable';
 export type MessagePosition = 'bottom' | 'top';
+export type CombinationResultType = 'message' | 'sound' | 'puzzle' | 'canvasNavigation';
 
 export interface PuzzleConfig {
   name: string;
@@ -53,6 +54,20 @@ export interface SliderPuzzleConfig {
   maxValue: number;
 }
 
+export interface CombinationResult {
+  type: CombinationResultType;
+  message?: string;
+  messagePosition?: MessagePosition;
+  sound?: string;
+  soundUrl?: string;
+  targetCanvasId?: string;
+  puzzleType?: ElementType;
+  puzzleConfig?: PuzzleConfig;
+  sequencePuzzleConfig?: SequencePuzzleConfig;
+  clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
+  sliderPuzzleConfig?: SliderPuzzleConfig;
+}
+
 export interface InteractionConfig {
   type: InteractionType;
   puzzleType?: ElementType;
@@ -66,6 +81,7 @@ export interface InteractionConfig {
   soundUrl?: string;
   targetCanvasId?: string;
   canCombineWith?: string[]; // IDs of items that can be combined with this element
+  combinationResult?: CombinationResult;
 }
 
 export interface FileMetadata {

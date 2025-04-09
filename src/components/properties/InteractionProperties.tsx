@@ -1,13 +1,27 @@
 import React, { useState } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { InteractionType, PuzzleType, MessagePosition } from "@/types/designTypes";
+import { 
+  InteractionType, 
+  PuzzleType, 
+  MessagePosition, 
+  CombinationResultType 
+} from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { AlertCircle, MessageSquare, Music, Puzzle, Navigation, ShoppingBasket, Combine } from "lucide-react";
+import { 
+  AlertCircle, 
+  MessageSquare, 
+  Music, 
+  Puzzle, 
+  Navigation, 
+  ShoppingBasket, 
+  Combine,
+  Split
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PuzzleProperties from "./PuzzleProperties";
 import SequencePuzzleProperties from "./SequencePuzzleProperties";
@@ -22,6 +36,7 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
   const { updateElement, canvases, activeCanvasIndex, elements } = useDesignState();
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<string>("config");
+  const [combinationTab, setCombinationTab] = useState<string>("setup");
   
   const interactionConfig = element.interaction || { 
     type: 'none',
@@ -36,7 +51,11 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
       images: [],
       solution: []
     },
-    canCombineWith: []
+    canCombineWith: [],
+    combinationResult: {
+      type: 'message' as CombinationResultType,
+      message: ''
+    }
   };
 
   const handleTypeChange = (value: string) => {
@@ -248,6 +267,69 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     }
   };
 
+  const getCombinationResultPuzzleElementProxy = () => {
+    const baseElement = { ...element };
+    const combinationResult = interactionConfig.combinationResult;
+    
+    if (!combinationResult) return baseElement;
+    
+    if (combinationResult.puzzleType === 'puzzle' && combinationResult.puzzleConfig) {
+      baseElement.puzzleConfig = combinationResult.puzzleConfig;
+    } 
+    else if (combinationResult.puzzleType === 'sequencePuzzle' && combinationResult.sequencePuzzleConfig) {
+      baseElement.sequencePuzzleConfig = combinationResult.sequencePuzzleConfig;
+    }
+    else if (combinationResult.puzzleType === 'clickSequencePuzzle' && combinationResult.clickSequencePuzzleConfig) {
+      baseElement.clickSequencePuzzleConfig = combinationResult.clickSequencePuzzleConfig;
+    }
+    else if (combinationResult.puzzleType === 'sliderPuzzle' && combinationResult.sliderPuzzleConfig) {
+      baseElement.sliderPuzzleConfig = combinationResult.sliderPuzzleConfig;
+    }
+    
+    return baseElement;
+  };
+
+  const getCombinationResultPuzzleConfigComponent = () => {
+    const combinationResult = interactionConfig.combinationResult;
+    if (!combinationResult) return null;
+    
+    const puzzleType = combinationResult.puzzleType || 'puzzle';
+    const proxyElement = getCombinationResultPuzzleElementProxy();
+    
+    switch (puzzleType) {
+      case 'puzzle':
+        return (
+          <PuzzleProperties 
+            element={proxyElement} 
+            onUpdateConfig={(config) => handleCombinationResultPuzzleConfigUpdate('puzzleConfig', config)} 
+          />
+        );
+      case 'sequencePuzzle':
+        return (
+          <SequencePuzzleProperties 
+            element={proxyElement} 
+            onUpdateConfig={(config) => handleCombinationResultPuzzleConfigUpdate('sequencePuzzleConfig', config)} 
+          />
+        );
+      case 'clickSequencePuzzle':
+        return (
+          <ClickSequencePuzzleProperties 
+            element={proxyElement} 
+            onUpdateConfig={(config) => handleCombinationResultPuzzleConfigUpdate('clickSequencePuzzleConfig', config)} 
+          />
+        );
+      case 'sliderPuzzle':
+        return (
+          <SliderPuzzleProperties 
+            element={proxyElement} 
+            onUpdateConfig={(config) => handleCombinationResultPuzzleConfigUpdate('sliderPuzzleConfig', config)} 
+          />
+        );
+      default:
+        return <div>Select a puzzle type to configure</div>;
+    }
+  };
+
   const getCombinableElements = () => {
     const currentCanvasElements = elements.filter(el => 
       el.id !== element.id && 
@@ -262,6 +344,175 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     });
     
     return [...currentCanvasElements, ...otherCanvasElements];
+  };
+
+  const handleCombinationResultTypeChange = (value: string) => {
+    const combinationResult = interactionConfig.combinationResult || {
+      type: 'message' as CombinationResultType,
+      message: ''
+    };
+    
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        combinationResult: {
+          ...combinationResult,
+          type: value as CombinationResultType
+        }
+      }
+    });
+  };
+
+  const handleCombinationResultMessageChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const combinationResult = interactionConfig.combinationResult || {
+      type: 'message' as CombinationResultType
+    };
+    
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        combinationResult: {
+          ...combinationResult,
+          message: e.target.value
+        }
+      }
+    });
+  };
+
+  const handleCombinationResultTargetCanvasChange = (value: string) => {
+    const combinationResult = interactionConfig.combinationResult || {
+      type: 'canvasNavigation' as CombinationResultType
+    };
+    
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        combinationResult: {
+          ...combinationResult,
+          targetCanvasId: value
+        }
+      }
+    });
+  };
+
+  const handleCombinationResultSoundUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!file.type.startsWith('audio/')) {
+      toast.error('Please upload a valid audio file');
+      return;
+    }
+    
+    setAudioFile(file);
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      if (event.target?.result) {
+        const combinationResult = interactionConfig.combinationResult || {
+          type: 'sound' as CombinationResultType
+        };
+        
+        updateElement(element.id, {
+          interaction: {
+            ...interactionConfig,
+            combinationResult: {
+              ...combinationResult,
+              sound: file.name,
+              soundUrl: event.target.result as string
+            }
+          }
+        });
+        toast.success('Sound uploaded successfully');
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleCombinationResultPuzzleTypeChange = (value: string) => {
+    const combinationResult = interactionConfig.combinationResult || {
+      type: 'puzzle' as CombinationResultType
+    };
+    
+    let newCombinationResult = { ...combinationResult, puzzleType: value as ElementType };
+    
+    if (value === 'puzzle') {
+      if (!combinationResult.puzzleConfig) {
+        newCombinationResult.puzzleConfig = {
+          name: 'Puzzle',
+          type: 'image',
+          placeholders: 3,
+          images: [],
+          solution: []
+        };
+      }
+    } 
+    else if (value === 'sequencePuzzle') {
+      if (!combinationResult.sequencePuzzleConfig) {
+        newCombinationResult.sequencePuzzleConfig = {
+          name: 'Sequence Puzzle',
+          images: [],
+          solution: [],
+          currentOrder: []
+        };
+      }
+    } 
+    else if (value === 'clickSequencePuzzle') {
+      if (!combinationResult.clickSequencePuzzleConfig) {
+        newCombinationResult.clickSequencePuzzleConfig = {
+          name: 'Click Sequence Puzzle',
+          images: [],
+          solution: [],
+          clickedIndices: []
+        };
+      }
+    } 
+    else if (value === 'sliderPuzzle') {
+      if (!combinationResult.sliderPuzzleConfig) {
+        newCombinationResult.sliderPuzzleConfig = {
+          name: 'Slider Puzzle',
+          orientation: 'horizontal',
+          sliderCount: 3,
+          solution: [5, 2, 8],
+          currentValues: [0, 0, 0],
+          maxValue: 10
+        };
+      }
+    }
+    
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        combinationResult: newCombinationResult
+      }
+    });
+  };
+
+  const handleCombinationResultPuzzleConfigUpdate = (configType: string, config: any) => {
+    const combinationResult = interactionConfig.combinationResult || {
+      type: 'puzzle' as CombinationResultType
+    };
+    
+    let updatedCombinationResult = { ...combinationResult };
+    
+    if (configType === 'puzzleConfig') {
+      updatedCombinationResult.puzzleConfig = config;
+    } 
+    else if (configType === 'sequencePuzzleConfig') {
+      updatedCombinationResult.sequencePuzzleConfig = config;
+    }
+    else if (configType === 'clickSequencePuzzleConfig') {
+      updatedCombinationResult.clickSequencePuzzleConfig = config;
+    }
+    else if (configType === 'sliderPuzzleConfig') {
+      updatedCombinationResult.sliderPuzzleConfig = config;
+    }
+    
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        combinationResult: updatedCombinationResult
+      }
+    });
   };
 
   return (
@@ -339,79 +590,166 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
 
       {interactionConfig.type === 'combinable' && (
         <div className="space-y-4">
-          <Label>Combinable with these items:</Label>
-          <div className="space-y-2 max-h-64 overflow-y-auto p-2 border rounded-md">
-            {getCombinableElements().length > 0 ? (
-              getCombinableElements().map(item => (
-                <div key={item.id} className="flex items-center space-x-2">
-                  <Checkbox 
-                    id={`item-${item.id}`}
-                    checked={(interactionConfig.canCombineWith || []).includes(item.id)}
-                    onCheckedChange={() => handleToggleCombinableItem(item.id)}
+          <Tabs value={combinationTab} onValueChange={setCombinationTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value="setup">Item Setup</TabsTrigger>
+              <TabsTrigger value="result">Combination Result</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="setup" className="space-y-4">
+              <Label>Combinable with these items:</Label>
+              <div className="space-y-2 max-h-64 overflow-y-auto p-2 border rounded-md">
+                {getCombinableElements().length > 0 ? (
+                  getCombinableElements().map(item => (
+                    <div key={item.id} className="flex items-center space-x-2">
+                      <Checkbox 
+                        id={`item-${item.id}`}
+                        checked={(interactionConfig.canCombineWith || []).includes(item.id)}
+                        onCheckedChange={() => handleToggleCombinableItem(item.id)}
+                      />
+                      <Label htmlFor={`item-${item.id}`} className="cursor-pointer">
+                        {item.name || `${item.type} (${item.id.slice(0, 4)})`}
+                      </Label>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-gray-500 py-2">
+                    No items available. Create items with "Add to Inventory" interaction first.
+                  </p>
+                )}
+              </div>
+              <div className="p-3 bg-gray-50 rounded-md">
+                <p className="text-sm text-gray-600">
+                  When an inventory item is dragged and dropped onto this element, the item will be removed from the inventory
+                  and the selected combination result will occur.
+                </p>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="result" className="space-y-4">
+              <div>
+                <Label>Result Type</Label>
+                <Select
+                  value={interactionConfig.combinationResult?.type || 'message'}
+                  onValueChange={handleCombinationResultTypeChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select result type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="message" className="flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4" />
+                      <span>Show Message</span>
+                    </SelectItem>
+                    <SelectItem value="sound" className="flex items-center gap-2">
+                      <Music className="h-4 w-4" />
+                      <span>Play Sound</span>
+                    </SelectItem>
+                    <SelectItem value="canvasNavigation" className="flex items-center gap-2">
+                      <Navigation className="h-4 w-4" />
+                      <span>Navigate to Canvas</span>
+                    </SelectItem>
+                    <SelectItem value="puzzle" className="flex items-center gap-2">
+                      <Puzzle className="h-4 w-4" />
+                      <span>Show Puzzle</span>
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              {interactionConfig.combinationResult?.type === 'message' && (
+                <div>
+                  <Label>Message Text</Label>
+                  <Textarea
+                    value={interactionConfig.combinationResult?.message || ''}
+                    onChange={handleCombinationResultMessageChange}
+                    placeholder="Enter message to show when items are combined..."
+                    className="min-h-[80px]"
                   />
-                  <Label htmlFor={`item-${item.id}`} className="cursor-pointer">
-                    {item.name || `${item.type} (${item.id.slice(0, 4)})`}
-                  </Label>
                 </div>
-              ))
-            ) : (
-              <p className="text-sm text-gray-500 py-2">
-                No items available. Create items with "Add to Inventory" interaction first.
-              </p>
-            )}
-          </div>
-          <div className="p-3 bg-gray-50 rounded-md">
-            <p className="text-sm text-gray-600">
-              When an inventory item is dragged and dropped onto this element, the item will be removed from the inventory
-              and a success message will be shown.
-            </p>
-          </div>
-          <div>
-            <Label>Success Message</Label>
-            <Textarea
-              value={interactionConfig.message || ''}
-              onChange={handleMessageChange}
-              placeholder="Enter message to show when items are combined..."
-              className="min-h-[80px]"
-            />
-          </div>
+              )}
+              
+              {interactionConfig.combinationResult?.type === 'sound' && (
+                <div className="space-y-2">
+                  <Label>Upload Sound</Label>
+                  <Input 
+                    type="file" 
+                    accept="audio/*" 
+                    onChange={handleCombinationResultSoundUpload}
+                  />
+                  {interactionConfig.combinationResult?.sound && (
+                    <div className="mt-2">
+                      <p className="text-sm">Current sound: {interactionConfig.combinationResult.sound}</p>
+                      {interactionConfig.combinationResult?.soundUrl && (
+                        <audio 
+                          controls 
+                          src={interactionConfig.combinationResult.soundUrl} 
+                          className="mt-2 w-full" 
+                        />
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+              
+              {interactionConfig.combinationResult?.type === 'canvasNavigation' && (
+                <div>
+                  <Label>Target Canvas</Label>
+                  <Select
+                    value={interactionConfig.combinationResult?.targetCanvasId || ''}
+                    onValueChange={handleCombinationResultTargetCanvasChange}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select target canvas" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {canvases.map((canvas, index) => (
+                        index !== activeCanvasIndex && (
+                          <SelectItem key={canvas.id} value={canvas.id}>
+                            {canvas.name}
+                          </SelectItem>
+                        )
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              {interactionConfig.combinationResult?.type === 'puzzle' && (
+                <Tabs defaultValue="puzzleType">
+                  <TabsList className="w-full">
+                    <TabsTrigger value="puzzleType">Puzzle Type</TabsTrigger>
+                    <TabsTrigger value="puzzleConfig">Puzzle Config</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="puzzleType" className="space-y-4">
+                    <div>
+                      <Label>Puzzle Type</Label>
+                      <Select
+                        value={interactionConfig.combinationResult?.puzzleType || 'puzzle'}
+                        onValueChange={handleCombinationResultPuzzleTypeChange}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select puzzle type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="puzzle">Regular Puzzle</SelectItem>
+                          <SelectItem value="sequencePuzzle">Sequence Puzzle</SelectItem>
+                          <SelectItem value="clickSequencePuzzle">Click Sequence Puzzle</SelectItem>
+                          <SelectItem value="sliderPuzzle">Slider Puzzle</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="puzzleConfig">
+                    {getCombinationResultPuzzleConfigComponent()}
+                  </TabsContent>
+                </Tabs>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
-      )}
-
-      {interactionConfig.type === 'puzzle' && (
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full">
-            <TabsTrigger value="config">Basic Config</TabsTrigger>
-            <TabsTrigger value="advanced">Puzzle Setup</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="config" className="space-y-4">
-            <div>
-              <Label>Puzzle Type</Label>
-              <Select
-                value={interactionConfig.puzzleType || 'puzzle'}
-                onValueChange={handlePuzzleTypeChange}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select puzzle type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="puzzle">Regular Puzzle</SelectItem>
-                  <SelectItem value="sequencePuzzle">Sequence Puzzle</SelectItem>
-                  <SelectItem value="clickSequencePuzzle">Click Sequence Puzzle</SelectItem>
-                  <SelectItem value="sliderPuzzle">Slider Puzzle</SelectItem>
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-gray-500 mt-1">
-                Select the puzzle type, then go to the "Puzzle Setup" tab to configure it.
-              </p>
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="advanced">
-            {getPuzzleConfigComponent()}
-          </TabsContent>
-        </Tabs>
       )}
 
       {interactionConfig.type === 'message' && (
