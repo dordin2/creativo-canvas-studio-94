@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -22,7 +21,8 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     activeElement, 
     setActiveElement,
     handleImageUpload,
-    isGameMode
+    isGameMode,
+    updateElementWithoutHistory
   } = useDesignState();
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 1600, height: 900 });
@@ -30,6 +30,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive);
+  const [previousFullscreenState, setPreviousFullscreenState] = useState(isFullscreenActive);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -37,15 +38,58 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     }
   }, [canvasRef, setCanvasRef]);
   
-  // Update isFullscreen state when prop changes
   useEffect(() => {
-    setIsFullscreen(isFullscreenActive);
+    if (isFullscreenActive !== previousFullscreenState) {
+      setIsFullscreen(isFullscreenActive);
+      
+      adjustImageSizesForMode(isFullscreenActive);
+      
+      setPreviousFullscreenState(isFullscreenActive);
+    }
   }, [isFullscreenActive]);
+  
+  const adjustImageSizesForMode = (toFullscreen: boolean) => {
+    if (!isGameMode) return;
+    
+    elements.forEach(element => {
+      if (element.type === 'image' && element.metadata) {
+        if (toFullscreen && element.metadata.originalScale !== undefined) {
+          if (element.metadata.fullscreenScale !== undefined) {
+            if (element.originalSize) {
+              const scaleFactor = element.metadata.fullscreenScale / 100;
+              const newWidth = Math.round(element.originalSize.width * scaleFactor);
+              const newHeight = Math.round(element.originalSize.height * scaleFactor);
+              
+              updateElementWithoutHistory(element.id, {
+                size: {
+                  width: newWidth,
+                  height: newHeight
+                }
+              });
+            }
+          }
+        } 
+        else if (!toFullscreen && element.metadata.originalScale !== undefined) {
+          if (element.originalSize) {
+            const scaleFactor = element.metadata.originalScale / 100;
+            const newWidth = Math.round(element.originalSize.width * scaleFactor);
+            const newHeight = Math.round(element.originalSize.height * scaleFactor);
+            
+            updateElementWithoutHistory(element.id, {
+              size: {
+                width: newWidth,
+                height: newHeight
+              }
+            });
+          }
+        }
+      }
+    });
+  };
   
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current && parentRef.current) {
-        // If in fullscreen game mode, fill the entire screen
         if (isFullscreen && isGameMode) {
           const screenWidth = window.innerWidth;
           const screenHeight = window.innerHeight;
@@ -108,10 +152,10 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
 
     document.addEventListener('keydown', handleKeyDown);
     
-    // Detect fullscreen change from browser controls
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
+      if (!document.fullscreenElement && isFullscreen) {
         setIsFullscreen(false);
+        adjustImageSizesForMode(false);
       }
     };
     
@@ -127,7 +171,10 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     if (!isFullscreen) {
       if (parentRef.current?.requestFullscreen) {
         parentRef.current.requestFullscreen()
-          .then(() => setIsFullscreen(true))
+          .then(() => {
+            setIsFullscreen(true);
+            adjustImageSizesForMode(true);
+          })
           .catch(err => console.error("Error attempting to enable fullscreen:", err));
       }
     } else {
@@ -138,7 +185,10 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   const exitFullscreen = () => {
     if (document.fullscreenElement) {
       document.exitFullscreen()
-        .then(() => setIsFullscreen(false))
+        .then(() => {
+          setIsFullscreen(false);
+          adjustImageSizesForMode(false);
+        })
         .catch(err => console.error("Error attempting to exit fullscreen:", err));
     }
   };
@@ -162,7 +212,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   };
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    if (isGameMode) return; // No dragging in game mode
+    if (isGameMode) return;
     
     e.preventDefault();
     e.stopPropagation();
@@ -176,7 +226,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   };
   
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    if (isGameMode) return; // No dropping in game mode
+    if (isGameMode) return;
     
     e.preventDefault();
     e.stopPropagation();
@@ -419,7 +469,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
-  // Use different styling for fullscreen mode
   const canvasContainerStyle = isFullscreen && isGameMode
     ? {
         transform: `scale(${zoomLevel})`,
