@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -22,7 +21,8 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     activeElement, 
     setActiveElement,
     handleImageUpload,
-    isGameMode
+    isGameMode,
+    updateElementWithoutHistory
   } = useDesignState();
   const containerRef = useRef<HTMLDivElement>(null);
   const [canvasDimensions, setCanvasDimensions] = useState({ width: 1600, height: 900 });
@@ -30,6 +30,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive);
+  const [previousFullscreenState, setPreviousFullscreenState] = useState(isFullscreenActive);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -39,8 +40,61 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   
   // Update isFullscreen state when prop changes
   useEffect(() => {
-    setIsFullscreen(isFullscreenActive);
+    // Only handle transitions between states
+    if (isFullscreenActive !== previousFullscreenState) {
+      setIsFullscreen(isFullscreenActive);
+      
+      // When transitioning to or from fullscreen, adjust image sizes
+      adjustImageSizesForMode(isFullscreenActive);
+      
+      setPreviousFullscreenState(isFullscreenActive);
+    }
   }, [isFullscreenActive]);
+  
+  // Function to adjust image sizes when switching modes
+  const adjustImageSizesForMode = (toFullscreen: boolean) => {
+    if (!isGameMode) return; // Only apply in game mode
+    
+    // Process all image elements
+    elements.forEach(element => {
+      if (element.type === 'image' && element.metadata) {
+        // Handle transition to fullscreen
+        if (toFullscreen && element.metadata.originalScale !== undefined) {
+          if (element.metadata.fullscreenScale !== undefined) {
+            // Use the stored fullscreen scale if available
+            if (element.originalSize) {
+              const scaleFactor = element.metadata.fullscreenScale / 100;
+              const newWidth = Math.round(element.originalSize.width * scaleFactor);
+              const newHeight = Math.round(element.originalSize.height * scaleFactor);
+              
+              updateElementWithoutHistory(element.id, {
+                size: {
+                  width: newWidth,
+                  height: newHeight
+                }
+              });
+            }
+          }
+        } 
+        // Handle transition from fullscreen
+        else if (!toFullscreen && element.metadata.originalScale !== undefined) {
+          // Restore the original scale
+          if (element.originalSize) {
+            const scaleFactor = element.metadata.originalScale / 100;
+            const newWidth = Math.round(element.originalSize.width * scaleFactor);
+            const newHeight = Math.round(element.originalSize.height * scaleFactor);
+            
+            updateElementWithoutHistory(element.id, {
+              size: {
+                width: newWidth,
+                height: newHeight
+              }
+            });
+          }
+        }
+      }
+    });
+  };
   
   useEffect(() => {
     const handleResize = () => {
@@ -110,8 +164,9 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     
     // Detect fullscreen change from browser controls
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
+      if (!document.fullscreenElement && isFullscreen) {
         setIsFullscreen(false);
+        adjustImageSizesForMode(false); // Restore original sizes
       }
     };
     
@@ -127,7 +182,10 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     if (!isFullscreen) {
       if (parentRef.current?.requestFullscreen) {
         parentRef.current.requestFullscreen()
-          .then(() => setIsFullscreen(true))
+          .then(() => {
+            setIsFullscreen(true);
+            adjustImageSizesForMode(true); // Apply fullscreen sizes
+          })
           .catch(err => console.error("Error attempting to enable fullscreen:", err));
       }
     } else {
@@ -138,7 +196,10 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   const exitFullscreen = () => {
     if (document.fullscreenElement) {
       document.exitFullscreen()
-        .then(() => setIsFullscreen(false))
+        .then(() => {
+          setIsFullscreen(false);
+          adjustImageSizesForMode(false); // Restore original sizes
+        })
         .catch(err => console.error("Error attempting to exit fullscreen:", err));
     }
   };
