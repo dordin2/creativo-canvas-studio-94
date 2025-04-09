@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -24,7 +23,12 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
     isGameMode
   } = useDesignState();
   const containerRef = useRef<HTMLDivElement>(null);
-  const [canvasDimensions, setCanvasDimensions] = useState({ width: 1600, height: 900 });
+  const FIXED_CANVAS_WIDTH = 1600;
+  const FIXED_CANVAS_HEIGHT = 900;
+  const [canvasDimensions, setCanvasDimensions] = useState({ 
+    width: FIXED_CANVAS_WIDTH, 
+    height: FIXED_CANVAS_HEIGHT 
+  });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
@@ -41,22 +45,18 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
         const parentWidth = parentRef.current.clientWidth;
         const parentHeight = parentRef.current.clientHeight;
         
-        const minWidth = 1600;
-        const minHeight = 900;
+        const canvasWidth = FIXED_CANVAS_WIDTH;
+        const canvasHeight = FIXED_CANVAS_HEIGHT;
         
-        const maxWidth = Math.max(minWidth, parentWidth - 20);
-        const maxHeight = Math.max(minHeight, parentHeight - 40);
+        const scaleX = (parentWidth - 40) / canvasWidth;
+        const scaleY = (parentHeight - 40) / canvasHeight;
+        const scale = Math.min(scaleX, scaleY, 1);
         
-        const aspectRatio = 16/9;
-        let width = maxWidth;
-        let height = width / aspectRatio;
-        
-        if (height > maxHeight) {
-          height = maxHeight;
-          width = height * aspectRatio;
+        if (!isGameMode) {
+          setZoomLevel(scale);
         }
         
-        setCanvasDimensions({ width, height });
+        setCanvasDimensions({ width: canvasWidth, height: canvasHeight });
       }
     };
     
@@ -78,7 +78,7 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
+  }, [isGameMode]);
   
   const handleZoomIn = () => {
     setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
@@ -99,7 +99,7 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
   };
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    if (isGameMode) return; // No dragging in game mode
+    if (isGameMode) return;
     
     e.preventDefault();
     e.stopPropagation();
@@ -113,7 +113,7 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
   };
   
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    if (isGameMode) return; // No dropping in game mode
+    if (isGameMode) return;
     
     e.preventDefault();
     e.stopPropagation();
@@ -356,8 +356,19 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
     background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
-  // Use a larger zoom level in fullscreen mode
-  const displayZoomLevel = isFullscreen && isGameMode ? 1.25 : zoomLevel;
+  const calculateFullscreenScale = () => {
+    if (!isFullscreen || !isGameMode) return zoomLevel;
+    
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    const scaleX = viewportWidth / FIXED_CANVAS_WIDTH;
+    const scaleY = viewportHeight / FIXED_CANVAS_HEIGHT;
+    
+    return Math.min(scaleX, scaleY) * 0.9;
+  };
+  
+  const displayZoomLevel = isFullscreen && isGameMode ? calculateFullscreenScale() : zoomLevel;
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full">

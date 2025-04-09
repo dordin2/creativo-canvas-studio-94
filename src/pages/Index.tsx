@@ -52,7 +52,7 @@ const Index = () => {
               <Canvas />
             </>
           ) : (
-            <div className="game-mode-canvas-container">
+            <div className="fixed-canvas-container">
               <Canvas isFullscreen={true} />
             </div>
           )}

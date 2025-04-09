@@ -212,15 +212,28 @@
     background-color: #000 !important;
   }
 
+  .fixed-canvas-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
   .game-mode-canvas-container {
-    position: relative !important;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
-    height: 100% !important;
-    width: 100% !important;
+    position: absolute !important;
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
     transform-origin: center !important;
-    overflow: hidden !important;
+  }
+
+  .game-mode-canvas-container .canvas-container > div:first-child {
+    box-shadow: none !important;
   }
 
   /* Ensure the canvas scales from center in game mode */
@@ -231,10 +244,6 @@
     transform: translate(-50%, -50%) !important;
     max-width: 100% !important;
     max-height: 100% !important;
-  }
-
-  .game-mode-canvas-container .canvas-container > div:first-child {
-    box-shadow: none !important;
   }
 
   /* Ensure resize and rotation handles are always visible */
