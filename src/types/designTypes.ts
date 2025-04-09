@@ -84,6 +84,7 @@ export interface InteractionConfig {
   combinationResult?: CombinationResult;
   lipsyncIntensity?: number; // Controls how strong the pulsing animation is
   lipsyncSpeed?: number; // Controls the speed of the pulsing animation
+  lipsyncMaxScale?: number; // Controls the maximum scale before shrinking
 }
 
 export interface FileMetadata {
