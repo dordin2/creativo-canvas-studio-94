@@ -54,7 +54,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       
       if (projectData) {
         // Check if this is a private project and the user has access
-        if (projectData.user_id && !projectData.is_public && user?.id !== projectData.user_id) {
+        if (projectData.user_id && projectData.is_public === false && user?.id !== projectData.user_id) {
           toast.error("You don't have access to this project");
           navigate('/');
           return;
