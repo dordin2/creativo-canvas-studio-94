@@ -8,7 +8,7 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
+  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
@@ -23,16 +23,7 @@ export const useDraggable = (elementId: string) => {
   const isPuzzleElement = currentElement?.type === 'puzzle';
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
   const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
-  const isClickSequencePuzzleElement = currentElement?.type === 'clickSequencePuzzle';
   const isImageElement = currentElement?.type === 'image';
-  
-  // Check if this element should be draggable in game mode
-  const isDraggableInGameMode = 
-    isPuzzleElement || 
-    isSequencePuzzleElement || 
-    isSliderPuzzleElement || 
-    isClickSequencePuzzleElement ||
-    (currentElement?.interaction?.allowDragInGameMode === true);
 
   // Handle drops from inventory items
   useEffect(() => {
@@ -123,9 +114,6 @@ export const useDraggable = (elementId: string) => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      // Skip dragging in game mode if element is not supposed to be draggable
-      if (isGameMode && !isDraggableInGameMode) return;
-      
       if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
       
       // Update current mouse position immediately for responsive feel
@@ -205,14 +193,9 @@ export const useDraggable = (elementId: string) => {
         animationFrame.current = null;
       }
     };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isDraggableInGameMode]);
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
-    // If in game mode, only allow dragging for specific elements
-    if (isGameMode && !isDraggableInGameMode) {
-      return;
-    }
-    
     // Prevent browser's native drag behavior for images and puzzle elements
     if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
       e.preventDefault();
@@ -235,10 +218,5 @@ export const useDraggable = (elementId: string) => {
     }
   };
 
-  return { 
-    startDrag, 
-    isDragging, 
-    currentElement,
-    isDraggableInGameMode
-  };
+  return { startDrag, isDragging, currentElement };
 };

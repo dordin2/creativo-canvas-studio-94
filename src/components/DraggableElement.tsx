@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -47,7 +46,7 @@ const DraggableElement = ({ element, isActive, children }: {
     handleItemCombination
   } = useDesignState();
   
-  const { startDrag, isDragging: isDraggingFromHook, isDraggableInGameMode } = useDraggable(element.id);
+  const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -92,12 +91,6 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isGameMode) {
       if (hasInteraction) {
         handleInteraction();
-      }
-      // Only initiate drag if the element is supposed to be draggable in game mode
-      if (isDraggableInGameMode) {
-        startDrag(e, element.position);
-        setIsDragging(true);
-        setStartPos({ x: e.clientX, y: e.clientY });
       }
       return;
     }
@@ -570,7 +563,7 @@ const DraggableElement = ({ element, isActive, children }: {
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
     cursor: isGameMode 
-      ? (hasInteraction ? 'pointer' : (isDraggableInGameMode ? 'grab' : 'default')) 
+      ? (hasInteraction ? 'pointer' : 'default') 
       : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
@@ -581,19 +574,16 @@ const DraggableElement = ({ element, isActive, children }: {
     boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
     
     backgroundColor: isGameMode && isImageElement ? 'transparent' : elementStyle.backgroundColor,
-    // Add a non-draggable style attribute for image elements in game mode that aren't meant to be dragged
-    pointerEvents: isGameMode && isImageElement && !isDraggableInGameMode ? 'none' : 'auto',
   };
 
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => {
     const gameImageClass = isGameMode && isImageElement ? 'transparent-game-image' : '';
-    const noDragClass = isGameMode && !isDraggableInGameMode ? 'no-drag' : '';
     
     const content = (
       <div
         id={`element-${element.id}`}
         ref={ref}
-        className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${gameImageClass} ${noDragClass}`}
+        className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${gameImageClass}`}
         style={combinedStyle}
         onMouseDown={handleMouseDown}
         onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
