@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -345,6 +346,28 @@
 
 .zoom-controls span {
   @apply px-2 text-sm font-medium text-sidebar-foreground;
+}
+
+/* Fullscreen button */
+.fullscreen-controls {
+  @apply fixed bottom-4 right-4 z-50;
+}
+
+.fullscreen-button {
+  @apply flex items-center justify-center w-10 h-10 bg-white hover:bg-gray-100 text-gray-700 rounded-lg shadow-md border border-gray-100 transition-colors;
+}
+
+.fullscreen-button:active {
+  @apply transform scale-95;
+}
+
+/* Fullscreen canvas styles */
+:fullscreen .game-mode-workspace {
+  background-color: #000 !important;
+}
+
+:fullscreen .fullscreen-button {
+  @apply bg-black/30 text-white border-gray-700 hover:bg-black/50;
 }
 
 /* Sequence Puzzle Drag and Drop styles */
