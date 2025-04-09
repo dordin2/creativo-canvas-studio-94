@@ -1,7 +1,5 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { InteractionAction } from "@/types/designTypes"; // Fixed import
 import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
 import { useElementRotation } from "@/hooks/useElementRotation";
@@ -56,16 +54,10 @@ const DraggableElement = ({ element, isActive, children }: {
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [showControls, setShowControls] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
-  const [messageContent, setMessageContent] = useState("");
   const [showPuzzleModal, setShowPuzzleModal] = useState(false);
-  const [currentPuzzleType, setCurrentPuzzleType] = useState<string>('puzzle');
-  const [currentPuzzleConfig, setCurrentPuzzleConfig] = useState<any>(null);
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [combinationPuzzleModal, setCombinationPuzzleModal] = useState(false);
   const [combinationMessage, setCombinationMessage] = useState('');
-  const [puzzleSolved, setPuzzleSolved] = useState(false);
-  const [actionQueue, setActionQueue] = useState<InteractionAction[]>([]);
-  const [isProcessingActions, setIsProcessingActions] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -137,97 +129,10 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  const processActionQueue = () => {
-    if (actionQueue.length === 0 || isProcessingActions) return;
-    
-    setIsProcessingActions(true);
-    const nextAction = actionQueue[0];
-    
-    let shouldExecute = true;
-    if (nextAction.condition === 'puzzleSolved' && !puzzleSolved) {
-      shouldExecute = false;
-    } else if (nextAction.condition === 'none') {
-      shouldExecute = false;
-    }
-    
-    if (shouldExecute) {
-      const delay = nextAction.delay || 0;
-      
-      setTimeout(() => {
-        executeAction(nextAction);
-        
-        setActionQueue(prev => prev.slice(1));
-        setIsProcessingActions(false);
-      }, delay);
-    } else {
-      setActionQueue(prev => prev.slice(1));
-      setIsProcessingActions(false);
-    }
-  };
-  
-  const executeAction = (action: InteractionAction) => {
-    switch (action.type) {
-      case 'message':
-        if (action.message) {
-          setMessageContent(action.message);
-          setShowMessageModal(true);
-        }
-        break;
-        
-      case 'sound':
-        if (action.soundUrl) {
-          const audio = new Audio(action.soundUrl);
-          audio.play().catch(err => {
-            console.error('Audio playback error:', err);
-            toast.error('Could not play sound');
-          });
-        }
-        break;
-        
-      case 'puzzle':
-        setCurrentPuzzleType(action.puzzleType || 'puzzle');
-        
-        if (action.puzzleType === 'puzzle') {
-          setCurrentPuzzleConfig(action.puzzleConfig);
-        } else if (action.puzzleType === 'sequencePuzzle') {
-          setCurrentPuzzleConfig(action.sequencePuzzleConfig);
-        } else if (action.puzzleType === 'clickSequencePuzzle') {
-          setCurrentPuzzleConfig(action.clickSequencePuzzleConfig);
-        } else if (action.puzzleType === 'sliderPuzzle') {
-          setCurrentPuzzleConfig(action.sliderPuzzleConfig);
-        }
-        
-        setShowPuzzleModal(true);
-        break;
-        
-      case 'canvasNavigation':
-        if (action.targetCanvasId) {
-          const targetCanvasIndex = canvases.findIndex(
-            canvas => canvas.id === action.targetCanvasId
-          );
-          
-          if (targetCanvasIndex !== -1) {
-            setActiveCanvas(targetCanvasIndex);
-            toast.success(`Navigated to ${canvases[targetCanvasIndex].name}`);
-          } else {
-            toast.error('Target canvas not found');
-          }
-        }
-        break;
-    }
-  };
-
   const handleInteraction = () => {
     if (!hasInteraction) return;
     
-    if (element.interaction?.actions && element.interaction.actions.length > 0) {
-      setActionQueue(element.interaction.actions);
-      setPuzzleSolved(false);
-      return;
-    }
-    
     if (interactionType === 'message' && element.interaction?.message) {
-      setMessageContent(element.interaction.message);
       setShowMessageModal(true);
     } 
     else if (interactionType === 'sound' && element.interaction?.soundUrl) {
@@ -240,18 +145,6 @@ const DraggableElement = ({ element, isActive, children }: {
       }
     }
     else if (interactionType === 'puzzle') {
-      setCurrentPuzzleType(interactionPuzzleType);
-      
-      if (interactionPuzzleType === 'puzzle') {
-        setCurrentPuzzleConfig(element.interaction?.puzzleConfig);
-      } else if (interactionPuzzleType === 'sequencePuzzle') {
-        setCurrentPuzzleConfig(element.interaction?.sequencePuzzleConfig);
-      } else if (interactionPuzzleType === 'clickSequencePuzzle') {
-        setCurrentPuzzleConfig(element.interaction?.clickSequencePuzzleConfig);
-      } else if (interactionPuzzleType === 'sliderPuzzle') {
-        setCurrentPuzzleConfig(element.interaction?.sliderPuzzleConfig);
-      }
-      
       setShowPuzzleModal(true);
     }
     else if (interactionType === 'canvasNavigation' && element.interaction?.targetCanvasId) {
@@ -285,33 +178,25 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  const handlePuzzleSolved = () => {
-    setPuzzleSolved(true);
-    
-    setIsProcessingActions(false);
-  };
-
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
+  const handleDuplicate = () => {
     console.log("DraggableElement - Original element to duplicate:", element);
     
+    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("DraggableElement - Duplicate props before adding:", duplicateProps);
     
+    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
-  const handleToggleVisibility = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleToggleVisibility = () => {
     updateElement(element.id, {
       isHidden: !element.isHidden
     });
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleDelete = () => {
     removeElement(element.id);
   };
 
@@ -358,12 +243,9 @@ const DraggableElement = ({ element, isActive, children }: {
         break;
     }
     
+    // Trigger the actual item combination in the DesignContext
     handleItemCombination(draggedItemId, element.id);
   };
-
-  useEffect(() => {
-    processActionQueue();
-  }, [actionQueue, isProcessingActions, puzzleSolved]);
 
   useEffect(() => {
     const handleMouseUp = () => {
@@ -474,12 +356,7 @@ const DraggableElement = ({ element, isActive, children }: {
 
   useEffect(() => {
     if (showMessageModal) {
-      const timer = setTimeout(() => {
-        setShowMessageModal(false);
-        setIsProcessingActions(false);
-      }, 3000);
-      
-      return () => clearTimeout(timer);
+      // Message is auto-closed in the InteractionMessageModal component
     }
   }, [showMessageModal]);
 
@@ -535,65 +412,37 @@ const DraggableElement = ({ element, isActive, children }: {
   const renderPuzzleModal = () => {
     if (!showPuzzleModal) return null;
     
-    const proxyElement = { ...element };
-    
-    if (currentPuzzleType === 'puzzle') {
-      proxyElement.puzzleConfig = currentPuzzleConfig;
-    } else if (currentPuzzleType === 'sequencePuzzle') {
-      proxyElement.sequencePuzzleConfig = currentPuzzleConfig;
-    } else if (currentPuzzleType === 'clickSequencePuzzle') {
-      proxyElement.clickSequencePuzzleConfig = currentPuzzleConfig;
-    } else if (currentPuzzleType === 'sliderPuzzle') {
-      proxyElement.sliderPuzzleConfig = currentPuzzleConfig;
-    }
-    
-    switch (currentPuzzleType) {
+    switch (interactionPuzzleType) {
       case 'puzzle':
         return (
           <PuzzleModal 
             isOpen={showPuzzleModal} 
-            onClose={() => {
-              setShowPuzzleModal(false);
-              setIsProcessingActions(false);
-            }}
-            element={proxyElement}
-            onPuzzleSolved={handlePuzzleSolved}
+            onClose={() => setShowPuzzleModal(false)} 
+            element={{...element, puzzleConfig: element.interaction?.puzzleConfig}} 
           />
         );
       case 'sequencePuzzle':
         return (
           <SequencePuzzleModal 
             isOpen={showPuzzleModal} 
-            onClose={() => {
-              setShowPuzzleModal(false);
-              setIsProcessingActions(false);
-            }}
-            element={proxyElement}
-            onPuzzleSolved={handlePuzzleSolved}
+            onClose={() => setShowPuzzleModal(false)} 
+            element={{...element, sequencePuzzleConfig: element.interaction?.sequencePuzzleConfig}} 
           />
         );
       case 'clickSequencePuzzle':
         return (
           <ClickSequencePuzzleModal 
             isOpen={showPuzzleModal} 
-            onClose={() => {
-              setShowPuzzleModal(false);
-              setIsProcessingActions(false);
-            }}
-            element={proxyElement}
-            onPuzzleSolved={handlePuzzleSolved}
+            onClose={() => setShowPuzzleModal(false)} 
+            element={{...element, clickSequencePuzzleConfig: element.interaction?.clickSequencePuzzleConfig}} 
           />
         );
       case 'sliderPuzzle':
         return (
           <SliderPuzzleModal 
             isOpen={showPuzzleModal} 
-            onClose={() => {
-              setShowPuzzleModal(false);
-              setIsProcessingActions(false);
-            }}
-            element={proxyElement}
-            onPuzzleSolved={handlePuzzleSolved}
+            onClose={() => setShowPuzzleModal(false)} 
+            element={{...element, sliderPuzzleConfig: element.interaction?.sliderPuzzleConfig}} 
           />
         );
       default:
@@ -634,8 +483,7 @@ const DraggableElement = ({ element, isActive, children }: {
           <PuzzleModal 
             isOpen={combinationPuzzleModal} 
             onClose={() => setCombinationPuzzleModal(false)} 
-            element={proxy}
-            onPuzzleSolved={handlePuzzleSolved}
+            element={proxy} 
           />
         );
       case 'sequencePuzzle':
@@ -643,8 +491,7 @@ const DraggableElement = ({ element, isActive, children }: {
           <SequencePuzzleModal 
             isOpen={combinationPuzzleModal} 
             onClose={() => setCombinationPuzzleModal(false)} 
-            element={proxy}
-            onPuzzleSolved={handlePuzzleSolved}
+            element={proxy} 
           />
         );
       case 'clickSequencePuzzle':
@@ -652,8 +499,7 @@ const DraggableElement = ({ element, isActive, children }: {
           <ClickSequencePuzzleModal 
             isOpen={combinationPuzzleModal} 
             onClose={() => setCombinationPuzzleModal(false)} 
-            element={proxy}
-            onPuzzleSolved={handlePuzzleSolved}
+            element={proxy} 
           />
         );
       case 'sliderPuzzle':
@@ -661,8 +507,7 @@ const DraggableElement = ({ element, isActive, children }: {
           <SliderPuzzleModal 
             isOpen={combinationPuzzleModal} 
             onClose={() => setCombinationPuzzleModal(false)} 
-            element={proxy}
-            onPuzzleSolved={handlePuzzleSolved}
+            element={proxy} 
           />
         );
       default:
@@ -680,8 +525,6 @@ const DraggableElement = ({ element, isActive, children }: {
       indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full animate-pulse";
     } else if (interactionType === 'combinable') {
       indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-purple-500 rounded-full animate-pulse";
-    } else if (element.interaction?.actions && element.interaction.actions.length > 0) {
-      indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-yellow-500 rounded-full animate-pulse";
     }
   }
 
@@ -721,9 +564,7 @@ const DraggableElement = ({ element, isActive, children }: {
               ? "Click to add to inventory"
               : interactionType === 'combinable'
                 ? "Can be combined with inventory items"
-                : element.interaction?.actions && element.interaction.actions.length > 0
-                  ? "Has interaction sequence"
-                  : ""
+                : ""
         }></div>
       )}
     </div>
@@ -783,15 +624,11 @@ const DraggableElement = ({ element, isActive, children }: {
         />
       )}
       
-      {(interactionType === 'message' || messageContent) && (
+      {interactionType === 'message' && (
         <InteractionMessageModal
           isOpen={showMessageModal}
-          onClose={() => {
-            setShowMessageModal(false);
-            setMessageContent("");
-            setIsProcessingActions(false);
-          }}
-          message={messageContent || element.interaction?.message || ''}
+          onClose={() => setShowMessageModal(false)}
+          message={element.interaction?.message || ''}
         />
       )}
       
@@ -804,7 +641,6 @@ const DraggableElement = ({ element, isActive, children }: {
           onClose={() => {
             setShowMessageModal(false);
             setCombinationMessage('');
-            setIsProcessingActions(false);
           }}
           message={combinationMessage}
         />

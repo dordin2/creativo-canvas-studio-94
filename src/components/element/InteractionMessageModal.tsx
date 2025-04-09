@@ -7,14 +7,12 @@ interface InteractionMessageModalProps {
   isOpen: boolean;
   onClose: () => void;
   message: string;
-  autoCloseDelay?: number;
 }
 
 const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({ 
   isOpen, 
   onClose, 
-  message,
-  autoCloseDelay = 3000 // Default to 3 seconds if not specified
+  message
 }) => {
   const [isVisible, setIsVisible] = useState(false);
   
@@ -22,10 +20,10 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
     if (isOpen) {
       setIsVisible(true);
       
-      // Auto-close after the specified delay
+      // Auto-close after 3 seconds
       const timer = setTimeout(() => {
         onClose();
-      }, autoCloseDelay);
+      }, 3000);
       
       return () => clearTimeout(timer);
     } else {
@@ -35,7 +33,7 @@ const InteractionMessageModal: React.FC<InteractionMessageModalProps> = ({
       
       return () => clearTimeout(timer);
     }
-  }, [isOpen, onClose, autoCloseDelay]);
+  }, [isOpen, onClose]);
   
   if (!isVisible && !isOpen) return null;
   

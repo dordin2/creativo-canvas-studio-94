@@ -1,4 +1,3 @@
-
 import { CSSProperties } from "react";
 
 export type ElementType =
@@ -69,24 +68,6 @@ export interface CombinationResult {
   sliderPuzzleConfig?: SliderPuzzleConfig;
 }
 
-export interface InteractionAction {
-  type: InteractionType;
-  puzzleType?: ElementType;
-  puzzleConfig?: PuzzleConfig;
-  sequencePuzzleConfig?: SequencePuzzleConfig;
-  clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
-  sliderPuzzleConfig?: SliderPuzzleConfig;
-  message?: string;
-  messagePosition?: MessagePosition;
-  sound?: string;
-  soundUrl?: string;
-  targetCanvasId?: string;
-  canCombineWith?: string[]; // IDs of items that can be combined with this element
-  combinationResult?: CombinationResult;
-  delay?: number; // Delay in milliseconds before this action is executed
-  condition?: 'always' | 'puzzleSolved' | 'none'; // Condition for this action to execute
-}
-
 export interface InteractionConfig {
   type: InteractionType;
   puzzleType?: ElementType;
@@ -101,7 +82,6 @@ export interface InteractionConfig {
   targetCanvasId?: string;
   canCombineWith?: string[]; // IDs of items that can be combined with this element
   combinationResult?: CombinationResult;
-  actions?: InteractionAction[]; // Sequence of actions to perform
 }
 
 export interface FileMetadata {
