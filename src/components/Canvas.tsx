@@ -400,9 +400,12 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
       <div className={`flex-1 flex items-center justify-center p-4 canvas-workspace relative ${isGameMode ? 'game-mode-workspace' : ''}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
           transform: `scale(${displayZoomLevel})`, 
-          transformOrigin: 'center center', 
+          transformOrigin: 'center center',
           transition: 'transform 0.2s ease-out',
-          position: 'relative',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          translate: '-50% -50%',
           width: 'fit-content',
           height: 'fit-content'
         }}>
