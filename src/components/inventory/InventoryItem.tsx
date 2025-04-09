@@ -13,6 +13,12 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
   const dragStartPosition = useRef<{ x: number, y: number } | null>(null);
   const cursorPreviewRef = useRef<HTMLDivElement | null>(null);
   
+  // Check if element has transparent background
+  const hasTransparentBackground = element.style?.backgroundColor === 'transparent' || 
+                                  element.style?.backgroundColor === 'rgba(0,0,0,0)' || 
+                                  element.style?.backgroundColor === '#0000' || 
+                                  !element.style?.backgroundColor;
+  
   // Handle custom drag and drop
   useEffect(() => {
     if (isDragging) {
@@ -22,7 +28,14 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       // Create and apply a custom cursor with item preview
       const cursorPreview = document.createElement('div');
       cursorPreview.id = 'cursor-preview';
-      cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-100 w-60 h-60 flex items-center justify-center bg-white rounded-md shadow-md';
+      
+      // Make cursor preview transparent if the element has a transparent background
+      if (hasTransparentBackground) {
+        cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-100 w-60 h-60 flex items-center justify-center';
+      } else {
+        cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-100 w-60 h-60 flex items-center justify-center bg-white rounded-md shadow-md';
+      }
+      
       document.body.appendChild(cursorPreview);
       cursorPreviewRef.current = cursorPreview;
       
@@ -134,7 +147,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
         }
       };
     }
-  }, [isDragging, element, setDraggedInventoryItem]);
+  }, [isDragging, element, setDraggedInventoryItem, hasTransparentBackground]);
   
   const handleMouseDown = (e: React.MouseEvent) => {
     if (!isGameMode) return;
@@ -228,7 +241,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
   
   return (
     <div 
-      className={`relative bg-gray-50 border rounded-md p-2 h-32 flex items-center justify-center shadow-sm group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''} ${isDragging ? 'opacity-30' : ''}`}
+      className={`relative ${hasTransparentBackground ? '' : 'bg-gray-50 border'} rounded-md p-2 h-32 flex items-center justify-center ${hasTransparentBackground ? '' : 'shadow-sm'} group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''} ${isDragging ? 'opacity-30' : ''}`}
       onMouseDown={handleMouseDown}
     >
       <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">

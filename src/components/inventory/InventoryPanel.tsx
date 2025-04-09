@@ -18,6 +18,15 @@ const InventoryPanel = () => {
     return canvas.elements.find(el => el.id === elementId);
   };
   
+  // Check if there's at least one item with a background that's not transparent
+  const hasVisibleBackground = inventoryItems.some(item => {
+    const element = getElement(item.elementId, item.canvasId);
+    if (!element) return true; // Default to visible
+    
+    const bgColor = element.style?.backgroundColor;
+    return !(bgColor === 'transparent' || bgColor === 'rgba(0,0,0,0)' || bgColor === '#0000' || !bgColor);
+  });
+  
   return (
     <div className="fixed top-20 right-4 z-[9999] bg-white rounded-lg shadow-xl w-[320px] h-[70vh] max-h-[90vh] overflow-hidden flex flex-col animate-fade-in">
       <div className="p-6 bg-canvas-purple text-white flex justify-between items-center">
@@ -32,7 +41,8 @@ const InventoryPanel = () => {
       
       <div className={cn(
         "p-6 grid grid-cols-2 gap-6 overflow-y-auto",
-        inventoryItems.length === 0 && "flex items-center justify-center h-64"
+        inventoryItems.length === 0 && "flex items-center justify-center h-64",
+        !hasVisibleBackground && "bg-transparent"
       )}>
         {inventoryItems.length === 0 ? (
           <p className="text-gray-500 text-base text-center col-span-2">Your inventory is empty</p>
