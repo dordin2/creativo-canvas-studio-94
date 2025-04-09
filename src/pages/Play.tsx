@@ -11,6 +11,7 @@ import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -51,7 +52,7 @@ const Play = () => {
       // Fetch project details
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('name, user_id')
+        .select('*')
         .eq('id', projectId)
         .single();
       

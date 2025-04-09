@@ -3,202 +3,168 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters")
-});
-
-const signupSchema = loginSchema.extend({
-  name: z.string().optional(),
-  confirmPassword: z.string().min(6, "Password must be at least 6 characters")
-}).refine(data => data.password === data.confirmPassword, {
-  message: "Passwords do not match",
-  path: ["confirmPassword"]
-});
-
-type LoginFormValues = z.infer<typeof loginSchema>;
-type SignupFormValues = z.infer<typeof signupSchema>;
+import { Label } from "@/components/ui/label";
+import { LogIn, UserPlus } from "lucide-react";
 
 const Auth = () => {
-  const [tab, setTab] = useState<string>("login");
-  const { signIn, signUp } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
   
-  const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: ""
+  // Redirect if already authenticated
+  if (user) {
+    navigate("/");
+    return null;
+  }
+  
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await signIn(email, password);
+    } finally {
+      setLoading(false);
     }
-  });
-
-  const signupForm = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      email: "",
-      name: "",
-      password: "",
-      confirmPassword: ""
+  };
+  
+  const handleSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    
+    try {
+      await signUp(email, password, name);
+      // Clear fields after sign up
+      setEmail("");
+      setPassword("");
+      setName("");
+    } finally {
+      setLoading(false);
     }
-  });
-
-  const onLogin = async (values: LoginFormValues) => {
-    await signIn(values.email, values.password);
   };
-
-  const onSignup = async (values: SignupFormValues) => {
-    await signUp(values.email, values.password, values.name);
-    // Reset the form and switch to login tab after successful signup
-    signupForm.reset();
-    setTab("login");
-  };
-
+  
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="w-full max-w-md p-4">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-canvas-purple">CreativoCanvas</h1>
-          <p className="text-gray-600 mt-2">Create, design, and play interactive experiences</p>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+      <div className="max-w-md w-full space-y-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-canvas-purple mb-2">CreativoCanvas</h1>
+          <p className="text-gray-600">Create interactive experiences</p>
         </div>
         
-        <Tabs value={tab} onValueChange={setTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
-            <TabsTrigger value="login">Login</TabsTrigger>
+        <Tabs defaultValue="signin" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="login">
+          <TabsContent value="signin">
             <Card>
               <CardHeader>
-                <CardTitle>Login</CardTitle>
-                <CardDescription>Enter your credentials to access your projects</CardDescription>
+                <CardTitle>Sign In</CardTitle>
+                <CardDescription>
+                  Enter your email and password to access your projects
+                </CardDescription>
               </CardHeader>
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLogin)}>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={loginForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="your.email@example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+              <form onSubmit={handleSignIn}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-email">Email</Label>
+                    <Input
+                      id="signin-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="•••••••" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signin-password">Password</Label>
+                    <Input
+                      id="signin-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
                     />
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full bg-canvas-purple hover:bg-canvas-purple/90">
-                      Login
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Form>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-canvas-purple hover:bg-canvas-purple/90"
+                    disabled={loading}
+                  >
+                    <LogIn className="mr-2 h-4 w-4" />
+                    {loading ? "Signing in..." : "Sign In"}
+                  </Button>
+                </CardFooter>
+              </form>
             </Card>
           </TabsContent>
           
           <TabsContent value="signup">
             <Card>
               <CardHeader>
-                <CardTitle>Sign Up</CardTitle>
-                <CardDescription>Create a new account to start using CreativoCanvas</CardDescription>
+                <CardTitle>Create an Account</CardTitle>
+                <CardDescription>
+                  Sign up to create and save your own projects
+                </CardDescription>
               </CardHeader>
-              <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(onSignup)}>
-                  <CardContent className="space-y-4">
-                    <FormField
-                      control={signupForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input placeholder="your.email@example.com" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+              <form onSubmit={handleSignUp}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Name (Optional)</Label>
+                    <Input
+                      id="signup-name"
+                      type="text"
+                      placeholder="Your Name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
                     />
-                    <FormField
-                      control={signupForm.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Name (optional)</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Your Name" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
                     />
-                    <FormField
-                      control={signupForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="•••••••" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-password">Password</Label>
+                    <Input
+                      id="signup-password"
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
                     />
-                    <FormField
-                      control={signupForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
-                          <FormControl>
-                            <Input type="password" placeholder="•••••••" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </CardContent>
-                  <CardFooter>
-                    <Button type="submit" className="w-full bg-canvas-purple hover:bg-canvas-purple/90">
-                      Sign Up
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Form>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-canvas-purple hover:bg-canvas-purple/90"
+                    disabled={loading}
+                  >
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    {loading ? "Creating Account..." : "Create Account"}
+                  </Button>
+                </CardFooter>
+              </form>
             </Card>
           </TabsContent>
         </Tabs>
-        
-        <div className="text-center mt-8">
-          <Button variant="link" onClick={() => navigate('/')}>
-            Back to Home
-          </Button>
-        </div>
       </div>
     </div>
   );

@@ -63,10 +63,13 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const loadUserProfile = async () => {
     try {
+      if (!user) return;
+      
+      // Use the correct table name that exists in the database schema
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
-        .eq('id', user?.id)
+        .eq('id', user.id)
         .single();
 
       if (error) {

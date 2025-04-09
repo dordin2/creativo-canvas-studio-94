@@ -41,7 +41,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('name, user_id')
+        .select('*')
         .eq('id', projectId)
         .single();
         
