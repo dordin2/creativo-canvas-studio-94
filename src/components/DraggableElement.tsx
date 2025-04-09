@@ -79,9 +79,13 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    if (isImageElement && 
-        (e.target as HTMLElement).classList.contains('upload-placeholder-text')) {
+    if (isImageElement && isGameMode) {
       e.preventDefault();
+      
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
     }
     
     if (isGameMode) {
@@ -543,11 +547,12 @@ const DraggableElement = ({ element, isActive, children }: {
     <div
       id={`element-${element.id}`}
       ref={ref}
-      className={`canvas-element ${isDropTarget ? 'drop-target' : ''}`}
+      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
       style={combinedStyle}
       onMouseDown={handleMouseDown}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+      draggable={isGameMode && isImageElement ? false : undefined}
     >
       {childContent}
       {showInteractionIndicator && (

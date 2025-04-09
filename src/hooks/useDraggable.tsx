@@ -8,7 +8,7 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination } = useDesignState();
+  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
@@ -116,6 +116,11 @@ export const useDraggable = (elementId: string) => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
       
+      // Don't drag images in game mode unless they are interactive
+      if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
+        return;
+      }
+      
       // Update current mouse position immediately for responsive feel
       mousePosition.current = { x: e.clientX, y: e.clientY };
 
@@ -193,9 +198,15 @@ export const useDraggable = (elementId: string) => {
         animationFrame.current = null;
       }
     };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement]);
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
+    // Don't start drag for static images in game mode
+    if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
+      e.preventDefault();
+      return;
+    }
+    
     // Prevent browser's native drag behavior for images and puzzle elements
     if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
       e.preventDefault();
