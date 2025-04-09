@@ -14,7 +14,7 @@ import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Save } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
-import { Canvas as CanvasType } from "@/types/designTypes";
+import { Canvas as CanvasType, Json } from "@/types/designTypes";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -55,16 +55,23 @@ const Editor = () => {
       if (data && data.canvas_data) {
         console.log("Loaded project data:", data.canvas_data);
         
-        // Ensure we have proper type checking for the canvas data
-        const canvasData = data.canvas_data as {
-          canvases: CanvasType[];
-          activeCanvasIndex: number;
-        };
+        // Properly assert the type with a type guard
+        const jsonData = data.canvas_data as Json;
         
-        if (canvasData.canvases && Array.isArray(canvasData.canvases)) {
+        // Check if the structure matches what we expect
+        if (typeof jsonData === 'object' && jsonData !== null && 
+            'canvases' in jsonData && 'activeCanvasIndex' in jsonData &&
+            Array.isArray(jsonData.canvases)) {
+          
+          // Now we can safely cast to the expected type
+          const canvasData = {
+            canvases: jsonData.canvases as unknown as CanvasType[],
+            activeCanvasIndex: jsonData.activeCanvasIndex as number
+          };
+          
           updateCanvases(canvasData.canvases);
         } else {
-          console.error("Invalid canvas data structure:", canvasData);
+          console.error("Invalid canvas data structure:", jsonData);
           toast.error('Invalid project data format');
         }
       }
