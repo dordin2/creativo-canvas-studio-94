@@ -1,4 +1,3 @@
-
 import { CSSProperties } from "react";
 import { DesignElement } from "@/types/designTypes";
 
@@ -59,7 +58,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   const height = element.size?.height ? Math.round(element.size.height) : undefined;
   
   // Create a clean object for the style to avoid reference issues
-  const style: CSSProperties & { userDrag?: string } = {
+  const style: CSSProperties = {
     ...element.style,
     position: 'absolute',
     left,
@@ -79,12 +78,10 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     boxSizing: 'border-box',
     // Ensure all images have transparent background by default
     backgroundColor: isImageElement ? 'transparent' : (element.style?.backgroundColor as string),
+    // Disable browser's native drag behavior for all elements
+    WebkitUserDrag: 'none',
+    userDrag: 'none',
   };
-
-  // Prevent browser's default drag behavior for image elements
-  if (isImageElement) {
-    style.userDrag = 'none' as any;
-  }
 
   return style;
 };

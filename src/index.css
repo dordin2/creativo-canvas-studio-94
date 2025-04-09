@@ -1,4 +1,3 @@
-
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -154,11 +153,18 @@
     background-image: none !important;
   }
 
-  /* Remove hover effects for game mode transparent images */
-  .transparent-game-image:hover {
-    outline: none !important;
-    box-shadow: none !important;
-    border: none !important;
+  /* Add a new class for non-draggable elements in game mode */
+  .no-drag-in-game {
+    -webkit-user-drag: none !important;
+    user-select: none !important;
+    pointer-events: none !important;
+  }
+
+  /* Add a new class to only allow clicks but not drags */
+  .click-only-in-game {
+    -webkit-user-drag: none !important;
+    user-select: none !important;
+    cursor: pointer !important;
   }
 
   /* Even when selected as drop target, keep transparent */

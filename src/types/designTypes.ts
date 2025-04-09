@@ -126,6 +126,7 @@ export interface DesignElement {
   name?: string;
   interaction?: InteractionConfig;
   inInventory?: boolean;
+  allowDragInGameMode?: boolean; // New property to control dragging in game mode
 }
 
 export interface Canvas {

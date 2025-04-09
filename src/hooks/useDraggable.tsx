@@ -8,7 +8,7 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination } = useDesignState();
+  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
@@ -22,8 +22,16 @@ export const useDraggable = (elementId: string) => {
   // Check if this is a puzzle element, slider puzzle, or image
   const isPuzzleElement = currentElement?.type === 'puzzle';
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
+  const isClickSequencePuzzleElement = currentElement?.type === 'clickSequencePuzzle';
   const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
   const isImageElement = currentElement?.type === 'image';
+  
+  // Check if this element should be draggable in game mode
+  const isDraggableInGameMode = currentElement?.allowDragInGameMode || 
+    isPuzzleElement || 
+    isSequencePuzzleElement || 
+    isClickSequencePuzzleElement || 
+    isSliderPuzzleElement;
 
   // Handle drops from inventory items
   useEffect(() => {
@@ -196,6 +204,11 @@ export const useDraggable = (elementId: string) => {
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
+    // In game mode, only allow dragging for elements that should be draggable
+    if (isGameMode && !isDraggableInGameMode) {
+      return;
+    }
+    
     // Prevent browser's native drag behavior for images and puzzle elements
     if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
       e.preventDefault();
@@ -218,5 +231,10 @@ export const useDraggable = (elementId: string) => {
     }
   };
 
-  return { startDrag, isDragging, currentElement };
+  return { 
+    startDrag, 
+    isDragging, 
+    currentElement,
+    isDraggableInGameMode // Export this to be used in the DraggableElement component
+  };
 };

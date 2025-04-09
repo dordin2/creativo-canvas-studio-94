@@ -46,7 +46,7 @@ const DraggableElement = ({ element, isActive, children }: {
     handleItemCombination
   } = useDesignState();
   
-  const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
+  const { startDrag, isDragging: isDraggingFromHook, isDraggableInGameMode } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -567,7 +567,7 @@ const DraggableElement = ({ element, isActive, children }: {
       : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
-    position: 'absolute' as 'absolute',
+    position: 'absolute' as const,
     
     border: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
     outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
@@ -576,18 +576,23 @@ const DraggableElement = ({ element, isActive, children }: {
     backgroundColor: isGameMode && isImageElement ? 'transparent' : elementStyle.backgroundColor,
   };
 
+  const gameModeClasses = isGameMode ? [
+    isImageElement ? 'transparent-game-image' : '',
+    !isDraggableInGameMode ? 'no-drag-in-game' : '',
+    hasInteraction && !isDraggableInGameMode ? 'click-only-in-game' : ''
+  ].filter(Boolean).join(' ') : '';
+
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => {
-    const gameImageClass = isGameMode && isImageElement ? 'transparent-game-image' : '';
-    
     const content = (
       <div
         id={`element-${element.id}`}
         ref={ref}
-        className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${gameImageClass}`}
+        className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${gameModeClasses}`}
         style={combinedStyle}
         onMouseDown={handleMouseDown}
         onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
         onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+        draggable={false}
       >
         {childContent}
         {showInteractionIndicator && (
