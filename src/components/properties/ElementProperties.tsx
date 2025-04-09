@@ -25,6 +25,32 @@ const ElementProperties = ({ element }: ElementPropertiesProps) => {
   // Don't show interaction properties for puzzle elements and backgrounds
   const canHaveInteraction = !puzzleElements.includes(element.type) && element.type !== 'background';
   
+  // Common properties that appear in both tabs and non-tabs view
+  const renderCommonProperties = () => (
+    <>
+      <PositionProperties element={element} />
+      
+      {/* Only render RotationProperty once if the element has a size */}
+      {element.size && <RotationProperty element={element} />}
+      
+      {textElements.includes(element.type) && <TextProperties element={element} />}
+      
+      {shapeElements.includes(element.type) && <ShapeProperties element={element} />}
+      
+      {element.type === 'image' && <ImageProperties element={element} />}
+      
+      {element.type === 'puzzle' && <PuzzleProperties element={element} />}
+      
+      {element.type === 'sequencePuzzle' && <SequencePuzzleProperties element={element} />}
+      
+      {element.type === 'clickSequencePuzzle' && <ClickSequencePuzzleProperties element={element} />}
+      
+      {element.type === 'sliderPuzzle' && <SliderPuzzleProperties element={element} />}
+      
+      <LayerProperties element={element} />
+    </>
+  );
+  
   return (
     <div className="properties-panel p-4 space-y-6">
       <h2 className="text-lg font-semibold mb-4">Properties</h2>
@@ -37,17 +63,7 @@ const ElementProperties = ({ element }: ElementPropertiesProps) => {
           </TabsList>
           
           <TabsContent value="properties" className="space-y-6 pt-4">
-            <PositionProperties element={element} />
-            
-            {element.size && <RotationProperty element={element} />}
-            
-            {textElements.includes(element.type) && <TextProperties element={element} />}
-            
-            {shapeElements.includes(element.type) && <ShapeProperties element={element} />}
-            
-            {element.type === 'image' && <ImageProperties element={element} />}
-            
-            <LayerProperties element={element} />
+            {renderCommonProperties()}
           </TabsContent>
           
           <TabsContent value="interaction" className="space-y-6 pt-4">
@@ -55,27 +71,7 @@ const ElementProperties = ({ element }: ElementPropertiesProps) => {
           </TabsContent>
         </Tabs>
       ) : (
-        <>
-          <PositionProperties element={element} />
-          
-          {element.size && <RotationProperty element={element} />}
-          
-          {textElements.includes(element.type) && <TextProperties element={element} />}
-          
-          {shapeElements.includes(element.type) && <ShapeProperties element={element} />}
-          
-          {element.type === 'image' && <ImageProperties element={element} />}
-          
-          {element.type === 'puzzle' && <PuzzleProperties element={element} />}
-          
-          {element.type === 'sequencePuzzle' && <SequencePuzzleProperties element={element} />}
-          
-          {element.type === 'clickSequencePuzzle' && <ClickSequencePuzzleProperties element={element} />}
-          
-          {element.type === 'sliderPuzzle' && <SliderPuzzleProperties element={element} />}
-          
-          <LayerProperties element={element} />
-        </>
+        renderCommonProperties()
       )}
     </div>
   );
