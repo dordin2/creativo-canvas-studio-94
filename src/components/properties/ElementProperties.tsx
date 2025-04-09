@@ -5,6 +5,7 @@ import ShapeProperties from "./ShapeProperties";
 import ImageProperties from "./ImageProperties";
 import LayerProperties from "./LayerProperties";
 import PositionProperties from "./PositionProperties";
+import RotationProperty from "./RotationProperty";
 import PuzzleProperties from "./PuzzleProperties";
 import SequencePuzzleProperties from "./SequencePuzzleProperties";
 import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
@@ -28,6 +29,9 @@ const ElementProperties = ({ element }: ElementPropertiesProps) => {
   const renderCommonProperties = () => (
     <>
       <PositionProperties element={element} />
+      
+      {/* Only render RotationProperty once if the element has a size */}
+      {element.size && <RotationProperty element={element} />}
       
       {textElements.includes(element.type) && <TextProperties element={element} />}
       

@@ -1,241 +1,154 @@
-import React, { useState, useEffect } from "react";
+
 import { DesignElement } from "@/types/designTypes";
+import { HexColorPicker } from "react-colorful";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { HexColorPicker } from "react-colorful";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
+import { Textarea } from "@/components/ui/textarea";
+import { 
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Slider } from "@/components/ui/slider";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Bold, Italic, Underline } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
-import { getRotation } from "@/utils/elementStyles";
+import RotationProperty from "./RotationProperty";
 
-// Font options available in the editor
-const fontOptions = [
-  { value: "Arial, sans-serif", label: "Arial" },
-  { value: "Verdana, sans-serif", label: "Verdana" },
-  { value: "Helvetica, sans-serif", label: "Helvetica" },
-  { value: "'Times New Roman', serif", label: "Times New Roman" },
-  { value: "Georgia, serif", label: "Georgia" },
-  { value: "'Courier New', monospace", label: "Courier New" },
-  { value: "'Comic Sans MS', cursive", label: "Comic Sans" },
-  { value: "'Impact', sans-serif", label: "Impact" },
-  { value: "'Tahoma', sans-serif", label: "Tahoma" },
-];
+const TextProperties = ({ element }: { element: DesignElement }) => {
+  const { updateElement } = useDesignState();
 
-// Text alignment options
-const alignmentOptions = [
-  { value: "left", label: "Left" },
-  { value: "center", label: "Center" },
-  { value: "right", label: "Right" },
-  { value: "justify", label: "Justify" },
-];
-
-interface TextPropertiesProps {
-  element: DesignElement;
-}
-
-const TextProperties = ({ element }: TextPropertiesProps) => {
-  const { updateElement, isGameMode } = useDesignState();
-  const [text, setText] = useState(element.text || "");
-  const [textColor, setTextColor] = useState(element.style?.color || "#000000");
-  const [fontSize, setFontSize] = useState(
-    parseInt(element.style?.fontSize || "16")
-  );
-  const [fontFamily, setFontFamily] = useState(
-    element.style?.fontFamily || fontOptions[0].value
-  );
-  const [textAlign, setTextAlign] = useState(
-    element.style?.textAlign || "left"
-  );
-  const [rotation, setRotation] = useState(getRotation(element));
-
-  // Initialize state values when element changes
-  useEffect(() => {
-    setText(element.text || "");
-    setTextColor(element.style?.color || "#000000");
-    setFontSize(parseInt(element.style?.fontSize || "16"));
-    setFontFamily(element.style?.fontFamily || fontOptions[0].value);
-    setTextAlign(element.style?.textAlign || "left");
-    setRotation(getRotation(element));
-  }, [element]);
-
-  // Event handlers for property changes
-  const handleTextChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newText = e.target.value;
-    setText(newText);
-    updateElement(element.id, { text: newText });
-  };
-
-  const handleColorChange = (color: string) => {
-    setTextColor(color);
+  const handleColorChange = (newColor: string) => {
     updateElement(element.id, {
-      style: { ...element.style, color }
+      style: { ...element.style, color: newColor }
     });
   };
 
-  const handleFontSizeChange = (value: number[]) => {
-    const newSize = value[0];
-    setFontSize(newSize);
+  const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    updateElement(element.id, { content: e.target.value });
+  };
+
+  const handleFontSizeChange = (value: string) => {
     updateElement(element.id, {
-      style: { ...element.style, fontSize: `${newSize}px` }
+      style: { ...element.style, fontSize: `${value}px` }
     });
   };
 
-  const handleFontFamilyChange = (value: string) => {
-    setFontFamily(value);
-    updateElement(element.id, {
-      style: { ...element.style, fontFamily: value }
-    });
-  };
-
-  const handleTextAlignChange = (value: string) => {
-    setTextAlign(value);
-    updateElement(element.id, {
-      style: { ...element.style, textAlign: value }
-    });
-  };
-
-  const handleRotationChange = (value: number[]) => {
-    if (isGameMode) return; // No rotation in game mode
+  const toggleTextStyle = (style: 'fontWeight' | 'textDecoration' | 'fontStyle', value: string) => {
+    const currentStyle = element.style?.[style];
+    const newValue = currentStyle === value ? 'normal' : value;
     
-    const newRotation = Math.round(value[0]);
-    setRotation(newRotation);
     updateElement(element.id, {
-      style: { ...element.style, transform: `rotate(${newRotation}deg)` }
+      style: { ...element.style, [style]: newValue }
     });
   };
 
-  const handleRotationInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (isGameMode) return;
+  const isStyleActive = (style: 'fontWeight' | 'textDecoration' | 'fontStyle', value: string): boolean => {
+    if (!element.style) return false;
+    return element.style[style] === value;
+  };
+
+  const getCurrentFontSize = (): string => {
+    if (!element.style?.fontSize) {
+      if (element.type === 'heading') return '24';
+      if (element.type === 'subheading') return '18';
+      return '16';
+    }
     
-    // Parse input and handle non-numeric input
-    const inputValue = e.target.value;
-    const newRotation = parseInt(inputValue) || 0;
-    
-    // Keep rotation between -360 and 360 degrees
-    const boundedRotation = Math.max(-360, Math.min(360, newRotation));
-    
-    setRotation(boundedRotation);
-    updateElement(element.id, {
-      style: { ...element.style, transform: `rotate(${boundedRotation}deg)` }
-    });
+    const fontSize = element.style.fontSize.toString();
+    const match = fontSize.match(/(\d+)px/);
+    return match ? match[1] : '16';
   };
 
   return (
     <div className="space-y-4">
       <div>
-        <Label htmlFor="text-content">Text Content</Label>
-        <Input
-          id="text-content"
-          value={text}
+        <Label>Text Content</Label>
+        <Textarea 
+          value={element.content || ''}
           onChange={handleTextChange}
-          className="mt-1"
-          placeholder="Enter text"
+          className="mt-2"
         />
       </div>
-
+      
       <div>
         <Label>Text Color</Label>
-        <div className="flex items-center gap-2 mt-1">
-          <Popover>
-            <PopoverTrigger asChild>
-              <button
-                className="w-8 h-8 rounded border"
-                style={{ backgroundColor: textColor }}
-                aria-label="Pick text color"
-              />
-            </PopoverTrigger>
-            <PopoverContent className="w-auto p-0 border-none">
-              <HexColorPicker color={textColor} onChange={handleColorChange} />
-            </PopoverContent>
-          </Popover>
-          <Input
-            value={textColor}
-            onChange={(e) => handleColorChange(e.target.value)}
-            className="flex-1 font-mono"
-          />
-        </div>
-      </div>
-
-      <div>
-        <div className="flex justify-between items-center">
-          <Label>Font Size</Label>
-          <span className="text-sm">{fontSize}px</span>
-        </div>
-        <Slider
-          value={[fontSize]}
-          min={8}
-          max={72}
-          step={1}
-          onValueChange={handleFontSizeChange}
-          className="my-2"
+        <HexColorPicker 
+          color={element.style?.color as string || '#1F2937'} 
+          onChange={handleColorChange}
+          className="w-full mb-2 mt-2"
+        />
+        <Input 
+          value={element.style?.color as string || '#1F2937'} 
+          onChange={(e) => handleColorChange(e.target.value)}
         />
       </div>
 
-      <div>
-        <Label htmlFor="font-family">Font Family</Label>
-        <Select value={fontFamily} onValueChange={handleFontFamilyChange}>
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Select font" />
+      <div className="space-y-2">
+        <Label>Font Size</Label>
+        <Select 
+          value={getCurrentFontSize()} 
+          onValueChange={handleFontSizeChange}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="Select font size" />
           </SelectTrigger>
           <SelectContent>
-            {fontOptions.map((font) => (
-              <SelectItem key={font.value} value={font.value}>
-                {font.label}
-              </SelectItem>
-            ))}
+            <SelectItem value="8">8</SelectItem>
+            <SelectItem value="9">9</SelectItem>
+            <SelectItem value="10">10</SelectItem>
+            <SelectItem value="11">11</SelectItem>
+            <SelectItem value="12">12</SelectItem>
+            <SelectItem value="14">14</SelectItem>
+            <SelectItem value="16">16</SelectItem>
+            <SelectItem value="18">18</SelectItem>
+            <SelectItem value="20">20</SelectItem>
+            <SelectItem value="22">22</SelectItem>
+            <SelectItem value="24">24</SelectItem>
+            <SelectItem value="28">28</SelectItem>
+            <SelectItem value="32">32</SelectItem>
+            <SelectItem value="36">36</SelectItem>
+            <SelectItem value="42">42</SelectItem>
+            <SelectItem value="48">48</SelectItem>
+            <SelectItem value="56">56</SelectItem>
+            <SelectItem value="64">64</SelectItem>
+            <SelectItem value="72">72</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div>
-        <Label htmlFor="text-align">Text Alignment</Label>
-        <Select value={textAlign} onValueChange={handleTextAlignChange}>
-          <SelectTrigger className="mt-1">
-            <SelectValue placeholder="Select alignment" />
-          </SelectTrigger>
-          <SelectContent>
-            {alignmentOptions.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+      <div className="space-y-2">
+        <Label>Text Style</Label>
+        <ToggleGroup type="multiple" className="mt-2 justify-start">
+          <ToggleGroupItem 
+            value="bold" 
+            aria-label="Toggle bold"
+            data-state={isStyleActive('fontWeight', 'bold') ? 'on' : 'off'}
+            onClick={() => toggleTextStyle('fontWeight', 'bold')}
+          >
+            <Bold className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem 
+            value="italic" 
+            aria-label="Toggle italic"
+            data-state={isStyleActive('fontStyle', 'italic') ? 'on' : 'off'}
+            onClick={() => toggleTextStyle('fontStyle', 'italic')}
+          >
+            <Italic className="h-4 w-4" />
+          </ToggleGroupItem>
+          <ToggleGroupItem 
+            value="underline" 
+            aria-label="Toggle underline"
+            data-state={isStyleActive('textDecoration', 'underline') ? 'on' : 'off'}
+            onClick={() => toggleTextStyle('textDecoration', 'underline')}
+          >
+            <Underline className="h-4 w-4" />
+          </ToggleGroupItem>
+        </ToggleGroup>
       </div>
-
-      <div className="space-y-4">
-        <Label>Rotation</Label>
-        <div className="space-y-2">
-          <Slider
-            value={[rotation]}
-            min={-180}
-            max={180}
-            step={1}
-            onValueChange={handleRotationChange}
-            disabled={isGameMode}
-            className="my-4"
-          />
-          <div className="flex gap-4 items-center">
-            <Input 
-              type="number" 
-              value={rotation}
-              onChange={handleRotationInputChange}
-              min={-360}
-              max={360}
-              className="w-24"
-              disabled={isGameMode}
-            />
-            <span className="text-sm">degrees</span>
-          </div>
-        </div>
-      </div>
+      
+      <RotationProperty element={element} />
     </div>
   );
 };
