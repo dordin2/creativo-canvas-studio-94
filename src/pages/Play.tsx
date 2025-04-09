@@ -12,6 +12,7 @@ import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { Tables } from "@/integrations/supabase/types";
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);

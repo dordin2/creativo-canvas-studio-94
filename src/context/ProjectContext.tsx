@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Canvas } from "@/types/designTypes";
 import { useAuth } from "@/context/AuthContext";
+import { Tables } from "@/integrations/supabase/types";
 
 type ProjectContextType = {
   projectId: string | null;
