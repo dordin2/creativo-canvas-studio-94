@@ -1,5 +1,6 @@
+
 import { CSSProperties } from "react";
-import { DesignElement } from "@/types/designTypes";
+import { DesignElement } from "@/context/DesignContext";
 
 export const getRotation = (element: DesignElement): number => {
   if (!element.style?.transform) return 0;
@@ -58,7 +59,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   const height = element.size?.height ? Math.round(element.size.height) : undefined;
   
   // Create a clean object for the style to avoid reference issues
-  const style: CSSProperties = {
+  const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
     position: 'absolute',
     left,
@@ -76,12 +77,12 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     willChange: isDragging ? 'transform' : 'auto',
     transition: isDragging ? 'none' : 'transform 0.05s ease-out',
     boxSizing: 'border-box',
-    // Ensure all images have transparent background by default
-    backgroundColor: isImageElement ? 'transparent' : (element.style?.backgroundColor as string),
-    // Disable browser's native drag behavior for all elements
-    WebkitUserDrag: 'none',
-    userDrag: 'none',
   };
+
+  // Prevent browser's default drag behavior for image elements
+  if (isImageElement) {
+    style.userDrag = 'none' as any;
+  }
 
   return style;
 };

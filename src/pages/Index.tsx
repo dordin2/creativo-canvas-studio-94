@@ -37,9 +37,9 @@ const Index = () => {
   }
 
   return (
-    <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
+    <div className="flex flex-col h-screen overflow-hidden">
       {!isGameMode && <Header />}
-      <div className={`flex flex-1 overflow-hidden ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
+      <div className={`flex flex-1 overflow-hidden ${isGameMode ? 'h-screen w-screen' : ''}`}>
         {!isGameMode && (
           <div className="flex-shrink-0 w-64">
             <Sidebar />

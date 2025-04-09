@@ -17,7 +17,7 @@ export type ElementType =
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 export type SliderOrientation = 'horizontal' | 'vertical';
-export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation' | 'addToInventory' | 'combinable' | 'lipsync';
+export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation' | 'addToInventory' | 'combinable';
 export type MessagePosition = 'bottom' | 'top';
 export type CombinationResultType = 'message' | 'sound' | 'puzzle' | 'canvasNavigation';
 
@@ -82,9 +82,6 @@ export interface InteractionConfig {
   targetCanvasId?: string;
   canCombineWith?: string[]; // IDs of items that can be combined with this element
   combinationResult?: CombinationResult;
-  lipsyncIntensity?: number; // Controls how strong the pulsing animation is
-  lipsyncSpeed?: number; // Controls the speed of the pulsing animation
-  lipsyncMaxScale?: number; // Controls the maximum scale before shrinking
 }
 
 export interface FileMetadata {
@@ -126,7 +123,6 @@ export interface DesignElement {
   name?: string;
   interaction?: InteractionConfig;
   inInventory?: boolean;
-  allowDragInGameMode?: boolean; // New property to control dragging in game mode
 }
 
 export interface Canvas {

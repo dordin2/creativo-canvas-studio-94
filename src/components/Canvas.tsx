@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -391,23 +390,19 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
     const scaleX = viewportWidth / FIXED_CANVAS_WIDTH;
     const scaleY = viewportHeight / FIXED_CANVAS_HEIGHT;
     
-    // Use the largest scale to ensure it fills the entire screen
-    return Math.max(scaleX, scaleY);
+    return Math.min(scaleX, scaleY) * 0.9;
   };
   
   const displayZoomLevel = isFullscreen && isGameMode ? calculateFullscreenScale() : zoomLevel;
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full">
-      <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
+      <div className={`flex-1 flex items-center justify-center p-4 canvas-workspace relative ${isGameMode ? 'game-mode-workspace' : ''}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
           transform: `scale(${displayZoomLevel})`, 
-          transformOrigin: 'center center',
+          transformOrigin: 'center center', 
           transition: 'transform 0.2s ease-out',
-          position: 'absolute',
-          top: '50%',
-          left: '50%',
-          translate: '-50% -50%',
+          position: 'relative',
           width: 'fit-content',
           height: 'fit-content'
         }}>
