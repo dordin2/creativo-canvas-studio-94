@@ -14,6 +14,7 @@ import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Save } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
+import { Canvas as CanvasType } from "@/types/designTypes";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -54,9 +55,9 @@ const Editor = () => {
       if (data && data.canvas_data) {
         console.log("Loaded project data:", data.canvas_data);
         
-        // Type checking for the canvas data
+        // Ensure we have proper type checking for the canvas data
         const canvasData = data.canvas_data as {
-          canvases: any[];
+          canvases: CanvasType[];
           activeCanvasIndex: number;
         };
         

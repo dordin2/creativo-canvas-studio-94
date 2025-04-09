@@ -221,7 +221,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   
   // Make sure elements is properly initialized with fallback to empty array
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
-    ? canvases[activeCanvasIndex].elements 
+    ? (canvases[activeCanvasIndex]?.elements || []) 
     : [];
   
   const updateElementWithoutHistory = useCallback((id: string, updates: Partial<DesignElement>) => {
@@ -255,6 +255,14 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const addElement = (type: ElementType, props?: any): DesignElement => {
+    // Make sure canvases and activeCanvasIndex are valid before proceeding
+    if (!canvases || activeCanvasIndex < 0 || activeCanvasIndex >= canvases.length) {
+      console.error("Invalid canvas state when trying to add element");
+      toast.error("Could not add element: invalid canvas state");
+      // Return a default element to prevent further errors
+      return createNewElement(type, { x: 0, y: 0 }, 0, props);
+    }
+    
     const position = getDefaultPosition(canvasRef);
     const newLayer = getHighestLayer(elements);
     

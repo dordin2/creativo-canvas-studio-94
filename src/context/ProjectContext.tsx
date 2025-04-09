@@ -29,6 +29,11 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   }, [projectId]);
   
   const fetchProjectDetails = async () => {
+    if (!projectId) {
+      setIsLoading(false);
+      return;
+    }
+    
     try {
       setIsLoading(true);
       
