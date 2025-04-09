@@ -2,18 +2,14 @@ import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
 import LayersList from "./LayersList";
-import { Minus, Plus, RotateCcw, Maximize, Minimize } from "lucide-react";
+import { Minus, Plus, RotateCcw } from "lucide-react";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import InventoryIcon from "./inventory/InventoryIcon";
 
-interface CanvasProps {
-  isFullscreenActive?: boolean;
-}
-
-const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
+const Canvas = () => {
   const { 
     canvasRef, 
     setCanvasRef, 
@@ -28,9 +24,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
-  const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive);
-  
-  const fullscreenGameZoom = 1.8;
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -39,29 +32,8 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   }, [canvasRef, setCanvasRef]);
   
   useEffect(() => {
-    setIsFullscreen(isFullscreenActive);
-    
-    if (isFullscreenActive && isGameMode) {
-      setZoomLevel(fullscreenGameZoom);
-    } else if (!isFullscreenActive && isGameMode) {
-      setZoomLevel(1);
-    }
-  }, [isFullscreenActive, isGameMode]);
-  
-  useEffect(() => {
     const handleResize = () => {
       if (containerRef.current && parentRef.current) {
-        if (isFullscreen && isGameMode) {
-          const screenWidth = window.innerWidth;
-          const screenHeight = window.innerHeight;
-          
-          setCanvasDimensions({ 
-            width: screenWidth, 
-            height: screenHeight 
-          });
-          return;
-        }
-        
         const parentWidth = parentRef.current.clientWidth;
         const parentHeight = parentRef.current.clientHeight;
         
@@ -102,63 +74,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, [isGameMode, isFullscreen]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && isFullscreen) {
-        exitFullscreen();
-      }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    
-    const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) {
-        setIsFullscreen(false);
-        if (isGameMode) {
-          setZoomLevel(1);
-        }
-      }
-    };
-    
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, [isFullscreen, isGameMode]);
-
-  const toggleFullscreen = () => {
-    if (!isFullscreen) {
-      if (parentRef.current?.requestFullscreen) {
-        parentRef.current.requestFullscreen()
-          .then(() => {
-            setIsFullscreen(true);
-            if (isGameMode) {
-              setZoomLevel(fullscreenGameZoom);
-            }
-          })
-          .catch(err => console.error("Error attempting to enable fullscreen:", err));
-      }
-    } else {
-      exitFullscreen();
-    }
-  };
-
-  const exitFullscreen = () => {
-    if (document.fullscreenElement) {
-      document.exitFullscreen()
-        .then(() => {
-          setIsFullscreen(false);
-          if (isGameMode) {
-            setZoomLevel(1);
-          }
-        })
-        .catch(err => console.error("Error attempting to exit fullscreen:", err));
-    }
-  };
+  }, []);
   
   const handleZoomIn = () => {
     setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
@@ -179,7 +95,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   };
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    if (isGameMode) return;
+    if (isGameMode) return; // No dragging in game mode
     
     e.preventDefault();
     e.stopPropagation();
@@ -193,7 +109,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   };
   
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    if (isGameMode) return;
+    if (isGameMode) return; // No dropping in game mode
     
     e.preventDefault();
     e.stopPropagation();
@@ -220,21 +136,15 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     return sortedElements.map((element) => {
       const isActive = activeElement?.id === element.id;
       
-      const elementToRender = isFullscreen && isGameMode 
-        ? {
-            ...element,
-          } 
-        : element;
-      
-      switch (elementToRender.type) {
+      switch (element.type) {
         case 'rectangle':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="h-full w-full"
                 style={{
-                  backgroundColor: elementToRender.style?.backgroundColor as string || '#8B5CF6',
-                  borderRadius: elementToRender.style?.borderRadius || '4px'
+                  backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
+                  borderRadius: element.style?.borderRadius || '4px'
                 }}
               />
             </DraggableElement>
@@ -242,11 +152,11 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
           
         case 'circle':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="h-full w-full rounded-full"
                 style={{
-                  backgroundColor: elementToRender.style?.backgroundColor as string || '#8B5CF6'
+                  backgroundColor: element.style?.backgroundColor as string || '#8B5CF6'
                 }}
               />
             </DraggableElement>
@@ -254,15 +164,15 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
           
         case 'triangle':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="absolute"
                 style={{
                   width: 0,
                   height: 0,
-                  borderLeft: `${(elementToRender.size?.width || 50)}px solid transparent`,
-                  borderRight: `${(elementToRender.size?.width || 50)}px solid transparent`,
-                  borderBottom: `${(elementToRender.size?.height || 100)}px solid ${elementToRender.style?.backgroundColor as string || '#8B5CF6'}`,
+                  borderLeft: `${(element.size?.width || 50)}px solid transparent`,
+                  borderRight: `${(element.size?.width || 50)}px solid transparent`,
+                  borderBottom: `${(element.size?.height || 100)}px solid ${element.style?.backgroundColor as string || '#8B5CF6'}`,
                   backgroundColor: 'transparent'
                 }}
               />
@@ -271,11 +181,11 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
           
         case 'line':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="h-full w-full"
                 style={{
-                  backgroundColor: elementToRender.style?.backgroundColor as string || '#8B5CF6'
+                  backgroundColor: element.style?.backgroundColor as string || '#8B5CF6'
                 }}
               />
             </DraggableElement>
@@ -283,49 +193,49 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
           
         case 'heading':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <h2 
                 style={{ 
                   fontSize: '28px', 
                   fontWeight: 'bold',
-                  color: elementToRender.style?.color as string || '#1F2937',
+                  color: element.style?.color as string || '#1F2937',
                   margin: 0,
                   width: '100%',
                   height: '100%',
                   cursor: 'text'
                 }}
               >
-                {elementToRender.content || 'Add a heading'}
+                {element.content || 'Add a heading'}
               </h2>
             </DraggableElement>
           );
           
         case 'subheading':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <h3 
                 style={{ 
                   fontSize: '20px', 
                   fontWeight: '600',
-                  color: elementToRender.style?.color as string || '#1F2937',
+                  color: element.style?.color as string || '#1F2937',
                   margin: 0,
                   width: '100%',
                   height: '100%',
                   cursor: 'text'
                 }}
               >
-                {elementToRender.content || 'Add a subheading'}
+                {element.content || 'Add a subheading'}
               </h3>
             </DraggableElement>
           );
           
         case 'paragraph':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <p 
                 style={{ 
                   fontSize: '16px',
-                  color: elementToRender.style?.color as string || '#1F2937',
+                  color: element.style?.color as string || '#1F2937',
                   margin: 0,
                   width: '100%',
                   height: '100%',
@@ -333,14 +243,14 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
                   overflowWrap: 'break-word'
                 }}
               >
-                {elementToRender.content || 'Add your text here. Click to edit this text.'}
+                {element.content || 'Add your text here. Click to edit this text.'}
               </p>
             </DraggableElement>
           );
           
         case 'image':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <div
                 className="h-full w-full flex items-center justify-center overflow-hidden"
                 onDragOver={(e) => {
@@ -353,13 +263,13 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
                   
                   const files = e.dataTransfer.files;
                   if (files.length > 0 && files[0].type.startsWith('image/')) {
-                    handleImageUpload(elementToRender.id, files[0]);
+                    handleImageUpload(element.id, files[0]);
                   }
                 }}
               >
-                {elementToRender.dataUrl ? (
+                {element.dataUrl ? (
                   <img 
-                    src={elementToRender.dataUrl} 
+                    src={element.dataUrl} 
                     alt="Uploaded content" 
                     className="w-full h-full" 
                     draggable={false}
@@ -369,9 +279,9 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
                       height: '100%'
                     }}
                   />
-                ) : elementToRender.src ? (
+                ) : element.src ? (
                   <img 
-                    src={elementToRender.src} 
+                    src={element.src} 
                     alt="Uploaded content" 
                     className="w-full h-full" 
                     draggable={false}
@@ -392,9 +302,9 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
           
         case 'puzzle':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <PuzzleElement 
-                element={elementToRender} 
+                element={element} 
                 onClick={(e) => e.stopPropagation()} 
               />
             </DraggableElement>
@@ -402,9 +312,9 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
           
         case 'sequencePuzzle':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <SequencePuzzleElement 
-                element={elementToRender} 
+                element={element} 
                 onClick={(e) => e.stopPropagation()} 
               />
             </DraggableElement>
@@ -412,9 +322,9 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
           
         case 'clickSequencePuzzle':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <ClickSequencePuzzleElement 
-                element={elementToRender} 
+                element={element} 
                 onClick={(e) => e.stopPropagation()} 
               />
             </DraggableElement>
@@ -422,9 +332,9 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
           
         case 'sliderPuzzle':
           return (
-            <DraggableElement key={element.id} element={elementToRender} isActive={isActive}>
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
               <SliderPuzzleElement 
-                element={elementToRender} 
+                element={element} 
                 onClick={(e) => e.stopPropagation()} 
               />
             </DraggableElement>
@@ -442,58 +352,26 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
-  const canvasContainerStyle = isFullscreen && isGameMode
-    ? {
-        width: '100vw',
-        height: '100vh',
-        position: 'fixed' as const,
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        transform: `scale(${zoomLevel})`,
-        transformOrigin: 'center center',
-        transition: 'transform 0.2s ease-out',
-        zIndex: 50,
-      }
-    : {
-        transform: `scale(${zoomLevel})`,
-        transformOrigin: 'center center',
-        transition: 'transform 0.2s ease-out',
-        position: 'relative' as const,
-        width: 'fit-content',
-        height: 'fit-content',
-      };
-      
-  const canvasStyle = isFullscreen && isGameMode
-    ? {
-        width: '100%',
-        height: '100%',
-        ...backgroundStyle,
-        overflow: 'hidden',
-        borderRadius: 0,
-        maxWidth: '100vw',
-        maxHeight: '100vh'
-      }
-    : {
-        width: `${canvasDimensions.width}px`,
-        height: `${canvasDimensions.height}px`,
-        ...backgroundStyle,
-        overflow: 'hidden',
-      };
-  
   return (
-    <div ref={parentRef} className={`flex-1 flex flex-col h-full ${isFullscreen && isGameMode ? 'fullscreen-canvas' : ''}`}>
-      <div className={`flex-1 flex items-center justify-center ${isFullscreen && isGameMode ? 'p-0' : 'p-4'} canvas-workspace relative`}
-           style={isFullscreen && isGameMode ? { padding: 0, margin: 0, height: '100vh', width: '100vw' } : undefined}>
-        <div className="canvas-container" style={canvasContainerStyle}>
+    <div ref={parentRef} className="flex-1 flex flex-col h-full">
+      <div className="flex-1 flex items-center justify-center p-4 canvas-workspace relative">
+        <div className="canvas-container" style={{ 
+          transform: `scale(${zoomLevel})`, 
+          transformOrigin: 'center center', 
+          transition: 'transform 0.2s ease-out',
+          position: 'relative',
+          width: 'fit-content',
+          height: 'fit-content'
+        }}>
           <div
             ref={containerRef}
-            className={`relative shadow-lg ${!isFullscreen && 'rounded-lg'} ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`}
-            style={canvasStyle}
+            className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`}
+            style={{
+              width: `${canvasDimensions.width}px`,
+              height: `${canvasDimensions.height}px`,
+              ...backgroundStyle,
+              overflow: 'hidden'
+            }}
             onClick={handleCanvasClick}
             onDragOver={!isGameMode ? handleDragOver : undefined}
             onDragLeave={!isGameMode ? handleDragLeave : undefined}

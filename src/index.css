@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -5,139 +6,413 @@
 
 @layer base {
   :root {
-    --canvas-purple: 151 71 255;
-
     --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
- 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
- 
+    --foreground: 222.2 84% 4.9%;
+
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
- 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
- 
-    --primary: 151 71 255;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 262 83% 63%;
     --primary-foreground: 210 40% 98%;
- 
+
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
- 
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
- 
-    --destructive: 0 92% 60%;
+
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
- 
-    --ring: 151 71 255;
- 
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 262 83% 63%;
+
     --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 262 83% 63%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 262 83% 63%;
   }
- 
+
   .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
- 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
- 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
- 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
- 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
- 
-    --primary: 151 71 255;
-    --primary-foreground: 0 0% 98%;
- 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
- 
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
- 
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 262 83% 63%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
- 
-    --ring: 240 4.9% 83.9%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 262 83% 63%;
+
+    --sidebar-background: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 262 83% 63%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 262 83% 63%;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* Custom inventory drag cursor styles */
+  body.inventory-dragging {
+    cursor: none !important;
+  }
+
+  body.inventory-dragging * {
+    cursor: none !important;
+  }
+
+  #cursor-preview {
+    pointer-events: none;
+    position: fixed;
+    z-index: 10000;
+    transform-origin: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+  }
+  
+  /* Custom drag preview for sequence puzzle */
+  #sequence-item-preview {
+    pointer-events: none;
+    position: fixed;
+    z-index: 10000;
+    transform-origin: center;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border-radius: 4px;
+    overflow: hidden;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: white;
+  }
+
+  /* Canvas element styles */
+  .canvas-element {
+    @apply cursor-move transition-transform duration-150 relative shadow-element hover:shadow-glow;
+    will-change: transform, left, top;
+    touch-action: none;
+    /* Allow elements to extend beyond their parent container */
+    pointer-events: auto !important;
+    /* Disable transition during drag for better performance */
+    transition: transform 0.15s ease-out, box-shadow 0.2s ease-in-out;
+  }
+
+  .canvas-element.dragging {
+    /* Apply hardware acceleration for smoother dragging */
+    transform: translate3d(0, 0, 0);
+    @apply shadow-lg;
+  }
+
+  .canvas-element:hover {
+    @apply outline outline-2 outline-canvas-purple/40;
+  }
+  
+  /* Drop target styling */
+  .canvas-element.drop-target {
+    @apply outline-2 outline outline-canvas-purple ring-2 ring-canvas-purple;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
+  }
+  
+  /* Sequence puzzle styles */
+  .sequence-item {
+    user-select: none;
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
+  }
+  
+  .sequence-item.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+    z-index: 50;
+  }
+  
+  .sequence-item.drop-target {
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.8);
+    transform: scale(1.05);
+    z-index: 10;
+  }
+  
+  /* Canvas container to manage overflow behavior */
+  .canvas-container {
+    position: relative;
+    /* Allow controls to remain visible outside the canvas */
+    overflow: visible !important;
+    pointer-events: auto;
+  }
+  
+  /* Main canvas has overflow:hidden to mask content */
+  .canvas-container > div:first-child {
+    overflow: hidden !important;
+    /* Controls should still be interactive even outside the canvas */
+    pointer-events: auto;
+    @apply rounded-lg shadow-canvas bg-white;
+  }
+
+  /* Ensure resize and rotation handles are always visible */
+  .resize-handle {
+    @apply absolute w-3 h-3 bg-canvas-purple border-2 border-white rounded-full shadow-md z-[1000] hover:scale-110 transition-transform;
+    pointer-events: auto !important;
+    /* Ensure handles are visible outside the canvas */
+    position: absolute;
+    visibility: visible !important;
+    display: block !important;
+  }
+
+  .rotation-handle {
+    @apply absolute w-5 h-5 rounded-full bg-canvas-purple border-2 border-white flex items-center justify-center cursor-move shadow-md z-[1000] hover:scale-110 transition-transform;
+    pointer-events: auto !important;
+    /* Ensure rotation handle is visible outside the canvas */
+    position: absolute;
+    visibility: visible !important;
+    display: block !important;
+  }
+  
+  .drag-handle {
+    pointer-events: auto !important;
+    position: absolute;
+    visibility: visible !important;
+    display: block !important;
+    z-index: 1001;
+  }
+  
+  .drag-handle:active {
+    cursor: grabbing !important;
+  }
+  
+  /* Element controls wrapper that sits outside the canvas overflow */
+  .element-controls-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1000;
+    overflow: visible !important;
+  }
+
+  /* Frame for the selection border that extends beyond canvas */
+  .element-frame {
+    position: absolute;
+    border: 2px solid #8B5CF6;
+    pointer-events: none;
+    z-index: 999;
+    box-sizing: border-box;
+    @apply rounded-sm;
   }
 }
 
+/* Canvas workspace styling */
+.canvas-workspace {
+  background-size: 20px 20px;
+  @apply bg-gray-50;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+}
+
+/* Cursor styles for resize handlers */
+.cursor-nw-resize { cursor: nw-resize; }
+.cursor-n-resize { cursor: n-resize; }
+.cursor-ne-resize { cursor: ne-resize; }
+.cursor-e-resize { cursor: e-resize; }
+.cursor-se-resize { cursor: se-resize; }
+.cursor-s-resize { cursor: s-resize; }
+.cursor-sw-resize { cursor: sw-resize; }
+.cursor-w-resize { cursor: w-resize; }
+
+/* Fix for side panels */
+.sidebar-panel {
+  @apply h-full bg-white overflow-y-auto border-r border-gray-200 shadow-sm;
+  min-width: 16rem;
+  width: 16rem;
+  flex: 0 0 auto;
+}
+
+.properties-panel {
+  @apply h-full bg-sidebar-background text-sidebar-foreground overflow-y-auto border-l border-gray-200 shadow-sm;
+  min-width: 20rem;
+  width: 20rem;
+  flex: 0 0 auto;
+}
+
+/* Zoom controls */
 .zoom-controls {
-  @apply absolute bg-white rounded-md shadow bottom-4 right-4 flex items-center p-1 space-x-2;
-  z-index: 100;
+  @apply fixed bottom-4 right-4 flex items-center gap-2 bg-white p-2 rounded-lg shadow-md z-50 border border-gray-100;
 }
 
 .zoom-controls button {
-  @apply p-1 hover:bg-gray-100 rounded-md;
+  @apply bg-sidebar-accent hover:bg-sidebar-accent-foreground/10 text-sidebar-foreground rounded-md p-2 transition-colors;
 }
 
-/* Fullscreen related styles */
-.fullscreen-canvas {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 50;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+.zoom-controls span {
+  @apply px-2 text-sm font-medium text-sidebar-foreground;
 }
 
-.fullscreen-mode {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 9999;
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
-  background-color: black;
+/* Sequence Puzzle Drag and Drop styles */
+.dragging {
+  opacity: 0.6;
+  transform: scale(1.05);
+  z-index: 100;
 }
 
-/* Always center and scale the canvas from center in fullscreen game mode */
-.fullscreen-canvas .canvas-container {
-  width: 100vw !important;
-  height: 100vh !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  transform-origin: center center !important; /* Ensure transform scales from center */
+.drag-over {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
+  transform: scale(1.03);
 }
 
-.fullscreen-canvas .canvas-workspace {
-  padding: 0 !important;
-  margin: 0 !important;
-  width: 100vw !important;
-  height: 100vh !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
+/* Custom drag ghost image */
+[draggable] {
+  user-select: none;
+  -webkit-user-drag: element;
 }
 
-/* Ensure the canvas is centered in fullscreen mode */
-.fullscreen-canvas .canvas-container > div {
-  margin: 0 auto !important;
-  transform-origin: center center !important; /* Apply to the canvas element itself */
+/* Hide default drag image in Firefox */
+@-moz-document url-prefix() {
+  [draggable] {
+    -moz-user-select: none;
+  }
+}
+
+/* Enhanced card styling */
+.enhanced-card {
+  @apply rounded-lg border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-md;
+}
+
+/* Button glow effect */
+.button-glow:hover {
+  @apply shadow-glow transition-shadow duration-300;
+}
+
+/* Input enhancements */
+.enhanced-input {
+  @apply focus:ring-2 focus:ring-canvas-purple focus:ring-opacity-40 transition-shadow duration-200;
+}
+
+/* Tooltip enhanced styling */
+.enhanced-tooltip {
+  @apply bg-white border border-gray-200 shadow-lg rounded-md text-sm;
+}
+
+/* Interface polish for sidebar items */
+.sidebar-item {
+  @apply rounded-md p-2 transition-colors duration-200 hover:bg-gray-100;
+}
+
+.sidebar-item.active {
+  @apply bg-primary/10 text-primary font-medium;
+}
+
+/* Panel headers standardization */
+.panel-header {
+  @apply text-lg font-semibold border-b border-gray-100 p-4;
+}
+
+/* Add smooth transitions for interactive elements */
+button, a, input, select, textarea {
+  @apply transition-all duration-200;
+}
+
+/* Improved scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 rounded-full hover:bg-gray-400;
+}
+
+/* Canvas element selection for better visibility */
+.element-selected {
+  @apply ring-2 ring-canvas-purple ring-opacity-60;
+}
+
+/* Properties panel section styling */
+.properties-section {
+  @apply border-b border-gray-100 py-3 px-4;
+}
+
+.properties-section-title {
+  @apply text-sm font-medium text-gray-700 mb-2;
+}
+
+/* Control button hover states */
+.control-button {
+  @apply rounded-md p-1 hover:bg-gray-100 transition-colors;
+}
+
+/* Layer item hover effect */
+.layer-item {
+  @apply p-2 hover:bg-gray-50 border border-transparent hover:border-gray-200 rounded-md transition-colors;
+}
+
+/* Canvas tab styling */
+.canvas-tab {
+  @apply border-b-2 border-transparent hover:border-gray-300 px-4 py-2 font-medium text-gray-600 hover:text-gray-800 transition-colors;
+}
+
+.canvas-tab.active {
+  @apply border-canvas-purple text-canvas-purple;
+}
+
+/* Focus styles for accessibility */
+*:focus-visible {
+  @apply outline-canvas-purple/50 outline-offset-2;
 }
