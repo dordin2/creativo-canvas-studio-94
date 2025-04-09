@@ -8,11 +8,12 @@ import CanvasTabs from "@/components/CanvasTabs";
 import { useDesignState } from "@/context/DesignContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Maximize, Minimize } from "lucide-react";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { isGameMode, toggleGameMode } = useDesignState();
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     // Simulate loading resources
@@ -22,6 +23,32 @@ const Index = () => {
 
     return () => clearTimeout(timer);
   }, []);
+  
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+  
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error("Error attempting to enable fullscreen:", err);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen().catch(err => {
+          console.error("Error attempting to exit fullscreen:", err);
+        });
+      }
+    }
+  };
 
   if (isLoading) {
     return (
@@ -64,7 +91,7 @@ const Index = () => {
       {isGameMode && (
         <>
           <InventoryPanel />
-          <div className="absolute bottom-4 left-4 z-[100]">
+          <div className="absolute bottom-4 left-4 z-[100] flex gap-2">
             <Button 
               variant="secondary" 
               className="shadow-md bg-white hover:bg-gray-100"
@@ -72,6 +99,16 @@ const Index = () => {
             >
               <ChevronLeft className="mr-1" />
               Exit Game Mode
+            </Button>
+            
+            <Button
+              variant="secondary"
+              className="shadow-md bg-white hover:bg-gray-100"
+              onClick={toggleFullscreen}
+              title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+            >
+              {isFullscreen ? <Minimize className="mr-1" /> : <Maximize className="mr-1" />}
+              {isFullscreen ? "Exit Fullscreen" : "Fullscreen"}
             </Button>
           </div>
         </>

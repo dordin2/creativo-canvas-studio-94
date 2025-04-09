@@ -1,8 +1,9 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
 import LayersList from "./LayersList";
-import { Minus, Plus, RotateCcw } from "lucide-react";
+import { Minus, Plus, RotateCcw, Maximize, Minimize } from "lucide-react";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
@@ -24,6 +25,7 @@ const Canvas = () => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -75,6 +77,51 @@ const Canvas = () => {
       window.removeEventListener("resize", handleResize);
     };
   }, []);
+  
+  // Handle fullscreen mode
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && isFullscreen) {
+        exitFullscreen();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    
+    // Detect fullscreen change from browser controls
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+      }
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, [isFullscreen]);
+
+  const toggleFullscreen = () => {
+    if (!isFullscreen) {
+      if (parentRef.current?.requestFullscreen) {
+        parentRef.current.requestFullscreen()
+          .then(() => setIsFullscreen(true))
+          .catch(err => console.error("Error attempting to enable fullscreen:", err));
+      }
+    } else {
+      exitFullscreen();
+    }
+  };
+
+  const exitFullscreen = () => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen()
+        .then(() => setIsFullscreen(false))
+        .catch(err => console.error("Error attempting to exit fullscreen:", err));
+    }
+  };
   
   const handleZoomIn = () => {
     setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
