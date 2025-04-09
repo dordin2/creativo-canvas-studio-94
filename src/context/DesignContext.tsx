@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { 
@@ -608,7 +609,9 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     addToInventory,
     removeFromInventory,
     setDraggedInventoryItem,
-    handleItemCombination
+    handleItemCombination,
+    // Add a setter for the canvases state to be used by the ProjectContext
+    setCanvases
   };
   
   return (

@@ -6,7 +6,9 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { DesignProvider } from "@/context/DesignContext";
-import Index from "./pages/Index";
+import { ProjectProvider } from "@/context/ProjectContext";
+import Projects from "./pages/Projects";
+import Editor from "./pages/Editor";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -14,19 +16,27 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <LanguageProvider>
-      <DesignProvider>
+      <BrowserRouter>
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Index />} />
-              {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Projects />} />
+            <Route 
+              path="/editor/:projectId" 
+              element={
+                <DesignProvider>
+                  <ProjectProvider>
+                    <Editor />
+                  </ProjectProvider>
+                </DesignProvider>
+              } 
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
-      </DesignProvider>
+      </BrowserRouter>
     </LanguageProvider>
   </QueryClientProvider>
 );
