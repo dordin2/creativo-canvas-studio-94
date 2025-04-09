@@ -5,7 +5,7 @@ interface AudioVisualizerProps {
   audioElement: HTMLAudioElement | null;
   isPlaying: boolean;
   intensity?: number;
-  speed?: number; // New prop for controlling animation speed
+  speed?: number; // Controls animation speed
   children: React.ReactNode;
 }
 
@@ -23,6 +23,8 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
+  const lastScaleRef = useRef<number>(1);
+  const targetScaleRef = useRef<number>(1);
 
   // Set up the audio analyzer when the audio element changes
   useEffect(() => {
@@ -72,14 +74,14 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     if (!isPlaying || !analyserRef.current || !dataArrayRef.current) {
       // Reset scale when not playing
       setScale(1);
+      lastScaleRef.current = 1;
+      targetScaleRef.current = 1;
       return;
     }
     
     const analyzeAudio = (timestamp: number) => {
       if (!analyserRef.current || !dataArrayRef.current) return;
       
-      // Calculate time difference based on speed
-      // Lower speed value means slower updates
       const updateInterval = 50 / speed; // Base interval adjusted by speed
       const elapsed = timestamp - lastUpdateTimeRef.current;
       
@@ -97,10 +99,20 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
         // Apply intensity and calculate scale factor (add a minimum scale to always show some animation)
         const minScale = 1;
         const maxScale = 1 + (0.2 * intensity);
-        const newScale = minScale + (normalizedValue * (maxScale - minScale));
         
-        setScale(newScale);
+        // Set target scale based on audio analysis
+        targetScaleRef.current = minScale + (normalizedValue * (maxScale - minScale));
         lastUpdateTimeRef.current = timestamp;
+      }
+      
+      // Smoothly interpolate between current scale and target scale
+      const interpolationSpeed = 0.1 * speed; // Adjust the interpolation speed based on the speed setting
+      const newScale = lastScaleRef.current + (targetScaleRef.current - lastScaleRef.current) * interpolationSpeed;
+      
+      // Update scale if it has changed significantly
+      if (Math.abs(newScale - lastScaleRef.current) > 0.001) {
+        setScale(newScale);
+        lastScaleRef.current = newScale;
       }
       
       // Continue animation loop
@@ -118,11 +130,11 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     };
   }, [isPlaying, intensity, speed]);
 
-  // Apply scale transformation to children
+  // Apply scale transformation to children with smooth transition
   return (
     <div style={{ 
       transform: `scale(${scale})`,
-      transition: `transform ${0.05 / speed}s ease-out`, // Adjust transition speed
+      transition: `transform ${0.1 / speed}s ease-in-out`, // Smoother transition with ease-in-out
       transformOrigin: 'center'
     }}>
       {children}
