@@ -7,6 +7,7 @@ import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
 import { useDesignState } from "@/context/DesignContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
+import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
 
@@ -66,6 +67,7 @@ const Index = () => {
       {isGameMode && (
         <>
           <InventoryPanel />
+          <InventoryIcon />
           <div className="absolute bottom-4 left-4 z-[100]">
             <Button 
               variant="secondary" 

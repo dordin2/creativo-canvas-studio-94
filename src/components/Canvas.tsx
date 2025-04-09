@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -7,7 +6,6 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
-import InventoryIcon from "./inventory/InventoryIcon";
 
 interface CanvasProps {
   isFullscreen?: boolean;
@@ -391,7 +389,6 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
     const scaleX = viewportWidth / FIXED_CANVAS_WIDTH;
     const scaleY = viewportHeight / FIXED_CANVAS_HEIGHT;
     
-    // Use the largest scale to ensure it fills the entire screen
     return Math.max(scaleX, scaleY);
   };
   
@@ -426,7 +423,6 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
             onDrop={!isGameMode ? handleDrop : undefined}
           >
             {renderElements()}
-            {isGameMode && <InventoryIcon />}
           </div>
         </div>
         

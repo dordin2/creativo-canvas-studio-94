@@ -339,113 +339,36 @@
   @apply bg-black/30 text-white border-gray-700 hover:bg-black/50;
 }
 
-.dragging {
-  opacity: 0.6;
-  transform: scale(1.05);
-  z-index: 100;
+:fullscreen .inventory-panel {
+  z-index: 10000 !important;
 }
 
-.drag-over {
-  border-color: #8B5CF6;
-  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.3);
-  transform: scale(1.03);
+:fullscreen [class*="inventory-icon"] {
+  z-index: 10000 !important;
+  position: fixed !important;
+  top: 1rem !important;
+  right: 1rem !important;
 }
 
-[draggable] {
-  user-select: none;
-  -webkit-user-drag: element;
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
-@-moz-document url-prefix() {
-  [draggable] {
-    -moz-user-select: none;
-  }
+.animate-fade-in {
+  animation: fade-in 0.3s ease-in-out;
 }
 
-.enhanced-card {
-  @apply rounded-lg border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-md;
+:fullscreen .game-mode-image {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
 }
 
-.button-glow:hover {
-  @apply shadow-glow transition-shadow duration-300;
-}
-
-.enhanced-input {
-  @apply focus:ring-2 focus:ring-canvas-purple focus:ring-opacity-40 transition-shadow duration-200;
-}
-
-.enhanced-tooltip {
-  @apply bg-white border border-gray-200 shadow-lg rounded-md text-sm;
-}
-
-.sidebar-item {
-  @apply rounded-md p-2 transition-colors duration-200 hover:bg-gray-100;
-}
-
-.sidebar-item.active {
-  @apply bg-primary/10 text-primary font-medium;
-}
-
-.panel-header {
-  @apply text-lg font-semibold border-b border-gray-100 p-4;
-}
-
-button, a, input, select, textarea {
-  @apply transition-all duration-200;
-}
-
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-transparent;
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-gray-300 rounded-full hover:bg-gray-400;
-}
-
-.element-selected {
-  @apply ring-2 ring-canvas-purple ring-opacity-60;
-}
-
-.properties-section {
-  @apply border-b border-gray-100 py-3 px-4;
-}
-
-.properties-section-title {
-  @apply text-sm font-medium text-gray-700 mb-2;
-}
-
-.control-button {
-  @apply rounded-md p-1 hover:bg-gray-100 transition-colors;
-}
-
-.layer-item {
-  @apply p-2 hover:bg-gray-50 border border-transparent hover:border-gray-200 rounded-md transition-colors;
-}
-
-.canvas-tab {
-  @apply border-b-2 border-transparent hover:border-gray-300 px-4 py-2 font-medium text-gray-600 hover:text-gray-800 transition-colors;
-}
-
-.canvas-tab.active {
-  @apply border-canvas-purple text-canvas-purple;
-}
-
-*:focus-visible {
-  @apply outline-canvas-purple/50 outline-offset-2;
-}
-
-.canvas-element img {
-  -webkit-user-drag: none;
-  -khtml-user-drag: none;
-  -moz-user-drag: none;
-  -o-user-drag: none;
-  user-drag: none;
-  pointer-events: none;
+:fullscreen .game-mode-image:hover {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 .game-mode-image {
