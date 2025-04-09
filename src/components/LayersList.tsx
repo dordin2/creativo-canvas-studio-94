@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight } from "lucide-react";
@@ -24,6 +23,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { prepareElementForDuplication } from "@/utils/elementUtils";
 
 const LayersList = () => {
   const { 
@@ -62,45 +62,12 @@ const LayersList = () => {
   };
 
   const handleDuplicate = (element: DesignElement) => {
-    console.log("Original element to duplicate:", element);
+    console.log("LayersList - Original element to duplicate:", element);
     
-    // Create a proper deep copy of the element
-    const duplicateProps = JSON.parse(JSON.stringify(element));
+    // Use the utility function to prepare the element for duplication
+    const duplicateProps = prepareElementForDuplication(element);
     
-    // Special handling for image types which might have non-serializable properties
-    if (element.type === 'image') {
-      // Ensure image data is properly copied
-      duplicateProps.dataUrl = element.dataUrl;
-      duplicateProps.src = element.src;
-      
-      // For File objects, we can't deep clone them, so we need to reference the original
-      if (element.file) {
-        duplicateProps.file = element.file;
-      }
-      
-      // Make sure we copy the original dimensions
-      if (element.originalSize) {
-        duplicateProps.originalSize = { ...element.originalSize };
-      }
-      
-      console.log("Image data being copied:", {
-        dataUrl: duplicateProps.dataUrl ? "exists" : "missing",
-        src: duplicateProps.src,
-        fileExists: !!duplicateProps.file,
-        originalSize: duplicateProps.originalSize
-      });
-    }
-    
-    // Position the duplicate slightly offset from the original
-    duplicateProps.position = {
-      x: element.position.x + 20,
-      y: element.position.y + 20
-    };
-    
-    // Remove the id to ensure a new one is generated
-    delete duplicateProps.id;
-    
-    console.log("Duplicate props before adding:", duplicateProps);
+    console.log("LayersList - Duplicate props before adding:", duplicateProps);
     
     // Add the duplicated element
     addElement(element.type, duplicateProps);

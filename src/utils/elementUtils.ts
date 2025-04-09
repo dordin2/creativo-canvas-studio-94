@@ -24,6 +24,13 @@ export const prepareElementForDuplication = (element: DesignElement): Partial<De
     if (element.originalSize) {
       duplicate.originalSize = { ...element.originalSize };
     }
+    
+    console.log("elementUtils - Image element duplicated with data:", {
+      dataUrl: duplicate.dataUrl ? "exists" : "missing",
+      src: duplicate.src,
+      fileExists: !!duplicate.file,
+      originalSize: duplicate.originalSize
+    });
   }
   
   // Position the duplicate slightly offset from the original

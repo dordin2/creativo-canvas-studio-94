@@ -7,6 +7,7 @@ import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Upload, Plus, Trash2, FileCheck, ArrowUpDown, MoveHorizontal, ArrowUp, ArrowDown } from "lucide-react";
 import { toast } from "sonner";
+import { prepareElementForDuplication } from "@/utils/elementUtils";
 
 const PLACEHOLDER_IMAGES = [
   "/placeholder.svg",
@@ -122,6 +123,8 @@ const SequencePuzzleProperties: React.FC<SequencePuzzlePropertiesProps> = ({ ele
     reader.onload = (event) => {
       if (event.target?.result) {
         const imageDataUrl = event.target.result.toString();
+        console.log("SequencePuzzleProperties - Image loaded as dataUrl");
+        
         const newImages = [...localConfig.images, imageDataUrl];
         const newSolution = [...Array(newImages.length).keys()]; // Default solution is sequential
         

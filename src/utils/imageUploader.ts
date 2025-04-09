@@ -46,6 +46,7 @@ export const processImageUpload = (
         onSuccess({ 
           dataUrl, 
           src: undefined, // Clear the external URL when using a local file
+          file: file, // Store the original file reference
           size: {
             width: scaledWidth,
             height: scaledHeight

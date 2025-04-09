@@ -16,8 +16,8 @@ import {
 import { processImageUpload } from "@/utils/imageUploader";
 import { getHighestLayer, handleBackgroundLayer } from "@/utils/layerUtils";
 import { useLanguage } from "@/context/LanguageContext";
+import { prepareElementForDuplication } from "@/utils/elementUtils";
 
-// Create the context with undefined as initial value
 const DesignContext = createContext<DesignContextType | undefined>(undefined);
 
 export const DesignProvider = ({ children }: { children: ReactNode }) => {
@@ -45,15 +45,11 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   
   const toggleGameMode = () => {
     if (isGameMode) {
-      // Switching from game mode to edit mode
-      // Restore the canvas state from before game mode
       if (gameModeState) {
         setCanvases(gameModeState.canvases);
         setInventoryItems([]);
       }
     } else {
-      // Switching to game mode
-      // Save the current state to be restored later
       setGameModeState({
         canvases: JSON.parse(JSON.stringify(canvases)),
         inventoryItems: JSON.parse(JSON.stringify(inventoryItems))
@@ -62,15 +58,12 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     
     setIsGameMode(prev => !prev);
     if (isGameMode) {
-      // Reset active element when exiting game mode
       setActiveElement(null);
     }
   };
   
-  // When returning to game mode, restore inventory items from last game session
   useEffect(() => {
     if (isGameMode && gameModeState) {
-      // Restore inventory items from previous game session
       setInventoryItems(gameModeState.inventoryItems);
     }
   }, [isGameMode, gameModeState]);
@@ -128,31 +121,26 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const handleItemCombination = (inventoryItemId: string, targetElementId: string) => {
-    // Find the dragged inventory item
     const inventoryElement = getElementFromInventory(inventoryItemId);
     if (!inventoryElement) return;
     
-    // Find the target element
     const currentCanvas = canvases[activeCanvasIndex];
     if (!currentCanvas) return;
     
     const targetElement = currentCanvas.elements.find(el => el.id === targetElementId);
     if (!targetElement) return;
     
-    // Check if the target can accept this inventory item
     if (!targetElement.interaction?.canCombineWith?.includes(inventoryItemId)) {
       toast.error("These items cannot be combined");
       return;
     }
     
-    // Show success message if defined
     if (targetElement.interaction.message) {
       toast.success(targetElement.interaction.message);
     } else {
       toast.success("Items combined successfully!");
     }
     
-    // Remove the item from inventory
     removeFromInventory(inventoryItemId);
   };
   
@@ -399,10 +387,11 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
       return;
     }
     
-    const elementCopy = JSON.parse(JSON.stringify(elementToMove));
+    const elementCopy = prepareElementForDuplication(elementToMove);
+    elementCopy.id = generateId();
     
     const updatedCanvases = [...canvases];
-    updatedCanvases[targetCanvasIndex].elements.push(elementCopy);
+    updatedCanvases[targetCanvasIndex].elements.push(elementCopy as DesignElement);
     
     updatedCanvases[activeCanvasIndex].elements = updatedCanvases[activeCanvasIndex].elements.filter(
       el => el.id !== elementId
@@ -557,7 +546,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-// Custom hook to use the design context
 export const useDesignState = () => {
   const context = useContext(DesignContext);
   

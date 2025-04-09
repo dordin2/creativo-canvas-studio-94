@@ -40,6 +40,7 @@ const ImageProperties = ({
   const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
+    console.log("ImageProperties - Selected file:", file.name, file.type, file.size);
     handleImageUpload(element.id, file);
   };
   
@@ -61,6 +62,19 @@ const ImageProperties = ({
       }
     });
   };
+  
+  useEffect(() => {
+    // Log image data for debugging
+    if (element.type === 'image') {
+      console.log("ImageProperties - Current image data:", {
+        dataUrl: element.dataUrl ? "exists" : "missing",
+        src: element.src,
+        fileExists: !!element.file,
+        fileName: element.file?.name,
+        originalSize: element.originalSize
+      });
+    }
+  }, [element]);
   
   return <div className="space-y-4">
       <div>

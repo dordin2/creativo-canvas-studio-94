@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -24,6 +23,7 @@ import {
 } from "@/components/ui/context-menu";
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
+import { prepareElementForDuplication } from "@/utils/elementUtils";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -173,25 +173,14 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handleDuplicate = () => {
-    const duplicateProps = { ...element };
+    console.log("DraggableElement - Original element to duplicate:", element);
     
-    // Preserve image data when duplicating
-    if (isImageElement) {
-      duplicateProps.dataUrl = element.dataUrl;
-      duplicateProps.src = element.src;
-      duplicateProps.file = element.file;
-      duplicateProps.originalSize = element.originalSize;
-    }
+    // Use the utility function to prepare the element for duplication
+    const duplicateProps = prepareElementForDuplication(element);
     
-    // Position the duplicate slightly offset from the original
-    duplicateProps.position = {
-      x: element.position.x + 20,
-      y: element.position.y + 20
-    };
+    console.log("DraggableElement - Duplicate props before adding:", duplicateProps);
     
-    // Remove the id to ensure a new one is generated
-    delete (duplicateProps as any).id;
-    
+    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 

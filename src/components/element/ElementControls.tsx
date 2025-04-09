@@ -1,4 +1,3 @@
-
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Trash2, Copy, Eye, EyeOff, Zap, Navigation } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
@@ -11,6 +10,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { getRotation } from "@/utils/elementStyles";
+import { prepareElementForDuplication } from "@/utils/elementUtils";
 
 interface ElementControlsProps {
   isActive: boolean;
@@ -50,41 +50,8 @@ const ElementControls = ({
     
     console.log("ElementControls - Original element to duplicate:", element);
     
-    // Create a proper deep copy of the element
-    const duplicateProps = JSON.parse(JSON.stringify(element));
-    
-    // Special handling for image types which might have non-serializable properties
-    if (element.type === 'image') {
-      // Ensure image data is properly copied
-      duplicateProps.dataUrl = element.dataUrl;
-      duplicateProps.src = element.src;
-      
-      // For File objects, we can't deep clone them, so we need to reference the original
-      if (element.file) {
-        duplicateProps.file = element.file;
-      }
-      
-      // Make sure we copy the original dimensions
-      if (element.originalSize) {
-        duplicateProps.originalSize = { ...element.originalSize };
-      }
-      
-      console.log("ElementControls - Image data being copied:", {
-        dataUrl: duplicateProps.dataUrl ? "exists" : "missing",
-        src: duplicateProps.src,
-        fileExists: !!duplicateProps.file,
-        originalSize: duplicateProps.originalSize
-      });
-    }
-    
-    // Position the duplicate slightly offset from the original
-    duplicateProps.position = {
-      x: element.position.x + 20,
-      y: element.position.y + 20
-    };
-    
-    // Remove the id to ensure a new one is generated
-    delete duplicateProps.id;
+    // Use the utility function to prepare the element for duplication
+    const duplicateProps = prepareElementForDuplication(element);
     
     console.log("ElementControls - Duplicate props before adding:", duplicateProps);
     
