@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,19 +75,21 @@ const Projects = () => {
       toast.success('Project created successfully');
       
       // Create initial canvas data for this project
+      const initialCanvasData = {
+        canvases: [{
+          id: crypto.randomUUID(),
+          name: 'Canvas 1',
+          elements: []
+        }],
+        activeCanvasIndex: 0
+      };
+      
       const { error: canvasError } = await supabase
         .from('project_canvases')
         .insert([
           {
             project_id: data.id,
-            canvas_data: {
-              canvases: [{
-                id: crypto.randomUUID(),
-                name: 'Canvas 1',
-                elements: []
-              }],
-              activeCanvasIndex: 0
-            }
+            canvas_data: initialCanvasData
           }
         ]);
         

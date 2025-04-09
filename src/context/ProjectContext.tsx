@@ -65,7 +65,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       // Update the project's updated_at timestamp
       const { error: projectError } = await supabase
         .from('projects')
-        .update({ updated_at: new Date() })
+        .update({ updated_at: new Date().toISOString() })
         .eq('id', projectId);
         
       if (projectError) {
@@ -83,8 +83,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         throw fetchError;
       }
       
+      // We need to serialize and stringify the canvas data properly
       const canvasData = {
-        canvases,
+        canvases: JSON.parse(JSON.stringify(canvases)),
         activeCanvasIndex
       };
       
@@ -94,7 +95,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
           .from('project_canvases')
           .update({ 
             canvas_data: canvasData,
-            updated_at: new Date()
+            updated_at: new Date().toISOString()
           })
           .eq('id', existingCanvas.id);
           

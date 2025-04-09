@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,11 +52,20 @@ const Editor = () => {
       }
       
       if (data && data.canvas_data) {
-        // Handle loading the canvas data
-        const canvasData = data.canvas_data;
-        updateCanvases(canvasData.canvases);
+        console.log("Loaded project data:", data.canvas_data);
         
-        // We don't need to set activeCanvasIndex here as it will be handled by the DesignContext
+        // Type checking for the canvas data
+        const canvasData = data.canvas_data as {
+          canvases: any[];
+          activeCanvasIndex: number;
+        };
+        
+        if (canvasData.canvases && Array.isArray(canvasData.canvases)) {
+          updateCanvases(canvasData.canvases);
+        } else {
+          console.error("Invalid canvas data structure:", canvasData);
+          toast.error('Invalid project data format');
+        }
       }
       
     } catch (error) {

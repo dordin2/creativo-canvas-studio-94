@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { 
@@ -218,6 +219,7 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setHistoryIndex(newHistoryIndex);
   }, [history, historyIndex]);
   
+  // Make sure elements is properly initialized with fallback to empty array
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
     ? canvases[activeCanvasIndex].elements 
     : [];
@@ -261,23 +263,31 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
       
       if (newElement) {
         const updatedCanvases = [...canvases];
-        updatedCanvases[activeCanvasIndex].elements = updatedElements;
         
-        setCanvases(updatedCanvases);
-        addToHistory(updatedCanvases);
-        setActiveElement(newElement);
-        toast.success(`Added new ${type}`);
-        return newElement;
+        if (activeCanvasIndex >= 0 && activeCanvasIndex < updatedCanvases.length) {
+          updatedCanvases[activeCanvasIndex].elements = updatedElements;
+          
+          setCanvases(updatedCanvases);
+          addToHistory(updatedCanvases);
+          setActiveElement(newElement);
+          toast.success(`Added new ${type}`);
+          return newElement;
+        }
       }
       
       const backgroundElement = createNewElement(type, position, 0, props);
       const updatedCanvases = [...canvases];
-      updatedCanvases[activeCanvasIndex].elements = [...elements, backgroundElement];
       
-      setCanvases(updatedCanvases);
-      addToHistory(updatedCanvases);
-      setActiveElement(backgroundElement);
-      toast.success(`Added new ${type}`);
+      if (activeCanvasIndex >= 0 && activeCanvasIndex < updatedCanvases.length) {
+        updatedCanvases[activeCanvasIndex].elements = [...elements, backgroundElement];
+        
+        setCanvases(updatedCanvases);
+        addToHistory(updatedCanvases);
+        setActiveElement(backgroundElement);
+        toast.success(`Added new ${type}`);
+        return backgroundElement;
+      }
+      
       return backgroundElement;
     }
     
@@ -289,21 +299,34 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
     
     const updatedCanvases = [...canvases];
-    updatedCanvases[activeCanvasIndex].elements = [...elements, newElement];
     
-    setCanvases(updatedCanvases);
-    addToHistory(updatedCanvases);
-    setActiveElement(newElement);
+    if (activeCanvasIndex >= 0 && activeCanvasIndex < updatedCanvases.length) {
+      updatedCanvases[activeCanvasIndex].elements = [...elements, newElement];
+      
+      setCanvases(updatedCanvases);
+      addToHistory(updatedCanvases);
+      setActiveElement(newElement);
+      
+      toast.success(`Added new ${type}`);
+    }
     
-    toast.success(`Added new ${type}`);
     return newElement;
   };
   
   const updateElement = (id: string, updates: Partial<DesignElement>) => {
     const updatedCanvases = [...canvases];
+    
+    if (activeCanvasIndex < 0 || activeCanvasIndex >= updatedCanvases.length) {
+      console.error("Invalid activeCanvasIndex:", activeCanvasIndex);
+      return;
+    }
+    
     const activeCanvas = updatedCanvases[activeCanvasIndex];
     
-    if (!activeCanvas) return;
+    if (!activeCanvas) {
+      console.error("No active canvas found");
+      return;
+    }
     
     activeCanvas.elements = activeCanvas.elements.map(element => {
       if (element.id === id) {
@@ -322,6 +345,11 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   
   const updateElementLayer = (id: string, newLayer: number) => {
     const updatedCanvases = [...canvases];
+    
+    if (activeCanvasIndex < 0 || activeCanvasIndex >= updatedCanvases.length) {
+      return;
+    }
+    
     const activeCanvas = updatedCanvases[activeCanvasIndex];
     
     if (!activeCanvas) return;
@@ -345,6 +373,11 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   
   const removeElement = (id: string) => {
     const updatedCanvases = [...canvases];
+    
+    if (activeCanvasIndex < 0 || activeCanvasIndex >= updatedCanvases.length) {
+      return;
+    }
+    
     const activeCanvas = updatedCanvases[activeCanvasIndex];
     
     if (!activeCanvas) return;
@@ -417,6 +450,11 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const duplicateCanvas = (index: number) => {
+    if (index < 0 || index >= canvases.length) {
+      console.error("Invalid canvas index for duplication:", index);
+      return;
+    }
+    
     const sourceCanvas = canvases[index];
     if (!sourceCanvas) return;
     
@@ -570,9 +608,12 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
-  if (history.length === 0 && canvases.length > 0) {
-    addToHistory(canvases);
-  }
+  // Initialize history
+  useEffect(() => {
+    if (history.length === 0 && canvases.length > 0) {
+      addToHistory(canvases);
+    }
+  }, [canvases, history.length, addToHistory]);
   
   const value = {
     canvases,
