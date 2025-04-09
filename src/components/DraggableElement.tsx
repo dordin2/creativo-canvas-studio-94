@@ -15,6 +15,7 @@ import PuzzleModal from "./element/PuzzleModal";
 import SequencePuzzleModal from "./element/SequencePuzzleModal";
 import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
 import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
+import AudioVisualizer from "./audio/AudioVisualizer";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -58,6 +59,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [combinationPuzzleModal, setCombinationPuzzleModal] = useState(false);
   const [combinationMessage, setCombinationMessage] = useState('');
+  const [isAudioPlaying, setIsAudioPlaying] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -74,6 +76,8 @@ const DraggableElement = ({ element, isActive, children }: {
   const interactionPuzzleType = element.interaction?.puzzleType || 'puzzle';
   
   const isInInventory = element.inInventory || inventoryItems.some(item => item.elementId === element.id);
+  const isLipsyncInteraction = interactionType === 'lipsync';
+  const lipsyncIntensity = element.interaction?.lipsyncIntensity || 1.0;
   
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
@@ -132,6 +136,15 @@ const DraggableElement = ({ element, isActive, children }: {
       setShowMessageModal(true);
     } 
     else if (interactionType === 'sound' && element.interaction?.soundUrl) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        audioRef.current.play().catch(err => {
+          toast.error('Could not play sound');
+          console.error('Audio playback error:', err);
+        });
+      }
+    }
+    else if (interactionType === 'lipsync' && element.interaction?.soundUrl) {
       if (audioRef.current) {
         audioRef.current.currentTime = 0;
         audioRef.current.play().catch(err => {
@@ -356,6 +369,25 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }, [showMessageModal]);
 
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    
+    const handlePlay = () => setIsAudioPlaying(true);
+    const handlePause = () => setIsAudioPlaying(false);
+    const handleEnded = () => setIsAudioPlaying(false);
+    
+    audio.addEventListener('play', handlePlay);
+    audio.addEventListener('pause', handlePause);
+    audio.addEventListener('ended', handleEnded);
+    
+    return () => {
+      audio.removeEventListener('play', handlePlay);
+      audio.removeEventListener('pause', handlePause);
+      audio.removeEventListener('ended', handleEnded);
+    };
+  }, [audioRef.current]);
+
   const elementStyle = getElementStyle(element, isDragging);
   const rotation = getRotation(element);
   const frameTransform = `rotate(${rotation}deg)`;
@@ -521,6 +553,8 @@ const DraggableElement = ({ element, isActive, children }: {
       indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full animate-pulse";
     } else if (interactionType === 'combinable') {
       indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-purple-500 rounded-full animate-pulse";
+    } else if (interactionType === 'lipsync') {
+      indicatorStyles = "absolute bottom-0 right-0 w-3 h-3 bg-pink-500 rounded-full animate-pulse";
     }
   }
 
@@ -539,30 +573,48 @@ const DraggableElement = ({ element, isActive, children }: {
     boxShadow: isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow,
   };
 
-  const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
-    <div
-      id={`element-${element.id}`}
-      ref={ref}
-      className={`canvas-element ${isDropTarget ? 'drop-target' : ''}`}
-      style={combinedStyle}
-      onMouseDown={handleMouseDown}
-      onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
-      onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
-    >
-      {childContent}
-      {showInteractionIndicator && (
-        <div className={indicatorStyles} title={
-          interactionType === 'canvasNavigation' 
-            ? "Click to navigate to another canvas" 
-            : interactionType === 'addToInventory'
-              ? "Click to add to inventory"
-              : interactionType === 'combinable'
-                ? "Can be combined with inventory items"
-                : ""
-        }></div>
-      )}
-    </div>
-  );
+  const createElementContent = (ref: React.RefObject<HTMLDivElement>) => {
+    const content = (
+      <div
+        id={`element-${element.id}`}
+        ref={ref}
+        className={`canvas-element ${isDropTarget ? 'drop-target' : ''}`}
+        style={combinedStyle}
+        onMouseDown={handleMouseDown}
+        onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
+        onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+      >
+        {childContent}
+        {showInteractionIndicator && (
+          <div className={indicatorStyles} title={
+            interactionType === 'canvasNavigation' 
+              ? "Click to navigate to another canvas" 
+              : interactionType === 'addToInventory'
+                ? "Click to add to inventory"
+                : interactionType === 'combinable'
+                  ? "Can be combined with inventory items"
+                  : interactionType === 'lipsync'
+                    ? "Click to play sound with lipsync animation"
+                    : ""
+          }></div>
+        )}
+      </div>
+    );
+    
+    if (isLipsyncInteraction && isGameMode) {
+      return (
+        <AudioVisualizer 
+          audioElement={audioRef.current} 
+          isPlaying={isAudioPlaying}
+          intensity={lipsyncIntensity}
+        >
+          {content}
+        </AudioVisualizer>
+      );
+    }
+    
+    return content;
+  };
 
   return (
     <>
@@ -610,7 +662,7 @@ const DraggableElement = ({ element, isActive, children }: {
         />
       )}
       
-      {interactionType === 'sound' && element.interaction?.soundUrl && (
+      {(interactionType === 'sound' || interactionType === 'lipsync') && element.interaction?.soundUrl && (
         <audio 
           ref={audioRef}
           src={element.interaction.soundUrl}

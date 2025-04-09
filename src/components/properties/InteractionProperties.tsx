@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { 
@@ -13,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Slider } from "@/components/ui/slider";
 import { toast } from "sonner";
 import { 
   AlertCircle, 
@@ -22,7 +22,8 @@ import {
   Navigation, 
   ShoppingBasket, 
   Combine,
-  Split
+  Split,
+  Mic
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PuzzleProperties from "./PuzzleProperties";
@@ -46,6 +47,7 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     sound: '',
     puzzleType: 'puzzle',
     messagePosition: 'top' as MessagePosition,
+    lipsyncIntensity: 1.0,
     puzzleConfig: {
       name: 'Puzzle',
       type: 'image' as PuzzleType,
@@ -175,6 +177,16 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
       }
     };
     reader.readAsDataURL(file);
+  };
+
+  const handleLipsyncIntensityChange = (values: number[]) => {
+    const intensity = values[0];
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        lipsyncIntensity: intensity
+      }
+    });
   };
 
   const handleToggleCombinableItem = (itemId: string) => {
@@ -545,6 +557,10 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
               <Music className="h-4 w-4" />
               <span>Sound</span>
             </SelectItem>
+            <SelectItem value="lipsync" className="flex items-center gap-2">
+              <Mic className="h-4 w-4" />
+              <span>Lipsync</span>
+            </SelectItem>
             <SelectItem value="canvasNavigation" className="flex items-center gap-2">
               <Navigation className="h-4 w-4" />
               <span>Canvas Navigation</span>
@@ -768,24 +784,45 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
         </div>
       )}
 
-      {interactionConfig.type === 'sound' && (
-        <div className="space-y-2">
-          <Label>Upload Sound</Label>
-          <Input 
-            type="file" 
-            accept="audio/*" 
-            onChange={handleSoundUpload}
-          />
-          {interactionConfig.sound && (
-            <div className="mt-2">
-              <p className="text-sm">Current sound: {interactionConfig.sound}</p>
-              {interactionConfig.soundUrl && (
-                <audio 
-                  controls 
-                  src={interactionConfig.soundUrl} 
-                  className="mt-2 w-full" 
-                />
-              )}
+      {(interactionConfig.type === 'sound' || interactionConfig.type === 'lipsync') && (
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label>Upload Sound</Label>
+            <Input 
+              type="file" 
+              accept="audio/*" 
+              onChange={handleSoundUpload}
+            />
+            {interactionConfig.sound && (
+              <div className="mt-2">
+                <p className="text-sm">Current sound: {interactionConfig.sound}</p>
+                {interactionConfig.soundUrl && (
+                  <audio 
+                    controls 
+                    src={interactionConfig.soundUrl} 
+                    className="mt-2 w-full" 
+                  />
+                )}
+              </div>
+            )}
+          </div>
+          
+          {interactionConfig.type === 'lipsync' && (
+            <div className="space-y-2">
+              <Label className="flex justify-between">
+                <span>Animation Intensity</span>
+                <span className="text-sm text-gray-500">{interactionConfig.lipsyncIntensity?.toFixed(1) || '1.0'}</span>
+              </Label>
+              <Slider
+                defaultValue={[interactionConfig.lipsyncIntensity || 1.0]}
+                max={3}
+                min={0.2}
+                step={0.1}
+                onValueChange={handleLipsyncIntensityChange}
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Controls how strong the pulsing animation is when audio plays.
+              </p>
             </div>
           )}
         </div>
