@@ -5,10 +5,11 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Upload } from "lucide-react";
+import { Upload, Info } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import RotationProperty from "./RotationProperty";
 import { getImageFromCache } from "@/utils/imageUploader";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ImageProperties = ({
   element
@@ -17,10 +18,12 @@ const ImageProperties = ({
 }) => {
   const {
     updateElement,
-    handleImageUpload
+    handleImageUpload,
+    isGameMode
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
+  const [recommendedFullscreenScale, setRecommendedFullscreenScale] = useState<number | null>(null);
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
@@ -42,6 +45,23 @@ const ImageProperties = ({
       }
     }
   }, [element.id, element.cacheKey, element.dataUrl]);
+
+  // Calculate recommended fullscreen scale based on canvas and original image dimensions
+  useEffect(() => {
+    if (element.originalSize) {
+      const windowWidth = window.innerWidth;
+      const windowHeight = window.innerHeight;
+      
+      // Calculate the scale needed for the image to fill the screen
+      // We use the larger scaling factor to ensure it covers the entire screen
+      const widthScale = (windowWidth / element.originalSize.width) * 100;
+      const heightScale = (windowHeight / element.originalSize.height) * 100;
+      
+      // Take the larger scale factor to ensure full coverage
+      const recommendedScale = Math.ceil(Math.max(widthScale, heightScale));
+      setRecommendedFullscreenScale(recommendedScale);
+    }
+  }, [element.originalSize]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateElement(element.id, {
@@ -75,6 +95,12 @@ const ImageProperties = ({
         height: newHeight
       }
     });
+  };
+
+  const applyRecommendedFullscreenScale = () => {
+    if (recommendedFullscreenScale && element.originalSize) {
+      handleImageResize([recommendedFullscreenScale]);
+    }
   };
   
   useEffect(() => {
@@ -120,8 +146,29 @@ const ImageProperties = ({
           <span>10%</span>
           <span>200%</span>
         </div>
-        <div className="text-sm mt-2">
-          {element.size?.width} × {element.size?.height} px
+        <div className="text-sm mt-2 flex items-center justify-between">
+          <span>{element.size?.width} × {element.size?.height} px</span>
+          
+          {recommendedFullscreenScale && (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={applyRecommendedFullscreenScale}
+                    className="flex items-center gap-1 h-7 px-2 text-xs"
+                  >
+                    <Info className="h-3 w-3" />
+                    Fullscreen size
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Set to {recommendedFullscreenScale}% to fill screen in fullscreen mode</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
         </div>
       </div>
       
