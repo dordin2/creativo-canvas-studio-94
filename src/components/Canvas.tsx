@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -10,7 +9,11 @@ import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import InventoryIcon from "./inventory/InventoryIcon";
 
-const Canvas = () => {
+interface CanvasProps {
+  isFullscreenActive?: boolean;
+}
+
+const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   const { 
     canvasRef, 
     setCanvasRef, 
@@ -25,7 +28,7 @@ const Canvas = () => {
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -78,7 +81,6 @@ const Canvas = () => {
     };
   }, []);
   
-  // Handle fullscreen mode
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {

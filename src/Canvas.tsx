@@ -1,13 +1,14 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
-import DraggableElement from "./DraggableElement";
-import LayersList from "./LayersList";
+import DraggableElement from "@/components/DraggableElement";
+import LayersList from "@/components/LayersList";
 import { Minus, Plus, RotateCcw, Maximize, Minimize } from "lucide-react";
-import PuzzleElement from "./element/PuzzleElement";
-import SequencePuzzleElement from "./element/SequencePuzzleElement";
-import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
-import SliderPuzzleElement from "./element/SliderPuzzleElement";
-import InventoryIcon from "./inventory/InventoryIcon";
+import PuzzleElement from "@/components/element/PuzzleElement";
+import SequencePuzzleElement from "@/components/element/SequencePuzzleElement";
+import ClickSequencePuzzleElement from "@/components/element/ClickSequencePuzzleElement";
+import SliderPuzzleElement from "@/components/element/SliderPuzzleElement";
+import InventoryIcon from "@/components/inventory/InventoryIcon";
 
 interface CanvasProps {
   isFullscreenActive?: boolean;
