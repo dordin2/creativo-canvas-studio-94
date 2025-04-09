@@ -1,4 +1,3 @@
-
 import { CSSProperties } from "react";
 
 export type ElementType =
@@ -92,12 +91,6 @@ export interface FileMetadata {
   lastModified: number;
 }
 
-export interface ElementMetadata {
-  originalScale?: number;
-  fullscreenScale?: number;
-  [key: string]: any;
-}
-
 export interface DesignElement {
   id: string;
   type: ElementType;
@@ -130,7 +123,6 @@ export interface DesignElement {
   name?: string;
   interaction?: InteractionConfig;
   inInventory?: boolean;
-  metadata?: ElementMetadata;
 }
 
 export interface Canvas {
