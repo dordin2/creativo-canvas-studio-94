@@ -7,7 +7,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Folder, Clock } from "lucide-react";
+import { Plus, Folder, Clock, LogOut, UserCircle } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 type Project = {
   id: string;
@@ -24,18 +25,28 @@ const Projects = () => {
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDescription, setNewProjectDescription] = useState("");
   const navigate = useNavigate();
+  const { user, profile, signOut, isLoading: authLoading } = useAuth();
   
   useEffect(() => {
-    fetchProjects();
-  }, []);
+    if (!authLoading) {
+      fetchProjects();
+    }
+  }, [authLoading, user]);
   
   const fetchProjects = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .order('updated_at', { ascending: false });
+      let query = supabase.from('projects').select('*');
+      
+      // If user is logged in, fetch only their projects
+      if (user) {
+        query = query.eq('user_id', user.id);
+      } else {
+        // For non-authenticated users, only show public projects (null user_id)
+        query = query.is('user_id', null);
+      }
+      
+      const { data, error } = await query.order('updated_at', { ascending: false });
         
       if (error) {
         throw error;
@@ -57,14 +68,19 @@ const Projects = () => {
     }
     
     try {
+      const projectData: any = { 
+        name: newProjectName.trim(), 
+        description: newProjectDescription.trim() || null 
+      };
+      
+      // Add user_id for authenticated users
+      if (user) {
+        projectData.user_id = user.id;
+      }
+      
       const { data, error } = await supabase
         .from('projects')
-        .insert([
-          { 
-            name: newProjectName.trim(), 
-            description: newProjectDescription.trim() || null 
-          }
-        ])
+        .insert([projectData])
         .select()
         .single();
         
@@ -123,18 +139,50 @@ const Projects = () => {
       minute: '2-digit'
     });
   };
+
+  // Handle navigation to auth page
+  const goToAuth = () => {
+    navigate('/auth');
+  };
   
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-10 px-4">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-3xl font-bold text-canvas-purple">CreativoCanvas Projects</h1>
-          <Button 
-            onClick={() => setNewProjectOpen(true)}
-            className="bg-canvas-purple hover:bg-canvas-purple/90"
-          >
-            <Plus className="mr-2 h-4 w-4" /> New Project
-          </Button>
+          <div className="flex items-center gap-3">
+            {user ? (
+              <>
+                <div className="flex items-center mr-4">
+                  <UserCircle className="h-5 w-5 mr-2 text-gray-600" />
+                  <span className="text-gray-700 font-medium">
+                    {profile?.display_name || user.email}
+                  </span>
+                </div>
+                <Button 
+                  variant="outline"
+                  className="mr-2"
+                  onClick={signOut}
+                >
+                  <LogOut className="mr-2 h-4 w-4" /> Log Out
+                </Button>
+              </>
+            ) : (
+              <Button 
+                variant="outline"
+                className="mr-2"
+                onClick={goToAuth}
+              >
+                <UserCircle className="mr-2 h-4 w-4" /> Log In
+              </Button>
+            )}
+            <Button 
+              onClick={() => setNewProjectOpen(true)}
+              className="bg-canvas-purple hover:bg-canvas-purple/90"
+            >
+              <Plus className="mr-2 h-4 w-4" /> New Project
+            </Button>
+          </div>
         </div>
         
         {isLoading ? (

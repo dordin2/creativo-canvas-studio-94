@@ -3,46 +3,72 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { LanguageProvider } from "@/context/LanguageContext";
 import { DesignProvider } from "@/context/DesignContext";
 import { ProjectProvider } from "@/context/ProjectContext";
+import { AuthProvider } from "@/context/AuthContext";
 import Projects from "./pages/Projects";
 import Editor from "./pages/Editor";
 import Play from "./pages/Play";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <LanguageProvider>
-      <BrowserRouter>
+    <BrowserRouter>
+      <LanguageProvider>
         <TooltipProvider>
           <Toaster />
           <Sonner />
           <Routes>
-            <Route path="/" element={<Projects />} />
+            <Route 
+              path="/" 
+              element={
+                <AuthProvider>
+                  <Projects />
+                </AuthProvider>
+              } 
+            />
+            <Route 
+              path="/auth" 
+              element={
+                <AuthProvider>
+                  <Auth />
+                </AuthProvider>
+              } 
+            />
             <Route 
               path="/editor/:projectId" 
               element={
-                <ProjectProvider>
-                  <DesignProvider>
-                    <Editor />
-                  </DesignProvider>
-                </ProjectProvider>
+                <AuthProvider>
+                  <ProtectedRoute>
+                    <ProjectProvider>
+                      <DesignProvider>
+                        <Editor />
+                      </DesignProvider>
+                    </ProjectProvider>
+                  </ProtectedRoute>
+                </AuthProvider>
               } 
             />
             <Route 
               path="/play/:projectId" 
-              element={<Play />} 
+              element={
+                <AuthProvider>
+                  <Play />
+                </AuthProvider>
+              } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
-      </BrowserRouter>
-    </LanguageProvider>
+      </LanguageProvider>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

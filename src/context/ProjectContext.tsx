@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Canvas } from "@/types/designTypes";
+import { useAuth } from "@/context/AuthContext";
 
 type ProjectContextType = {
   projectId: string | null;
@@ -19,6 +20,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const [projectName, setProjectName] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   useEffect(() => {
     if (projectId) {
@@ -26,7 +28,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     } else {
       setIsLoading(false);
     }
-  }, [projectId]);
+  }, [projectId, user]);
   
   const fetchProjectDetails = async () => {
     if (!projectId) {
@@ -39,7 +41,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('name')
+        .select('name, user_id')
         .eq('id', projectId)
         .single();
         
@@ -48,6 +50,13 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       }
       
       if (projectData) {
+        // Check if this is a private project and the user has access
+        if (projectData.user_id && user?.id !== projectData.user_id) {
+          toast.error("You don't have access to this project");
+          navigate('/');
+          return;
+        }
+        
         setProjectName(projectData.name);
       } else {
         // If project not found, redirect to projects page

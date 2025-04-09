@@ -10,6 +10,7 @@ import { Maximize, Minimize } from "lucide-react";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/context/AuthContext";
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -20,6 +21,7 @@ const Play = () => {
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!projectId) {
@@ -46,10 +48,10 @@ const Play = () => {
     try {
       setIsLoading(true);
       
-      // Fetch project name
+      // Fetch project details
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('name')
+        .select('name, user_id')
         .eq('id', projectId)
         .single();
       
@@ -58,7 +60,16 @@ const Play = () => {
       }
       
       if (projectData) {
+        // Check if this is a private project and the user has access
+        if (projectData.user_id && user?.id !== projectData.user_id) {
+          toast.error("You don't have access to this project");
+          navigate('/');
+          return;
+        }
+        
         setProjectName(projectData.name);
+      } else {
+        throw new Error('Project not found');
       }
       
       // Fetch canvas data
