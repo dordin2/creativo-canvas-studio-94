@@ -52,7 +52,9 @@ const Index = () => {
               <Canvas />
             </>
           ) : (
-            <Canvas />
+            <div className="game-mode-canvas-container">
+              <Canvas />
+            </div>
           )}
         </div>
         {!isGameMode && (

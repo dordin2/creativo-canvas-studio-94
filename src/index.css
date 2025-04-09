@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -197,6 +198,45 @@
     /* Controls should still be interactive even outside the canvas */
     pointer-events: auto;
     @apply rounded-lg shadow-canvas bg-white;
+  }
+
+  /* Game mode canvas container styles */
+  .game-mode-workspace {
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden !important;
+  }
+
+  .game-mode-canvas-container {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden !important;
+    transform-origin: center center !important;
+  }
+
+  /* Ensure the canvas scales from center in game mode */
+  .game-mode-canvas-container .canvas-container {
+    width: 100% !important;
+    height: 100% !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    transform-origin: center center !important;
+  }
+
+  .game-mode-canvas-container .canvas-container > div:first-child {
+    max-width: 100% !important;
+    max-height: 100% !important;
+    object-fit: contain !important;
+    transform-origin: center center !important;
   }
 
   /* Ensure resize and rotation handles are always visible */

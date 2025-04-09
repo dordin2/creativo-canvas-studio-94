@@ -1,7 +1,7 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
-import LayersList from "./LayersList";
 import { Minus, Plus, RotateCcw } from "lucide-react";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
@@ -354,8 +354,8 @@ const Canvas = () => {
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full">
-      <div className="flex-1 flex items-center justify-center p-4 canvas-workspace relative">
-        <div className="canvas-container" style={{ 
+      <div className={`flex-1 flex items-center justify-center p-4 canvas-workspace relative ${isGameMode ? 'game-mode-workspace' : ''}`}>
+        <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
           transform: `scale(${zoomLevel})`, 
           transformOrigin: 'center center', 
           transition: 'transform 0.2s ease-out',
