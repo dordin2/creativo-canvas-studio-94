@@ -1,4 +1,3 @@
-
 import { CSSProperties } from "react";
 import { DesignElement } from "@/context/DesignContext";
 
@@ -82,7 +81,6 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   // Prevent browser's default drag behavior for image elements
   if (isImageElement) {
     style.userDrag = 'none' as any;
-    // Add CSS class for additional drag prevention via CSS
   }
 
   return style;

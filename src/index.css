@@ -447,3 +447,15 @@ button, a, input, select, textarea {
   user-drag: none;
   pointer-events: none;
 }
+
+.game-mode-image {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+  outline: none !important;
+}
+
+.game-mode-image:hover {
+  outline: none !important;
+  box-shadow: none !important;
+}
