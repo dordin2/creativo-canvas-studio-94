@@ -12,7 +12,7 @@ import { useDesignState } from "@/context/DesignContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Share2 } from "lucide-react";
+import { ChevronLeft, Save, Share2, Globe, Lock } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 
@@ -27,7 +27,7 @@ const Editor = () => {
     activeCanvasIndex, 
     setCanvases: updateCanvases
   } = useDesignState();
-  const { projectName, saveProject } = useProject();
+  const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
 
   useEffect(() => {
     if (!projectId) {
@@ -154,6 +154,18 @@ const Editor = () => {
             <h1 className="text-xl font-semibold text-canvas-purple">{projectName}</h1>
           </div>
           <div className="flex gap-2">
+            <Button 
+              onClick={toggleProjectVisibility}
+              variant="outline"
+              className="bg-white hover:bg-gray-50"
+            >
+              {isPublic ? (
+                <Globe className="mr-2 h-4 w-4 text-green-500" />
+              ) : (
+                <Lock className="mr-2 h-4 w-4 text-red-500" />
+              )}
+              {isPublic ? 'Public' : 'Private'}
+            </Button>
             <Button 
               onClick={handleShareGame}
               variant="outline"

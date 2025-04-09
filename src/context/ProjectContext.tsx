@@ -9,8 +9,10 @@ import { useAuth } from "@/context/AuthContext";
 type ProjectContextType = {
   projectId: string | null;
   projectName: string;
+  isPublic: boolean;
   isLoading: boolean;
   saveProject: (canvases: Canvas[], activeCanvasIndex: number) => Promise<void>;
+  toggleProjectVisibility: () => Promise<void>;
 };
 
 const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
@@ -18,6 +20,7 @@ const ProjectContext = createContext<ProjectContextType | undefined>(undefined);
 export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const { projectId } = useParams<{ projectId: string }>();
   const [projectName, setProjectName] = useState<string>("");
+  const [isPublic, setIsPublic] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -51,13 +54,14 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       
       if (projectData) {
         // Check if this is a private project and the user has access
-        if (projectData.user_id && user?.id !== projectData.user_id) {
+        if (projectData.user_id && !projectData.is_public && user?.id !== projectData.user_id) {
           toast.error("You don't have access to this project");
           navigate('/');
           return;
         }
         
         setProjectName(projectData.name);
+        setIsPublic(projectData.is_public || false);
       } else {
         // If project not found, redirect to projects page
         toast.error('Project not found');
@@ -69,6 +73,30 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       navigate('/');
     } finally {
       setIsLoading(false);
+    }
+  };
+  
+  const toggleProjectVisibility = async () => {
+    if (!projectId || !user) return;
+    
+    try {
+      const newIsPublic = !isPublic;
+      
+      const { error } = await supabase
+        .from('projects')
+        .update({ is_public: newIsPublic })
+        .eq('id', projectId)
+        .eq('user_id', user.id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      setIsPublic(newIsPublic);
+      toast.success(newIsPublic ? 'Project is now public' : 'Project is now private');
+    } catch (error) {
+      console.error('Error updating project visibility:', error);
+      toast.error('Failed to update project visibility');
     }
   };
   
@@ -140,8 +168,10 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const value = {
     projectId,
     projectName,
+    isPublic,
     isLoading,
-    saveProject
+    saveProject,
+    toggleProjectVisibility
   };
   
   return (

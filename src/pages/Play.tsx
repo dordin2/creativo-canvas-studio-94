@@ -62,8 +62,8 @@ const Play = () => {
       
       if (projectData) {
         // Check if this is a private project and the user has access
-        if (projectData.user_id && user?.id !== projectData.user_id) {
-          toast.error("You don't have access to this project");
+        if (projectData.user_id && !projectData.is_public && user?.id !== projectData.user_id) {
+          toast.error("This project is private");
           navigate('/');
           return;
         }
