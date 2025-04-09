@@ -22,7 +22,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       // Create and apply a custom cursor with item preview
       const cursorPreview = document.createElement('div');
       cursorPreview.id = 'cursor-preview';
-      cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-100 w-32 h-32 flex items-center justify-center bg-white rounded-md shadow-md';
+      cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-75 w-12 h-12 flex items-center justify-center bg-white rounded-md shadow-md';
       document.body.appendChild(cursorPreview);
       cursorPreviewRef.current = cursorPreview;
       
@@ -31,15 +31,15 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       
       switch (element.type) {
         case 'rectangle':
-          previewContent = `<div class="h-24 w-24" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}; border-radius: ${element.style?.borderRadius || '4px'}"></div>`;
+          previewContent = `<div class="h-10 w-10" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}; border-radius: ${element.style?.borderRadius || '4px'}"></div>`;
           break;
           
         case 'circle':
-          previewContent = `<div class="h-24 w-24 rounded-full" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}"></div>`;
+          previewContent = `<div class="h-10 w-10 rounded-full" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}"></div>`;
           break;
           
         case 'triangle':
-          previewContent = `<div style="width: 0; height: 0; border-left: 30px solid transparent; border-right: 30px solid transparent; border-bottom: 60px solid ${element.style?.backgroundColor || '#8B5CF6'}; background-color: transparent;"></div>`;
+          previewContent = `<div style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 30px solid ${element.style?.backgroundColor || '#8B5CF6'}; background-color: transparent;"></div>`;
           break;
           
         case 'image':
@@ -48,26 +48,26 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
           } else if (element.src) {
             previewContent = `<img src="${element.src}" alt="Item" class="w-full h-full object-contain" />`;
           } else {
-            previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></div>`;
+            previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></div>`;
           }
           break;
           
         case 'heading':
         case 'subheading':
         case 'paragraph':
-          previewContent = `<div class="w-full h-full flex items-center justify-center text-lg overflow-hidden font-semibold">${element.content?.substring(0, 10) || 'Text'}...</div>`;
+          previewContent = `<div class="w-full h-full flex items-center justify-center text-xs overflow-hidden font-semibold">${element.content?.substring(0, 5) || 'Text'}...</div>`;
           break;
           
         case 'puzzle':
         case 'sequencePuzzle':
         case 'sliderPuzzle':
           previewContent = `<div class="w-full h-full flex items-center justify-center">
-            <div class="h-20 w-20 bg-canvas-purple rounded-md flex items-center justify-center text-white text-base">Puzzle</div>
+            <div class="h-8 w-8 bg-canvas-purple rounded-md flex items-center justify-center text-white text-xs">Puzzle</div>
           </div>`;
           break;
           
         default:
-          previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-lg text-gray-600 font-medium">Item</div>`;
+          previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-medium">Item</div>`;
       }
       
       cursorPreview.innerHTML = previewContent;
@@ -75,8 +75,8 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       // Move custom cursor with mouse and fire custom events for potential drop targets
       const handleMouseMove = (e: MouseEvent) => {
         if (cursorPreview) {
-          cursorPreview.style.left = `${e.clientX + 15}px`;
-          cursorPreview.style.top = `${e.clientY + 15}px`;
+          cursorPreview.style.left = `${e.clientX + 10}px`;
+          cursorPreview.style.top = `${e.clientY + 10}px`;
           
           // Dispatch a custom event for potential drop targets
           const dragOverEvent = new CustomEvent('custom-drag-over', {
@@ -119,8 +119,8 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
       
       // Set initial position of cursor preview
       if (dragStartPosition.current && cursorPreview) {
-        cursorPreview.style.left = `${dragStartPosition.current.x + 15}px`;
-        cursorPreview.style.top = `${dragStartPosition.current.y + 15}px`;
+        cursorPreview.style.left = `${dragStartPosition.current.x + 10}px`;
+        cursorPreview.style.top = `${dragStartPosition.current.y + 10}px`;
       }
       
       return () => {
