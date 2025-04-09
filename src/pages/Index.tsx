@@ -38,15 +38,15 @@ const Index = () => {
   }
 
   return (
-    <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
+    <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`} style={{ position: 'relative' }}>
       {!isGameMode && <Header />}
       <div className={`flex flex-1 overflow-hidden ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
         {!isGameMode && (
-          <div className="flex-shrink-0 w-64">
+          <div className="flex-shrink-0 w-64" style={{ position: 'relative', zIndex: 30 }}>
             <Sidebar />
           </div>
         )}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col" style={{ position: 'relative', zIndex: 10 }}>
           {!isGameMode ? (
             <>
               <CanvasTabs />
@@ -59,7 +59,7 @@ const Index = () => {
           )}
         </div>
         {!isGameMode && (
-          <div className="flex-shrink-0 w-80">
+          <div className="flex-shrink-0 w-80" style={{ position: 'relative', zIndex: 30 }}>
             <Properties />
           </div>
         )}

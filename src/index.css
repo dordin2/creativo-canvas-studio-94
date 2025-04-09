@@ -181,6 +181,7 @@
     position: relative;
     overflow: visible !important;
     pointer-events: auto;
+    z-index: 5;
   }
   
   .canvas-container > div:first-child {
@@ -284,6 +285,8 @@
   background-image: 
     linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  position: relative;
+  z-index: 1;
 }
 
 .cursor-nw-resize { cursor: nw-resize; }
@@ -300,6 +303,8 @@
   min-width: 16rem;
   width: 16rem;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 20;
 }
 
 .properties-panel {
@@ -307,6 +312,8 @@
   min-width: 20rem;
   width: 20rem;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 20;
 }
 
 .zoom-controls {
