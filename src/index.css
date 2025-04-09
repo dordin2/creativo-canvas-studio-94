@@ -96,6 +96,20 @@
     font-family: 'Inter', sans-serif;
   }
 
+  .fullscreen-mode {
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: none !important;
+    max-height: none !important;
+  }
+
+  .fullscreen-canvas {
+    width: 100vw !important;
+    height: 100vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
   /* Custom inventory drag cursor styles */
   body.inventory-dragging {
     cursor: none !important;

@@ -64,7 +64,7 @@ const Index = () => {
   }
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
+    <div className={`flex flex-col h-screen overflow-hidden ${isFullscreen ? 'fullscreen-mode' : ''}`}>
       {!isGameMode && <Header />}
       <div className={`flex flex-1 overflow-hidden ${isGameMode ? 'h-screen w-screen' : ''}`}>
         {!isGameMode && (
@@ -76,10 +76,10 @@ const Index = () => {
           {!isGameMode ? (
             <>
               <CanvasTabs />
-              <Canvas />
+              <Canvas isFullscreenActive={isFullscreen} />
             </>
           ) : (
-            <Canvas />
+            <Canvas isFullscreenActive={isFullscreen} />
           )}
         </div>
         {!isGameMode && (
