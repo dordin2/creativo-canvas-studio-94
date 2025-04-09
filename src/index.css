@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -181,6 +182,7 @@
     position: relative;
     overflow: visible !important;
     pointer-events: auto;
+    z-index: 10; /* Lower z-index than sidebars */
   }
   
   .canvas-container > div:first-child {
@@ -300,6 +302,8 @@
   min-width: 16rem;
   width: 16rem;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 50; /* Higher z-index than canvas */
 }
 
 .properties-panel {
@@ -307,6 +311,8 @@
   min-width: 20rem;
   width: 20rem;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 50; /* Higher z-index than canvas */
 }
 
 .zoom-controls {
