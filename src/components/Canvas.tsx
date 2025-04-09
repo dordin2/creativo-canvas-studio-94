@@ -221,7 +221,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     }
   };
   
-  // Update the renderElements function to apply coordinate correction in fullscreen mode
   const renderElements = () => {
     const sortedElements = [...elements]
       .filter(element => element.type !== 'background')
@@ -230,7 +229,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     return sortedElements.map((element) => {
       const isActive = activeElement?.id === element.id;
       
-      // Clone the element to adjust position in fullscreen mode without affecting the original
       const elementToRender = isFullscreen && isGameMode 
         ? {
             ...element,
@@ -454,7 +452,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
-  // Use different styling for fullscreen game mode
   const canvasContainerStyle = isFullscreen && isGameMode
     ? {
         width: '100vw',

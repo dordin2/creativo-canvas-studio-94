@@ -116,13 +116,14 @@
   background-color: black;
 }
 
-/* Always stretch canvas in fullscreen game mode */
+/* Always center and scale the canvas from center in fullscreen game mode */
 .fullscreen-canvas .canvas-container {
   width: 100vw !important;
   height: 100vh !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
+  transform-origin: center center !important; /* Ensure transform scales from center */
 }
 
 .fullscreen-canvas .canvas-workspace {
@@ -130,9 +131,13 @@
   margin: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 /* Ensure the canvas is centered in fullscreen mode */
 .fullscreen-canvas .canvas-container > div {
   margin: 0 auto !important;
+  transform-origin: center center !important; /* Apply to the canvas element itself */
 }
