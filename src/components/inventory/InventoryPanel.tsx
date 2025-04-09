@@ -3,56 +3,53 @@ import React from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import InventoryItem from './InventoryItem';
 import { X } from 'lucide-react';
-import { Button } from '../ui/button';
+import { cn } from '@/lib/utils';
 
-const InventoryPanel: React.FC = () => {
-  const { inventoryItems, canvases, showInventory, toggleInventory } = useDesignState();
+const InventoryPanel = () => {
+  const { showInventory, inventoryItems, toggleInventory, canvases, isGameMode } = useDesignState();
   
-  // Get all elements in the inventory
-  const getInventoryElements = () => {
-    return inventoryItems.map(item => {
-      const canvas = canvases.find(c => c.id === item.canvasId);
-      if (!canvas) return null;
-      
-      const element = canvas.elements.find(e => e.id === item.elementId);
-      return element || null;
-    }).filter(Boolean);
+  // Only show in game mode and when inventory is open
+  if (!isGameMode || !showInventory) return null;
+  
+  const getElement = (elementId: string, canvasId: string) => {
+    const canvas = canvases.find(c => c.id === canvasId);
+    if (!canvas) return null;
+    
+    return canvas.elements.find(el => el.id === elementId);
   };
   
-  const inventoryElements = getInventoryElements();
-  
-  if (!showInventory) return null;
-  
   return (
-    <div className="inventory-panel fixed bottom-16 right-4 w-56 bg-white rounded-lg shadow-lg border border-gray-200 z-50 animate-in slide-in-from-bottom-10 duration-150">
-      <div className="flex items-center justify-between p-2 border-b border-gray-200">
-        <h3 className="font-semibold text-gray-700">Inventory</h3>
-        <Button 
-          variant="ghost" 
-          size="icon" 
-          onClick={toggleInventory} 
-          className="h-6 w-6"
+    <div className="fixed top-16 right-4 z-[9999] bg-white rounded-lg shadow-xl w-80 max-h-[70vh] overflow-hidden flex flex-col animate-fade-in">
+      <div className="p-3 bg-canvas-purple text-white flex justify-between items-center">
+        <h3 className="font-semibold">Inventory</h3>
+        <button 
+          onClick={toggleInventory}
+          className="hover:bg-white/20 rounded-full p-1"
         >
-          <X className="h-4 w-4" />
-        </Button>
+          <X size={16} />
+        </button>
       </div>
       
-      {inventoryElements.length === 0 ? (
-        <div className="p-4 text-center text-gray-500 text-sm">
-          Your inventory is empty
-        </div>
-      ) : (
-        <div className="p-3 grid grid-cols-3 gap-8">
-          {inventoryElements.map(element => (
-            element && (
+      <div className={cn(
+        "p-4 grid grid-cols-3 gap-3 overflow-y-auto",
+        inventoryItems.length === 0 && "flex items-center justify-center h-32"
+      )}>
+        {inventoryItems.length === 0 ? (
+          <p className="text-gray-500 text-sm text-center col-span-3">Your inventory is empty</p>
+        ) : (
+          inventoryItems.map(item => {
+            const element = getElement(item.elementId, item.canvasId);
+            if (!element) return null;
+            
+            return (
               <InventoryItem 
-                key={element.id} 
+                key={item.elementId} 
                 element={element} 
               />
-            )
-          ))}
-        </div>
-      )}
+            );
+          })
+        )}
+      </div>
     </div>
   );
 };
