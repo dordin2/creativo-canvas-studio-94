@@ -1,247 +1,155 @@
 
-import React, { useState, useEffect, useRef } from 'react';
-import { useDesignState, DesignElement } from '@/context/DesignContext';
-import { X } from 'lucide-react';
+import React, { useState, useRef } from 'react';
+import { DesignElement, useDesignState } from '@/context/DesignContext';
 
 interface InventoryItemProps {
   element: DesignElement;
 }
 
-const InventoryItem = ({ element }: InventoryItemProps) => {
-  const { removeFromInventory, setDraggedInventoryItem, isGameMode } = useDesignState();
+const InventoryItem: React.FC<InventoryItemProps> = ({ element }) => {
+  const { removeFromInventory, setDraggedInventoryItem } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartPosition = useRef<{ x: number, y: number } | null>(null);
-  const cursorPreviewRef = useRef<HTMLDivElement | null>(null);
+  const elementRef = useRef<HTMLDivElement>(null);
   
-  // Handle custom drag and drop
-  useEffect(() => {
-    if (isDragging) {
-      // Add dragging classes for styling
-      document.body.classList.add('inventory-dragging');
-      
-      // Create and apply a custom cursor with item preview
-      const cursorPreview = document.createElement('div');
-      cursorPreview.id = 'cursor-preview';
-      cursorPreview.className = 'fixed pointer-events-none z-[10000] opacity-90 scale-75 w-12 h-12 flex items-center justify-center bg-white rounded-md shadow-md';
-      document.body.appendChild(cursorPreview);
-      cursorPreviewRef.current = cursorPreview;
-      
-      // Add content to the cursor preview based on element type
-      let previewContent = '';
-      
-      switch (element.type) {
-        case 'rectangle':
-          previewContent = `<div class="h-10 w-10" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}; border-radius: ${element.style?.borderRadius || '4px'}"></div>`;
-          break;
-          
-        case 'circle':
-          previewContent = `<div class="h-10 w-10 rounded-full" style="background-color: ${element.style?.backgroundColor || '#8B5CF6'}"></div>`;
-          break;
-          
-        case 'triangle':
-          previewContent = `<div style="width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-bottom: 30px solid ${element.style?.backgroundColor || '#8B5CF6'}; background-color: transparent;"></div>`;
-          break;
-          
-        case 'image':
-          if (element.dataUrl) {
-            previewContent = `<img src="${element.dataUrl}" alt="Item" class="w-full h-full object-contain" />`;
-          } else if (element.src) {
-            previewContent = `<img src="${element.src}" alt="Item" class="w-full h-full object-contain" />`;
-          } else {
-            previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></div>`;
-          }
-          break;
-          
-        case 'heading':
-        case 'subheading':
-        case 'paragraph':
-          previewContent = `<div class="w-full h-full flex items-center justify-center text-xs overflow-hidden font-semibold">${element.content?.substring(0, 5) || 'Text'}...</div>`;
-          break;
-          
-        case 'puzzle':
-        case 'sequencePuzzle':
-        case 'sliderPuzzle':
-          previewContent = `<div class="w-full h-full flex items-center justify-center">
-            <div class="h-8 w-8 bg-canvas-purple rounded-md flex items-center justify-center text-white text-xs">Puzzle</div>
-          </div>`;
-          break;
-          
-        default:
-          previewContent = `<div class="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-600 font-medium">Item</div>`;
-      }
-      
-      cursorPreview.innerHTML = previewContent;
-      
-      // Move custom cursor with mouse and fire custom events for potential drop targets
-      const handleMouseMove = (e: MouseEvent) => {
-        if (cursorPreview) {
-          cursorPreview.style.left = `${e.clientX + 10}px`;
-          cursorPreview.style.top = `${e.clientY + 10}px`;
-          
-          // Dispatch a custom event for potential drop targets
-          const dragOverEvent = new CustomEvent('custom-drag-over', {
-            detail: {
-              clientX: e.clientX,
-              clientY: e.clientY,
-              elementId: element.id
-            }
-          });
-          document.dispatchEvent(dragOverEvent);
-        }
-      };
-      
-      // Handle drag end by listening for mouseup globally
-      const handleMouseUp = (e: MouseEvent) => {
-        // Dispatch custom drop event with mouse coordinates
-        const dropEvent = new CustomEvent('custom-drop', {
-          detail: {
-            clientX: e.clientX,
-            clientY: e.clientY,
-            elementId: element.id
-          }
-        });
-        document.dispatchEvent(dropEvent);
-        
-        setIsDragging(false);
-        setDraggedInventoryItem(null);
-        document.body.classList.remove('inventory-dragging');
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        
-        if (cursorPreview && cursorPreview.parentNode) {
-          cursorPreview.parentNode.removeChild(cursorPreview);
-          cursorPreviewRef.current = null;
-        }
-      };
-      
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleMouseUp);
-      
-      // Set initial position of cursor preview
-      if (dragStartPosition.current && cursorPreview) {
-        cursorPreview.style.left = `${dragStartPosition.current.x + 10}px`;
-        cursorPreview.style.top = `${dragStartPosition.current.y + 10}px`;
-      }
-      
-      return () => {
-        document.body.classList.remove('inventory-dragging');
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
-        
-        if (cursorPreview && cursorPreview.parentNode) {
-          cursorPreview.parentNode.removeChild(cursorPreview);
-          cursorPreviewRef.current = null;
-        }
-      };
-    }
-  }, [isDragging, element, setDraggedInventoryItem]);
+  // Track position for custom drag effect
+  const startPos = useRef({ x: 0, y: 0 });
+  const mouseOffset = useRef({ x: 0, y: 0 });
   
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (!isGameMode) return;
-    
-    // Prevent default to avoid browser's native drag behavior
     e.preventDefault();
-    e.stopPropagation();
     
-    // Save start position for dragging
-    dragStartPosition.current = { x: e.clientX, y: e.clientY };
+    if (elementRef.current) {
+      const rect = elementRef.current.getBoundingClientRect();
+      startPos.current = { x: e.clientX, y: e.clientY };
+      mouseOffset.current = { 
+        x: e.clientX - rect.left, 
+        y: e.clientY - rect.top 
+      };
+    }
     
-    // Set dragging state and update context
     setIsDragging(true);
     setDraggedInventoryItem(element);
+    
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
   
-  const renderThumbnail = () => {
-    switch (element.type) {
-      case 'rectangle':
-        return (
-          <div
-            className="h-full w-full"
-            style={{
-              backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
-              borderRadius: element.style?.borderRadius || '4px'
-            }}
-          />
-        );
-        
-      case 'circle':
-        return (
-          <div
-            className="h-full w-full rounded-full"
-            style={{
-              backgroundColor: element.style?.backgroundColor as string || '#8B5CF6'
-            }}
-          />
-        );
-        
-      case 'triangle':
-        return (
-          <div
-            className="absolute"
-            style={{
-              width: 0,
-              height: 0,
-              borderLeft: '15px solid transparent',
-              borderRight: '15px solid transparent',
-              borderBottom: `30px solid ${element.style?.backgroundColor as string || '#8B5CF6'}`,
-              backgroundColor: 'transparent'
-            }}
-          />
-        );
-        
-      case 'image':
-        return element.dataUrl ? (
-          <img 
-            src={element.dataUrl} 
-            alt="Item" 
-            className="w-full h-full object-contain" 
-          />
-        ) : element.src ? (
-          <img 
-            src={element.src} 
-            alt="Item" 
-            className="w-full h-full object-contain" 
-          />
-        ) : (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-400">
-            No image
-          </div>
-        );
-        
-      case 'heading':
-      case 'subheading':
-      case 'paragraph':
-        return (
-          <div className="w-full h-full flex items-center justify-center text-xs overflow-hidden">
-            {element.content?.substring(0, 20) || 'Text'}
-          </div>
-        );
-        
-      default:
-        return (
-          <div className="w-full h-full bg-gray-200 flex items-center justify-center text-xs text-gray-400">
-            Item
-          </div>
-        );
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    // Create custom event for drag over
+    const dragOverEvent = new CustomEvent('custom-drag-over', {
+      detail: { clientX: e.clientX, clientY: e.clientY }
+    });
+    document.dispatchEvent(dragOverEvent);
+    
+    // Visual feedback - move the dragged element with cursor
+    if (elementRef.current) {
+      elementRef.current.style.position = 'fixed';
+      elementRef.current.style.left = `${e.clientX - mouseOffset.current.x}px`;
+      elementRef.current.style.top = `${e.clientY - mouseOffset.current.y}px`;
+      elementRef.current.style.pointerEvents = 'none';
+      elementRef.current.style.zIndex = '9999';
+      elementRef.current.style.opacity = '0.8';
+      elementRef.current.style.transform = 'scale(1.05)';
+      elementRef.current.style.boxShadow = '0 5px 15px rgba(0,0,0,0.2)';
     }
+  };
+  
+  const handleMouseUp = (e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    // Create custom drop event
+    const dropEvent = new CustomEvent('custom-drop', {
+      detail: { clientX: e.clientX, clientY: e.clientY }
+    });
+    document.dispatchEvent(dropEvent);
+    
+    // Reset styles
+    if (elementRef.current) {
+      elementRef.current.style.position = '';
+      elementRef.current.style.left = '';
+      elementRef.current.style.top = '';
+      elementRef.current.style.pointerEvents = '';
+      elementRef.current.style.zIndex = '';
+      elementRef.current.style.opacity = '';
+      elementRef.current.style.transform = '';
+      elementRef.current.style.boxShadow = '';
+    }
+    
+    setIsDragging(false);
+    setDraggedInventoryItem(null);
+    
+    document.removeEventListener('mousemove', handleMouseMove);
+    document.removeEventListener('mouseup', handleMouseUp);
+  };
+  
+  const handleUse = () => {
+    // This could be expanded to allow item inspection or other interactions
+    console.log("Inventory item used:", element);
+  };
+  
+  const handleRemove = () => {
+    removeFromInventory(element.id);
+  };
+  
+  // Get a nice display for the element based on its type
+  const getItemPreview = () => {
+    if (element.type === 'image' && element.dataUrl) {
+      return (
+        <img 
+          src={element.dataUrl} 
+          alt={element.name || 'Item'} 
+          className="max-h-full max-w-full object-contain"
+        />
+      );
+    } else if (['rectangle', 'circle', 'triangle'].includes(element.type)) {
+      const shapeStyles = {
+        backgroundColor: element.style?.backgroundColor as string || '#6366F1',
+        width: '90%',
+        height: '90%',
+        borderRadius: element.type === 'circle' ? '50%' : 
+                      element.type === 'rectangle' ? '4px' : '0',
+      };
+      
+      if (element.type === 'triangle') {
+        return (
+          <div className="w-full h-full flex items-center justify-center">
+            <div 
+              style={{
+                width: 0,
+                height: 0,
+                borderLeft: '20px solid transparent',
+                borderRight: '20px solid transparent',
+                borderBottom: `40px solid ${element.style?.backgroundColor as string || '#6366F1'}`,
+              }}
+            />
+          </div>
+        );
+      }
+      
+      return <div style={shapeStyles} />;
+    }
+    
+    return (
+      <div className="flex items-center justify-center text-lg font-bold">
+        {element.name || element.type.charAt(0).toUpperCase() + element.type.slice(1)}
+      </div>
+    );
   };
   
   return (
     <div 
-      className={`relative bg-gray-50 border rounded-md p-1 h-20 flex items-center justify-center shadow-sm group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''} ${isDragging ? 'opacity-30' : ''}`}
+      ref={elementRef}
+      className={`inventory-item w-16 h-16 bg-white rounded-lg border-2 border-gray-200 flex items-center justify-center cursor-grab overflow-hidden relative ${isDragging ? 'cursor-grabbing' : ''}`}
       onMouseDown={handleMouseDown}
+      title={element.name || `${element.type} item`}
     >
-      <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-        <button 
-          onClick={() => removeFromInventory(element.id)}
-          className="bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-        >
-          <X size={14} />
-        </button>
-      </div>
+      {getItemPreview()}
       
-      <div className={`w-full h-full overflow-hidden flex items-center justify-center`}>
-        {renderThumbnail()}
+      {/* Display item name below the item */}
+      <div className="absolute -bottom-6 left-0 right-0 text-center text-xs text-gray-700 whitespace-nowrap overflow-hidden text-ellipsis px-1">
+        {element.name || element.type}
       </div>
     </div>
   );

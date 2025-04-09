@@ -8,6 +8,8 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { DesignProvider } from "@/context/DesignContext";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
+import InventoryIcon from "./components/inventory/InventoryIcon";
+import InventoryPanel from "./components/inventory/InventoryPanel";
 
 const queryClient = new QueryClient();
 
@@ -18,6 +20,8 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <InventoryIcon />
+          <InventoryPanel />
           <BrowserRouter>
             <Routes>
               <Route path="/" element={<Index />} />
