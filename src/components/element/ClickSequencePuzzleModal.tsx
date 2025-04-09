@@ -1,134 +1,88 @@
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { X, CheckCircle } from "lucide-react";
+import { X, MousePointerClick, RotateCcw, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { useLanguage } from "@/context/LanguageContext";
 import { DesignElement } from "@/types/designTypes";
-import { useDesignState } from "@/context/DesignContext";
 
 interface ClickSequencePuzzleModalProps {
   isOpen: boolean;
   onClose: () => void;
   element: DesignElement;
+  onPuzzleSolved?: () => void;
 }
 
-const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isOpen, onClose, element }) => {
-  const { updateElement } = useDesignState();
-  const [solved, setSolved] = useState(false);
+const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ 
+  isOpen, 
+  onClose, 
+  element,
+  onPuzzleSolved
+}) => {
+  const puzzleConfig = element.clickSequencePuzzleConfig;
   const [clickedIndices, setClickedIndices] = useState<number[]>([]);
+  const [solved, setSolved] = useState(false);
   const { t, language } = useLanguage();
   
-  // Use a ref to prevent excessive updates to the global state
-  const isInitialized = useRef(false);
-  const pendingUpdate = useRef(false);
-  const timeoutRef = useRef<number | null>(null);
-  
-  const clickSequencePuzzleConfig = element.clickSequencePuzzleConfig || {
-    name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
-    images: [],
-    solution: [],
-    clickedIndices: []
-  };
-  
-  // Initialize when modal opens or puzzle changes
   useEffect(() => {
-    if (!isOpen) {
-      // Reset state when modal closes
-      setSolved(false);
-      isInitialized.current = false;
-      return;
-    }
-    
-    // Only initialize once when the modal opens
-    if (!isInitialized.current) {
-      let initialClickedIndices: number[] = [];
-      
-      if (clickSequencePuzzleConfig.clickedIndices.length > 0) {
-        initialClickedIndices = [...clickSequencePuzzleConfig.clickedIndices];
-      }
-      
-      setClickedIndices(initialClickedIndices);
-      isInitialized.current = true;
-    }
-  }, [isOpen, clickSequencePuzzleConfig]);
-  
-  // Check if the puzzle is solved when clicked indices change
-  useEffect(() => {
-    if (!isOpen || clickedIndices.length === 0 || clickSequencePuzzleConfig.solution.length === 0) return;
-    
-    // Check if the sequence is valid so far
-    const isValidSoFar = clickedIndices.every((clickedIndex, index) => {
-      return clickedIndex === clickSequencePuzzleConfig.solution[index];
-    });
-    
-    // If the sequence is invalid, silently reset the clicked indices
-    if (!isValidSoFar) {
+    if (isOpen && puzzleConfig) {
+      // Reset clicked indices when modal opens
       setClickedIndices([]);
-      return;
+      setSolved(false);
     }
+  }, [isOpen, puzzleConfig]);
+  
+  useEffect(() => {
+    if (!puzzleConfig || !puzzleConfig.solution) return;
     
-    // Check if the puzzle is fully solved
-    const isSolved = clickSequencePuzzleConfig.solution.length === clickedIndices.length && isValidSoFar;
-    
-    // Update the solved state and handle success
-    if (isSolved && !solved) {
-      setSolved(true);
+    // Check if the click sequence is correct
+    if (clickedIndices.length === puzzleConfig.solution.length) {
+      const isCorrect = clickedIndices.every((index, i) => {
+        return index === puzzleConfig.solution[i];
+      });
       
-      // Update the element with the current clicked indices, but only once
-      if (!pendingUpdate.current) {
-        pendingUpdate.current = true;
-        
-        // Clear any existing timeout
-        if (timeoutRef.current !== null) {
-          window.clearTimeout(timeoutRef.current);
+      if (isCorrect && !solved) {
+        setSolved(true);
+        toast.success(t('toast.success.puzzle'), {
+          duration: 2000
+        });
+
+        // Call the onPuzzleSolved callback if provided
+        if (onPuzzleSolved) {
+          onPuzzleSolved();
         }
         
-        // Use a timeout to debounce the update
-        timeoutRef.current = window.setTimeout(() => {
-          updateElement(element.id, {
-            clickSequencePuzzleConfig: {
-              ...clickSequencePuzzleConfig,
-              clickedIndices: [...clickedIndices]
-            }
-          });
-          pendingUpdate.current = false;
-          timeoutRef.current = null;
-          
-          // Show success message with extended duration
-          toast.success(language === 'en' ? 'Puzzle solved correctly!' : 'הפאזל נפתר בהצלחה!', {
-            duration: 3000 // Extended duration
-          });
-          
-          // Close after a delay to ensure user sees the success state
-          setTimeout(() => {
-            onClose();
-          }, 3000);
-        }, 300);
+        // Close after delay
+        setTimeout(() => {
+          onClose();
+        }, 2000);
+      } else if (!isCorrect) {
+        // Reset if the sequence is incorrect
+        toast.error(t('toast.error.puzzleWrong'), {
+          duration: 1500
+        });
+        
+        setTimeout(() => {
+          setClickedIndices([]);
+        }, 1000);
       }
     }
-  }, [clickedIndices, clickSequencePuzzleConfig.solution, solved, isOpen, onClose, language, element.id, updateElement]);
+  }, [clickedIndices, puzzleConfig, solved, onClose, t, onPuzzleSolved]);
   
-  // Cleanup timeouts on unmount
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current !== null) {
-        window.clearTimeout(timeoutRef.current);
-      }
-    };
-  }, []);
-  
-  // Handle image click
   const handleImageClick = (index: number) => {
-    if (solved) return; // Don't allow clicks if already solved
+    if (solved) return;
     
-    // Simply add the clicked index to the sequence
-    const newClickedIndices = [...clickedIndices, index];
-    setClickedIndices(newClickedIndices);
-    
-    // We don't need to update global state here as the effect will handle that if the puzzle is solved
+    setClickedIndices(prev => [...prev, index]);
   };
+  
+  const resetSequence = () => {
+    setClickedIndices([]);
+  };
+  
+  if (!puzzleConfig) {
+    return null;
+  }
   
   return (
     <Dialog open={isOpen} onOpenChange={(open) => {
@@ -138,8 +92,10 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
     }}>
       <DialogContent className={`sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <DialogHeader>
-          <DialogTitle className="text-xl">{clickSequencePuzzleConfig.name}</DialogTitle>
-          <DialogDescription className="sr-only">{language === 'en' ? 'Click images in the correct order' : 'לחץ על התמונות בסדר הנכון'}</DialogDescription>
+          <DialogTitle className="text-xl">{puzzleConfig.name || t('puzzle.clickSequence.title')}</DialogTitle>
+          <DialogDescription className="sr-only">
+            {t('puzzle.clickSequence.description')}
+          </DialogDescription>
           <DialogClose asChild>
             <Button 
               variant="ghost" 
@@ -154,40 +110,57 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
         </DialogHeader>
         
         <div className="py-6">
-          {clickSequencePuzzleConfig.images.length > 0 ? (
-            <div className="space-y-6">
-              {/* Images grid */}
-              <div className="flex flex-row justify-center items-center gap-4 flex-wrap">
-                {clickSequencePuzzleConfig.images.map((image, index) => {
-                  return (
-                    <div 
-                      key={index}
-                      onClick={() => handleImageClick(index)}
-                      className="relative transition-transform cursor-pointer hover:scale-105"
+          {puzzleConfig.images.length > 0 ? (
+            <>
+              <div className="flex justify-center mb-4">
+                <div className="inline-flex items-center gap-2">
+                  <div className="p-2 rounded-full bg-muted">
+                    <MousePointerClick className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  
+                  {clickedIndices.length > 0 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={resetSequence}
+                      className="flex items-center gap-1"
                     >
-                      <div className="flex flex-col items-center">
-                        <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-gray-300 rounded-md overflow-hidden hover:border-blue-500 bg-white relative flex items-center justify-center">
-                          <img
-                            src={image}
-                            alt={`Image ${index + 1}`}
-                            className="max-w-full max-h-full object-contain"
-                          />
-                        </div>
-                        <div className="text-xs text-center mt-1">
-                          {language === 'en' ? `Image ${index + 1}` : `תמונה ${index + 1}`}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+                      <RotateCcw className="h-3.5 w-3.5" />
+                      <span>{t('puzzle.clickSequence.reset')}</span>
+                    </Button>
+                  )}
+                </div>
               </div>
               
-              <div className="text-center text-sm text-gray-500 mt-2">
-                {language === 'en' 
-                  ? 'Click on the images in the correct sequence order' 
-                  : 'לחץ על התמונות בסדר הנכון'}
+              <div className="flex justify-center gap-4 flex-wrap">
+                {puzzleConfig.images.map((imageUrl, index) => (
+                  <div
+                    key={index}
+                    className={`
+                      relative p-1 rounded border bg-white shadow-sm 
+                      ${clickedIndices.includes(index) ? 'outline outline-2 outline-primary' : ''}
+                      ${solved ? 'pointer-events-none' : 'cursor-pointer hover:brightness-90 active:scale-95'}
+                      transition-all
+                    `}
+                    onClick={() => handleImageClick(index)}
+                  >
+                    <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 flex items-center justify-center overflow-hidden">
+                      <img 
+                        src={imageUrl} 
+                        alt={`Puzzle piece ${index + 1}`} 
+                        className="max-w-full max-h-full object-contain"
+                      />
+                    </div>
+                    
+                    {clickedIndices.includes(index) && (
+                      <div className="absolute -top-2 -right-2 w-6 h-6 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-semibold">
+                        {clickedIndices.findIndex(i => i === index) + 1}
+                      </div>
+                    )}
+                  </div>
+                ))}
               </div>
-            </div>
+            </>
           ) : (
             <div className="text-center py-10">
               <p className="text-gray-500">
@@ -201,13 +174,9 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
         </div>
         
         {solved && (
-          <div className="p-4 bg-green-50 border border-green-200 rounded-md mb-4">
-            <div className="flex items-center justify-center text-green-600 gap-2">
-              <CheckCircle className="h-6 w-6" />
-              <span className="text-lg font-semibold">
-                {language === 'en' ? 'Puzzle solved correctly!' : 'הפאזל נפתר בהצלחה!'}
-              </span>
-            </div>
+          <div className="flex items-center justify-center text-green-500 gap-2 pb-2">
+            <CheckCircle className="h-5 w-5" />
+            <span>{t('puzzle.modal.solved')}</span>
           </div>
         )}
       </DialogContent>

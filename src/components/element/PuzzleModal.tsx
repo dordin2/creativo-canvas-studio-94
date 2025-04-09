@@ -11,9 +11,10 @@ interface PuzzleModalProps {
   isOpen: boolean;
   onClose: () => void;
   element: DesignElement;
+  onPuzzleSolved?: () => void;
 }
 
-const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) => {
+const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element, onPuzzleSolved }) => {
   const [currentStates, setCurrentStates] = useState<number[]>([]);
   const [solved, setSolved] = useState(false);
   const { t, language } = useLanguage();
@@ -54,12 +55,17 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
         duration: 2000 // 2 seconds duration
       });
       
+      // Call the onPuzzleSolved callback if provided
+      if (onPuzzleSolved) {
+        onPuzzleSolved();
+      }
+      
       // Close after delay
       setTimeout(() => {
         onClose();
       }, 2000);
     }
-  }, [currentStates, puzzleConfig.solution, solved, isOpen, onClose, t]);
+  }, [currentStates, puzzleConfig.solution, solved, isOpen, onClose, t, onPuzzleSolved]);
   
   const cyclePlaceholder = (index: number) => {
     if (puzzleType === 'image' && puzzleConfig.images.length === 0) return;
