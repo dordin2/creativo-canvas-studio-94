@@ -19,11 +19,13 @@ const ImageProperties = ({
   const {
     updateElement,
     handleImageUpload,
-    isGameMode
+    isGameMode,
+    canvasRef
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
   const [recommendedFullscreenScale, setRecommendedFullscreenScale] = useState<number | null>(null);
+  const [fullscreenScaleRatio, setFullscreenScaleRatio] = useState(1.6); // Default ratio (approximately 103/64)
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
@@ -48,20 +50,35 @@ const ImageProperties = ({
 
   // Calculate recommended fullscreen scale based on canvas and original image dimensions
   useEffect(() => {
-    if (element.originalSize) {
+    if (element.originalSize && canvasRef) {
+      // Get current canvas dimensions
+      const canvasWidth = canvasRef.clientWidth;
+      const canvasHeight = canvasRef.clientHeight;
+      
+      // Get screen dimensions
       const windowWidth = window.innerWidth;
       const windowHeight = window.innerHeight;
       
-      // Calculate the scale needed for the image to fill the screen
-      // We use the larger scaling factor to ensure it covers the entire screen
-      const widthScale = (windowWidth / element.originalSize.width) * 100;
-      const heightScale = (windowHeight / element.originalSize.height) * 100;
+      // Calculate the scale factors for both modes
+      const normalWidthScale = (canvasWidth / element.originalSize.width) * 100;
+      const normalHeightScale = (canvasHeight / element.originalSize.height) * 100;
       
-      // Take the larger scale factor to ensure full coverage
-      const recommendedScale = Math.ceil(Math.max(widthScale, heightScale));
+      const fullscreenWidthScale = (windowWidth / element.originalSize.width) * 100;
+      const fullscreenHeightScale = (windowHeight / element.originalSize.height) * 100;
+      
+      // Use the larger scale in each mode to ensure full coverage
+      const normalScale = Math.max(normalWidthScale, normalHeightScale);
+      const fullscreenScale = Math.max(fullscreenWidthScale, fullscreenHeightScale);
+      
+      // Calculate the ratio between fullscreen and normal scales
+      const ratio = fullscreenScale / normalScale;
+      setFullscreenScaleRatio(ratio);
+      
+      // Set the recommended fullscreen scale based on current scale and ratio
+      const recommendedScale = Math.ceil(scaleValue * ratio);
       setRecommendedFullscreenScale(recommendedScale);
     }
-  }, [element.originalSize]);
+  }, [element.originalSize, canvasRef, scaleValue, element.size]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateElement(element.id, {
@@ -100,6 +117,17 @@ const ImageProperties = ({
   const applyRecommendedFullscreenScale = () => {
     if (recommendedFullscreenScale && element.originalSize) {
       handleImageResize([recommendedFullscreenScale]);
+    }
+  };
+
+  const applyProportionalScale = () => {
+    if (element.originalSize) {
+      // Apply the proportional scale based on current scale and the ratio
+      const fullscreenProportionalScale = Math.round(scaleValue * fullscreenScaleRatio);
+      handleImageResize([fullscreenProportionalScale]);
+      
+      // Show a toast or console message to indicate the scale was applied
+      console.log(`Applied proportional scale: ${scaleValue}% → ${fullscreenProportionalScale}%`);
     }
   };
   
@@ -149,26 +177,28 @@ const ImageProperties = ({
         <div className="text-sm mt-2 flex items-center justify-between">
           <span>{element.size?.width} × {element.size?.height} px</span>
           
-          {recommendedFullscreenScale && (
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={applyRecommendedFullscreenScale}
-                    className="flex items-center gap-1 h-7 px-2 text-xs"
-                  >
-                    <Info className="h-3 w-3" />
-                    Fullscreen size
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Set to {recommendedFullscreenScale}% to fill screen in fullscreen mode</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          )}
+          <div className="flex gap-2">
+            {recommendedFullscreenScale && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={applyProportionalScale}
+                      className="flex items-center gap-1 h-7 px-2 text-xs"
+                    >
+                      <Info className="h-3 w-3" />
+                      Fill screen ({Math.round(scaleValue * fullscreenScaleRatio)}%)
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>Set to {Math.round(scaleValue * fullscreenScaleRatio)}% to proportionally fill screen in fullscreen mode</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
         </div>
       </div>
       
