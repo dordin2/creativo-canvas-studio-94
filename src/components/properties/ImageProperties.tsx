@@ -5,11 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Info } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import RotationProperty from "./RotationProperty";
 import { getImageFromCache } from "@/utils/imageUploader";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const ImageProperties = ({
   element
@@ -18,14 +17,10 @@ const ImageProperties = ({
 }) => {
   const {
     updateElement,
-    handleImageUpload,
-    isGameMode,
-    canvasRef
+    handleImageUpload
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
-  const [recommendedFullscreenScale, setRecommendedFullscreenScale] = useState<number | null>(null);
-  const [fullscreenScaleRatio, setFullscreenScaleRatio] = useState(1.6); // Default ratio
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
@@ -47,52 +42,6 @@ const ImageProperties = ({
       }
     }
   }, [element.id, element.cacheKey, element.dataUrl]);
-
-  // Calculate recommended fullscreen scale based on canvas and original image dimensions
-  useEffect(() => {
-    if (element.originalSize && canvasRef) {
-      // Get current canvas dimensions
-      const canvasWidth = canvasRef.clientWidth;
-      const canvasHeight = canvasRef.clientHeight;
-      
-      // Get screen dimensions
-      const windowWidth = window.innerWidth;
-      const windowHeight = window.innerHeight;
-      
-      // Calculate the aspect ratios
-      const canvasAspectRatio = canvasWidth / canvasHeight;
-      const screenAspectRatio = windowWidth / windowHeight;
-      
-      // Calculate the scaling factors for both modes based on both width and height
-      const normalWidthScale = (canvasWidth / element.originalSize.width) * 100;
-      const normalHeightScale = (canvasHeight / element.originalSize.height) * 100;
-      
-      const fullscreenWidthScale = (windowWidth / element.originalSize.width) * 100;
-      const fullscreenHeightScale = (windowHeight / element.originalSize.height) * 100;
-      
-      // Use the smaller scale in each mode to ensure full coverage without overflow
-      const normalScale = Math.min(normalWidthScale, normalHeightScale);
-      const fullscreenScale = Math.min(fullscreenWidthScale, fullscreenHeightScale);
-      
-      // Calculate the ratio between fullscreen and normal scales with a 15% buffer (increased from 5% to 15%)
-      // The buffer helps ensure the image fully covers the screen
-      const ratio = (fullscreenScale / normalScale) * 1.15; // Increased from 1.05 to 1.15 (adding 10% more)
-      
-      console.log("Scale calculation:", {
-        canvasSize: `${canvasWidth}x${canvasHeight}`,
-        windowSize: `${windowWidth}x${windowHeight}`,
-        normalScale,
-        fullscreenScale,
-        ratio
-      });
-      
-      setFullscreenScaleRatio(ratio);
-      
-      // Set the recommended fullscreen scale based on current scale and ratio
-      const recommendedScale = Math.ceil(scaleValue * ratio);
-      setRecommendedFullscreenScale(recommendedScale);
-    }
-  }, [element.originalSize, canvasRef, scaleValue, element.size]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateElement(element.id, {
@@ -127,34 +76,6 @@ const ImageProperties = ({
       }
     });
   };
-
-  const applyProportionalScale = () => {
-    if (element.originalSize) {
-      // Apply the proportional scale based on current scale and the ratio
-      const fullscreenProportionalScale = Math.round(scaleValue * fullscreenScaleRatio);
-      handleImageResize([fullscreenProportionalScale]);
-      
-      // Store the original scale for potential restoration
-      updateElement(element.id, {
-        metadata: {
-          ...element.metadata,
-          originalScale: scaleValue,
-          fullscreenScale: fullscreenProportionalScale
-        }
-      });
-      
-      // Show a toast or console message to indicate the scale was applied
-      console.log(`Applied proportional scale: ${scaleValue}% → ${fullscreenProportionalScale}%`);
-    }
-  };
-  
-  const getScaleLabel = () => {
-    if (recommendedFullscreenScale) {
-      const fullscreenPropScale = Math.round(scaleValue * fullscreenScaleRatio);
-      return `Fill screen (${fullscreenPropScale}%)`;
-    }
-    return "Fill screen";
-  };
   
   useEffect(() => {
     // Log image data for debugging
@@ -166,8 +87,7 @@ const ImageProperties = ({
         fileExists: !!element.file,
         fileName: element.file?.name,
         cacheKey: element.cacheKey,
-        originalSize: element.originalSize,
-        metadata: element.metadata
+        originalSize: element.originalSize
       });
     }
   }, [element]);
@@ -200,31 +120,8 @@ const ImageProperties = ({
           <span>10%</span>
           <span>200%</span>
         </div>
-        <div className="text-sm mt-2 flex items-center justify-between">
-          <span>{element.size?.width} × {element.size?.height} px</span>
-          
-          <div className="flex gap-2">
-            {recommendedFullscreenScale && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={applyProportionalScale}
-                      className="flex items-center gap-1 h-7 px-2 text-xs"
-                    >
-                      <Info className="h-3 w-3" />
-                      {getScaleLabel()}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>Set to {Math.round(scaleValue * fullscreenScaleRatio)}% to proportionally fill screen in fullscreen mode</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-          </div>
+        <div className="text-sm mt-2">
+          {element.size?.width} × {element.size?.height} px
         </div>
       </div>
       
@@ -245,4 +142,3 @@ const ImageProperties = ({
 };
 
 export default ImageProperties;
-
