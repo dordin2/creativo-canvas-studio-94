@@ -6,7 +6,7 @@ import Canvas from "@/components/Canvas";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Maximize, Minimize } from "lucide-react";
+import { Maximize, Minimize } from "lucide-react";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { DesignProvider } from "@/context/DesignContext";
 
@@ -95,10 +95,6 @@ const Play = () => {
     }
   };
 
-  const goBackToProjects = () => {
-    navigate('/');
-  };
-
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {
@@ -127,17 +123,6 @@ const Play = () => {
   return (
     <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
-        <div className="absolute top-4 left-4 z-[100]">
-          <Button 
-            variant="secondary" 
-            className="shadow-md bg-white hover:bg-gray-100"
-            onClick={goBackToProjects}
-          >
-            <ChevronLeft className="mr-1" />
-            {projectName ? `Exit ${projectName}` : 'Exit Game'}
-          </Button>
-        </div>
-        
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
           <div className="fixed-canvas-container">
             <Canvas isFullscreen={true} />
