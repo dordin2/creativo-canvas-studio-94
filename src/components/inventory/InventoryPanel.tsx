@@ -28,7 +28,7 @@ const InventoryPanel = () => {
   });
   
   return (
-    <div className="fixed top-20 right-4 z-[9999] bg-white rounded-lg shadow-xl w-[320px] h-[70vh] max-h-[90vh] overflow-hidden flex flex-col animate-fade-in" style={{ zIndex: 200 }}>
+    <div className="fixed top-20 right-4 z-[9999] bg-white rounded-lg shadow-xl w-[320px] h-[70vh] max-h-[90vh] overflow-hidden flex flex-col animate-fade-in">
       <div className="p-6 bg-canvas-purple text-white flex justify-between items-center">
         <h3 className="font-semibold text-xl">Inventory</h3>
         <button 
