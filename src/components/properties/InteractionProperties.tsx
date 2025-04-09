@@ -39,6 +39,7 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [activeTab, setActiveTab] = useState<string>("config");
   const [combinationTab, setCombinationTab] = useState<string>("setup");
+  const [puzzleTab, setPuzzleTab] = useState<string>("puzzleType");
   
   const interactionConfig = element.interaction || { 
     type: 'none',
@@ -587,6 +588,41 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
           <p className="text-xs text-gray-500 mt-1">
             Select the canvas to navigate to when this element is interacted with.
           </p>
+        </div>
+      )}
+
+      {interactionConfig.type === 'puzzle' && (
+        <div className="space-y-4">
+          <Tabs value={puzzleTab} onValueChange={setPuzzleTab}>
+            <TabsList className="w-full">
+              <TabsTrigger value="puzzleType">Puzzle Type</TabsTrigger>
+              <TabsTrigger value="puzzleConfig">Puzzle Config</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="puzzleType" className="space-y-4">
+              <div>
+                <Label>Puzzle Type</Label>
+                <Select
+                  value={interactionConfig.puzzleType || 'puzzle'}
+                  onValueChange={handlePuzzleTypeChange}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select puzzle type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="puzzle">Regular Puzzle</SelectItem>
+                    <SelectItem value="sequencePuzzle">Sequence Puzzle</SelectItem>
+                    <SelectItem value="clickSequencePuzzle">Click Sequence Puzzle</SelectItem>
+                    <SelectItem value="sliderPuzzle">Slider Puzzle</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="puzzleConfig">
+              {getPuzzleConfigComponent()}
+            </TabsContent>
+          </Tabs>
         </div>
       )}
 
