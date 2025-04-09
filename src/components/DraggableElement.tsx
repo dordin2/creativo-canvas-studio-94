@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -172,14 +173,23 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   const handleDuplicate = () => {
-    const duplicateProps = {
-      ...element,
-      position: {
-        x: element.position.x + 20,
-        y: element.position.y + 20
-      }
+    const duplicateProps = { ...element };
+    
+    // Preserve image data when duplicating
+    if (isImageElement) {
+      duplicateProps.dataUrl = element.dataUrl;
+      duplicateProps.src = element.src;
+      duplicateProps.file = element.file;
+      duplicateProps.originalSize = element.originalSize;
+    }
+    
+    // Position the duplicate slightly offset from the original
+    duplicateProps.position = {
+      x: element.position.x + 20,
+      y: element.position.y + 20
     };
     
+    // Remove the id to ensure a new one is generated
     delete (duplicateProps as any).id;
     
     addElement(element.type, duplicateProps);

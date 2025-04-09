@@ -1,4 +1,5 @@
-import { useRef, useState } from "react";
+
+import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Upload } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import RotationProperty from "./RotationProperty";
+
 const ImageProperties = ({
   element
 }: {
@@ -19,6 +21,14 @@ const ImageProperties = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
 
+  // Initialize scale value based on element's current size when component mounts
+  useEffect(() => {
+    if (element.originalSize && element.size) {
+      const currentScale = Math.round((element.size.width / element.originalSize.width) * 100);
+      setScaleValue(currentScale || 100);
+    }
+  }, [element.id, element.originalSize, element.size]);
+
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateElement(element.id, {
       src: e.target.value,
@@ -26,14 +36,17 @@ const ImageProperties = ({
       file: undefined
     });
   };
+  
   const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
     handleImageUpload(element.id, file);
   };
+  
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
+  
   const handleImageResize = (value: number[]) => {
     if (!element.originalSize) return;
     const scalePercentage = value[0];
@@ -48,6 +61,7 @@ const ImageProperties = ({
       }
     });
   };
+  
   return <div className="space-y-4">
       <div>
         <Label>Upload Image</Label>
@@ -62,8 +76,6 @@ const ImageProperties = ({
             </p>}
         </div>
       </div>
-      
-      
       
       <div className="mt-4">
         <div className="flex items-center justify-between mb-2">
@@ -87,4 +99,5 @@ const ImageProperties = ({
       <RotationProperty element={element} />
     </div>;
 };
+
 export default ImageProperties;

@@ -49,12 +49,20 @@ const ElementControls = ({
     e.stopPropagation();
     
     // Create a duplicate with the same properties but at a slightly offset position
-    const duplicateProps = {
-      ...element,
-      position: {
-        x: element.position.x + 20,
-        y: element.position.y + 20
-      }
+    const duplicateProps = { ...element };
+    
+    // Preserve image data when duplicating
+    if (element.type === 'image') {
+      duplicateProps.dataUrl = element.dataUrl;
+      duplicateProps.src = element.src;
+      duplicateProps.file = element.file;
+      duplicateProps.originalSize = element.originalSize;
+    }
+    
+    // Position the duplicate slightly offset from the original
+    duplicateProps.position = {
+      x: element.position.x + 20,
+      y: element.position.y + 20
     };
     
     // Remove the id to ensure a new one is generated
