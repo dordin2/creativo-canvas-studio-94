@@ -25,11 +25,11 @@ const App = () => (
             <Route 
               path="/editor/:projectId" 
               element={
-                <DesignProvider>
-                  <ProjectProvider>
+                <ProjectProvider>
+                  <DesignProvider>
                     <Editor />
-                  </ProjectProvider>
-                </DesignProvider>
+                  </DesignProvider>
+                </ProjectProvider>
               } 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

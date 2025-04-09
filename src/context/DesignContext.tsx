@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { 
@@ -219,7 +218,9 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     setHistoryIndex(newHistoryIndex);
   }, [history, historyIndex]);
   
-  const elements = canvases[activeCanvasIndex]?.elements || [];
+  const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
+    ? canvases[activeCanvasIndex].elements 
+    : [];
   
   const updateElementWithoutHistory = useCallback((id: string, updates: Partial<DesignElement>) => {
     const updatedCanvases = [...canvases];
@@ -610,7 +611,6 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     removeFromInventory,
     setDraggedInventoryItem,
     handleItemCombination,
-    // Add a setter for the canvases state to be used by the ProjectContext
     setCanvases
   };
   
