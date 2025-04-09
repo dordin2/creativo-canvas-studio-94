@@ -22,9 +22,8 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
-  const lastUpdateTimeRef = useRef<number>(0);
-  const lastScaleRef = useRef<number>(1);
-  const targetScaleRef = useRef<number>(1);
+  const animationPhaseRef = useRef<'growing' | 'shrinking'>('growing');
+  const animationProgressRef = useRef<number>(0);
 
   // Set up the audio analyzer when the audio element changes
   useEffect(() => {
@@ -71,56 +70,68 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
 
   // Animation loop for visualization
   useEffect(() => {
-    if (!isPlaying || !analyserRef.current || !dataArrayRef.current) {
+    if (!isPlaying) {
       // Reset scale when not playing
       setScale(1);
-      lastScaleRef.current = 1;
-      targetScaleRef.current = 1;
+      animationPhaseRef.current = 'growing';
+      animationProgressRef.current = 0;
       return;
     }
     
-    const analyzeAudio = (timestamp: number) => {
+    const animate = (timestamp: number) => {
       if (!analyserRef.current || !dataArrayRef.current) return;
       
-      const updateInterval = 50 / speed; // Base interval adjusted by speed
-      const elapsed = timestamp - lastUpdateTimeRef.current;
+      // Get frequency data for amplitude calculation
+      analyserRef.current.getByteFrequencyData(dataArrayRef.current);
       
-      if (elapsed > updateInterval || lastUpdateTimeRef.current === 0) {
-        // Get frequency data
-        analyserRef.current.getByteFrequencyData(dataArrayRef.current);
-        
-        // Calculate average amplitude
-        const average = dataArrayRef.current.reduce((sum, value) => sum + value, 0) / 
-                        dataArrayRef.current.length;
-        
-        // Normalize to 0-1 range
-        const normalizedValue = average / 255;
-        
-        // Apply intensity and calculate scale factor (add a minimum scale to always show some animation)
-        const minScale = 1;
-        const maxScale = 1 + (0.2 * intensity);
-        
-        // Set target scale based on audio analysis
-        targetScaleRef.current = minScale + (normalizedValue * (maxScale - minScale));
-        lastUpdateTimeRef.current = timestamp;
+      // Calculate average amplitude
+      const average = dataArrayRef.current.reduce((sum, value) => sum + value, 0) / 
+                    dataArrayRef.current.length;
+      
+      // Normalize to 0-1 range
+      const normalizedValue = average / 255;
+      
+      // Calculate max scale based on audio amplitude and intensity
+      const minScale = 1;
+      const maxScale = 1 + (0.2 * intensity * normalizedValue);
+      
+      // Determine animation progress based on current phase
+      const animationStepSize = 0.01 * speed; // Speed affects how fast the animation progresses
+      
+      if (animationPhaseRef.current === 'growing') {
+        animationProgressRef.current += animationStepSize;
+        if (animationProgressRef.current >= 1) {
+          animationProgressRef.current = 1;
+          animationPhaseRef.current = 'shrinking';
+        }
+      } else {
+        animationProgressRef.current -= animationStepSize;
+        if (animationProgressRef.current <= 0) {
+          animationProgressRef.current = 0;
+          animationPhaseRef.current = 'growing';
+        }
       }
       
-      // Smoothly interpolate between current scale and target scale
-      const interpolationSpeed = 0.1 * speed; // Adjust the interpolation speed based on the speed setting
-      const newScale = lastScaleRef.current + (targetScaleRef.current - lastScaleRef.current) * interpolationSpeed;
+      // Calculate current scale using easing function for smooth animation
+      // Using cubic easing for more natural movement
+      const easedProgress = easeInOutCubic(animationProgressRef.current);
+      const newScale = minScale + (easedProgress * (maxScale - minScale));
       
-      // Update scale if it has changed significantly
-      if (Math.abs(newScale - lastScaleRef.current) > 0.001) {
-        setScale(newScale);
-        lastScaleRef.current = newScale;
-      }
+      setScale(newScale);
       
       // Continue animation loop
-      animationRef.current = requestAnimationFrame(analyzeAudio);
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    
+    // Cubic easing function for smooth transitions
+    const easeInOutCubic = (t: number): number => {
+      return t < 0.5
+        ? 4 * t * t * t
+        : 1 - Math.pow(-2 * t + 2, 3) / 2;
     };
     
     // Start animation loop
-    animationRef.current = requestAnimationFrame(analyzeAudio);
+    animationRef.current = requestAnimationFrame(animate);
     
     // Clean up animation loop
     return () => {
@@ -130,11 +141,11 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
     };
   }, [isPlaying, intensity, speed]);
 
-  // Apply scale transformation to children with smooth transition
+  // Apply scale transformation with smooth transition
   return (
     <div style={{ 
       transform: `scale(${scale})`,
-      transition: `transform ${0.1 / speed}s ease-in-out`, // Smoother transition with ease-in-out
+      transition: `transform 0.05s ease-in-out`, // Small transition for extra smoothness
       transformOrigin: 'center'
     }}>
       {children}
