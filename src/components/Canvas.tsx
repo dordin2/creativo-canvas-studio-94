@@ -406,8 +406,7 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
           left: '50%',
           translate: '-50% -50%',
           width: 'fit-content',
-          height: 'fit-content',
-          zIndex: 5
+          height: 'fit-content'
         }}>
           <div
             ref={containerRef}
@@ -416,9 +415,7 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
               width: `${canvasDimensions.width}px`,
               height: `${canvasDimensions.height}px`,
               ...backgroundStyle,
-              overflow: 'hidden',
-              maxWidth: '100%',
-              maxHeight: '100%'
+              overflow: 'hidden'
             }}
             onClick={handleCanvasClick}
             onDragOver={!isGameMode ? handleDragOver : undefined}
