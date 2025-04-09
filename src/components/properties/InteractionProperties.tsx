@@ -49,6 +49,7 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     messagePosition: 'top' as MessagePosition,
     lipsyncIntensity: 1.0,
     lipsyncSpeed: 1.0,
+    lipsyncMaxScale: 1.2,
     puzzleConfig: {
       name: 'Puzzle',
       type: 'image' as PuzzleType,
@@ -196,6 +197,16 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
       interaction: {
         ...interactionConfig,
         lipsyncSpeed: speed
+      }
+    });
+  };
+
+  const handleLipsyncMaxScaleChange = (values: number[]) => {
+    const maxScale = values[0];
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        lipsyncMaxScale: maxScale
       }
     });
   };
@@ -851,6 +862,23 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Controls how fast the pulsing animation cycles (lower values = slower animation).
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="flex justify-between">
+                  <span>Maximum Scale</span>
+                  <span className="text-sm text-gray-500">{interactionConfig.lipsyncMaxScale?.toFixed(1) || '1.2'}</span>
+                </Label>
+                <Slider
+                  defaultValue={[interactionConfig.lipsyncMaxScale || 1.2]}
+                  max={2}
+                  min={1.1}
+                  step={0.1}
+                  onValueChange={handleLipsyncMaxScaleChange}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Sets how large the element will grow before shrinking back (higher values = larger maximum size).
                 </p>
               </div>
             </>

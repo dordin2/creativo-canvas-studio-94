@@ -6,6 +6,7 @@ interface AudioVisualizerProps {
   isPlaying: boolean;
   intensity?: number;
   speed?: number; // Controls animation speed
+  maxScale?: number; // Controls the maximum scale before shrinking
   children: React.ReactNode;
 }
 
@@ -14,6 +15,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   isPlaying, 
   intensity = 1.0,
   speed = 1.0, // Default speed value
+  maxScale = 1.2, // Default maximum scale
   children 
 }) => {
   const [scale, setScale] = useState(1);
@@ -91,9 +93,9 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       // Normalize to 0-1 range
       const normalizedValue = average / 255;
       
-      // Calculate max scale based on audio amplitude and intensity
+      // Calculate max scale based on audio amplitude, intensity and max scale
       const minScale = 1;
-      const maxScale = 1 + (0.2 * intensity * normalizedValue);
+      const calculatedMaxScale = 1 + ((maxScale - 1) * intensity * normalizedValue);
       
       // Determine animation progress based on current phase
       const animationStepSize = 0.01 * speed; // Speed affects how fast the animation progresses
@@ -115,7 +117,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       // Calculate current scale using easing function for smooth animation
       // Using cubic easing for more natural movement
       const easedProgress = easeInOutCubic(animationProgressRef.current);
-      const newScale = minScale + (easedProgress * (maxScale - minScale));
+      const newScale = minScale + (easedProgress * (calculatedMaxScale - minScale));
       
       setScale(newScale);
       
@@ -139,7 +141,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPlaying, intensity, speed]);
+  }, [isPlaying, intensity, speed, maxScale]);
 
   // Apply scale transformation with smooth transition
   return (
