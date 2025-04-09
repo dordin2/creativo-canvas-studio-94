@@ -40,13 +40,13 @@ const Index = () => {
   return (
     <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
       {!isGameMode && <Header />}
-      <div className={`flex flex-1 overflow-hidden ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
+      <div className={`flex flex-1 overflow-hidden ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''} relative`}>
         {!isGameMode && (
-          <div className="flex-shrink-0 w-64">
+          <div className="flex-shrink-0 w-64 z-20 relative">
             <Sidebar />
           </div>
         )}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col z-10 relative">
           {!isGameMode ? (
             <>
               <CanvasTabs />
@@ -59,7 +59,7 @@ const Index = () => {
           )}
         </div>
         {!isGameMode && (
-          <div className="flex-shrink-0 w-80">
+          <div className="flex-shrink-0 w-80 z-20 relative">
             <Properties />
           </div>
         )}

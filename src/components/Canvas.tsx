@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -406,7 +407,10 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
           left: '50%',
           translate: '-50% -50%',
           width: 'fit-content',
-          height: 'fit-content'
+          height: 'fit-content',
+          maxWidth: '100%',
+          maxHeight: '100%',
+          zIndex: 10
         }}>
           <div
             ref={containerRef}
