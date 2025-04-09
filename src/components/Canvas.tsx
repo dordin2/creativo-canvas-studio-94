@@ -30,7 +30,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   const parentRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive);
   
-  // Adjust fullscreen game zoom to 1.8 based on observed behavior
   const fullscreenGameZoom = 1.8;
 
   useEffect(() => {
@@ -39,15 +38,12 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     }
   }, [canvasRef, setCanvasRef]);
   
-  // Update isFullscreen state when prop changes
   useEffect(() => {
     setIsFullscreen(isFullscreenActive);
     
-    // Apply the adjusted zoom level when entering fullscreen game mode
     if (isFullscreenActive && isGameMode) {
       setZoomLevel(fullscreenGameZoom);
     } else if (!isFullscreenActive && isGameMode) {
-      // Reset to normal zoom when exiting fullscreen in game mode
       setZoomLevel(1);
     }
   }, [isFullscreenActive, isGameMode]);
@@ -55,7 +51,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current && parentRef.current) {
-        // If in fullscreen game mode, fill the entire screen
         if (isFullscreen && isGameMode) {
           const screenWidth = window.innerWidth;
           const screenHeight = window.innerHeight;
@@ -118,11 +113,9 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
 
     document.addEventListener('keydown', handleKeyDown);
     
-    // Detect fullscreen change from browser controls
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
         setIsFullscreen(false);
-        // Reset zoom level when exiting fullscreen in game mode
         if (isGameMode) {
           setZoomLevel(1);
         }
@@ -143,7 +136,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
         parentRef.current.requestFullscreen()
           .then(() => {
             setIsFullscreen(true);
-            // Apply updated zoom when entering fullscreen in game mode
             if (isGameMode) {
               setZoomLevel(fullscreenGameZoom);
             }
@@ -160,7 +152,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
       document.exitFullscreen()
         .then(() => {
           setIsFullscreen(false);
-          // Reset zoom level when exiting fullscreen in game mode
           if (isGameMode) {
             setZoomLevel(1);
           }
@@ -188,7 +179,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   };
   
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    if (isGameMode) return; // No dragging in game mode
+    if (isGameMode) return;
     
     e.preventDefault();
     e.stopPropagation();
@@ -202,7 +193,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   };
   
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    if (isGameMode) return; // No dropping in game mode
+    if (isGameMode) return;
     
     e.preventDefault();
     e.stopPropagation();
@@ -232,7 +223,6 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
       const elementToRender = isFullscreen && isGameMode 
         ? {
             ...element,
-            // No need to modify positions here as we're using CSS transforms for scaling
           } 
         : element;
       
