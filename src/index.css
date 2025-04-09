@@ -110,10 +110,10 @@
     z-index: 10000;
     transform-origin: center;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
-    border-radius: 8px;
+    border-radius: 4px;
     overflow: hidden;
-    width: 240px;
-    height: 240px;
+    width: 120px;
+    height: 120px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -135,7 +135,7 @@
     justify-content: center;
     background-color: white;
   }
-  
+
   .canvas-element {
     @apply cursor-move transition-transform duration-150 relative shadow-element hover:shadow-glow;
     will-change: transform, left, top;
