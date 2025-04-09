@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -91,6 +92,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     const handleResize = () => {
       if (containerRef.current && parentRef.current) {
         if (isFullscreen && isGameMode) {
+          // For fullscreen game mode, use 100% of available screen space
           const screenWidth = window.innerWidth;
           const screenHeight = window.innerHeight;
           
@@ -101,6 +103,7 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
           return;
         }
         
+        // For non-fullscreen mode, maintain proportional sizing
         const parentWidth = parentRef.current.clientWidth;
         const parentHeight = parentRef.current.clientHeight;
         
@@ -469,18 +472,22 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
+  // Updated styles for fullscreen game mode
   const canvasContainerStyle = isFullscreen && isGameMode
     ? {
-        transform: `scale(${zoomLevel})`,
-        transformOrigin: 'center center',
-        transition: 'transform 0.2s ease-out',
-        position: 'absolute' as const,
+        position: 'fixed' as const,
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        width: '100%',
-        height: '100%',
+        width: '100vw',
+        height: '100vh',
+        zIndex: 50,
+        margin: 0,
+        padding: 0,
+        transform: `scale(${zoomLevel})`,
+        transformOrigin: 'center center',
+        transition: 'transform 0.2s ease-out',
       }
     : {
         transform: `scale(${zoomLevel})`,
@@ -498,6 +505,11 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
         ...backgroundStyle,
         overflow: 'hidden',
         borderRadius: 0,
+        position: 'absolute' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
       }
     : {
         width: `${canvasDimensions.width}px`,
