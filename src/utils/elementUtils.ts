@@ -1,4 +1,3 @@
-
 import { DesignElement } from "@/types/designTypes";
 
 /**
@@ -11,13 +10,26 @@ export const prepareElementForDuplication = (element: DesignElement): Partial<De
   
   // Handle special element types that require custom copying
   if (element.type === 'image') {
-    // Ensure image data is properly preserved
-    duplicate.dataUrl = element.dataUrl;
-    duplicate.src = element.src;
+    // Explicitly preserve the dataUrl - this is crucial for image duplication
+    if (element.dataUrl) {
+      duplicate.dataUrl = element.dataUrl;
+    }
     
-    // File objects can't be cloned via JSON, so reference the original
+    // Preserve the external source URL if it exists
+    if (element.src) {
+      duplicate.src = element.src;
+    }
+    
+    // File objects can't be cloned via JSON, but we need to keep track that a file existed
+    // We'll store a reference to indicate that this was originally a file upload
     if (element.file) {
-      duplicate.file = element.file;
+      // We can't clone the file object, but we can keep its metadata
+      duplicate.fileMetadata = {
+        name: element.file.name,
+        type: element.file.type,
+        size: element.file.size,
+        lastModified: element.file.lastModified
+      };
     }
     
     // Make sure original dimensions are preserved
@@ -27,8 +39,9 @@ export const prepareElementForDuplication = (element: DesignElement): Partial<De
     
     console.log("elementUtils - Image element duplicated with data:", {
       dataUrl: duplicate.dataUrl ? "exists" : "missing",
+      dataUrlLength: duplicate.dataUrl ? duplicate.dataUrl.length : 0,
       src: duplicate.src,
-      fileExists: !!duplicate.file,
+      fileMetadata: duplicate.fileMetadata,
       originalSize: duplicate.originalSize
     });
   }
@@ -43,4 +56,48 @@ export const prepareElementForDuplication = (element: DesignElement): Partial<De
   delete duplicate.id;
   
   return duplicate;
+};
+
+/**
+ * Creates a deep clone of an image element and ensures all image data is preserved
+ * This function is specifically designed for image elements to ensure their data
+ * is properly cloned when moving between canvases or duplicating
+ */
+export const cloneImageElement = (element: DesignElement): Partial<DesignElement> => {
+  if (element.type !== 'image') {
+    return JSON.parse(JSON.stringify(element));
+  }
+  
+  // Create a basic clone
+  const clone = JSON.parse(JSON.stringify(element));
+  
+  // Ensure image-specific properties are properly preserved
+  if (element.dataUrl) {
+    clone.dataUrl = element.dataUrl;
+  }
+  
+  if (element.src) {
+    clone.src = element.src;
+  }
+  
+  // For original file information, store metadata
+  if (element.file) {
+    clone.fileMetadata = {
+      name: element.file.name,
+      type: element.file.type,
+      size: element.file.size,
+      lastModified: element.file.lastModified
+    };
+  }
+  
+  // Preserve size information
+  if (element.originalSize) {
+    clone.originalSize = { ...element.originalSize };
+  }
+  
+  if (element.size) {
+    clone.size = { ...element.size };
+  }
+  
+  return clone;
 };

@@ -8,6 +8,7 @@ import { Slider } from "@/components/ui/slider";
 import { Upload } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import RotationProperty from "./RotationProperty";
+import { getImageFromCache } from "@/utils/imageUploader";
 
 const ImageProperties = ({
   element
@@ -28,6 +29,19 @@ const ImageProperties = ({
       setScaleValue(currentScale || 100);
     }
   }, [element.id, element.originalSize, element.size]);
+
+  useEffect(() => {
+    // Try to recover image from cache if we have a cache key but no dataUrl
+    if (element.cacheKey && !element.dataUrl) {
+      const cachedImage = getImageFromCache(element.cacheKey);
+      if (cachedImage) {
+        console.log("ImageProperties - Recovered image from cache:", element.cacheKey);
+        updateElement(element.id, {
+          dataUrl: cachedImage
+        });
+      }
+    }
+  }, [element.id, element.cacheKey, element.dataUrl]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateElement(element.id, {
@@ -67,10 +81,12 @@ const ImageProperties = ({
     // Log image data for debugging
     if (element.type === 'image') {
       console.log("ImageProperties - Current image data:", {
-        dataUrl: element.dataUrl ? "exists" : "missing",
+        dataUrl: element.dataUrl ? `${element.dataUrl.substring(0, 30)}...` : "missing",
+        dataUrlLength: element.dataUrl?.length || 0,
         src: element.src,
         fileExists: !!element.file,
         fileName: element.file?.name,
+        cacheKey: element.cacheKey,
         originalSize: element.originalSize
       });
     }
@@ -87,7 +103,10 @@ const ImageProperties = ({
           </Button>
           {element.file && <p className="text-xs text-muted-foreground">
               {element.file.name}
-            </p>}
+          </p>}
+          {element.fileMetadata && !element.file && <p className="text-xs text-muted-foreground">
+              {element.fileMetadata.name} (duplicated)
+          </p>}
         </div>
       </div>
       
@@ -107,7 +126,15 @@ const ImageProperties = ({
       </div>
       
       {(element.dataUrl || element.src) && <div className="mt-4 border rounded-md p-2 bg-background">
-          <img src={element.dataUrl || element.src} alt="Preview" className="w-full h-32 object-contain" />
+          <img 
+            src={element.dataUrl || element.src} 
+            alt="Preview" 
+            className="w-full h-32 object-contain" 
+            onError={(e) => {
+              console.error("Image failed to load:", element.dataUrl ? "dataUrl exists" : "no dataUrl", element.src);
+              e.currentTarget.src = "/placeholder.svg";
+            }}
+          />
         </div>}
       
       <RotationProperty element={element} />

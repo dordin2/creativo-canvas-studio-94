@@ -2,6 +2,9 @@
 import { toast } from "sonner";
 import { DesignElement } from "@/types/designTypes";
 
+// Create a local cache to store image data
+const imageCache = new Map<string, string>();
+
 export const processImageUpload = (
   file: File, 
   onSuccess: (data: Partial<DesignElement>) => void
@@ -15,6 +18,10 @@ export const processImageUpload = (
   reader.onload = (e) => {
     if (e.target?.result) {
       const dataUrl = e.target.result as string;
+      
+      // Cache the image data with a unique identifier
+      const cacheKey = `img_${file.name}_${file.size}_${file.lastModified}`;
+      imageCache.set(cacheKey, dataUrl);
       
       // Create a new image element to get the natural dimensions
       const img = new Image();
@@ -42,11 +49,21 @@ export const processImageUpload = (
           }
         }
         
+        console.log("imageUploader - Processing image:", {
+          fileName: file.name,
+          fileSize: file.size,
+          cacheKey,
+          dataUrlLength: dataUrl.length,
+          dimensions: `${naturalWidth}x${naturalHeight}`,
+          scaledDimensions: `${scaledWidth}x${scaledHeight}`
+        });
+        
         // Provide the processed image data
         onSuccess({ 
           dataUrl, 
           src: undefined, // Clear the external URL when using a local file
           file: file, // Store the original file reference
+          cacheKey, // Store the cache key for later retrieval
           size: {
             width: scaledWidth,
             height: scaledHeight
@@ -74,4 +91,18 @@ export const processImageUpload = (
   };
   
   reader.readAsDataURL(file);
+};
+
+/**
+ * Retrieves an image from the cache by its cache key
+ */
+export const getImageFromCache = (cacheKey: string): string | undefined => {
+  return imageCache.get(cacheKey);
+};
+
+/**
+ * Stores an image in the cache
+ */
+export const storeImageInCache = (cacheKey: string, dataUrl: string): void => {
+  imageCache.set(cacheKey, dataUrl);
 };

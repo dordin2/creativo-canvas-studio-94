@@ -224,6 +224,12 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     }
     
     const newElement = createNewElement(type, position, newLayer, props);
+    
+    if (type === 'image' && props?.dataUrl) {
+      console.log("DesignContext - Creating new image element with dataUrl length:", 
+        props.dataUrl.length);
+    }
+    
     const updatedCanvases = [...canvases];
     updatedCanvases[activeCanvasIndex].elements = [...elements, newElement];
     
@@ -389,6 +395,16 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
     
     const elementCopy = prepareElementForDuplication(elementToMove);
     elementCopy.id = generateId();
+    
+    if (elementToMove.type === 'image') {
+      console.log("DesignContext - Moving image element with dataUrl:", 
+        elementToMove.dataUrl ? "exists" : "missing",
+        elementToMove.dataUrl ? `length: ${elementToMove.dataUrl.length}` : "");
+        
+      if (elementToMove.dataUrl) {
+        elementCopy.dataUrl = elementToMove.dataUrl;
+      }
+    }
     
     const updatedCanvases = [...canvases];
     updatedCanvases[targetCanvasIndex].elements.push(elementCopy as DesignElement);
