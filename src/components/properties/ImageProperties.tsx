@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -7,8 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Upload } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
-import RotationProperty from "./RotationProperty";
 import { getImageFromCache } from "@/utils/imageUploader";
+import { getRotation } from "@/utils/elementStyles";
 
 const ImageProperties = ({
   element
@@ -17,10 +16,12 @@ const ImageProperties = ({
 }) => {
   const {
     updateElement,
-    handleImageUpload
+    handleImageUpload,
+    isGameMode
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
+  const [rotation, setRotation] = useState(getRotation(element));
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
@@ -42,6 +43,11 @@ const ImageProperties = ({
       }
     }
   }, [element.id, element.cacheKey, element.dataUrl]);
+
+  // Keep rotation state in sync with element
+  useEffect(() => {
+    setRotation(getRotation(element));
+  }, [element]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateElement(element.id, {
@@ -74,6 +80,32 @@ const ImageProperties = ({
         width: newWidth,
         height: newHeight
       }
+    });
+  };
+  
+  const handleRotationChange = (value: number[]) => {
+    if (isGameMode) return; // No rotation in game mode
+    
+    const newRotation = Math.round(value[0]);
+    setRotation(newRotation);
+    updateElement(element.id, {
+      style: { ...element.style, transform: `rotate(${newRotation}deg)` }
+    });
+  };
+
+  const handleRotationInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (isGameMode) return;
+    
+    // Parse input and handle non-numeric input
+    const inputValue = e.target.value;
+    const newRotation = parseInt(inputValue) || 0;
+    
+    // Keep rotation between -360 and 360 degrees
+    const boundedRotation = Math.max(-360, Math.min(360, newRotation));
+    
+    setRotation(boundedRotation);
+    updateElement(element.id, {
+      style: { ...element.style, transform: `rotate(${boundedRotation}deg)` }
     });
   };
   
@@ -137,7 +169,32 @@ const ImageProperties = ({
           />
         </div>}
       
-      <RotationProperty element={element} />
+      <div className="space-y-4">
+        <Label>Rotation</Label>
+        <div className="space-y-2">
+          <Slider
+            value={[rotation]}
+            min={-180}
+            max={180}
+            step={1}
+            onValueChange={handleRotationChange}
+            disabled={isGameMode}
+            className="my-4"
+          />
+          <div className="flex gap-4 items-center">
+            <Input 
+              type="number" 
+              value={rotation}
+              onChange={handleRotationInputChange}
+              min={-360}
+              max={360}
+              className="w-24"
+              disabled={isGameMode}
+            />
+            <span className="text-sm">degrees</span>
+          </div>
+        </div>
+      </div>
     </div>;
 };
 
