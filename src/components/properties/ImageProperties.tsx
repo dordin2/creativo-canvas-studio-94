@@ -74,9 +74,9 @@ const ImageProperties = ({
       const normalScale = Math.min(normalWidthScale, normalHeightScale);
       const fullscreenScale = Math.min(fullscreenWidthScale, fullscreenHeightScale);
       
-      // Calculate the ratio between fullscreen and normal scales with a small buffer
+      // Calculate the ratio between fullscreen and normal scales with a 15% buffer (increased from 5% to 15%)
       // The buffer helps ensure the image fully covers the screen
-      const ratio = (fullscreenScale / normalScale) * 1.05; // Add 5% buffer
+      const ratio = (fullscreenScale / normalScale) * 1.15; // Increased from 1.05 to 1.15 (adding 10% more)
       
       console.log("Scale calculation:", {
         canvasSize: `${canvasWidth}x${canvasHeight}`,
