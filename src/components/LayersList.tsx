@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight } from "lucide-react";
@@ -47,7 +46,6 @@ const LayersList = () => {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [selectedTargetCanvas, setSelectedTargetCanvas] = useState<string>('');
 
-  // Filter out background element and sort by layer (highest first)
   const layerElements = [...elements]
     .filter(element => element.type !== 'background')
     .sort((a, b) => b.layer - a.layer);
@@ -63,16 +61,20 @@ const LayersList = () => {
   };
 
   const handleDuplicate = (element: DesignElement) => {
-    // Create a duplicate with the same properties but at a slightly offset position
-    const duplicateProps = {
-      ...element,
-      position: {
-        x: element.position.x + 20,
-        y: element.position.y + 20
-      }
+    const duplicateProps = { ...element };
+    
+    if (element.type === 'image') {
+      duplicateProps.dataUrl = element.dataUrl;
+      duplicateProps.src = element.src;
+      duplicateProps.file = element.file;
+      duplicateProps.originalSize = element.originalSize;
+    }
+    
+    duplicateProps.position = {
+      x: element.position.x + 20,
+      y: element.position.y + 20
     };
     
-    // Remove the id to ensure a new one is generated
     delete (duplicateProps as any).id;
     
     addElement(element.type, duplicateProps);
