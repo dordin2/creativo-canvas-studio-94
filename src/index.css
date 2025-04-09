@@ -196,7 +196,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden !important;
-    background-color: #000 !important;
+    background-color: transparent !important;
   }
 
   .fixed-canvas-container {
@@ -332,7 +332,7 @@
 }
 
 :fullscreen .game-mode-workspace {
-  background-color: #000 !important;
+  background-color: transparent !important;
 }
 
 :fullscreen .fullscreen-button {
