@@ -1,3 +1,4 @@
+
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
@@ -142,6 +143,28 @@
     touch-action: none;
     pointer-events: auto !important;
     transition: transform 0.15s ease-out, box-shadow 0.2s ease-in-out;
+  }
+
+  /* Special style for transparent images in game mode - removes all borders and outlines */
+  .transparent-game-image {
+    background-color: transparent !important;
+    border: none !important;
+    outline: none !important;
+    box-shadow: none !important;
+    background-image: none !important;
+  }
+
+  /* Remove hover effects for game mode transparent images */
+  .transparent-game-image:hover {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* Even when selected as drop target, keep transparent */
+  .transparent-game-image.drop-target {
+    outline: 2px dashed #8B5CF6 !important;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5) !important;
   }
 
   .canvas-element.dragging {

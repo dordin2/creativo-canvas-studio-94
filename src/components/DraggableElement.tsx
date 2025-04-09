@@ -568,17 +568,22 @@ const DraggableElement = ({ element, isActive, children }: {
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute' as 'absolute',
-    border: isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border,
-    outline: isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline,
-    boxShadow: isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow,
+    
+    border: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
+    outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
+    boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
+    
+    backgroundColor: isGameMode && isImageElement ? 'transparent' : elementStyle.backgroundColor,
   };
 
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => {
+    const gameImageClass = isGameMode && isImageElement ? 'transparent-game-image' : '';
+    
     const content = (
       <div
         id={`element-${element.id}`}
         ref={ref}
-        className={`canvas-element ${isDropTarget ? 'drop-target' : ''}`}
+        className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${gameImageClass}`}
         style={combinedStyle}
         onMouseDown={handleMouseDown}
         onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}

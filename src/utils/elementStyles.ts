@@ -1,6 +1,6 @@
 
 import { CSSProperties } from "react";
-import { DesignElement } from "@/context/DesignContext";
+import { DesignElement } from "@/types/designTypes";
 
 export const getRotation = (element: DesignElement): number => {
   if (!element.style?.transform) return 0;
@@ -77,6 +77,8 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     willChange: isDragging ? 'transform' : 'auto',
     transition: isDragging ? 'none' : 'transform 0.05s ease-out',
     boxSizing: 'border-box',
+    // Ensure all images have transparent background by default
+    backgroundColor: isImageElement ? 'transparent' : (element.style?.backgroundColor as string),
   };
 
   // Prevent browser's default drag behavior for image elements
