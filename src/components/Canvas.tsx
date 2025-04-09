@@ -9,7 +9,11 @@ import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import InventoryIcon from "./inventory/InventoryIcon";
 
-const Canvas = () => {
+interface CanvasProps {
+  isFullscreen?: boolean;
+}
+
+const Canvas = ({ isFullscreen = false }: CanvasProps) => {
   const { 
     canvasRef, 
     setCanvasRef, 
@@ -352,11 +356,14 @@ const Canvas = () => {
     background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
+  // Use a larger zoom level in fullscreen mode
+  const displayZoomLevel = isFullscreen && isGameMode ? 1.25 : zoomLevel;
+  
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full">
       <div className={`flex-1 flex items-center justify-center p-4 canvas-workspace relative ${isGameMode ? 'game-mode-workspace' : ''}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
-          transform: `scale(${zoomLevel})`, 
+          transform: `scale(${displayZoomLevel})`, 
           transformOrigin: 'center center', 
           transition: 'transform 0.2s ease-out',
           position: 'relative',
