@@ -22,16 +22,32 @@ import { prepareElementForDuplication } from "@/utils/elementUtils";
 
 const DesignContext = createContext<DesignContextType | undefined>(undefined);
 
-export const DesignProvider = ({ children }: { children: ReactNode }) => {
-  const [canvases, setCanvases] = useState<Canvas[]>([
-    { id: generateId(), name: "Canvas 1", elements: [] }
-  ]);
-  const [activeCanvasIndex, setActiveCanvasIndex] = useState<number>(0);
+interface DesignProviderProps {
+  children: ReactNode;
+  initialState?: {
+    canvases?: Canvas[];
+    activeCanvasIndex?: number;
+    isGameMode?: boolean;
+  };
+}
+
+export const DesignProvider = ({ 
+  children, 
+  initialState = {} 
+}: DesignProviderProps) => {
+  const [canvases, setCanvases] = useState<Canvas[]>(
+    initialState.canvases || [
+      { id: generateId(), name: "Canvas 1", elements: [] }
+    ]
+  );
+  const [activeCanvasIndex, setActiveCanvasIndex] = useState<number>(
+    initialState.activeCanvasIndex !== undefined ? initialState.activeCanvasIndex : 0
+  );
   const [activeElement, setActiveElement] = useState<DesignElement | null>(null);
   const [canvasRef, setCanvasRefState] = useState<HTMLDivElement | null>(null);
   const [history, setHistory] = useState<Canvas[][]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
-  const [isGameMode, setIsGameMode] = useState<boolean>(false);
+  const [isGameMode, setIsGameMode] = useState<boolean>(initialState.isGameMode || false);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [showInventory, setShowInventory] = useState<boolean>(false);
   const [draggedInventoryItem, setDraggedInventoryItem] = useState<DesignElement | null>(null);

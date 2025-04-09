@@ -9,6 +9,7 @@ import { DesignProvider } from "@/context/DesignContext";
 import { ProjectProvider } from "@/context/ProjectContext";
 import Projects from "./pages/Projects";
 import Editor from "./pages/Editor";
+import Play from "./pages/Play";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,10 @@ const App = () => (
                   </DesignProvider>
                 </ProjectProvider>
               } 
+            />
+            <Route 
+              path="/play/:projectId" 
+              element={<Play />} 
             />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />

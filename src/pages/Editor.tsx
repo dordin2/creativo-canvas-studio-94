@@ -12,7 +12,7 @@ import { useDesignState } from "@/context/DesignContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save } from "lucide-react";
+import { ChevronLeft, Save, Share2 } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 
@@ -93,6 +93,34 @@ const Editor = () => {
     }
   };
 
+  const handleShareGame = () => {
+    const shareUrl = `${window.location.origin}/play/${projectId}`;
+    
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(shareUrl)
+        .then(() => {
+          toast.success('Game link copied to clipboard!');
+        })
+        .catch((err) => {
+          console.error('Failed to copy link:', err);
+          promptManualCopy(shareUrl);
+        });
+    } else {
+      promptManualCopy(shareUrl);
+    }
+  };
+
+  const promptManualCopy = (url: string) => {
+    toast.info(
+      <div>
+        <p>Copy this link to share your game:</p>
+        <div className="p-2 bg-gray-100 rounded mt-2 select-all">
+          {url}
+        </div>
+      </div>
+    );
+  };
+
   const goBackToProjects = () => {
     navigate('/');
   };
@@ -125,13 +153,23 @@ const Editor = () => {
             </Button>
             <h1 className="text-xl font-semibold text-canvas-purple">{projectName}</h1>
           </div>
-          <Button 
-            onClick={handleSaveProject}
-            className="bg-canvas-purple hover:bg-canvas-purple/90"
-          >
-            <Save className="mr-2 h-4 w-4" />
-            Save Project
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleShareGame}
+              variant="outline"
+              className="bg-white hover:bg-gray-50"
+            >
+              <Share2 className="mr-2 h-4 w-4" />
+              Share Game
+            </Button>
+            <Button 
+              onClick={handleSaveProject}
+              className="bg-canvas-purple hover:bg-canvas-purple/90"
+            >
+              <Save className="mr-2 h-4 w-4" />
+              Save Project
+            </Button>
+          </div>
         </div>
       )}
       {!isGameMode && <Header />}
