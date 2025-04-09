@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
@@ -36,9 +37,26 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     }
   }, [canvasRef, setCanvasRef]);
   
+  // Update isFullscreen state when prop changes
+  useEffect(() => {
+    setIsFullscreen(isFullscreenActive);
+  }, [isFullscreenActive]);
+  
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current && parentRef.current) {
+        // If in fullscreen game mode, fill the entire screen
+        if (isFullscreen && isGameMode) {
+          const screenWidth = window.innerWidth;
+          const screenHeight = window.innerHeight;
+          
+          setCanvasDimensions({ 
+            width: screenWidth, 
+            height: screenHeight 
+          });
+          return;
+        }
+        
         const parentWidth = parentRef.current.clientWidth;
         const parentHeight = parentRef.current.clientHeight;
         
@@ -79,8 +97,8 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, []);
-  
+  }, [isGameMode, isFullscreen]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isFullscreen) {
@@ -401,26 +419,52 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
+  // Use different styling for fullscreen mode
+  const canvasContainerStyle = isFullscreen && isGameMode
+    ? {
+        transform: `scale(${zoomLevel})`,
+        transformOrigin: 'center center',
+        transition: 'transform 0.2s ease-out',
+        position: 'absolute' as const,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100%',
+        height: '100%',
+      }
+    : {
+        transform: `scale(${zoomLevel})`,
+        transformOrigin: 'center center',
+        transition: 'transform 0.2s ease-out',
+        position: 'relative' as const,
+        width: 'fit-content',
+        height: 'fit-content',
+      };
+      
+  const canvasStyle = isFullscreen && isGameMode
+    ? {
+        width: '100%',
+        height: '100%',
+        ...backgroundStyle,
+        overflow: 'hidden',
+        borderRadius: 0,
+      }
+    : {
+        width: `${canvasDimensions.width}px`,
+        height: `${canvasDimensions.height}px`,
+        ...backgroundStyle,
+        overflow: 'hidden',
+      };
+  
   return (
-    <div ref={parentRef} className="flex-1 flex flex-col h-full">
-      <div className="flex-1 flex items-center justify-center p-4 canvas-workspace relative">
-        <div className="canvas-container" style={{ 
-          transform: `scale(${zoomLevel})`, 
-          transformOrigin: 'center center', 
-          transition: 'transform 0.2s ease-out',
-          position: 'relative',
-          width: 'fit-content',
-          height: 'fit-content'
-        }}>
+    <div ref={parentRef} className={`flex-1 flex flex-col h-full ${isFullscreen && isGameMode ? 'fullscreen-canvas' : ''}`}>
+      <div className={`flex-1 flex items-center justify-center ${isFullscreen && isGameMode ? 'p-0' : 'p-4'} canvas-workspace relative`}>
+        <div className="canvas-container" style={canvasContainerStyle}>
           <div
             ref={containerRef}
-            className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`}
-            style={{
-              width: `${canvasDimensions.width}px`,
-              height: `${canvasDimensions.height}px`,
-              ...backgroundStyle,
-              overflow: 'hidden'
-            }}
+            className={`relative shadow-lg ${!isFullscreen && 'rounded-lg'} ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`}
+            style={canvasStyle}
             onClick={handleCanvasClick}
             onDragOver={!isGameMode ? handleDragOver : undefined}
             onDragLeave={!isGameMode ? handleDragLeave : undefined}
