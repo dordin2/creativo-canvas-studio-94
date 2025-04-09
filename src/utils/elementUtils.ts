@@ -1,4 +1,4 @@
-import { DesignElement } from "@/types/designTypes";
+import { DesignElement, FileMetadata } from "@/types/designTypes";
 
 /**
  * Creates a proper deep copy of an element for duplication
@@ -18,6 +18,11 @@ export const prepareElementForDuplication = (element: DesignElement): Partial<De
     // Preserve the external source URL if it exists
     if (element.src) {
       duplicate.src = element.src;
+    }
+    
+    // Preserve cache key if it exists
+    if (element.cacheKey) {
+      duplicate.cacheKey = element.cacheKey;
     }
     
     // File objects can't be cloned via JSON, but we need to keep track that a file existed
@@ -41,6 +46,7 @@ export const prepareElementForDuplication = (element: DesignElement): Partial<De
       dataUrl: duplicate.dataUrl ? "exists" : "missing",
       dataUrlLength: duplicate.dataUrl ? duplicate.dataUrl.length : 0,
       src: duplicate.src,
+      cacheKey: duplicate.cacheKey,
       fileMetadata: duplicate.fileMetadata,
       originalSize: duplicate.originalSize
     });
@@ -78,6 +84,10 @@ export const cloneImageElement = (element: DesignElement): Partial<DesignElement
   
   if (element.src) {
     clone.src = element.src;
+  }
+  
+  if (element.cacheKey) {
+    clone.cacheKey = element.cacheKey;
   }
   
   // For original file information, store metadata

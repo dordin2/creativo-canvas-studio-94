@@ -1,4 +1,3 @@
-
 import { CSSProperties } from "react";
 
 export type ElementType =
@@ -69,6 +68,13 @@ export interface InteractionConfig {
   canCombineWith?: string[]; // IDs of items that can be combined with this element
 }
 
+export interface FileMetadata {
+  name: string;
+  type: string;
+  size: number;
+  lastModified: number;
+}
+
 export interface DesignElement {
   id: string;
   type: ElementType;
@@ -85,6 +91,8 @@ export interface DesignElement {
   src?: string;
   dataUrl?: string;
   file?: File;
+  cacheKey?: string;
+  fileMetadata?: FileMetadata;
   originalSize?: {
     width: number;
     height: number;
