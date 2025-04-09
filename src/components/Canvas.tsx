@@ -419,19 +419,23 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
-  // Use different styling for fullscreen mode
+  // Use different styling for fullscreen game mode
   const canvasContainerStyle = isFullscreen && isGameMode
     ? {
-        transform: `scale(${zoomLevel})`,
-        transformOrigin: 'center center',
-        transition: 'transform 0.2s ease-out',
-        position: 'absolute' as const,
+        width: '100vw',
+        height: '100vh',
+        position: 'fixed' as const,
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        width: '100%',
-        height: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        transform: `scale(${zoomLevel})`,
+        transformOrigin: 'center center',
+        transition: 'transform 0.2s ease-out',
+        zIndex: 50,
       }
     : {
         transform: `scale(${zoomLevel})`,
@@ -449,6 +453,8 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
         ...backgroundStyle,
         overflow: 'hidden',
         borderRadius: 0,
+        maxWidth: '100vw',
+        maxHeight: '100vh'
       }
     : {
         width: `${canvasDimensions.width}px`,
@@ -459,7 +465,8 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   
   return (
     <div ref={parentRef} className={`flex-1 flex flex-col h-full ${isFullscreen && isGameMode ? 'fullscreen-canvas' : ''}`}>
-      <div className={`flex-1 flex items-center justify-center ${isFullscreen && isGameMode ? 'p-0' : 'p-4'} canvas-workspace relative`}>
+      <div className={`flex-1 flex items-center justify-center ${isFullscreen && isGameMode ? 'p-0' : 'p-4'} canvas-workspace relative`}
+           style={isFullscreen && isGameMode ? { padding: 0, margin: 0, height: '100vh', width: '100vw' } : undefined}>
         <div className="canvas-container" style={canvasContainerStyle}>
           <div
             ref={containerRef}
