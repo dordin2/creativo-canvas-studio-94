@@ -19,8 +19,8 @@ const InventoryPanel = () => {
   };
   
   return (
-    <div className="fixed top-20 right-4 z-[9999] bg-white rounded-lg shadow-xl w-[320px] h-[70vh] max-h-[90vh] overflow-hidden flex flex-col animate-fade-in">
-      <div className="p-6 bg-canvas-purple text-white flex justify-between items-center">
+    <div className="fixed top-20 right-4 z-[9999] bg-card rounded-lg shadow-xl w-[1280px] h-[70vh] max-h-[90vh] overflow-hidden flex flex-col animate-fade-in border border-border">
+      <div className="p-6 bg-primary text-white flex justify-between items-center">
         <h3 className="font-semibold text-xl">Inventory</h3>
         <button 
           onClick={toggleInventory}
@@ -35,7 +35,7 @@ const InventoryPanel = () => {
         inventoryItems.length === 0 && "flex items-center justify-center h-64"
       )}>
         {inventoryItems.length === 0 ? (
-          <p className="text-gray-500 text-base text-center col-span-2">Your inventory is empty</p>
+          <p className="text-muted-foreground text-base text-center col-span-2">Your inventory is empty</p>
         ) : (
           // Use a combined key from both elementId and canvasId to ensure uniqueness
           inventoryItems.map(item => {
@@ -51,7 +51,7 @@ const InventoryPanel = () => {
           })
         )}
       </div>
-      <div className="p-6 bg-gray-50 border-t text-sm text-gray-500">
+      <div className="p-6 bg-accent border-t border-border text-sm text-muted-foreground">
         <p>Drag and drop items onto combinable elements to use them</p>
       </div>
     </div>

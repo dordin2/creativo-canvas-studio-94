@@ -13,13 +13,13 @@ export const InventoryIcon = () => {
   return (
     <div 
       className={cn(
-        "fixed top-4 right-4 z-[1000] bg-white p-6 rounded-full shadow-lg cursor-pointer hover:bg-gray-100 transition-all animate-fade-in",
-        showInventory && "bg-gray-200",
-        inventoryItems.length > 0 && "after:content-[''] after:absolute after:w-7 after:h-7 after:bg-red-500 after:rounded-full after:-top-2 after:-right-2"
+        "fixed top-4 right-4 z-[1000] bg-card p-6 rounded-full shadow-lg cursor-pointer hover:bg-accent transition-all animate-fade-in",
+        showInventory && "bg-accent",
+        inventoryItems.length > 0 && "after:content-[''] after:absolute after:w-7 after:h-7 after:bg-primary after:rounded-full after:-top-2 after:-right-2"
       )}
       onClick={toggleInventory}
     >
-      <Backpack size={96} className={showInventory ? "text-canvas-purple" : "text-gray-800"} />
+      <Backpack size={192} className={showInventory ? "text-primary" : "text-foreground"} />
     </div>
   );
 };
