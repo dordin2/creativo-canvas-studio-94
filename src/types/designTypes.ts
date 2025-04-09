@@ -83,6 +83,7 @@ export interface InteractionConfig {
   canCombineWith?: string[]; // IDs of items that can be combined with this element
   combinationResult?: CombinationResult;
   lipsyncIntensity?: number; // Controls how strong the pulsing animation is
+  lipsyncSpeed?: number; // Controls the speed of the pulsing animation
 }
 
 export interface FileMetadata {

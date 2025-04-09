@@ -48,6 +48,7 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
     puzzleType: 'puzzle',
     messagePosition: 'top' as MessagePosition,
     lipsyncIntensity: 1.0,
+    lipsyncSpeed: 1.0,
     puzzleConfig: {
       name: 'Puzzle',
       type: 'image' as PuzzleType,
@@ -185,6 +186,16 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
       interaction: {
         ...interactionConfig,
         lipsyncIntensity: intensity
+      }
+    });
+  };
+
+  const handleLipsyncSpeedChange = (values: number[]) => {
+    const speed = values[0];
+    updateElement(element.id, {
+      interaction: {
+        ...interactionConfig,
+        lipsyncSpeed: speed
       }
     });
   };
@@ -808,22 +819,41 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
           </div>
           
           {interactionConfig.type === 'lipsync' && (
-            <div className="space-y-2">
-              <Label className="flex justify-between">
-                <span>Animation Intensity</span>
-                <span className="text-sm text-gray-500">{interactionConfig.lipsyncIntensity?.toFixed(1) || '1.0'}</span>
-              </Label>
-              <Slider
-                defaultValue={[interactionConfig.lipsyncIntensity || 1.0]}
-                max={3}
-                min={0.2}
-                step={0.1}
-                onValueChange={handleLipsyncIntensityChange}
-              />
-              <p className="text-xs text-gray-500 mt-1">
-                Controls how strong the pulsing animation is when audio plays.
-              </p>
-            </div>
+            <>
+              <div className="space-y-2">
+                <Label className="flex justify-between">
+                  <span>Animation Intensity</span>
+                  <span className="text-sm text-gray-500">{interactionConfig.lipsyncIntensity?.toFixed(1) || '1.0'}</span>
+                </Label>
+                <Slider
+                  defaultValue={[interactionConfig.lipsyncIntensity || 1.0]}
+                  max={3}
+                  min={0.2}
+                  step={0.1}
+                  onValueChange={handleLipsyncIntensityChange}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Controls how strong the pulsing animation is when audio plays.
+                </p>
+              </div>
+              
+              <div className="space-y-2">
+                <Label className="flex justify-between">
+                  <span>Animation Speed</span>
+                  <span className="text-sm text-gray-500">{interactionConfig.lipsyncSpeed?.toFixed(1) || '1.0'}</span>
+                </Label>
+                <Slider
+                  defaultValue={[interactionConfig.lipsyncSpeed || 1.0]}
+                  max={2}
+                  min={0.1}
+                  step={0.1}
+                  onValueChange={handleLipsyncSpeedChange}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Controls how fast the pulsing animation cycles (lower values = slower animation).
+                </p>
+              </div>
+            </>
           )}
         </div>
       )}

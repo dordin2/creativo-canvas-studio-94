@@ -5,6 +5,7 @@ interface AudioVisualizerProps {
   audioElement: HTMLAudioElement | null;
   isPlaying: boolean;
   intensity?: number;
+  speed?: number; // New prop for controlling animation speed
   children: React.ReactNode;
 }
 
@@ -12,6 +13,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   audioElement, 
   isPlaying, 
   intensity = 1.0,
+  speed = 1.0, // Default speed value
   children 
 }) => {
   const [scale, setScale] = useState(1);
@@ -20,6 +22,7 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
   const analyserRef = useRef<AnalyserNode | null>(null);
   const sourceRef = useRef<MediaElementAudioSourceNode | null>(null);
   const dataArrayRef = useRef<Uint8Array | null>(null);
+  const lastUpdateTimeRef = useRef<number>(0);
 
   // Set up the audio analyzer when the audio element changes
   useEffect(() => {
@@ -72,25 +75,33 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
       return;
     }
     
-    const analyzeAudio = () => {
+    const analyzeAudio = (timestamp: number) => {
       if (!analyserRef.current || !dataArrayRef.current) return;
       
-      // Get frequency data
-      analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+      // Calculate time difference based on speed
+      // Lower speed value means slower updates
+      const updateInterval = 50 / speed; // Base interval adjusted by speed
+      const elapsed = timestamp - lastUpdateTimeRef.current;
       
-      // Calculate average amplitude
-      const average = dataArrayRef.current.reduce((sum, value) => sum + value, 0) / 
-                      dataArrayRef.current.length;
-      
-      // Normalize to 0-1 range
-      const normalizedValue = average / 255;
-      
-      // Apply intensity and calculate scale factor (add a minimum scale to always show some animation)
-      const minScale = 1;
-      const maxScale = 1 + (0.2 * intensity);
-      const newScale = minScale + (normalizedValue * (maxScale - minScale));
-      
-      setScale(newScale);
+      if (elapsed > updateInterval || lastUpdateTimeRef.current === 0) {
+        // Get frequency data
+        analyserRef.current.getByteFrequencyData(dataArrayRef.current);
+        
+        // Calculate average amplitude
+        const average = dataArrayRef.current.reduce((sum, value) => sum + value, 0) / 
+                        dataArrayRef.current.length;
+        
+        // Normalize to 0-1 range
+        const normalizedValue = average / 255;
+        
+        // Apply intensity and calculate scale factor (add a minimum scale to always show some animation)
+        const minScale = 1;
+        const maxScale = 1 + (0.2 * intensity);
+        const newScale = minScale + (normalizedValue * (maxScale - minScale));
+        
+        setScale(newScale);
+        lastUpdateTimeRef.current = timestamp;
+      }
       
       // Continue animation loop
       animationRef.current = requestAnimationFrame(analyzeAudio);
@@ -105,13 +116,13 @@ const AudioVisualizer: React.FC<AudioVisualizerProps> = ({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [isPlaying, intensity]);
+  }, [isPlaying, intensity, speed]);
 
   // Apply scale transformation to children
   return (
     <div style={{ 
       transform: `scale(${scale})`,
-      transition: 'transform 0.05s ease-out', 
+      transition: `transform ${0.05 / speed}s ease-out`, // Adjust transition speed
       transformOrigin: 'center'
     }}>
       {children}
