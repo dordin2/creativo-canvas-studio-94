@@ -120,6 +120,9 @@
 .fullscreen-canvas .canvas-container {
   width: 100vw !important;
   height: 100vh !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
 }
 
 .fullscreen-canvas .canvas-workspace {
@@ -127,4 +130,9 @@
   margin: 0 !important;
   width: 100vw !important;
   height: 100vh !important;
+}
+
+/* Ensure the canvas is centered in fullscreen mode */
+.fullscreen-canvas .canvas-container > div {
+  margin: 0 auto !important;
 }

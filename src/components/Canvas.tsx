@@ -30,6 +30,9 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
   const [isFullscreen, setIsFullscreen] = useState(isFullscreenActive);
+  
+  // Set fullscreen game mode zoom to 1.6
+  const fullscreenGameZoom = 1.6;
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -40,7 +43,15 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   // Update isFullscreen state when prop changes
   useEffect(() => {
     setIsFullscreen(isFullscreenActive);
-  }, [isFullscreenActive]);
+    
+    // Apply the 1.6x zoom level when entering fullscreen game mode
+    if (isFullscreenActive && isGameMode) {
+      setZoomLevel(fullscreenGameZoom);
+    } else if (!isFullscreenActive && isGameMode) {
+      // Reset to normal zoom when exiting fullscreen in game mode
+      setZoomLevel(1);
+    }
+  }, [isFullscreenActive, isGameMode]);
   
   useEffect(() => {
     const handleResize = () => {
@@ -112,6 +123,10 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
         setIsFullscreen(false);
+        // Reset zoom level when exiting fullscreen in game mode
+        if (isGameMode) {
+          setZoomLevel(1);
+        }
       }
     };
     
@@ -121,13 +136,19 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
       document.removeEventListener('keydown', handleKeyDown);
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
-  }, [isFullscreen]);
+  }, [isFullscreen, isGameMode]);
 
   const toggleFullscreen = () => {
     if (!isFullscreen) {
       if (parentRef.current?.requestFullscreen) {
         parentRef.current.requestFullscreen()
-          .then(() => setIsFullscreen(true))
+          .then(() => {
+            setIsFullscreen(true);
+            // Apply 1.6x zoom when entering fullscreen in game mode
+            if (isGameMode) {
+              setZoomLevel(fullscreenGameZoom);
+            }
+          })
           .catch(err => console.error("Error attempting to enable fullscreen:", err));
       }
     } else {
@@ -138,7 +159,13 @@ const Canvas = ({ isFullscreenActive = false }: CanvasProps) => {
   const exitFullscreen = () => {
     if (document.fullscreenElement) {
       document.exitFullscreen()
-        .then(() => setIsFullscreen(false))
+        .then(() => {
+          setIsFullscreen(false);
+          // Reset zoom level when exiting fullscreen in game mode
+          if (isGameMode) {
+            setZoomLevel(1);
+          }
+        })
         .catch(err => console.error("Error attempting to exit fullscreen:", err));
     }
   };
