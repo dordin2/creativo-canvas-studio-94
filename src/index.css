@@ -96,7 +96,6 @@
     font-family: 'Inter', sans-serif;
   }
 
-  /* Custom inventory drag cursor styles */
   body.inventory-dragging {
     cursor: none !important;
   }
@@ -121,7 +120,6 @@
     background-color: white;
   }
   
-  /* Custom drag preview for sequence puzzle */
   #sequence-item-preview {
     pointer-events: none;
     position: fixed;
@@ -138,19 +136,15 @@
     background-color: white;
   }
 
-  /* Canvas element styles */
   .canvas-element {
     @apply cursor-move transition-transform duration-150 relative shadow-element hover:shadow-glow;
     will-change: transform, left, top;
     touch-action: none;
-    /* Allow elements to extend beyond their parent container */
     pointer-events: auto !important;
-    /* Disable transition during drag for better performance */
     transition: transform 0.15s ease-out, box-shadow 0.2s ease-in-out;
   }
 
   .canvas-element.dragging {
-    /* Apply hardware acceleration for smoother dragging */
     transform: translate3d(0, 0, 0);
     @apply shadow-lg;
   }
@@ -159,13 +153,11 @@
     @apply outline outline-2 outline-canvas-purple/40;
   }
   
-  /* Drop target styling */
   .canvas-element.drop-target {
     @apply outline-2 outline outline-canvas-purple ring-2 ring-canvas-purple;
     box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
   }
   
-  /* Sequence puzzle styles */
   .sequence-item {
     user-select: none;
     transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
@@ -183,23 +175,18 @@
     z-index: 10;
   }
   
-  /* Canvas container to manage overflow behavior */
   .canvas-container {
     position: relative;
-    /* Allow controls to remain visible outside the canvas */
     overflow: visible !important;
     pointer-events: auto;
   }
   
-  /* Main canvas has overflow:hidden to mask content */
   .canvas-container > div:first-child {
     overflow: hidden !important;
-    /* Controls should still be interactive even outside the canvas */
     pointer-events: auto;
     @apply rounded-lg shadow-canvas bg-white;
   }
 
-  /* Game mode canvas container styles */
   .game-mode-workspace {
     padding: 0 !important;
     margin: 0 !important;
@@ -209,7 +196,7 @@
     align-items: center;
     justify-content: center;
     overflow: hidden !important;
-    background-color: #000 !important;
+    background-color: transparent !important;
   }
 
   .fixed-canvas-container {
@@ -226,31 +213,23 @@
 
   .game-mode-canvas-container {
     position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-    transform-origin: center !important;
+    transform-origin: center center !important;
   }
 
   .game-mode-canvas-container .canvas-container > div:first-child {
     box-shadow: none !important;
   }
 
-  /* Ensure the canvas scales from center in game mode */
   .game-mode-canvas-container .canvas-container {
     position: absolute !important;
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
+    transform-origin: center center !important;
     max-width: 100% !important;
     max-height: 100% !important;
   }
 
-  /* Ensure resize and rotation handles are always visible */
   .resize-handle {
     @apply absolute w-3 h-3 bg-canvas-purple border-2 border-white rounded-full shadow-md z-[1000] hover:scale-110 transition-transform;
     pointer-events: auto !important;
-    /* Ensure handles are visible outside the canvas */
     position: absolute;
     visibility: visible !important;
     display: block !important;
@@ -259,7 +238,6 @@
   .rotation-handle {
     @apply absolute w-5 h-5 rounded-full bg-canvas-purple border-2 border-white flex items-center justify-center cursor-move shadow-md z-[1000] hover:scale-110 transition-transform;
     pointer-events: auto !important;
-    /* Ensure rotation handle is visible outside the canvas */
     position: absolute;
     visibility: visible !important;
     display: block !important;
@@ -277,7 +255,6 @@
     cursor: grabbing !important;
   }
   
-  /* Element controls wrapper that sits outside the canvas overflow */
   .element-controls-wrapper {
     position: absolute;
     top: 0;
@@ -289,7 +266,6 @@
     overflow: visible !important;
   }
 
-  /* Frame for the selection border that extends beyond canvas */
   .element-frame {
     position: absolute;
     border: 2px solid #8B5CF6;
@@ -300,7 +276,6 @@
   }
 }
 
-/* Canvas workspace styling */
 .canvas-workspace {
   background-size: 20px 20px;
   @apply bg-gray-50;
@@ -309,7 +284,6 @@
     linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
 }
 
-/* Cursor styles for resize handlers */
 .cursor-nw-resize { cursor: nw-resize; }
 .cursor-n-resize { cursor: n-resize; }
 .cursor-ne-resize { cursor: ne-resize; }
@@ -319,7 +293,6 @@
 .cursor-sw-resize { cursor: sw-resize; }
 .cursor-w-resize { cursor: w-resize; }
 
-/* Fix for side panels */
 .sidebar-panel {
   @apply h-full bg-white overflow-y-auto border-r border-gray-200 shadow-sm;
   min-width: 16rem;
@@ -334,7 +307,6 @@
   flex: 0 0 auto;
 }
 
-/* Zoom controls */
 .zoom-controls {
   @apply fixed bottom-4 right-4 flex items-center gap-2 bg-white p-2 rounded-lg shadow-md z-50 border border-gray-100;
 }
@@ -347,7 +319,6 @@
   @apply px-2 text-sm font-medium text-sidebar-foreground;
 }
 
-/* Fullscreen button */
 .fullscreen-controls {
   @apply fixed bottom-4 right-4 z-50;
 }
@@ -360,16 +331,14 @@
   @apply transform scale-95;
 }
 
-/* Fullscreen canvas styles */
 :fullscreen .game-mode-workspace {
-  background-color: #000 !important;
+  background-color: transparent !important;
 }
 
 :fullscreen .fullscreen-button {
   @apply bg-black/30 text-white border-gray-700 hover:bg-black/50;
 }
 
-/* Sequence Puzzle Drag and Drop styles */
 .dragging {
   opacity: 0.6;
   transform: scale(1.05);
@@ -382,40 +351,33 @@
   transform: scale(1.03);
 }
 
-/* Custom drag ghost image */
 [draggable] {
   user-select: none;
   -webkit-user-drag: element;
 }
 
-/* Hide default drag image in Firefox */
 @-moz-document url-prefix() {
   [draggable] {
     -moz-user-select: none;
   }
 }
 
-/* Enhanced card styling */
 .enhanced-card {
   @apply rounded-lg border border-gray-100 bg-white shadow-sm transition-all duration-300 hover:shadow-md;
 }
 
-/* Button glow effect */
 .button-glow:hover {
   @apply shadow-glow transition-shadow duration-300;
 }
 
-/* Input enhancements */
 .enhanced-input {
   @apply focus:ring-2 focus:ring-canvas-purple focus:ring-opacity-40 transition-shadow duration-200;
 }
 
-/* Tooltip enhanced styling */
 .enhanced-tooltip {
   @apply bg-white border border-gray-200 shadow-lg rounded-md text-sm;
 }
 
-/* Interface polish for sidebar items */
 .sidebar-item {
   @apply rounded-md p-2 transition-colors duration-200 hover:bg-gray-100;
 }
@@ -424,17 +386,14 @@
   @apply bg-primary/10 text-primary font-medium;
 }
 
-/* Panel headers standardization */
 .panel-header {
   @apply text-lg font-semibold border-b border-gray-100 p-4;
 }
 
-/* Add smooth transitions for interactive elements */
 button, a, input, select, textarea {
   @apply transition-all duration-200;
 }
 
-/* Improved scrollbars */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -448,12 +407,10 @@ button, a, input, select, textarea {
   @apply bg-gray-300 rounded-full hover:bg-gray-400;
 }
 
-/* Canvas element selection for better visibility */
 .element-selected {
   @apply ring-2 ring-canvas-purple ring-opacity-60;
 }
 
-/* Properties panel section styling */
 .properties-section {
   @apply border-b border-gray-100 py-3 px-4;
 }
@@ -462,17 +419,14 @@ button, a, input, select, textarea {
   @apply text-sm font-medium text-gray-700 mb-2;
 }
 
-/* Control button hover states */
 .control-button {
   @apply rounded-md p-1 hover:bg-gray-100 transition-colors;
 }
 
-/* Layer item hover effect */
 .layer-item {
   @apply p-2 hover:bg-gray-50 border border-transparent hover:border-gray-200 rounded-md transition-colors;
 }
 
-/* Canvas tab styling */
 .canvas-tab {
   @apply border-b-2 border-transparent hover:border-gray-300 px-4 py-2 font-medium text-gray-600 hover:text-gray-800 transition-colors;
 }
@@ -481,7 +435,6 @@ button, a, input, select, textarea {
   @apply border-canvas-purple text-canvas-purple;
 }
 
-/* Focus styles for accessibility */
 *:focus-visible {
   @apply outline-canvas-purple/50 outline-offset-2;
 }
