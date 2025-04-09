@@ -53,10 +53,10 @@ const config = {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        "canvas-purple": "#4E7BFF", // Changed from purple to blue
-        "canvas-purple-light": "#6E93FF", // Lighter blue
-        "canvas-purple-dark": "#3A65E0", // Darker blue
-        "canvas-indigo": "#3A65E0", // Changed to match the theme
+        "canvas-purple": "#8B5CF6",
+        "canvas-purple-light": "#A78BFF",
+        "canvas-purple-dark": "#7048D5",
+        "canvas-indigo": "#6366F1",
         "design-blue": "#1E40AF",
         "design-blue-light": "#60A5FA",
         // Add sidebar colors
@@ -104,9 +104,9 @@ const config = {
         inter: ["Inter", "sans-serif"],
       },
       boxShadow: {
-        "element": "0 4px 12px rgba(0, 0, 0, 0.15)",
-        "canvas": "0 0 0 1px rgba(255, 255, 255, 0.1), 0 2px 8px rgba(0, 0, 0, 0.2)",
-        "glow": "0 0 10px rgba(78, 123, 255, 0.4)",
+        "element": "0 4px 12px rgba(0, 0, 0, 0.08)",
+        "canvas": "0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.08)",
+        "glow": "0 0 10px rgba(139, 92, 246, 0.3)",
       },
     },
   },
