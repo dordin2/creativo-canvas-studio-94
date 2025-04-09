@@ -9,9 +9,10 @@ import SliderPuzzleElement from "./element/SliderPuzzleElement";
 
 interface CanvasProps {
   isFullscreen?: boolean;
+  isMobileView?: boolean;
 }
 
-const Canvas = ({ isFullscreen = false }: CanvasProps) => {
+const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => {
   const { 
     canvasRef, 
     setCanvasRef, 
@@ -48,12 +49,19 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
         const canvasWidth = FIXED_CANVAS_WIDTH;
         const canvasHeight = FIXED_CANVAS_HEIGHT;
         
-        const scaleX = (parentWidth - 40) / canvasWidth;
-        const scaleY = (parentHeight - 40) / canvasHeight;
-        const scale = Math.min(scaleX, scaleY, 1);
-        
-        if (!isGameMode) {
+        if (isMobileView && isGameMode) {
+          const scaleX = parentWidth / canvasWidth;
+          const scaleY = parentHeight / canvasHeight;
+          const scale = Math.min(scaleX, scaleY);
           setZoomLevel(scale);
+        } else {
+          const scaleX = (parentWidth - 40) / canvasWidth;
+          const scaleY = (parentHeight - 40) / canvasHeight;
+          const scale = Math.min(scaleX, scaleY, 1);
+          
+          if (!isGameMode) {
+            setZoomLevel(scale);
+          }
         }
         
         setCanvasDimensions({ width: canvasWidth, height: canvasHeight });
@@ -78,7 +86,7 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, [isGameMode]);
+  }, [isGameMode, isMobileView]);
   
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -381,18 +389,24 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
   } : { backgroundColor: 'white' };
   
   const calculateFullscreenScale = () => {
-    if (!isFullscreen || !isGameMode) return zoomLevel;
+    if (!isFullscreen && !isGameMode) return zoomLevel;
     
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
     
+    if (isMobileView) {
+      const scaleX = viewportWidth / FIXED_CANVAS_WIDTH;
+      const scaleY = viewportHeight / FIXED_CANVAS_HEIGHT;
+      return Math.min(scaleX, scaleY);
+    }
+    
     const scaleX = viewportWidth / FIXED_CANVAS_WIDTH;
     const scaleY = viewportHeight / FIXED_CANVAS_HEIGHT;
     
-    return Math.max(scaleX, scaleY);
+    return Math.min(scaleX, scaleY);
   };
   
-  const displayZoomLevel = isFullscreen && isGameMode ? calculateFullscreenScale() : zoomLevel;
+  const displayZoomLevel = (isFullscreen || isMobileView) && isGameMode ? calculateFullscreenScale() : zoomLevel;
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full">
@@ -441,7 +455,7 @@ const Canvas = ({ isFullscreen = false }: CanvasProps) => {
           </div>
         )}
         
-        {isGameMode && (
+        {isGameMode && !isMobileView && (
           <div className="fullscreen-controls">
             <button 
               onClick={toggleFullscreen} 

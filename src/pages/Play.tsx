@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Maximize, Minimize } from "lucide-react";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { DesignProvider } from "@/context/DesignContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -18,6 +19,7 @@ const Play = () => {
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (!projectId) {
@@ -125,21 +127,21 @@ const Play = () => {
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
           <div className="fixed-canvas-container">
-            <Canvas isFullscreen={true} />
+            <Canvas isFullscreen={true} isMobileView={isMobile} />
           </div>
         </div>
         
         <InventoryPanel />
         <InventoryIcon />
         
-        <div className="absolute bottom-4 right-4 z-[100]">
+        <div className={`absolute ${isMobile ? 'bottom-2 right-2' : 'bottom-4 right-4'} z-[100]`}>
           <Button 
             variant="secondary" 
-            className="shadow-md bg-white hover:bg-gray-100"
+            className={`shadow-md bg-white hover:bg-gray-100 ${isMobile ? 'px-2 py-1 text-xs' : ''}`}
             onClick={toggleFullscreen}
           >
-            {isFullscreen ? <Minimize className="mr-1" /> : <Maximize className="mr-1" />}
-            {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
+            {isFullscreen ? <Minimize className={isMobile ? "h-4 w-4" : "mr-1"} /> : <Maximize className={isMobile ? "h-4 w-4" : "mr-1"} />}
+            {!isMobile && (isFullscreen ? 'Exit Fullscreen' : 'Fullscreen')}
           </Button>
         </div>
       </div>
