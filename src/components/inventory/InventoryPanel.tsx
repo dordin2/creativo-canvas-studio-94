@@ -37,13 +37,14 @@ const InventoryPanel = () => {
         {inventoryItems.length === 0 ? (
           <p className="text-gray-500 text-sm text-center col-span-3">Your inventory is empty</p>
         ) : (
+          // Use a combined key from both elementId and canvasId to ensure uniqueness
           inventoryItems.map(item => {
             const element = getElement(item.elementId, item.canvasId);
             if (!element) return null;
             
             return (
               <InventoryItem 
-                key={item.elementId} 
+                key={`${item.elementId}-${item.canvasId}`} 
                 element={element} 
               />
             );

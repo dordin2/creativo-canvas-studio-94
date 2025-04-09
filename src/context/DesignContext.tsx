@@ -79,6 +79,15 @@ export const DesignProvider = ({ children }: { children: ReactNode }) => {
 
     const element = currentCanvas.elements.find(el => el.id === elementId);
     if (!element) return;
+    
+    const itemExists = inventoryItems.some(
+      item => item.elementId === elementId && item.canvasId === currentCanvas.id
+    );
+    
+    if (itemExists) {
+      toast.info("This item is already in your inventory");
+      return;
+    }
 
     setInventoryItems(prev => [
       ...prev, 
