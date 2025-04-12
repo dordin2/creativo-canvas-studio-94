@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,7 +11,7 @@ import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Tables } from "@/integrations/supabase/types";
+import { Database } from "@/types/database";
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);

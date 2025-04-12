@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, Save, Share2, Globe, Lock } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
+import { Database } from "@/types/database";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
