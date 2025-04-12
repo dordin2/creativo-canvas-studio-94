@@ -55,15 +55,12 @@ const Editor = () => {
       if (data && data.canvas_data) {
         console.log("Loaded project data:", data.canvas_data);
         
-        // Properly assert the type with a type guard
         const jsonData = data.canvas_data as Json;
         
-        // Check if the structure matches what we expect
         if (typeof jsonData === 'object' && jsonData !== null && 
             'canvases' in jsonData && 'activeCanvasIndex' in jsonData &&
             Array.isArray(jsonData.canvases)) {
           
-          // Now we can safely cast to the expected type
           const canvasData = {
             canvases: jsonData.canvases as unknown as CanvasType[],
             activeCanvasIndex: jsonData.activeCanvasIndex as number
@@ -141,7 +138,7 @@ const Editor = () => {
   return (
     <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
       {!isGameMode && (
-        <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between">
+        <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
           <div className="flex items-center">
             <Button 
               variant="ghost" 
@@ -184,27 +181,31 @@ const Editor = () => {
           </div>
         </div>
       )}
-      {!isGameMode && <Header />}
-      <div className={`flex flex-1 overflow-hidden ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
+      {!isGameMode && <div className="z-30 relative"><Header /></div>}
+      <div className={`flex flex-1 overflow-hidden relative ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
         {!isGameMode && (
-          <div className="flex-shrink-0 w-64">
+          <div className="flex-shrink-0 w-64 z-20 relative">
             <Sidebar />
           </div>
         )}
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col relative z-1">
           {!isGameMode ? (
             <>
-              <CanvasTabs />
-              <Canvas />
+              <div className="z-10 relative">
+                <CanvasTabs />
+              </div>
+              <div className="flex-1 relative z-1">
+                <Canvas />
+              </div>
             </>
           ) : (
-            <div className="fixed-canvas-container">
+            <div className="fixed-canvas-container z-1">
               <Canvas isFullscreen={true} />
             </div>
           )}
         </div>
         {!isGameMode && (
-          <div className="flex-shrink-0 w-80">
+          <div className="flex-shrink-0 w-80 z-20 relative">
             <Properties />
           </div>
         )}

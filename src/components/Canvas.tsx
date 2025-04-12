@@ -409,7 +409,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   const displayZoomLevel = (isFullscreen || isMobileView) && isGameMode ? calculateFullscreenScale() : zoomLevel;
   
   return (
-    <div ref={parentRef} className="flex-1 flex flex-col h-full">
+    <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
       <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
           transform: `scale(${displayZoomLevel})`, 
@@ -420,7 +420,8 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           left: '50%',
           translate: '-50% -50%',
           width: 'fit-content',
-          height: 'fit-content'
+          height: 'fit-content',
+          zIndex: 1
         }}>
           <div
             ref={containerRef}

@@ -192,6 +192,7 @@
     position: relative;
     overflow: visible !important;
     pointer-events: auto;
+    z-index: 1; /* Ensure canvas container has explicit z-index */
   }
   
   .canvas-container > div:first-child {
@@ -210,6 +211,8 @@
     justify-content: center;
     overflow: hidden !important;
     background-color: transparent !important;
+    position: relative;
+    z-index: 1; /* Ensure workspace has explicit z-index */
   }
 
   .fixed-canvas-container {
@@ -222,22 +225,13 @@
     align-items: center;
     justify-content: center;
     overflow: hidden;
+    z-index: 1; /* Ensure fixed canvas container has explicit z-index */
   }
 
   .game-mode-canvas-container {
     position: absolute !important;
     transform-origin: center center !important;
-  }
-
-  .game-mode-canvas-container .canvas-container > div:first-child {
-    box-shadow: none !important;
-  }
-
-  .game-mode-canvas-container .canvas-container {
-    position: absolute !important;
-    transform-origin: center center !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
+    z-index: 1; /* Ensure game mode canvas container has explicit z-index */
   }
 
   .resize-handle {
@@ -295,6 +289,8 @@
   background-image: 
     linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+  position: relative;
+  z-index: 1; /* Ensure workspace has explicit z-index */
 }
 
 .cursor-nw-resize { cursor: nw-resize; }
@@ -311,6 +307,8 @@
   min-width: 16rem;
   width: 16rem;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 10; /* Higher z-index for sidebar */
 }
 
 .properties-panel {
@@ -318,10 +316,13 @@
   min-width: 20rem;
   width: 20rem;
   flex: 0 0 auto;
+  position: relative;
+  z-index: 10; /* Higher z-index for properties panel */
 }
 
 .zoom-controls {
-  @apply fixed bottom-4 right-4 flex items-center gap-2 bg-white p-2 rounded-lg shadow-md z-50 border border-gray-100;
+  @apply fixed bottom-4 right-4 flex items-center gap-2 bg-white p-2 rounded-lg shadow-md border border-gray-100;
+  z-index: 50 !important; /* Very high z-index for controls */
 }
 
 .zoom-controls button {
@@ -333,7 +334,8 @@
 }
 
 .fullscreen-controls {
-  @apply fixed bottom-4 right-4 z-50;
+  @apply fixed bottom-4 right-4;
+  z-index: 50 !important; /* Very high z-index for controls */
 }
 
 .fullscreen-button {
@@ -437,4 +439,28 @@
     padding-top: env(safe-area-inset-top);
     padding-bottom: env(safe-area-inset-bottom);
   }
+}
+
+/* Update the header styles to ensure it stays on top */
+header {
+  position: relative;
+  z-index: 20 !important; /* Higher z-index for header */
+}
+
+/* Ensure all UI elements stay above the canvas */
+.bg-white.border-b.border-gray-200.py-2.px-4.flex.items-center.justify-between {
+  position: relative;
+  z-index: 20 !important; /* Higher z-index for top navbar */
+}
+
+/* Make sure the editor wrapper maintains proper stacking context */
+.flex.flex-col.h-screen.overflow-hidden {
+  position: relative;
+}
+
+/* Ensure the canvas container doesn't overflow its bounds */
+.flex-1.overflow-hidden.flex.flex-col {
+  position: relative;
+  z-index: 1;
+  isolation: isolate; /* Create stacking context */
 }
