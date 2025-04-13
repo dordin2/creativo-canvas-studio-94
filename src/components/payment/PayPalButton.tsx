@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -101,11 +101,10 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
     <div className="w-full">
       <PayPalScriptProvider
         options={{
-          clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R", // PayPal Sandbox Client ID
+          clientId: "Aa4q8XzMQRJ_8JcAzYmvZeHlq5WBHW-1ZPq7S4i59hJOGwIjPSwbqQUfg7RWGU3_RpLVc3Rq4YNVYSLu", // PayPal Sandbox Client ID
           currency: "USD",
           intent: "capture",
           components: "buttons",
-          "data-client-token": "sandbox_abc123", // For sandbox testing
         }}
       >
         {loading ? (
@@ -124,13 +123,6 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
           />
         )}
       </PayPalScriptProvider>
-      
-      {/* Sandbox testing info */}
-      <div className="mt-3 text-xs text-gray-500 border-t pt-2">
-        <p className="font-medium mb-1">PayPal Sandbox Testing:</p>
-        <p>Email: sb-47hxd29003916@personal.example.com</p>
-        <p>Password: HL9^aP$2</p>
-      </div>
     </div>
   );
 };

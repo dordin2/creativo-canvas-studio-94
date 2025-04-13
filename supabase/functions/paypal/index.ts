@@ -20,9 +20,7 @@ const supabaseClient = (req: Request) => {
 };
 
 // PayPal API configuration
-const PAYPAL_BASE_URL = Deno.env.get('PAYPAL_MODE') === 'production'
-  ? 'https://api-m.paypal.com'
-  : 'https://api-m.sandbox.paypal.com';
+const PAYPAL_BASE_URL = 'https://api-m.sandbox.paypal.com';
 
 // Generate PayPal access token
 async function getPayPalAccessToken(): Promise<string> {
