@@ -5,15 +5,16 @@ import { useNavigate } from "react-router-dom";
 
 interface PaymentButtonProps {
   projectId: string | null;
+  currency?: string;
 }
 
-export function PaymentButton({ projectId }: PaymentButtonProps) {
+export function PaymentButton({ projectId, currency = "USD" }: PaymentButtonProps) {
   const navigate = useNavigate();
 
   if (!projectId) return null;
 
   const handleClick = () => {
-    navigate(`/payment/${projectId}`);
+    navigate(`/payment/${projectId}?currency=${currency}`);
   };
 
   return (

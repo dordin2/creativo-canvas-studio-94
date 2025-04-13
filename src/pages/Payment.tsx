@@ -1,22 +1,44 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+import { useState, useEffect } from "react";
+import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PayPalButton } from "@/components/PayPalButton";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
-import { useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, CreditCard } from "lucide-react";
+import { ChevronLeft, CreditCard, Globe } from "lucide-react";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const PAYPAL_MODE = "production" as const;
 
+// Available currencies
+const CURRENCIES = [
+  { value: "USD", label: "US Dollar ($)", symbol: "$" },
+  { value: "EUR", label: "Euro (€)", symbol: "€" },
+  { value: "ILS", label: "Israeli Shekel (₪)", symbol: "₪" },
+  { value: "GBP", label: "British Pound (£)", symbol: "£" },
+];
+
 export default function Payment() {
   const { projectId } = useParams<{ projectId: string }>();
+  const [searchParams] = useSearchParams();
+  const initialCurrency = searchParams.get("currency") || "USD";
+  
   const [amount, setAmount] = useState(5); // Default payment amount
+  const [currency, setCurrency] = useState(initialCurrency);
   const [isProcessing, setIsProcessing] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // Get the selected currency info
+  const selectedCurrency = CURRENCIES.find(c => c.value === currency) || CURRENCIES[0];
 
   const handlePaymentSuccess = async (details: any) => {
     try {
@@ -25,7 +47,7 @@ export default function Payment() {
       // Store payment details in the database
       const { error } = await supabase.from("payments").insert({
         amount: amount,
-        currency: "USD",
+        currency: currency,
         status: "completed",
         payment_id: details.id,
         payment_method: "paypal",
@@ -77,6 +99,29 @@ export default function Payment() {
           
           <div className="mb-6">
             <div className="text-center mb-4">
+              <div className="flex items-center justify-center mb-4">
+                <Globe className="h-5 w-5 mr-2 text-gray-600" />
+                <p className="text-lg font-semibold">Select Currency</p>
+              </div>
+              
+              <Select
+                value={currency}
+                onValueChange={(value) => setCurrency(value)}
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select currency" />
+                </SelectTrigger>
+                <SelectContent>
+                  {CURRENCIES.map((currencyOption) => (
+                    <SelectItem key={currencyOption.value} value={currencyOption.value}>
+                      {currencyOption.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="text-center mb-4">
               <p className="text-lg font-semibold mb-2">Select Amount</p>
               <div className="flex flex-wrap justify-center gap-2">
                 {[5, 10, 20, 50].map((value) => (
@@ -88,7 +133,7 @@ export default function Payment() {
                     }`}
                     onClick={() => setAmount(value)}
                   >
-                    ${value}
+                    {selectedCurrency.symbol}{value}
                   </Badge>
                 ))}
               </div>
@@ -102,6 +147,7 @@ export default function Payment() {
               
               <PayPalButton
                 amount={amount}
+                currency={currency}
                 onSuccess={handlePaymentSuccess}
                 onError={handlePaymentError}
                 disabled={isProcessing}
