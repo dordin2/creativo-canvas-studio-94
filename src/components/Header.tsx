@@ -7,7 +7,6 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import GameModeToggle from "./GameModeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LayersList from "./LayersList";
-import { UserStatus } from "./UserStatus";
 import { useProject } from "@/context/ProjectContext";
 
 const Header = () => {
@@ -79,7 +78,6 @@ const Header = () => {
       </div>
       
       <div className="flex items-center gap-4">
-        <UserStatus />
         <GameModeToggle />
         <div className="h-6 w-px bg-gray-200"></div>
         <div className="flex items-center gap-2">

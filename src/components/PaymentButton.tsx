@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Heart, UserCheck, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -60,15 +61,23 @@ export function PaymentButton({ projectId, currency = "USD" }: PaymentButtonProp
       {user ? (
         <>
           {isPro ? (
-            <UserCheck className="mr-2 h-4 w-4 text-green-500" />
+            <>
+              <UserCheck className="mr-2 h-4 w-4 text-green-500" />
+              Pro
+            </>
           ) : (
-            <User className="mr-2 h-4 w-4 text-gray-500" />
+            <>
+              <User className="mr-2 h-4 w-4 text-gray-500" />
+              Regular
+            </>
           )}
         </>
       ) : (
-        <Heart className="mr-2 h-4 w-4 text-red-500" />
+        <>
+          <Heart className="mr-2 h-4 w-4 text-red-500" />
+          Support Project
+        </>
       )}
-      {user ? (isPro ? "Pro" : "") : "Support Project"}
     </Button>
   );
 }
