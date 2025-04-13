@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PayPalButtonProps {
   amount: number;
@@ -11,7 +12,6 @@ interface PayPalButtonProps {
   currency?: string;
   disabled?: boolean;
   mode?: "sandbox" | "production";
-  clientId?: string;
 }
 
 export function PayPalButton({
@@ -20,20 +20,33 @@ export function PayPalButton({
   onError,
   currency = "USD",
   disabled = false,
-  mode = "production",
-  clientId
+  mode = "production"
 }: PayPalButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [paypalClientId, setPaypalClientId] = useState<string>("");
 
   useEffect(() => {
-    if (clientId) {
-      setPaypalClientId(clientId);
-    } else {
-      console.error("Missing PayPal Client ID! Please provide a valid client ID.");
-      toast.error("Payment configuration error. Please contact support.");
-    }
-  }, [clientId, mode]);
+    const fetchPayPalClientId = async () => {
+      try {
+        const { data, error } = await supabase.secrets.get("PAYPAL_CLIENT_ID");
+        
+        if (error) {
+          console.error("Error fetching PayPal Client ID:", error);
+          toast.error("Payment configuration error. Please contact support.");
+          return;
+        }
+
+        if (data) {
+          setPaypalClientId(data);
+        }
+      } catch (err) {
+        console.error("Unexpected error:", err);
+        toast.error("Payment system is currently unavailable.");
+      }
+    };
+
+    fetchPayPalClientId();
+  }, []);
 
   if (!paypalClientId) {
     return (

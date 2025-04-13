@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PayPalButton } from "@/components/PayPalButton";
@@ -10,8 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, CreditCard } from "lucide-react";
 
-// Replace with your actual PayPal production Client ID
-const PAYPAL_CLIENT_ID = "ACTUAL_PAYPAL_CLIENT_ID"; // Production Client ID
 const PAYPAL_MODE = "production" as const;
 
 export default function Payment() {
@@ -109,7 +106,6 @@ export default function Payment() {
                 onError={handlePaymentError}
                 disabled={isProcessing}
                 mode={PAYPAL_MODE}
-                clientId={PAYPAL_CLIENT_ID}
               />
             </div>
           </div>
