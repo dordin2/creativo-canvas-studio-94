@@ -4,6 +4,7 @@ import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
+import { usePayment } from "@/context/PaymentContext";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -18,6 +19,7 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
   const [loading, setLoading] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
   const { user } = useAuth();
+  const { refreshPaymentStatus } = usePayment();
 
   // Create PayPal order through our edge function
   const createOrder = async () => {
@@ -65,6 +67,10 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
       }
 
       toast.success("Payment completed successfully!");
+      
+      // Refresh payment status after successful payment
+      await refreshPaymentStatus();
+      
       if (onSuccess) {
         onSuccess(captureData);
       }
