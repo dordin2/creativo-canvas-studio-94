@@ -58,6 +58,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [combinationPuzzleModal, setCombinationPuzzleModal] = useState(false);
   const [combinationMessage, setCombinationMessage] = useState('');
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -569,6 +570,44 @@ const DraggableElement = ({ element, isActive, children }: {
       )}
     </div>
   );
+
+  if (isImageElement && element.type === 'image') {
+    const originalStyle = { ...elementStyle };
+    
+    if (element.dataUrl || element.src) {
+      const handleImageLoad = () => {
+        setImageLoaded(true);
+      };
+      
+      if (element.thumbnailDataUrl && !imageLoaded) {
+        const thumbnailImg = (
+          <img 
+            src={element.thumbnailDataUrl}
+            alt="Element thumbnail"
+            className="w-full h-full object-contain blur-[1px]"
+            style={{ position: 'absolute', top: 0, left: 0, transition: 'opacity 0.2s' }}
+          />
+        );
+        
+        const mainImg = (
+          <img 
+            src={element.dataUrl || element.src}
+            alt="Element"
+            className={`w-full h-full object-contain ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={handleImageLoad}
+            style={{ transition: 'opacity 0.3s' }}
+          />
+        );
+        
+        children = (
+          <div className="relative w-full h-full">
+            {!imageLoaded && thumbnailImg}
+            {mainImg}
+          </div>
+        );
+      }
+    }
+  }
 
   return (
     <>
