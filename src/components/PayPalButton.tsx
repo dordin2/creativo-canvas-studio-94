@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
@@ -10,6 +9,8 @@ interface PayPalButtonProps {
   onError?: (error: any) => void;
   currency?: string;
   disabled?: boolean;
+  mode?: "sandbox" | "production";
+  clientId?: string;
 }
 
 export function PayPalButton({
@@ -17,21 +18,42 @@ export function PayPalButton({
   onSuccess,
   onError,
   currency = "USD",
-  disabled = false
+  disabled = false,
+  mode = "sandbox",
+  clientId
 }: PayPalButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [paypalClientId, setPaypalClientId] = useState<string>("");
 
-  // PayPal sandbox client ID - replace with your own in production
-  const clientId = "sb"; // Use "sb" for sandbox testing
+  useEffect(() => {
+    if (clientId) {
+      setPaypalClientId(clientId);
+    } else {
+      setPaypalClientId(mode === "sandbox" ? "sb" : "MISSING_PRODUCTION_CLIENT_ID");
+      
+      if (mode === "production" && !clientId) {
+        console.warn("PayPal is in production mode but no clientId was provided!");
+      }
+    }
+  }, [clientId, mode]);
+
+  if (!paypalClientId) {
+    return (
+      <div className="p-4 border border-red-300 bg-red-50 rounded-md text-red-800">
+        Missing PayPal Client ID
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
       <PayPalScriptProvider 
         options={{ 
-          clientId: clientId, // Fixed: renamed "client-id" to clientId
+          clientId: paypalClientId,
           currency: currency,
           intent: "capture",
-          components: "buttons"
+          components: "buttons",
+          "debug": mode === "sandbox"
         }}
       >
         {isLoading && (
@@ -42,10 +64,10 @@ export function PayPalButton({
         
         <PayPalButtons
           disabled={disabled}
-          forceReRender={[amount, currency]}
+          forceReRender={[amount, currency, paypalClientId]}
           createOrder={(data, actions) => {
             return actions.order.create({
-              intent: "CAPTURE", // Fixed: added the required intent property
+              intent: "CAPTURE",
               purchase_units: [
                 {
                   amount: {

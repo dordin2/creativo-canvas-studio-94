@@ -8,12 +8,18 @@ import { useAuth } from "@/context/AuthContext";
 import { useParams } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, CreditCard } from "lucide-react";
+import { ChevronLeft, CreditCard, InfoIcon } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+
+// For production, replace this with your actual Client ID
+const PAYPAL_CLIENT_ID = "sb"; // Sandbox mode
+const PAYPAL_MODE = "sandbox" as const; // "sandbox" | "production"
 
 export default function Payment() {
   const { projectId } = useParams<{ projectId: string }>();
   const [amount, setAmount] = useState(5); // Default payment amount
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showInfoDialog, setShowInfoDialog] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
 
@@ -72,6 +78,22 @@ export default function Payment() {
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Support This Project</h1>
             <p className="text-gray-600 mt-2">Your contribution helps the creator continue their work</p>
+            
+            {PAYPAL_MODE === "sandbox" && (
+              <div className="mt-2 flex items-center justify-center">
+                <Badge variant="outline" className="bg-yellow-50 text-yellow-800 border-yellow-300">
+                  Test Mode
+                </Badge>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="ml-1 p-0 h-auto"
+                  onClick={() => setShowInfoDialog(true)}
+                >
+                  <InfoIcon className="h-4 w-4 text-gray-400" />
+                </Button>
+              </div>
+            )}
           </div>
           
           <div className="mb-6">
@@ -104,11 +126,36 @@ export default function Payment() {
                 onSuccess={handlePaymentSuccess}
                 onError={handlePaymentError}
                 disabled={isProcessing}
+                mode={PAYPAL_MODE}
+                clientId={PAYPAL_CLIENT_ID}
               />
             </div>
           </div>
         </div>
       </div>
+
+      <Dialog open={showInfoDialog} onOpenChange={setShowInfoDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>PayPal Test Mode</DialogTitle>
+            <DialogDescription>
+              <p className="mt-2">
+                This payment system is currently in test mode. No real money will be charged.
+              </p>
+              <p className="mt-2">
+                You can use the following PayPal sandbox account to test payments:
+              </p>
+              <div className="mt-4 p-3 bg-gray-50 rounded-md">
+                <p><strong>Email:</strong> sb-47hpg27959080@personal.example.com</p>
+                <p><strong>Password:</strong> D3=u9Xqb</p>
+              </div>
+              <p className="mt-4 text-sm text-gray-500">
+                For production use, the site administrator should update the PayPal Client ID.
+              </p>
+            </DialogDescription>
+          </DialogHeader>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
