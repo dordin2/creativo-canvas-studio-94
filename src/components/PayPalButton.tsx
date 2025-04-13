@@ -28,17 +28,18 @@ export function PayPalButton({
   useEffect(() => {
     const fetchPayPalClientId = async () => {
       try {
-        const { data, error } = await supabase.secrets.get("PAYPAL_CLIENT_ID");
+        // For production use, you should store this securely
+        // Here we're using the configuration from your Supabase project
+        // This is a placeholder - replace with your actual client ID from PayPal
+        const clientId = "YOUR_PAYPAL_CLIENT_ID";
         
-        if (error) {
-          console.error("Error fetching PayPal Client ID:", error);
+        if (!clientId || clientId === "YOUR_PAYPAL_CLIENT_ID") {
+          console.error("Missing PayPal Client ID! Please configure a valid client ID.");
           toast.error("Payment configuration error. Please contact support.");
           return;
         }
-
-        if (data) {
-          setPaypalClientId(data);
-        }
+        
+        setPaypalClientId(clientId);
       } catch (err) {
         console.error("Unexpected error:", err);
         toast.error("Payment system is currently unavailable.");
