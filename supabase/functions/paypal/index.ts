@@ -20,9 +20,7 @@ const supabaseClient = (req: Request) => {
 };
 
 // PayPal API configuration
-const PAYPAL_BASE_URL = Deno.env.get('PAYPAL_MODE') === 'production'
-  ? 'https://api-m.paypal.com'
-  : 'https://api-m.sandbox.paypal.com';
+const PAYPAL_BASE_URL = 'https://api-m.sandbox.paypal.com';
 
 // Generate PayPal access token
 async function getPayPalAccessToken(): Promise<string> {
@@ -30,6 +28,7 @@ async function getPayPalAccessToken(): Promise<string> {
   const clientSecret = Deno.env.get('PAYPAL_SECRET_KEY') || '';
   
   if (!clientId || !clientSecret) {
+    console.error('PayPal credentials missing:', { clientId: !!clientId, clientSecret: !!clientSecret });
     throw new Error('PayPal credentials are missing');
   }
 
@@ -81,13 +80,14 @@ async function createPayPalOrder(amount: number, currency: string): Promise<any>
       }),
     });
 
+    const responseData = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('PayPal create order error:', errorData);
-      throw new Error(`PayPal create order error: ${response.status}`);
+      console.error('PayPal create order error:', responseData);
+      throw new Error(`PayPal create order error: ${response.status} - ${JSON.stringify(responseData)}`);
     }
 
-    return await response.json();
+    return responseData;
   } catch (error) {
     console.error('Error creating PayPal order:', error);
     throw error;
@@ -107,13 +107,14 @@ async function capturePayPalPayment(orderId: string): Promise<any> {
       },
     });
 
+    const responseData = await response.json();
+    
     if (!response.ok) {
-      const errorData = await response.json();
-      console.error('PayPal capture payment error:', errorData);
-      throw new Error(`PayPal capture payment error: ${response.status}`);
+      console.error('PayPal capture payment error:', responseData);
+      throw new Error(`PayPal capture payment error: ${response.status} - ${JSON.stringify(responseData)}`);
     }
 
-    return await response.json();
+    return responseData;
   } catch (error) {
     console.error('Error capturing PayPal payment:', error);
     throw error;

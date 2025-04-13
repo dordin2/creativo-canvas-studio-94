@@ -17,7 +17,8 @@ type PayPalButtonProps = {
 
 const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonProps) => {
   const [loading, setLoading] = useState(false);
-  const [orderId, setOrderId] = useState<string | null>(null);
+  const [paypalReady, setPaypalReady] = useState(false);
+  const [sdkError, setSdkError] = useState<string | null>(null);
   const { user } = useAuth();
   const { refreshPaymentStatus } = usePayment();
 
@@ -43,7 +44,6 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
         throw new Error(error.message || "Failed to create order");
       }
 
-      setOrderId(data.id);
       return data.id;
     } catch (error) {
       console.error("Error creating PayPal order:", error);
@@ -91,33 +91,65 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
     }
   };
 
+  const handleScriptLoad = () => {
+    setPaypalReady(true);
+    setSdkError(null);
+  };
+
+  const handleScriptError = (err: Error) => {
+    console.error("PayPal SDK error:", err);
+    setSdkError("PayPal payment system is currently unavailable");
+    setPaypalReady(false);
+  };
+
   return (
     <div className="w-full">
-      <PayPalScriptProvider
-        options={{
-          clientId: "sb", // "sb" is a special value for sandbox mode, PayPal will replace it with the correct value
-          currency: "USD",
-          intent: "capture",
-        }}
-      >
-        {loading ? (
-          <Button disabled className="w-full">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Processing...
+      {sdkError ? (
+        <div className="text-center py-4">
+          <p className="text-red-500 mb-2">{sdkError}</p>
+          <Button 
+            variant="outline" 
+            onClick={() => window.location.reload()}
+            className="mt-2"
+          >
+            Retry
           </Button>
-        ) : (
-          <PayPalButtons
-            style={{ layout: "vertical" }}
-            createOrder={createOrder}
-            onApprove={onApprove}
-            onCancel={handleCancel}
-            onError={(err) => {
-              console.error("PayPal error:", err);
-              toast.error("PayPal error occurred");
-            }}
-          />
-        )}
-      </PayPalScriptProvider>
+        </div>
+      ) : (
+        <PayPalScriptProvider
+          options={{
+            clientId: "sb", // Special value for sandbox mode
+            currency: "USD",
+            intent: "capture",
+          }}
+          onScriptLoad={handleScriptLoad}
+          onError={handleScriptError}
+        >
+          {loading ? (
+            <Button disabled className="w-full">
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Processing...
+            </Button>
+          ) : (
+            <PayPalButtons
+              style={{ layout: "vertical" }}
+              createOrder={createOrder}
+              onApprove={onApprove}
+              onCancel={handleCancel}
+              onError={(err) => {
+                console.error("PayPal error:", err);
+                toast.error("PayPal error occurred");
+              }}
+              disabled={!paypalReady}
+            />
+          )}
+        </PayPalScriptProvider>
+      )}
+      
+      {/* Sandbox testing note */}
+      <div className="mt-3 text-xs text-gray-500 border-t pt-2">
+        <p>This is running in PayPal Sandbox mode for testing</p>
+      </div>
     </div>
   );
 };
