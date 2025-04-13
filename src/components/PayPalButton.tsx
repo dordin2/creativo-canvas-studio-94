@@ -14,6 +14,10 @@ interface PayPalButtonProps {
   mode?: "sandbox" | "production";
 }
 
+// Add your PayPal Client ID here
+// In a production environment, you should store this in environment variables or Supabase Edge Functions
+const PAYPAL_CLIENT_ID = "AZ5Q6WLBRk-fwCGh7bX9C-Xe-JTM9xd2HbPZ8QKgsjHYlDcGAk15J5wdnxC-ZH5BpEy4kBfBXRBSyJiq";
+
 export function PayPalButton({
   amount,
   onSuccess,
@@ -28,12 +32,11 @@ export function PayPalButton({
   useEffect(() => {
     const fetchPayPalClientId = async () => {
       try {
-        // For production use, you should store this securely
-        // Here we're using the configuration from your Supabase project
-        // This is a placeholder - replace with your actual client ID from PayPal
-        const clientId = "YOUR_PAYPAL_CLIENT_ID";
+        // Using the constant defined above - in a production app you would fetch this
+        // from a secure source like environment variables or Supabase Edge Functions
+        const clientId = PAYPAL_CLIENT_ID;
         
-        if (!clientId || clientId === "YOUR_PAYPAL_CLIENT_ID") {
+        if (!clientId) {
           console.error("Missing PayPal Client ID! Please configure a valid client ID.");
           toast.error("Payment configuration error. Please contact support.");
           return;
