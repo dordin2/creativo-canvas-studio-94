@@ -11,13 +11,24 @@ import { useDesignState } from "@/context/DesignContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Share2, Globe, Lock } from "lucide-react";
+import { ChevronLeft, Save, Share2, Globe, Lock, Crown } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { Database } from "@/types/database";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import PayPalButton from "@/components/payment/PayPalButton";
+import { useAuth } from "@/context/AuthContext";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
+  const [showPaymentDialog, setShowPaymentDialog] = useState(false);
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const { 
@@ -28,6 +39,7 @@ const Editor = () => {
     setCanvases: updateCanvases
   } = useDesignState();
   const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
+  const { user } = useAuth();
 
   useEffect(() => {
     if (!projectId) {
@@ -122,6 +134,12 @@ const Editor = () => {
     navigate('/');
   };
 
+  const handlePaymentSuccess = (data: any) => {
+    console.log("Payment successful:", data);
+    toast.success("Premium features unlocked!");
+    setShowPaymentDialog(false);
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -151,6 +169,42 @@ const Editor = () => {
             <h1 className="text-xl font-semibold text-canvas-purple">{projectName}</h1>
           </div>
           <div className="flex gap-2">
+            <Dialog open={showPaymentDialog} onOpenChange={setShowPaymentDialog}>
+              <DialogTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  className="bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200"
+                >
+                  <Crown className="mr-2 h-4 w-4 text-amber-500" />
+                  Upgrade Project
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Upgrade to Premium</DialogTitle>
+                  <DialogDescription>
+                    Unlock premium features for your project with a one-time payment of $5.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="mt-4">
+                  <h3 className="font-medium mb-2">Premium Features Include:</h3>
+                  <ul className="list-disc pl-5 mb-4 space-y-1">
+                    <li>Advanced game elements</li>
+                    <li>More storage for assets</li>
+                    <li>Priority support</li>
+                    <li>Remove watermarks</li>
+                  </ul>
+                  {projectId && (
+                    <PayPalButton
+                      amount={5}
+                      projectId={projectId}
+                      onSuccess={handlePaymentSuccess}
+                      onCancel={() => setShowPaymentDialog(false)}
+                    />
+                  )}
+                </div>
+              </DialogContent>
+            </Dialog>
             <Button 
               onClick={toggleProjectVisibility}
               variant="outline"
