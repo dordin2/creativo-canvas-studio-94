@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,29 +21,6 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
   const [sdkError, setSdkError] = useState<string | null>(null);
   const { user } = useAuth();
   const { refreshPaymentStatus } = usePayment();
-
-  // Script loading status handlers
-  useEffect(() => {
-    const handleScriptLoad = () => {
-      setPaypalReady(true);
-      setSdkError(null);
-    };
-
-    const handleScriptError = (err: Event) => {
-      console.error("PayPal SDK error:", err);
-      setSdkError("PayPal payment system is currently unavailable");
-      setPaypalReady(false);
-    };
-
-    // Add event listeners for script loading
-    window.addEventListener('paypal-script-loaded', handleScriptLoad);
-    window.addEventListener('paypal-script-error', handleScriptError);
-
-    return () => {
-      window.removeEventListener('paypal-script-loaded', handleScriptLoad);
-      window.removeEventListener('paypal-script-error', handleScriptError);
-    };
-  }, []);
 
   // Create PayPal order through our edge function
   const createOrder = async () => {
@@ -114,6 +91,19 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
     }
   };
 
+  // Script related event handlers
+  const handleScriptLoad = useCallback(() => {
+    console.log("PayPal script loaded successfully");
+    setPaypalReady(true);
+    setSdkError(null);
+  }, []);
+
+  const handleScriptError = useCallback((err: Error) => {
+    console.error("PayPal script error:", err);
+    setSdkError("PayPal payment system is currently unavailable");
+    setPaypalReady(false);
+  }, []);
+
   return (
     <div className="w-full">
       {sdkError ? (
@@ -133,37 +123,31 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
             clientId: "sb", // Special value for sandbox mode
             currency: "USD",
             intent: "capture",
-            dataClientToken: "sandbox_cgv4ktcg_wvrh4jwcqbh9p6kn",
             components: "buttons",
-            onError: (err) => {
-              console.error("PayPal SDK error:", err);
-              setSdkError("PayPal payment system is currently unavailable");
-              setPaypalReady(false);
-            },
-            onSuccess: () => {
-              setPaypalReady(true);
-              setSdkError(null);
-            },
+            dataClientToken: "sandbox_cgv4ktcg_wvrh4jwcqbh9p6kn",
           }}
         >
-          {loading ? (
-            <Button disabled className="w-full">
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing...
-            </Button>
-          ) : (
-            <PayPalButtons
-              style={{ layout: "vertical" }}
-              createOrder={createOrder}
-              onApprove={onApprove}
-              onCancel={handleCancel}
-              onError={(err) => {
-                console.error("PayPal error:", err);
-                toast.error("PayPal error occurred");
-              }}
-              disabled={!paypalReady}
-            />
-          )}
+          <div id="paypal-button-container">
+            {loading ? (
+              <Button disabled className="w-full">
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Processing...
+              </Button>
+            ) : (
+              <PayPalButtons
+                style={{ layout: "vertical" }}
+                createOrder={createOrder}
+                onApprove={onApprove}
+                onCancel={handleCancel}
+                onError={(err) => {
+                  console.error("PayPal error:", err);
+                  toast.error("PayPal error occurred");
+                }}
+                disabled={loading}
+                onInit={() => setPaypalReady(true)}
+              />
+            )}
+          </div>
         </PayPalScriptProvider>
       )}
       
