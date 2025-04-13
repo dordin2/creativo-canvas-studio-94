@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
@@ -23,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DesignElement } from "@/types/designTypes"; // Added this import to fix the TypeScript errors
+import { DesignElement } from "@/types/designTypes";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { updateElementsOrder } from "@/utils/layerUtils";
 
@@ -46,11 +45,12 @@ const LayersList = () => {
   const [showMoveDialog, setShowMoveDialog] = useState<boolean>(false);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [selectedTargetCanvas, setSelectedTargetCanvas] = useState<string>('');
+  
   const [draggedElement, setDraggedElement] = useState<DesignElement | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  
-  // Create an invisible element for the drag preview instead of using DOM manipulation
-  const dragPreviewRef = useRef<HTMLDivElement | null>(null);
+  const dragStartPosition = useRef<{ x: number, y: number } | null>(null);
+  const cursorPreviewRef = useRef<HTMLDivElement | null>(null);
+  const isDraggingRef = useRef<boolean>(false);
 
   const layerElements = [...elements]
     .filter(element => element.type !== 'background')
@@ -64,12 +64,10 @@ const LayersList = () => {
   const handleDuplicate = (element: DesignElement) => {
     console.log("LayersList - Original element to duplicate:", element);
     
-    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("LayersList - Duplicate props before adding:", duplicateProps);
     
-    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
@@ -105,9 +103,7 @@ const LayersList = () => {
     setShowMoveDialog(true);
   };
 
-  // Generate element thumbnail
   const renderElementThumbnail = (element: DesignElement) => {
-    // Define common style for the thumbnail container
     const commonStyle = "w-8 h-8 flex-shrink-0 flex items-center justify-center border rounded";
     
     switch (element.type) {
@@ -226,112 +222,162 @@ const LayersList = () => {
     }
   };
 
-  // Improved drag and drop handlers
-  const handleDragStart = (e: React.DragEvent, element: DesignElement, index: number) => {
-    // Prevent the default drag ghost image
-    const img = new Image();
-    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // Transparent 1x1 pixel
-    e.dataTransfer.setDragImage(img, 0, 0);
+  const handleMouseDown = (e: React.MouseEvent, element: DesignElement, index: number) => {
+    e.preventDefault();
+    e.stopPropagation();
     
-    // Set data for the drag operation
-    e.dataTransfer.setData('text/plain', element.id);
-    e.dataTransfer.effectAllowed = 'move';
+    dragStartPosition.current = { x: e.clientX, y: e.clientY };
     
-    // Update state to reflect dragging
     setDraggedElement(element);
+    isDraggingRef.current = true;
     
-    // Set the custom preview in a fixed position that won't interfere with the UI
-    if (dragPreviewRef.current) {
-      const preview = dragPreviewRef.current;
-      
-      // Position the preview near the cursor but out of the way
-      preview.style.display = 'flex';
-      preview.style.top = `${e.clientY + 15}px`;
-      preview.style.left = `${e.clientX + 15}px`;
-      
-      // Set the preview content
-      preview.innerHTML = `
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 flex-shrink-0 rounded-sm overflow-hidden" style="
-            ${element.type === 'circle' ? 'border-radius: 50%;' : ''}
-            ${element.type === 'image' && element.dataUrl ? `background-image: url(${element.dataUrl}); background-size: cover;` : ''}
-            ${element.type !== 'image' ? `background-color: ${element.style?.backgroundColor || '#8B5CF6'};` : ''}
-          "></div>
-          <span class="text-sm font-medium whitespace-nowrap">${getElementName(element)}</span>
-        </div>
-      `;
-      
-      // Add the element to the document
-      document.body.appendChild(preview);
+    const thumbnail = document.createElement('div');
+    thumbnail.id = 'drag-thumbnail';
+    thumbnail.style.position = 'fixed';
+    thumbnail.style.pointerEvents = 'none';
+    thumbnail.style.zIndex = '9999';
+    thumbnail.style.left = `${e.clientX}px`;
+    thumbnail.style.top = `${e.clientY}px`;
+    thumbnail.style.transform = 'translate(-50%, -50%)';
+    thumbnail.style.opacity = '0.8';
+    thumbnail.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+    thumbnail.style.borderRadius = '4px';
+    thumbnail.style.background = 'white';
+    thumbnail.style.padding = '6px';
+    thumbnail.style.display = 'flex';
+    thumbnail.style.alignItems = 'center';
+    thumbnail.style.gap = '8px';
+    
+    const thumbnailContent = document.createElement('div');
+    thumbnailContent.style.display = 'flex';
+    thumbnailContent.style.alignItems = 'center';
+    thumbnailContent.style.gap = '8px';
+    
+    const elementThumb = document.createElement('div');
+    elementThumb.style.width = '20px';
+    elementThumb.style.height = '20px';
+    elementThumb.style.flexShrink = '0';
+    
+    switch(element.type) {
+      case 'rectangle':
+        elementThumb.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+        elementThumb.style.borderRadius = (element.style?.borderRadius as string) || '0';
+        break;
+      case 'circle':
+        elementThumb.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+        elementThumb.style.borderRadius = '50%';
+        break;
+      case 'triangle':
+        elementThumb.style.width = '0';
+        elementThumb.style.height = '0';
+        elementThumb.style.borderLeft = '10px solid transparent';
+        elementThumb.style.borderRight = '10px solid transparent';
+        elementThumb.style.borderBottom = `20px solid ${(element.style?.backgroundColor as string) || '#8B5CF6'}`;
+        break;
+      case 'image':
+        if (element.dataUrl) {
+          elementThumb.style.backgroundImage = `url(${element.dataUrl})`;
+          elementThumb.style.backgroundSize = 'cover';
+          elementThumb.style.backgroundPosition = 'center';
+        } else {
+          elementThumb.style.backgroundColor = '#e2e8f0';
+          elementThumb.textContent = 'IMG';
+          elementThumb.style.display = 'flex';
+          elementThumb.style.alignItems = 'center';
+          elementThumb.style.justifyContent = 'center';
+          elementThumb.style.fontSize = '8px';
+          elementThumb.style.color = '#64748b';
+        }
+        break;
+      default:
+        elementThumb.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+        break;
     }
-  };
-  
-  const handleDragOver = (e: React.DragEvent, index: number) => {
-    e.preventDefault();
-    if (draggedElement) {
-      setDragOverIndex(index);
+    
+    const elementName = document.createElement('span');
+    elementName.textContent = getElementName(element);
+    elementName.style.fontSize = '12px';
+    elementName.style.fontWeight = '500';
+    elementName.style.whiteSpace = 'nowrap';
+    elementName.style.maxWidth = '100px';
+    elementName.style.overflow = 'hidden';
+    elementName.style.textOverflow = 'ellipsis';
+    
+    thumbnailContent.appendChild(elementThumb);
+    thumbnailContent.appendChild(elementName);
+    thumbnail.appendChild(thumbnailContent);
+    document.body.appendChild(thumbnail);
+    cursorPreviewRef.current = thumbnail;
+    
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      if (!isDraggingRef.current) return;
       
-      // Update the position of the drag preview to follow the cursor
-      if (dragPreviewRef.current) {
-        dragPreviewRef.current.style.top = `${e.clientY + 15}px`;
-        dragPreviewRef.current.style.left = `${e.clientX + 15}px`;
+      if (thumbnail) {
+        thumbnail.style.left = `${moveEvent.clientX}px`;
+        thumbnail.style.top = `${moveEvent.clientY}px`;
       }
-    }
-  };
-
-  const handleDragLeave = () => {
-    setDragOverIndex(null);
-  };
-
-  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
-    e.preventDefault();
-    
-    // Hide the drag preview
-    if (dragPreviewRef.current) {
-      dragPreviewRef.current.style.display = 'none';
-    }
-    
-    if (!draggedElement) return;
-    
-    const sourceIndex = layerElements.findIndex(el => el.id === draggedElement.id);
-    if (sourceIndex === -1 || sourceIndex === targetIndex) {
-      setDraggedElement(null);
-      setDragOverIndex(null);
-      return;
-    }
-
-    // Get the current canvas elements
-    const currentCanvas = canvases[activeCanvasIndex];
-    if (!currentCanvas) return;
-
-    // Create a copy of the elements to work with
-    const updatedElements = [...currentCanvas.elements];
-    
-    // Update the layers based on new order
-    const newElements = updateElementsOrder(updatedElements, sourceIndex, targetIndex, layerElements);
-    
-    // Update the canvas with the new elements
-    const updatedCanvases = [...canvases];
-    updatedCanvases[activeCanvasIndex] = {
-      ...currentCanvas,
-      elements: newElements
+      
+      const layerItems = document.querySelectorAll('[data-layer-index]');
+      let foundDropTarget = false;
+      
+      layerItems.forEach((item) => {
+        const rect = item.getBoundingClientRect();
+        const layerIndex = parseInt((item as HTMLElement).dataset.layerIndex || '-1');
+        
+        if (
+          moveEvent.clientX >= rect.left &&
+          moveEvent.clientX <= rect.right &&
+          moveEvent.clientY >= rect.top &&
+          moveEvent.clientY <= rect.bottom &&
+          layerIndex !== -1
+        ) {
+          setDragOverIndex(layerIndex);
+          foundDropTarget = true;
+        }
+      });
+      
+      if (!foundDropTarget) {
+        setDragOverIndex(null);
+      }
     };
     
-    setCanvases(updatedCanvases);
-    
-    // Reset drag state
-    setDraggedElement(null);
-    setDragOverIndex(null);
-  };
+    const handleMouseUp = (upEvent: MouseEvent) => {
+      isDraggingRef.current = false;
+      
+      if (thumbnail && thumbnail.parentNode) {
+        thumbnail.parentNode.removeChild(thumbnail);
+      }
+      
+      if (dragOverIndex !== null && draggedElement) {
+        const sourceIndex = layerElements.findIndex(el => el.id === draggedElement.id);
+        
+        if (sourceIndex !== -1 && sourceIndex !== dragOverIndex) {
+          const currentCanvas = canvases[activeCanvasIndex];
+          if (!currentCanvas) return;
 
-  const handleDragEnd = () => {
-    // Hide the drag preview when drag ends
-    if (dragPreviewRef.current) {
-      dragPreviewRef.current.style.display = 'none';
-    }
+          const updatedElements = [...currentCanvas.elements];
+          
+          const newElements = updateElementsOrder(updatedElements, sourceIndex, dragOverIndex, layerElements);
+          
+          const updatedCanvases = [...canvases];
+          updatedCanvases[activeCanvasIndex] = {
+            ...currentCanvas,
+            elements: newElements
+          };
+          
+          setCanvases(updatedCanvases);
+        }
+      }
+      
+      setDraggedElement(null);
+      setDragOverIndex(null);
+      
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+    };
     
-    setDraggedElement(null);
-    setDragOverIndex(null);
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
   };
 
   return (
@@ -341,14 +387,6 @@ const LayersList = () => {
         <h3 className="font-medium">Layers ({canvases[activeCanvasIndex]?.name || 'Current Canvas'})</h3>
       </div>
 
-      {/* Custom drag preview element positioned absolutely and hidden by default */}
-      <div 
-        ref={dragPreviewRef} 
-        className="fixed bg-white px-3 py-2 rounded-md shadow-lg border z-[9999] pointer-events-none items-center"
-        style={{ display: 'none' }}
-        aria-hidden="true"
-      ></div>
-
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
         {layerElements.length === 0 ? (
           <div className="text-sm text-gray-500 italic">No elements added yet</div>
@@ -356,25 +394,22 @@ const LayersList = () => {
           layerElements.map((element, index) => (
             <div 
               key={element.id}
+              data-layer-index={index}
               className={`p-2 border rounded-md flex items-center justify-between ${
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
               } ${dragOverIndex === index ? "border-blue-500 bg-blue-50" : ""} 
               ${draggedElement?.id === element.id ? "opacity-50" : "opacity-100"}
               cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
-              draggable={true}
-              onDragStart={(e) => handleDragStart(e, element, index)}
-              onDragOver={(e) => handleDragOver(e, index)}
-              onDragLeave={handleDragLeave}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragEnd={handleDragEnd}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div className="cursor-grab flex items-center justify-center">
+                <div 
+                  className="cursor-grab flex items-center justify-center"
+                  onMouseDown={(e) => handleMouseDown(e, element, index)}
+                >
                   <GripVertical className="h-4 w-4 text-gray-400" />
                 </div>
                 
-                {/* Replace the simple color block with our new thumbnail renderer */}
                 {renderElementThumbnail(element)}
                 
                 {editingNameId === element.id ? (
