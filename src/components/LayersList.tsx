@@ -23,6 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { DesignElement } from "@/types/designTypes"; // Added this import to fix the TypeScript errors
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { updateElementsOrder } from "@/utils/layerUtils";
 
