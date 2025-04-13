@@ -16,7 +16,7 @@ const LayerProperties = ({ element }: { element: DesignElement }) => {
       </div>
 
       <div className="bg-muted p-3 rounded-md text-sm">
-        <p>Layers are now ordered by drag and drop:</p>
+        <p>Layers are ordered by drag and drop:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
           <li>Drag elements up to bring them forward</li>
           <li>Drag elements down to send them backward</li>
