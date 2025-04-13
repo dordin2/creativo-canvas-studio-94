@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
@@ -62,12 +61,10 @@ const LayersList = () => {
   const handleDuplicate = (element: DesignElement) => {
     console.log("LayersList - Original element to duplicate:", element);
     
-    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("LayersList - Duplicate props before adding:", duplicateProps);
     
-    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
@@ -103,9 +100,7 @@ const LayersList = () => {
     setShowMoveDialog(true);
   };
 
-  // Generate element thumbnail
   const renderElementThumbnail = (element: DesignElement) => {
-    // Define common style for the thumbnail container
     const commonStyle = "w-8 h-8 flex-shrink-0 flex items-center justify-center border rounded";
     
     switch (element.type) {
@@ -224,19 +219,11 @@ const LayersList = () => {
     }
   };
 
-  // Improved drag and drop handlers
   const handleDragStart = (e: React.DragEvent, element: DesignElement, index: number) => {
-    // Prevent the default drag image
     e.preventDefault();
-    
-    // Set data for the drag operation
     e.dataTransfer.setData('text/plain', element.id);
     e.dataTransfer.effectAllowed = 'move';
-    
-    // Update state to reflect dragging
     setDraggedElement(element);
-    
-    // Create custom thumbnail element that follows cursor
     const thumbnail = document.createElement('div');
     thumbnail.id = 'drag-thumbnail';
     thumbnail.style.position = 'fixed';
@@ -253,20 +240,14 @@ const LayersList = () => {
     thumbnail.style.display = 'flex';
     thumbnail.style.alignItems = 'center';
     thumbnail.style.gap = '8px';
-    
-    // Create thumbnail content based on element type
     const thumbnailContent = document.createElement('div');
     thumbnailContent.style.display = 'flex';
     thumbnailContent.style.alignItems = 'center';
     thumbnailContent.style.gap = '8px';
-    
-    // Add the element thumbnail
     const elementThumbContainer = document.createElement('div');
     elementThumbContainer.style.width = '20px';
     elementThumbContainer.style.height = '20px';
     elementThumbContainer.style.flexShrink = '0';
-    
-    // Style the thumbnail based on element type
     switch(element.type) {
       case 'rectangle':
         elementThumbContainer.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
@@ -324,7 +305,6 @@ const LayersList = () => {
         elementThumbContainer.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
         break;
     }
-    
     const elementName = document.createElement('span');
     elementName.textContent = getElementName(element);
     elementName.style.fontSize = '12px';
@@ -333,31 +313,26 @@ const LayersList = () => {
     elementName.style.maxWidth = '100px';
     elementName.style.overflow = 'hidden';
     elementName.style.textOverflow = 'ellipsis';
-    
     thumbnailContent.appendChild(elementThumbContainer);
     thumbnailContent.appendChild(elementName);
     thumbnail.appendChild(thumbnailContent);
     document.body.appendChild(thumbnail);
     thumbnailRef.current = thumbnail;
-    
-    // Add mouse event listeners to move the thumbnail with the cursor
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleDragEnd);
-    
-    // Add CSS to hide the original element being dragged
     const draggedItem = document.getElementById(`layer-${element.id}`);
     if (draggedItem) {
       draggedItem.classList.add('opacity-50');
     }
   };
-  
+
   const handleMouseMove = (e: MouseEvent) => {
     if (thumbnailRef.current) {
       thumbnailRef.current.style.left = `${e.clientX}px`;
       thumbnailRef.current.style.top = `${e.clientY}px`;
     }
   };
-  
+
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedElement) {
@@ -371,56 +346,36 @@ const LayersList = () => {
 
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
-    
     if (!draggedElement) return;
-    
     const sourceIndex = layerElements.findIndex(el => el.id === draggedElement.id);
     if (sourceIndex === -1 || sourceIndex === targetIndex) {
       setDraggedElement(null);
       setDragOverIndex(null);
       return;
     }
-
-    // Get the current canvas elements
     const currentCanvas = canvases[activeCanvasIndex];
     if (!currentCanvas) return;
-
-    // Create a copy of the elements to work with
     const updatedElements = [...currentCanvas.elements];
-    
-    // Update the layers based on new order
     const newElements = updateElementsOrder(updatedElements, sourceIndex, targetIndex, layerElements);
-    
-    // Update the canvas with the new elements
     const updatedCanvases = [...canvases];
     updatedCanvases[activeCanvasIndex] = {
       ...currentCanvas,
       elements: newElements
     };
-    
     setCanvases(updatedCanvases);
-    
-    // Reset drag state
     setDraggedElement(null);
     setDragOverIndex(null);
   };
 
   const handleDragEnd = () => {
-    // Remove the custom thumbnail element
     if (thumbnailRef.current && thumbnailRef.current.parentNode) {
       thumbnailRef.current.parentNode.removeChild(thumbnailRef.current);
       thumbnailRef.current = null;
     }
-    
-    // Clean up event listeners
     document.removeEventListener('mousemove', handleMouseMove);
     document.removeEventListener('mouseup', handleDragEnd);
-    
-    // Reset state
     setDraggedElement(null);
     setDragOverIndex(null);
-    
-    // Remove opacity class from all items
     const dragItems = document.querySelectorAll('.layer-item');
     dragItems.forEach(item => {
       item.classList.remove('opacity-50');
@@ -458,10 +413,7 @@ const LayersList = () => {
                 <div className="cursor-grab flex items-center justify-center">
                   <GripVertical className="h-4 w-4 text-gray-400" />
                 </div>
-                
-                {/* Element thumbnail */}
                 {renderElementThumbnail(element)}
-                
                 {editingNameId === element.id ? (
                   <form 
                     onSubmit={(e) => {
@@ -494,7 +446,6 @@ const LayersList = () => {
                   </div>
                 )}
               </div>
-
               <div className="flex items-center gap-1 flex-shrink-0">
                 <TooltipProvider>
                   <Tooltip>
@@ -629,7 +580,8 @@ const LayersList = () => {
         </DialogContent>
       </Dialog>
 
-      <style jsx global>{`
+      <style>
+        {`
         .layer-item.opacity-50 {
           opacity: 0.5;
         }
@@ -642,10 +594,10 @@ const LayersList = () => {
           pointer-events: none;
           user-select: none;
         }
-      `}</style>
+        `}
+      </style>
     </div>
   );
 };
 
 export default LayersList;
-
