@@ -10,9 +10,8 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
   const [startAngle, setStartAngle] = useState(0);
   const lastRotation = useRef(getRotation(element));
   const lastMouseAngle = useRef(0);
-  const [isTouchRotate, setIsTouchRotate] = useState(false);
 
-  const handleRotateStart = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleRotateStart = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
     
@@ -23,19 +22,8 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       
-      // Calculate initial angle between center and pointer
-      let initialAngle: number;
-      
-      if ('touches' in e) {
-        // Touch event
-        setIsTouchRotate(true);
-        const touch = e.touches[0];
-        initialAngle = Math.atan2(touch.clientY - centerY, touch.clientX - centerX) * (180 / Math.PI);
-      } else {
-        // Mouse event
-        setIsTouchRotate(false);
-        initialAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
-      }
+      // Calculate initial angle between center and mouse
+      const initialAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * (180 / Math.PI);
       
       setCenterPos({ x: centerX, y: centerY });
       setStartAngle(initialAngle);
@@ -55,7 +43,7 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isRotating || isTouchRotate) return;
+      if (!isRotating) return;
       
       // Calculate current angle between center and mouse position
       const currentAngle = Math.atan2(e.clientY - centerPos.y, e.clientX - centerPos.x) * (180 / Math.PI);
@@ -90,10 +78,7 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isRotating || !isTouchRotate || e.touches.length === 0) return;
-      
-      // Prevent default to avoid scrolling while rotating
-      e.preventDefault();
+      if (!isRotating || e.touches.length === 0) return;
       
       // Get the first touch
       const touch = e.touches[0];
@@ -126,19 +111,15 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
     const handleEnd = () => {
       if (isRotating) {
         setIsRotating(false);
-        setIsTouchRotate(false);
       }
     };
 
     if (isRotating) {
-      if (isTouchRotate) {
-        document.addEventListener("touchmove", handleTouchMove, { passive: false });
-        document.addEventListener("touchend", handleEnd);
-        document.addEventListener("touchcancel", handleEnd);
-      } else {
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", handleEnd);
-      }
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleEnd);
+      document.addEventListener("touchmove", handleTouchMove);
+      document.addEventListener("touchend", handleEnd);
+      document.addEventListener("touchcancel", handleEnd);
     }
 
     return () => {
@@ -152,8 +133,7 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
     isRotating,
     centerPos,
     element,
-    updateElement,
-    isTouchRotate
+    updateElement
   ]);
 
   return {

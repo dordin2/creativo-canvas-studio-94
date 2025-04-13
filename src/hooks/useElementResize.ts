@@ -10,25 +10,14 @@ export const useElementResize = (element: DesignElement) => {
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [originalAspectRatio, setOriginalAspectRatio] = useState<number | null>(null);
-  const [isTouchResize, setIsTouchResize] = useState(false);
 
-  const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, direction: string) => {
+  const handleResizeStart = (e: React.MouseEvent, direction: string) => {
     e.stopPropagation();
     e.preventDefault();
     
     setIsResizing(true);
     setResizeDirection(direction);
-    
-    if ('touches' in e) {
-      // Touch event
-      setIsTouchResize(true);
-      const touch = e.touches[0];
-      setStartPos({ x: touch.clientX, y: touch.clientY });
-    } else {
-      // Mouse event
-      setIsTouchResize(false);
-      setStartPos({ x: e.clientX, y: e.clientY });
-    }
+    setStartPos({ x: e.clientX, y: e.clientY });
     
     const width = element.size?.width || 100;
     const height = element.size?.height || 100;
@@ -66,7 +55,7 @@ export const useElementResize = (element: DesignElement) => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isResizing && resizeDirection && !isTouchResize) {
+      if (isResizing && resizeDirection) {
         const deltaX = e.clientX - startPos.x;
         const deltaY = e.clientY - startPos.y;
         
@@ -173,142 +162,19 @@ export const useElementResize = (element: DesignElement) => {
       }
     };
 
-    const handleTouchMove = (e: TouchEvent) => {
-      if (isResizing && resizeDirection && isTouchResize && e.touches.length > 0) {
-        // Prevent default to avoid scrolling while resizing
-        e.preventDefault();
-        
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - startPos.x;
-        const deltaY = touch.clientY - startPos.y;
-        
-        const isImage = element.type === 'image';
-        const maintainAspectRatio = isImage || originalAspectRatio !== null;
-        
-        let newWidth = startSize.width;
-        let newHeight = startSize.height;
-        let newX = startPosition.x;
-        let newY = startPosition.y;
-        
-        // Handle pinch-to-zoom resize for touch - simplified for single touch point
-        // Calculate new dimensions and position based on resize direction
-        if (resizeDirection.includes('e')) {
-          newWidth = Math.max(20, startSize.width + deltaX);
-        }
-        
-        if (resizeDirection.includes('w')) {
-          const widthChange = deltaX;
-          newWidth = Math.max(20, startSize.width - widthChange);
-          newX = startPosition.x + (startSize.width - newWidth);
-        }
-        
-        if (resizeDirection.includes('s')) {
-          newHeight = Math.max(20, startSize.height + deltaY);
-        }
-        
-        if (resizeDirection.includes('n')) {
-          const heightChange = deltaY;
-          newHeight = Math.max(20, startSize.height - heightChange);
-          newY = startPosition.y + (startSize.height - newHeight);
-        }
-        
-        // Handle aspect ratio preservation for images and other elements that need it
-        if (maintainAspectRatio && originalAspectRatio) {
-          if (resizeDirection === 'nw') {
-            // For northwest corner, adjust both width and height proportionally
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-              // Width is driving dimension
-              newWidth = Math.max(20, startSize.width - deltaX);
-              newHeight = newWidth / originalAspectRatio;
-              newX = startPosition.x + (startSize.width - newWidth);
-              newY = startPosition.y + (startSize.height - newHeight);
-            } else {
-              // Height is driving dimension
-              newHeight = Math.max(20, startSize.height - deltaY);
-              newWidth = newHeight * originalAspectRatio;
-              newX = startPosition.x + (startSize.width - newWidth);
-              newY = startPosition.y + (startSize.height - newHeight);
-            }
-          } else if (resizeDirection === 'ne') {
-            // For northeast corner
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-              // Width is driving dimension
-              newWidth = Math.max(20, startSize.width + deltaX);
-              newHeight = newWidth / originalAspectRatio;
-              newY = startPosition.y + (startSize.height - newHeight);
-            } else {
-              // Height is driving dimension
-              newHeight = Math.max(20, startSize.height - deltaY);
-              newWidth = newHeight * originalAspectRatio;
-              newY = startPosition.y + (startSize.height - newHeight);
-            }
-          } else if (resizeDirection === 'sw') {
-            // For southwest corner
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-              // Width is driving dimension
-              newWidth = Math.max(20, startSize.width - deltaX);
-              newHeight = newWidth / originalAspectRatio;
-              newX = startPosition.x + (startSize.width - newWidth);
-            } else {
-              // Height is driving dimension
-              newHeight = Math.max(20, startSize.height + deltaY);
-              newWidth = newHeight * originalAspectRatio;
-              newX = startPosition.x + (startSize.width - newWidth);
-            }
-          } else if (resizeDirection === 'se') {
-            // For southeast corner
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-              // Width is driving dimension
-              newWidth = Math.max(20, startSize.width + deltaX);
-              newHeight = newWidth / originalAspectRatio;
-            } else {
-              // Height is driving dimension
-              newHeight = Math.max(20, startSize.height + deltaY);
-              newWidth = newHeight * originalAspectRatio;
-            }
-          } else if (resizeDirection === 'n' || resizeDirection === 's') {
-            // For north or south sides, adjust width based on height
-            newWidth = newHeight * originalAspectRatio;
-            if (resizeDirection === 'n') {
-              newY = startPosition.y + (startSize.height - newHeight);
-            }
-          } else if (resizeDirection === 'e' || resizeDirection === 'w') {
-            // For east or west sides, adjust height based on width
-            newHeight = newWidth / originalAspectRatio;
-            if (resizeDirection === 'w') {
-              newX = startPosition.x + (startSize.width - newWidth);
-            }
-          }
-        }
-        
-        // Update element with both new size and position in a single update
-        updateElementSize(newWidth, newHeight, newX, newY);
-      }
-    };
-
-    const handleEnd = () => {
+    const handleMouseUp = () => {
       setIsResizing(false);
       setResizeDirection(null);
-      setIsTouchResize(false);
     };
 
     if (isResizing) {
-      if (isTouchResize) {
-        document.addEventListener("touchmove", handleTouchMove, { passive: false });
-        document.addEventListener("touchend", handleEnd);
-        document.addEventListener("touchcancel", handleEnd);
-      } else {
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", handleEnd);
-      }
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
     }
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleEnd);
-      document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("touchend", handleEnd);
-      document.removeEventListener("touchcancel", handleEnd);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
   }, [
     isResizing,
@@ -318,8 +184,7 @@ export const useElementResize = (element: DesignElement) => {
     resizeDirection, 
     element, 
     updateElement,
-    originalAspectRatio,
-    isTouchResize
+    originalAspectRatio
   ]);
 
   return {
