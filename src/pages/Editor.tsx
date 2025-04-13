@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,10 +19,12 @@ import {
   Globe, 
   Lock, 
   Crown, 
-  Check
+  Check,
+  Sparkles 
 } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
+import { Database } from "@/types/database";
 import {
   Dialog,
   DialogContent,
@@ -33,7 +36,7 @@ import {
 import PayPalButton from "@/components/payment/PayPalButton";
 import { useAuth } from "@/context/AuthContext";
 import { usePayment } from "@/context/PaymentContext";
-import PaymentStatus from "@/components/payment/PaymentStatus";
+import { Badge } from "@/components/ui/badge";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -191,7 +194,12 @@ const Editor = () => {
               Back to Projects
             </Button>
             <h1 className="text-xl font-semibold text-canvas-purple">{projectName}</h1>
-            {isProjectPaid && <PaymentStatus className="ml-2" />}
+            {isProjectPaid && (
+              <Badge className="ml-2 bg-amber-500 hover:bg-amber-600">
+                <Sparkles className="h-3 w-3 mr-1" />
+                Premium
+              </Badge>
+            )}
           </div>
           <div className="flex gap-2">
             {!isProjectPaid ? (

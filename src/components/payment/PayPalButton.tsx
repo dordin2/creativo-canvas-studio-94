@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -91,20 +91,13 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
     }
   };
 
-  // For debugging
-  const handleError = (err: any) => {
-    console.error("PayPal error:", err);
-    toast.error("PayPal error occurred. Check console for details.");
-  };
-
   return (
     <div className="w-full">
       <PayPalScriptProvider
         options={{
-          clientId: "Aa4q8XzMQRJ_8JcAzYmvZeHlq5WBHW-1ZPq7S4i59hJOGwIjPSwbqQUfg7RWGU3_RpLVc3Rq4YNVYSLu", // PayPal Sandbox Client ID
+          clientId: "sb", // "sb" is a special value for sandbox mode, PayPal will replace it with the correct value
           currency: "USD",
           intent: "capture",
-          components: "buttons",
         }}
       >
         {loading ? (
@@ -114,12 +107,14 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
           </Button>
         ) : (
           <PayPalButtons
-            style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
+            style={{ layout: "vertical" }}
             createOrder={createOrder}
             onApprove={onApprove}
             onCancel={handleCancel}
-            onError={handleError}
-            forceReRender={[amount.toString()]}
+            onError={(err) => {
+              console.error("PayPal error:", err);
+              toast.error("PayPal error occurred");
+            }}
           />
         )}
       </PayPalScriptProvider>
