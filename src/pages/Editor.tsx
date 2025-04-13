@@ -34,7 +34,7 @@ const Editor = () => {
     canvases, 
     activeCanvasIndex, 
     setCanvases: updateCanvases,
-    selectedId
+    activeElement
   } = useDesignState();
   const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
   const isMobile = useIsMobile();
@@ -51,10 +51,10 @@ const Editor = () => {
   }, [projectId]);
 
   useEffect(() => {
-    if (isMobile && selectedId) {
+    if (isMobile && activeElement) {
       setShowMobileProperties(true);
     }
-  }, [selectedId, isMobile]);
+  }, [activeElement, isMobile]);
 
   const loadProjectData = async () => {
     try {

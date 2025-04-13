@@ -3,18 +3,13 @@ import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import NoElementSelected from "./NoElementSelected";
 import ElementProperties from "./properties/ElementProperties";
-import LayerProperties from "./properties/LayerProperties";
 import { Separator } from "@/components/ui/separator";
 
 const MobileProperties = () => {
-  const { selectedId, elements } = useDesignState();
+  const { activeElement, elements } = useDesignState();
   const { language } = useLanguage();
   
-  const selectedElement = selectedId 
-    ? elements.find(el => el.id === selectedId) 
-    : null;
-  
-  if (!selectedElement) {
+  if (!activeElement) {
     return <NoElementSelected />;
   }
 
@@ -26,15 +21,15 @@ const MobileProperties = () => {
         </h2>
         <p className="text-sm text-muted-foreground">
           {language === 'he' 
-            ? `סוג: ${selectedElement.type}` 
-            : `Type: ${selectedElement.type}`}
+            ? `סוג: ${activeElement.type}` 
+            : `Type: ${activeElement.type}`}
         </p>
       </div>
       
       <Separator />
       
       <div className="pb-16">
-        <ElementProperties element={selectedElement} />
+        <ElementProperties element={activeElement} />
       </div>
     </div>
   );
