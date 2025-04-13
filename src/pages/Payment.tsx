@@ -11,8 +11,8 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, CreditCard } from "lucide-react";
 
 // Replace with your actual PayPal production Client ID
-const PAYPAL_CLIENT_ID = "YOUR_LIVE_CLIENT_ID"; // Production Client ID
-const PAYPAL_MODE = "production" as const; // "sandbox" | "production"
+const PAYPAL_CLIENT_ID = "ACTUAL_PAYPAL_CLIENT_ID"; // Production Client ID
+const PAYPAL_MODE = "production" as const;
 
 export default function Payment() {
   const { projectId } = useParams<{ projectId: string }>();
