@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -15,9 +14,8 @@ import {
   SlidersHorizontal,
   SlidersVertical
 } from "lucide-react";
-import { useDesignState } from "@/context/DesignContext";
+import { useDesignState, ElementType } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 
 const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
@@ -42,7 +40,7 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
 
   // Handle puzzle options
   const handleImagePuzzleClick = () => {
-    addElement('puzzle', {
+    addElement('puzzle' as ElementType, {
       puzzleConfig: {
         name: language === 'en' ? 'Image Puzzle' : 'פאזל תמונה',
         type: 'image',
@@ -55,7 +53,7 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   };
 
   const handleNumberPuzzleClick = () => {
-    addElement('puzzle', {
+    addElement('puzzle' as ElementType, {
       puzzleConfig: {
         name: language === 'en' ? 'Number Lock' : 'מנעול מספרים',
         type: 'number',
@@ -69,7 +67,7 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   };
 
   const handleAlphabetPuzzleClick = () => {
-    addElement('puzzle', {
+    addElement('puzzle' as ElementType, {
       puzzleConfig: {
         name: language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות',
         type: 'alphabet',
@@ -83,7 +81,7 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   };
 
   const handleSequencePuzzleClick = () => {
-    addElement('sequencePuzzle', {
+    addElement('sequencePuzzle' as ElementType, {
       name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
       sequencePuzzleConfig: {
         name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
@@ -96,7 +94,7 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   };
   
   const handleClickSequencePuzzleClick = () => {
-    addElement('clickSequencePuzzle', {
+    addElement('clickSequencePuzzle' as ElementType, {
       name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
       clickSequencePuzzleConfig: {
         name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
@@ -109,7 +107,7 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   };
 
   const handleHorizontalSliderPuzzleClick = () => {
-    addElement('sliderPuzzle', {
+    addElement('sliderPuzzle' as ElementType, {
       name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
       sliderPuzzleConfig: {
         name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
@@ -124,7 +122,7 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   };
 
   const handleVerticalSliderPuzzleClick = () => {
-    addElement('sliderPuzzle', {
+    addElement('sliderPuzzle' as ElementType, {
       name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
       sliderPuzzleConfig: {
         name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
@@ -138,7 +136,7 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
     onClose();
   };
 
-  const handleAddElement = (type: string, config = {}) => {
+  const handleAddElement = (type: ElementType, config = {}) => {
     addElement(type, config);
     onClose();
   };
