@@ -1,70 +1,81 @@
 
 import { CSSProperties } from "react";
 import { useDesignState } from "@/context/DesignContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ResizeHandlesProps {
   show: boolean;
-  onResizeStart: (e: React.MouseEvent, direction: string) => void;
+  onResizeStart: (e: React.MouseEvent | React.TouchEvent, direction: string) => void;
 }
 
 const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
   const { isGameMode } = useDesignState();
+  const isMobile = useIsMobile();
   
   // Don't show resize handles in game mode
   if (!show || isGameMode) return null;
 
+  const handleSize = isMobile ? '18px' : '10px';
+  const borderSize = isMobile ? '3px' : '2px';
+
   const handleStyle: CSSProperties = {
     position: 'absolute',
-    width: '10px',
-    height: '10px',
+    width: handleSize,
+    height: handleSize,
     background: 'white',
-    border: '2px solid #4F46E5',
+    border: `${borderSize} solid #4F46E5`,
     borderRadius: '50%',
     zIndex: 1001,
     pointerEvents: 'auto',
+    touchAction: 'none',
   };
+
+  const handleEvents = (direction: string) => ({
+    onMouseDown: (e: React.MouseEvent) => onResizeStart(e, direction),
+    onTouchStart: (e: React.TouchEvent) => onResizeStart(e, direction)
+  });
 
   return (
     <>
       <div 
         className="resize-handle resize-handle-visible cursor-nw-resize"
         style={{ ...handleStyle, top: '0px', left: '0px', transform: 'translate(-50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "nw")}
+        {...handleEvents("nw")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-n-resize"
         style={{ ...handleStyle, top: '0px', left: '50%', transform: 'translate(-50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "n")}
+        {...handleEvents("n")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-ne-resize"
         style={{ ...handleStyle, top: '0px', right: '0px', left: 'auto', transform: 'translate(50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "ne")}
+        {...handleEvents("ne")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-e-resize"
         style={{ ...handleStyle, top: '50%', right: '0px', left: 'auto', transform: 'translate(50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "e")}
+        {...handleEvents("e")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-se-resize"
         style={{ ...handleStyle, bottom: '0px', right: '0px', top: 'auto', left: 'auto', transform: 'translate(50%, 50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "se")}
+        {...handleEvents("se")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-s-resize"
         style={{ ...handleStyle, bottom: '0px', left: '50%', top: 'auto', transform: 'translate(-50%, 50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "s")}
+        {...handleEvents("s")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-sw-resize"
         style={{ ...handleStyle, bottom: '0px', left: '0px', top: 'auto', transform: 'translate(-50%, 50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "sw")}
+        {...handleEvents("sw")}
       />
       <div 
         className="resize-handle resize-handle-visible cursor-w-resize"
         style={{ ...handleStyle, top: '50%', left: '0px', transform: 'translate(-50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "w")}
+        {...handleEvents("w")}
       />
     </>
   );
