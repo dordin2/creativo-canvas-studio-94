@@ -28,7 +28,7 @@ export function PayPalButton({
     <div className="w-full">
       <PayPalScriptProvider 
         options={{ 
-          "client-id": clientId,
+          clientId: clientId, // Fixed: renamed "client-id" to clientId
           currency: currency,
           intent: "capture",
           components: "buttons"
@@ -45,6 +45,7 @@ export function PayPalButton({
           forceReRender={[amount, currency]}
           createOrder={(data, actions) => {
             return actions.order.create({
+              intent: "CAPTURE", // Fixed: added the required intent property
               purchase_units: [
                 {
                   amount: {
