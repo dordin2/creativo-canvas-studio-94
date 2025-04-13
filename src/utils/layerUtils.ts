@@ -1,3 +1,4 @@
+
 import { DesignElement } from "@/types/designTypes";
 
 // Get highest layer to place new elements on top
@@ -36,4 +37,37 @@ export const handleBackgroundLayer = (
   
   // Return unchanged elements if no background operation was performed
   return { elements };
+};
+
+// Update element layers based on drag and drop reordering
+export const updateElementsOrder = (
+  allElements: DesignElement[],
+  sourceIndex: number, 
+  targetIndex: number,
+  layerElements: DesignElement[]
+): DesignElement[] => {
+  // Split into non-layer elements (like background) and layered elements
+  const nonLayerElements = allElements.filter(el => el.type === 'background');
+  
+  // Create a copy of layer elements
+  const updatedLayerElements = [...layerElements];
+  
+  // Remove the element from source position
+  const [draggedItem] = updatedLayerElements.splice(sourceIndex, 1);
+  
+  // Insert it at the target position
+  updatedLayerElements.splice(targetIndex, 0, draggedItem);
+  
+  // Reassign layer values based on new positions (reverse order since higher index means higher layer)
+  const reorderedElements = updatedLayerElements.map((element, index) => {
+    // We reverse the index for layer value since we want the top item to have highest layer
+    const newLayer = updatedLayerElements.length - index;
+    return {
+      ...element,
+      layer: newLayer
+    };
+  });
+  
+  // Combine non-layer elements with newly ordered layer elements
+  return [...nonLayerElements, ...reorderedElements];
 };

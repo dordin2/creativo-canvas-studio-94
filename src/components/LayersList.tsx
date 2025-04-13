@@ -1,6 +1,7 @@
-import { useState } from "react";
+
+import { useState, useRef } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
-import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight } from "lucide-react";
+import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -21,40 +22,38 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
+import { updateElementsOrder } from "@/utils/layerUtils";
 
 const LayersList = () => {
   const { 
     elements, 
     activeElement, 
     setActiveElement, 
-    updateElementLayer, 
     updateElement, 
     removeElement,
     addElement,
     canvases,
     activeCanvasIndex,
-    moveElementToCanvas
+    moveElementToCanvas,
+    setCanvases
   } = useDesignState();
   
-  const [editingLayerId, setEditingLayerId] = useState<string | null>(null);
-  const [newLayerValue, setNewLayerValue] = useState<number>(0);
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [newNameValue, setNewNameValue] = useState<string>('');
   const [showMoveDialog, setShowMoveDialog] = useState<boolean>(false);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [selectedTargetCanvas, setSelectedTargetCanvas] = useState<string>('');
+  const [draggedElement, setDraggedElement] = useState<DesignElement | null>(null);
+  const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  
+  // Create a drag preview image ref
+  const dragPreviewRef = useRef<HTMLDivElement | null>(null);
 
   const layerElements = [...elements]
     .filter(element => element.type !== 'background')
     .sort((a, b) => b.layer - a.layer);
-
-  const handleLayerChange = (elementId: string, newValue: number) => {
-    updateElementLayer(elementId, newValue);
-    setEditingLayerId(null);
-  };
 
   const handleNameChange = (elementId: string, newName: string) => {
     updateElement(elementId, { name: newName });
@@ -105,6 +104,98 @@ const LayersList = () => {
     setShowMoveDialog(true);
   };
 
+  // Drag and drop handlers
+  const handleDragStart = (e: React.DragEvent, element: DesignElement, index: number) => {
+    setDraggedElement(element);
+
+    // Create and style the drag preview
+    if (dragPreviewRef.current) {
+      const preview = dragPreviewRef.current;
+      
+      // Create a thumbnail based on element type
+      preview.innerHTML = "";
+      const thumbnail = document.createElement("div");
+      thumbnail.className = "w-6 h-6 rounded-sm";
+      
+      // Apply specific styling based on element type
+      if (element.type === 'circle') {
+        thumbnail.style.borderRadius = '50%';
+      }
+      
+      // Apply element's background color or default to purple
+      thumbnail.style.backgroundColor = element.style?.backgroundColor as string || '#8B5CF6';
+      
+      // Add element name
+      const nameSpan = document.createElement("span");
+      nameSpan.innerText = getElementName(element);
+      nameSpan.className = "ml-2 text-sm font-medium";
+      
+      // Add to preview
+      preview.appendChild(thumbnail);
+      preview.appendChild(nameSpan);
+      preview.className = "flex items-center p-2 bg-white border rounded-md shadow-md";
+      
+      // Set as drag image
+      const rect = e.currentTarget.getBoundingClientRect();
+      e.dataTransfer.setDragImage(preview, 20, 20);
+    }
+
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', element.id);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedElement) {
+      setDragOverIndex(index);
+    }
+  };
+
+  const handleDragLeave = () => {
+    setDragOverIndex(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetIndex: number) => {
+    e.preventDefault();
+    
+    if (!draggedElement) return;
+    
+    const sourceIndex = layerElements.findIndex(el => el.id === draggedElement.id);
+    if (sourceIndex === -1 || sourceIndex === targetIndex) {
+      setDraggedElement(null);
+      setDragOverIndex(null);
+      return;
+    }
+
+    // Get the current canvas elements
+    const currentCanvas = canvases[activeCanvasIndex];
+    if (!currentCanvas) return;
+
+    // Create a copy of the elements to work with
+    const updatedElements = [...currentCanvas.elements];
+    
+    // Update the layers based on new order
+    const newElements = updateElementsOrder(updatedElements, sourceIndex, targetIndex, layerElements);
+    
+    // Update the canvas with the new elements
+    const updatedCanvases = [...canvases];
+    updatedCanvases[activeCanvasIndex] = {
+      ...currentCanvas,
+      elements: newElements
+    };
+    
+    setCanvases(updatedCanvases);
+    
+    // Reset drag state
+    setDraggedElement(null);
+    setDragOverIndex(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedElement(null);
+    setDragOverIndex(null);
+  };
+
   return (
     <div className="border rounded-md p-4 mt-4">
       <div className="flex items-center gap-2 mb-4">
@@ -112,19 +203,38 @@ const LayersList = () => {
         <h3 className="font-medium">Layers ({canvases[activeCanvasIndex]?.name || 'Current Canvas'})</h3>
       </div>
 
+      {/* Hidden div used for drag preview */}
+      <div 
+        ref={dragPreviewRef} 
+        className="absolute opacity-0 pointer-events-none"
+        style={{ top: '-9999px', left: '-9999px' }}
+      ></div>
+
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
         {layerElements.length === 0 ? (
           <div className="text-sm text-gray-500 italic">No elements added yet</div>
         ) : (
-          layerElements.map((element) => (
+          layerElements.map((element, index) => (
             <div 
               key={element.id}
               className={`p-2 border rounded-md flex items-center justify-between ${
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
-              } cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
+              } ${dragOverIndex === index ? "border-blue-500 bg-blue-50" : ""} 
+              ${draggedElement?.id === element.id ? "opacity-50" : "opacity-100"}
+              cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
+              draggable={true}
+              onDragStart={(e) => handleDragStart(e, element, index)}
+              onDragOver={(e) => handleDragOver(e, index)}
+              onDragLeave={handleDragLeave}
+              onDrop={(e) => handleDrop(e, index)}
+              onDragEnd={handleDragEnd}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
+                <div className="cursor-grab flex items-center justify-center">
+                  <GripVertical className="h-4 w-4 text-gray-400" />
+                </div>
+                
                 <div 
                   className="w-4 h-4 rounded-sm flex-shrink-0" 
                   style={{ 
@@ -167,129 +277,95 @@ const LayersList = () => {
               </div>
 
               <div className="flex items-center gap-1 flex-shrink-0">
-                {editingLayerId === element.id ? (
-                  <form 
-                    onSubmit={(e) => {
-                      e.preventDefault();
-                      handleLayerChange(element.id, newLayerValue);
-                    }}
-                    className="flex items-center gap-1"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    <Input
-                      type="number"
-                      value={newLayerValue}
-                      onChange={(e) => setNewLayerValue(parseInt(e.target.value))}
-                      className="w-16 h-7 text-xs"
-                      min="1"
-                      autoFocus
-                      onBlur={() => handleLayerChange(element.id, newLayerValue)}
-                    />
-                  </form>
-                ) : (
-                  <>
-                    <div 
-                      className="text-xs bg-gray-100 px-2 py-1 rounded cursor-pointer"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingLayerId(element.id);
-                        setNewLayerValue(element.layer);
-                      }}
-                    >
-                      {element.layer}
-                    </div>
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              toggleVisibility(element);
-                            }}
-                          >
-                            {element.isHidden ? (
-                              <Eye className="h-3.5 w-3.5" />
-                            ) : (
-                              <EyeOff className="h-3.5 w-3.5" />
-                            )}
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>{element.isHidden ? 'Show' : 'Hide'}</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 p-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDuplicate(element);
-                            }}
-                          >
-                            <Copy className="h-3.5 w-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Duplicate</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                    
-                    {canvases.length > 1 && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-7 w-7 p-0 text-blue-500"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openMoveDialog(element.id);
-                              }}
-                            >
-                              <MoveRight className="h-3.5 w-3.5" />
-                            </Button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Move to canvas</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                    
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="h-7 w-7 p-0 text-red-500"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              removeElement(element.id);
-                            }}
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delete element</p>
-                        </TooltipContent>
-                      </Tooltip>
-                    </TooltipProvider>
-                  </>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 w-7 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleVisibility(element);
+                        }}
+                      >
+                        {element.isHidden ? (
+                          <Eye className="h-3.5 w-3.5" />
+                        ) : (
+                          <EyeOff className="h-3.5 w-3.5" />
+                        )}
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{element.isHidden ? 'Show' : 'Hide'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 w-7 p-0"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDuplicate(element);
+                        }}
+                      >
+                        <Copy className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Duplicate</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+                
+                {canvases.length > 1 && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-7 w-7 p-0 text-blue-500"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openMoveDialog(element.id);
+                          }}
+                        >
+                          <MoveRight className="h-3.5 w-3.5" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Move to canvas</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
+                
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-7 w-7 p-0 text-red-500"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeElement(element.id);
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Delete element</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             </div>
           ))
