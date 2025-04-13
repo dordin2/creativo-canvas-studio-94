@@ -1,5 +1,6 @@
+
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo, Layers } from "lucide-react";
+import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
@@ -8,11 +9,18 @@ import GameModeToggle from "./GameModeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LayersList from "./LayersList";
 import { useProject } from "@/context/ProjectContext";
+import { useIsMobile } from "@/hooks/use-mobile";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
 
 const Header = () => {
   const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
   const { t, language } = useLanguage();
   const { projectId } = useProject();
+  const isMobile = useIsMobile();
 
   const handleDownload = () => {
     if (!canvasRef) return;
@@ -66,6 +74,75 @@ const Header = () => {
   const handleShare = () => {
     toast.info(t('toast.info.share'));
   };
+
+  if (isMobile) {
+    return (
+      <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
+        <div className="flex items-center">
+          <div className="font-bold text-lg bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
+            {t('app.title')}
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <GameModeToggle />
+          
+          <Drawer>
+            <DrawerTrigger asChild>
+              <Button variant="outline" size="icon" className="hover:bg-gray-50">
+                <Menu className="h-4 w-4" />
+              </Button>
+            </DrawerTrigger>
+            <DrawerContent className="px-4 pb-6 pt-2">
+              <div className="space-y-4 mt-2">
+                <h3 className="font-medium text-lg">{t('app.tools')}</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={undo} 
+                    disabled={!canUndo}
+                    className="justify-start hover:bg-gray-50"
+                  >
+                    <Undo className="h-4 w-4 mr-2" />
+                    {t('app.undo')}
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    onClick={redo} 
+                    disabled={!canRedo}
+                    className="justify-start hover:bg-gray-50"
+                  >
+                    <Redo className="h-4 w-4 mr-2" />
+                    {t('app.redo')}
+                  </Button>
+                  <Button variant="outline" className="justify-start hover:bg-gray-50" onClick={handleShare}>
+                    <Share className="h-4 w-4 mr-2" />
+                    {t('app.share')}
+                  </Button>
+                  <Button variant="outline" className="justify-start hover:bg-gray-50" onClick={handleDownload}>
+                    <Download className="h-4 w-4 mr-2" />
+                    {t('app.download')}
+                  </Button>
+                </div>
+                
+                <div className="pt-2">
+                  <h3 className="font-medium mb-2">{language === 'he' ? 'שכבות' : 'Layers'}</h3>
+                  <div className="border rounded-md p-2 bg-gray-50">
+                    <LayersList />
+                  </div>
+                </div>
+                
+                <div className="pt-2">
+                  <h3 className="font-medium mb-2">{t('app.settings')}</h3>
+                  <LanguageSwitcher />
+                </div>
+              </div>
+            </DrawerContent>
+          </Drawer>
+        </div>
+      </header>
+    );
+  }
 
   return (
     <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
