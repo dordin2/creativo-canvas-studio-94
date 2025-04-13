@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { PayPalButton } from "@/components/PayPalButton";
@@ -123,7 +124,7 @@ export default function Payment() {
             <div className="text-center mb-4">
               <p className="text-lg font-semibold mb-2">Select Amount</p>
               <div className="flex flex-wrap justify-center gap-2">
-                {[1, 5, 10, 20, 50].map((value) => (
+                {[5, 10, 20, 50].map((value) => (
                   <Badge 
                     key={value}
                     variant={amount === value ? "default" : "outline"}
