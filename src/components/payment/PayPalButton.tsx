@@ -22,6 +22,29 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
   const { user } = useAuth();
   const { refreshPaymentStatus } = usePayment();
 
+  // Script loading status handlers
+  useEffect(() => {
+    const handleScriptLoad = () => {
+      setPaypalReady(true);
+      setSdkError(null);
+    };
+
+    const handleScriptError = (err: Event) => {
+      console.error("PayPal SDK error:", err);
+      setSdkError("PayPal payment system is currently unavailable");
+      setPaypalReady(false);
+    };
+
+    // Add event listeners for script loading
+    window.addEventListener('paypal-script-loaded', handleScriptLoad);
+    window.addEventListener('paypal-script-error', handleScriptError);
+
+    return () => {
+      window.removeEventListener('paypal-script-loaded', handleScriptLoad);
+      window.removeEventListener('paypal-script-error', handleScriptError);
+    };
+  }, []);
+
   // Create PayPal order through our edge function
   const createOrder = async () => {
     if (!user) {
@@ -91,17 +114,6 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
     }
   };
 
-  const handleScriptLoad = () => {
-    setPaypalReady(true);
-    setSdkError(null);
-  };
-
-  const handleScriptError = (err: Error) => {
-    console.error("PayPal SDK error:", err);
-    setSdkError("PayPal payment system is currently unavailable");
-    setPaypalReady(false);
-  };
-
   return (
     <div className="w-full">
       {sdkError ? (
@@ -121,9 +133,18 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
             clientId: "sb", // Special value for sandbox mode
             currency: "USD",
             intent: "capture",
+            dataClientToken: "sandbox_cgv4ktcg_wvrh4jwcqbh9p6kn",
+            components: "buttons",
+            onError: (err) => {
+              console.error("PayPal SDK error:", err);
+              setSdkError("PayPal payment system is currently unavailable");
+              setPaypalReady(false);
+            },
+            onSuccess: () => {
+              setPaypalReady(true);
+              setSdkError(null);
+            },
           }}
-          onScriptLoad={handleScriptLoad}
-          onError={handleScriptError}
         >
           {loading ? (
             <Button disabled className="w-full">
