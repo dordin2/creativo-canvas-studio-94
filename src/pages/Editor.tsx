@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, Save, Share2, Globe, Lock } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
-import { Database } from "@/types/database";
+import { PaymentButton } from "@/components/PaymentButton";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -151,6 +151,7 @@ const Editor = () => {
             <h1 className="text-xl font-semibold text-canvas-purple">{projectName}</h1>
           </div>
           <div className="flex gap-2">
+            <PaymentButton projectId={projectId} />
             <Button 
               onClick={toggleProjectVisibility}
               variant="outline"

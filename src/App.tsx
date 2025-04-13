@@ -13,6 +13,7 @@ import Editor from "./pages/Editor";
 import Play from "./pages/Play";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
+import Payment from "./pages/Payment";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -60,6 +61,16 @@ const App = () => (
               element={
                 <AuthProvider>
                   <Play />
+                </AuthProvider>
+              } 
+            />
+            <Route 
+              path="/payment/:projectId" 
+              element={
+                <AuthProvider>
+                  <ProtectedRoute>
+                    <Payment />
+                  </ProtectedRoute>
                 </AuthProvider>
               } 
             />
