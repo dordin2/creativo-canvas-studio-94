@@ -1,6 +1,7 @@
+
 import { useState, useRef } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
-import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
+import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -45,6 +46,15 @@ const LayersList = () => {
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
   const [selectedTargetCanvas, setSelectedTargetCanvas] = useState<string>('');
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+  const [dragImagePosition, setDragImagePosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Reference to store initial mouse position when dragging starts
+  const dragStartPosRef = useRef({ x: 0, y: 0 });
+  // Element that is being dragged
+  const draggedElementRef = useRef<HTMLDivElement | null>(null);
+  // Custom drag ghost image
+  const ghostImageRef = useRef<HTMLDivElement | null>(null);
 
   // Sort elements by layer in descending order (highest layer first)
   const layerElements = [...elements]
@@ -100,72 +110,168 @@ const LayersList = () => {
     setShowMoveDialog(true);
   };
 
-  // Handle drag start
-  const handleDragStart = (e: React.DragEvent, elementId: string) => {
-    setDraggedItemId(elementId);
-    e.dataTransfer.effectAllowed = 'move';
-    
-    // Create a ghost image for dragging
-    const dragGhost = document.createElement('div');
-    dragGhost.classList.add('bg-white', 'border', 'border-canvas-purple', 'rounded-md', 'opacity-80', 'p-2');
-    dragGhost.style.width = '200px';
-    dragGhost.style.position = 'absolute';
-    dragGhost.style.top = '-1000px';
-    dragGhost.style.zIndex = '9999';
-    dragGhost.textContent = getElementName(elements.find(el => el.id === elementId) as DesignElement);
-    document.body.appendChild(dragGhost);
-    e.dataTransfer.setDragImage(dragGhost, 0, 0);
+  // Create ghost image for dragging
+  const createGhostImage = (element: DesignElement) => {
+    // Remove any existing ghost image
+    if (ghostImageRef.current && ghostImageRef.current.parentNode) {
+      document.body.removeChild(ghostImageRef.current);
+    }
+
+    // Create a new ghost image element
+    const ghost = document.createElement('div');
+    ghost.classList.add('fixed', 'pointer-events-none', 'z-50', 'opacity-80', 'shadow-md', 'rounded-md', 'bg-white', 'border', 'border-canvas-purple', 'p-2', 'flex', 'items-center', 'gap-2');
+    ghost.style.width = '200px';
+    ghost.style.left = '-1000px'; // Initially off-screen
+
+    // Add image or colored box
+    const thumbnail = renderElementThumbnail(element);
+    if (typeof thumbnail === 'object') {
+      ghost.appendChild(thumbnail);
+    }
+
+    // Add element name
+    const nameSpan = document.createElement('span');
+    nameSpan.textContent = getElementName(element);
+    nameSpan.classList.add('text-sm', 'font-medium', 'truncate');
+    ghost.appendChild(nameSpan);
+
+    // Append to body
+    document.body.appendChild(ghost);
+    ghostImageRef.current = ghost;
+
+    return ghost;
   };
 
-  // Handle drag over
-  const handleDragOver = (e: React.DragEvent) => {
+  // Handle mouse down to start drag
+  const handleMouseDown = (e: React.MouseEvent, element: DesignElement) => {
+    // Only start drag on left click
+    if (e.button !== 0) return;
+    
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
+    e.stopPropagation();
+
+    // Select the element
+    setActiveElement(element);
+    
+    // Set up dragging state
+    setDraggedItemId(element.id);
+    
+    // Store initial mouse position
+    dragStartPosRef.current = { x: e.clientX, y: e.clientY };
+    
+    // Create and position the ghost image
+    const ghost = createGhostImage(element);
+    ghost.style.transform = 'translate(-50%, -50%)';
+    ghost.style.left = `${e.clientX}px`;
+    ghost.style.top = `${e.clientY}px`;
+    
+    // Store the element being dragged
+    draggedElementRef.current = e.currentTarget as HTMLDivElement;
+    
+    // Add event listeners for mouse move and mouse up
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    
+    setIsDragging(true);
   };
 
-  // Handle drop - reorder layers
-  const handleDrop = (e: React.DragEvent, targetElementId: string) => {
-    e.preventDefault();
+  // Handle mouse move during drag
+  const handleMouseMove = (e: MouseEvent) => {
+    if (!isDragging || !ghostImageRef.current) return;
     
-    if (!draggedItemId || draggedItemId === targetElementId) {
-      setDraggedItemId(null);
-      return;
+    // Move the ghost image with the mouse pointer
+    ghostImageRef.current.style.left = `${e.clientX}px`;
+    ghostImageRef.current.style.top = `${e.clientY}px`;
+    
+    // Find the element under the cursor to highlight drop area
+    const elementsUnderCursor = document.elementsFromPoint(e.clientX, e.clientY);
+    
+    // Remove highlighting from all layers
+    document.querySelectorAll('.layer-item').forEach(el => {
+      el.classList.remove('border-canvas-purple', 'bg-purple-50', 'drop-target');
+    });
+    
+    // Find the first layer-item element under the cursor that is not the dragged element
+    const dropTarget = elementsUnderCursor.find(el => 
+      el.classList.contains('layer-item') && 
+      el.getAttribute('data-element-id') !== draggedItemId
+    ) as HTMLElement;
+    
+    if (dropTarget) {
+      // Add highlight to the drop target
+      dropTarget.classList.add('border-canvas-purple', 'bg-purple-50', 'drop-target');
     }
-    
-    const sourceElement = elements.find(el => el.id === draggedItemId);
-    const targetElement = elements.find(el => el.id === targetElementId);
-    
-    if (!sourceElement || !targetElement) {
-      setDraggedItemId(null);
-      return;
-    }
-    
-    // Update the layer value of the dragged element
-    updateElementLayer(draggedItemId, targetElement.layer + 1);
-    
-    // Update layers of affected elements
-    const elementsToUpdate = elements
-      .filter(el => el.id !== draggedItemId && el.layer > targetElement.layer)
-      .sort((a, b) => a.layer - b.layer);
-    
-    // Update each affected element with new layer value
-    let currentLayer = targetElement.layer + 2;
-    for (const el of elementsToUpdate) {
-      updateElement(el.id, { layer: currentLayer });
-      currentLayer++;
-    }
-    
-    // Apply all changes to history
-    commitToHistory();
-    setDraggedItemId(null);
   };
 
-  // Handle drag end - cleanup
-  const handleDragEnd = () => {
+  // Handle mouse up to end drag
+  const handleMouseUp = (e: MouseEvent) => {
+    if (!isDragging) return;
+    
+    // Clean up the ghost image
+    if (ghostImageRef.current && ghostImageRef.current.parentNode) {
+      document.body.removeChild(ghostImageRef.current);
+      ghostImageRef.current = null;
+    }
+    
+    // Find drop target
+    const elementsUnderCursor = document.elementsFromPoint(e.clientX, e.clientY);
+    const dropTarget = elementsUnderCursor.find(el => 
+      el.classList.contains('layer-item') && 
+      el.getAttribute('data-element-id') !== draggedItemId
+    ) as HTMLElement;
+    
+    if (dropTarget && draggedItemId) {
+      const targetElementId = dropTarget.getAttribute('data-element-id');
+      if (targetElementId) {
+        // Find source and target elements
+        const sourceElement = elements.find(el => el.id === draggedItemId);
+        const targetElement = elements.find(el => el.id === targetElementId);
+        
+        if (sourceElement && targetElement) {
+          // Determine if dragging above or below target
+          const targetRect = dropTarget.getBoundingClientRect();
+          const isAbove = e.clientY < targetRect.top + targetRect.height / 2;
+          
+          // Update the layer value based on position
+          if (isAbove) {
+            // Place above target (higher layer number)
+            updateElementLayer(draggedItemId, targetElement.layer + 1);
+          } else {
+            // Place below target (lower layer number)
+            updateElementLayer(draggedItemId, Math.max(1, targetElement.layer - 1));
+          }
+          
+          // Reorder affected elements
+          const elementsToUpdate = elements
+            .filter(el => el.id !== draggedItemId && 
+                     ((isAbove && el.layer > targetElement.layer) || 
+                      (!isAbove && el.layer < targetElement.layer && el.layer > 0)))
+            .sort((a, b) => isAbove ? a.layer - b.layer : b.layer - a.layer);
+          
+          // Update each affected element with new layer value
+          let currentLayer = isAbove ? targetElement.layer + 2 : targetElement.layer - 2;
+          for (const el of elementsToUpdate) {
+            updateElement(el.id, { layer: Math.max(1, currentLayer) });
+            currentLayer = isAbove ? currentLayer + 1 : currentLayer - 1;
+          }
+          
+          // Apply all changes to history
+          commitToHistory();
+        }
+      }
+    }
+    
+    // Clean up and reset state
+    document.querySelectorAll('.layer-item').forEach(el => {
+      el.classList.remove('border-canvas-purple', 'bg-purple-50', 'drop-target');
+    });
+    
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
+    
+    setIsDragging(false);
     setDraggedItemId(null);
-    // Remove any ghost elements
-    const ghosts = document.querySelectorAll('div[style*="position: absolute; top: -1000px"]');
-    ghosts.forEach(ghost => ghost.remove());
+    draggedElementRef.current = null;
   };
 
   // Generate thumbnail for element
@@ -179,6 +285,31 @@ const LayersList = () => {
       );
     }
     
+    // Create a DOM element for the ghost image
+    if (ghostImageRef.current) {
+      const imgDiv = document.createElement('div');
+      imgDiv.className = "w-8 h-8 rounded-sm flex-shrink-0 flex items-center justify-center";
+      
+      if (element.type === 'circle') {
+        imgDiv.style.borderRadius = '50%';
+      } else if (element.style?.borderRadius) {
+        imgDiv.style.borderRadius = element.style.borderRadius;
+      }
+      
+      imgDiv.style.backgroundColor = element.style?.backgroundColor || '#8B5CF6';
+      
+      // Add text content for text elements
+      if (element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph') {
+        const span = document.createElement('span');
+        span.className = "text-xs text-white overflow-hidden";
+        span.textContent = (element.content as string || 'T').charAt(0);
+        imgDiv.appendChild(span);
+      }
+      
+      return imgDiv;
+    }
+    
+    // For the regular UI rendering
     return (
       <div 
         className="w-8 h-8 rounded-sm flex-shrink-0 flex items-center justify-center" 
@@ -187,7 +318,7 @@ const LayersList = () => {
           borderRadius: element.type === 'circle' ? '50%' : element.style?.borderRadius as string || '0' 
         }}
       >
-        {element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph' && (
+        {(element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph') && (
           <span className="text-xs text-white overflow-hidden">
             {(element.content as string || 'T').charAt(0)}
           </span>
@@ -210,23 +341,14 @@ const LayersList = () => {
           layerElements.map((element) => (
             <div 
               key={element.id}
-              className={`p-2 border rounded-md flex items-center justify-between ${
+              data-element-id={element.id}
+              className={`layer-item p-2 border rounded-md flex items-center justify-between ${
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
-              } cursor-pointer ${element.isHidden ? "opacity-50" : ""} ${
-                draggedItemId === element.id ? "border-dashed border-blue-400" : ""
-              }`}
+              } cursor-move ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
-              draggable
-              onDragStart={(e) => handleDragStart(e, element.id)}
-              onDragOver={handleDragOver}
-              onDrop={(e) => handleDrop(e, element.id)}
-              onDragEnd={handleDragEnd}
+              onMouseDown={(e) => handleMouseDown(e, element)}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div className="flex-shrink-0 cursor-move">
-                  <GripVertical className="h-4 w-4 text-gray-400" />
-                </div>
-                
                 {renderElementThumbnail(element)}
                 
                 {editingNameId === element.id ? (

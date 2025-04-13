@@ -21,7 +21,7 @@ const LayerProperties = ({ element }: { element: DesignElement }) => {
         </span>
       </div>
       <div className="mt-2 text-sm text-muted-foreground">
-        <span>Drag in layer list to reorder</span>
+        <span>Click and drag elements in the layers list to reorder</span>
       </div>
       <div className="mt-2 text-sm text-muted-foreground">
         Canvas: {currentCanvas?.name || 'Current Canvas'}
