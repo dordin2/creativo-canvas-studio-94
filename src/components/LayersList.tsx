@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useDesignState, DesignElement } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
@@ -188,7 +187,7 @@ const LayersList = () => {
           borderRadius: element.type === 'circle' ? '50%' : element.style?.borderRadius as string || '0' 
         }}
       >
-        {element.type === 'text' && (
+        {element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph' && (
           <span className="text-xs text-white overflow-hidden">
             {(element.content as string || 'T').charAt(0)}
           </span>
