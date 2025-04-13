@@ -8,7 +8,6 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { DesignProvider } from "@/context/DesignContext";
 import { ProjectProvider } from "@/context/ProjectContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { PaymentProvider } from "@/context/PaymentContext";
 import Projects from "./pages/Projects";
 import Editor from "./pages/Editor";
 import Play from "./pages/Play";
@@ -25,29 +24,48 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <AuthProvider>
-            <PaymentProvider>
-              <Routes>
-                <Route path="/" element={<Projects />} />
-                <Route path="/auth" element={<Auth />} />
-                <Route 
-                  path="/editor/:projectId" 
-                  element={
-                    <ProtectedRoute>
-                      <ProjectProvider>
-                        <DesignProvider>
-                          <Editor />
-                        </DesignProvider>
-                      </ProjectProvider>
-                    </ProtectedRoute>
-                  } 
-                />
-                <Route path="/play/:projectId" element={<Play />} />
-                {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </PaymentProvider>
-          </AuthProvider>
+          <Routes>
+            <Route 
+              path="/" 
+              element={
+                <AuthProvider>
+                  <Projects />
+                </AuthProvider>
+              } 
+            />
+            <Route 
+              path="/auth" 
+              element={
+                <AuthProvider>
+                  <Auth />
+                </AuthProvider>
+              } 
+            />
+            <Route 
+              path="/editor/:projectId" 
+              element={
+                <AuthProvider>
+                  <ProtectedRoute>
+                    <ProjectProvider>
+                      <DesignProvider>
+                        <Editor />
+                      </DesignProvider>
+                    </ProjectProvider>
+                  </ProtectedRoute>
+                </AuthProvider>
+              } 
+            />
+            <Route 
+              path="/play/:projectId" 
+              element={
+                <AuthProvider>
+                  <Play />
+                </AuthProvider>
+              } 
+            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
       </LanguageProvider>
     </BrowserRouter>
