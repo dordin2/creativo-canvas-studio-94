@@ -91,13 +91,21 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
     }
   };
 
+  // For debugging
+  const handleError = (err: any) => {
+    console.error("PayPal error:", err);
+    toast.error("PayPal error occurred. Check console for details.");
+  };
+
   return (
     <div className="w-full">
       <PayPalScriptProvider
         options={{
-          clientId: "sb", // "sb" is a special value for sandbox mode, PayPal will replace it with the correct value
+          clientId: "AZDxjDScFpQtjWTOUtWKbyN_bDt4OgqaF4eYXlewfBP4-8aqX3PiV8e1GWU6liB2CUXlkA59kJXE7M6R", // PayPal Sandbox Client ID
           currency: "USD",
           intent: "capture",
+          components: "buttons",
+          "data-client-token": "sandbox_abc123", // For sandbox testing
         }}
       >
         {loading ? (
@@ -107,17 +115,22 @@ const PayPalButton = ({ amount, projectId, onSuccess, onCancel }: PayPalButtonPr
           </Button>
         ) : (
           <PayPalButtons
-            style={{ layout: "vertical" }}
+            style={{ layout: "vertical", color: "gold", shape: "rect", label: "pay" }}
             createOrder={createOrder}
             onApprove={onApprove}
             onCancel={handleCancel}
-            onError={(err) => {
-              console.error("PayPal error:", err);
-              toast.error("PayPal error occurred");
-            }}
+            onError={handleError}
+            forceReRender={[amount.toString()]}
           />
         )}
       </PayPalScriptProvider>
+      
+      {/* Sandbox testing info */}
+      <div className="mt-3 text-xs text-gray-500 border-t pt-2">
+        <p className="font-medium mb-1">PayPal Sandbox Testing:</p>
+        <p>Email: sb-47hxd29003916@personal.example.com</p>
+        <p>Password: HL9^aP$2</p>
+      </div>
     </div>
   );
 };

@@ -7,9 +7,11 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Folder, Clock, LogOut, UserCircle } from "lucide-react";
+import { Plus, Folder, Clock, LogOut, UserCircle, Sparkles } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { Database } from "@/types/database";
+import { usePayment } from "@/context/PaymentContext";
+import { Badge } from "@/components/ui/badge";
+import PaymentStatus from "@/components/payment/PaymentStatus";
 
 type Project = {
   id: string;
@@ -19,14 +21,19 @@ type Project = {
   updated_at: string;
 };
 
+type ProjectWithPayment = Project & {
+  isPaid?: boolean;
+};
+
 const Projects = () => {
-  const [projects, setProjects] = useState<Project[]>([]);
+  const [projects, setProjects] = useState<ProjectWithPayment[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newProjectOpen, setNewProjectOpen] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [newProjectDescription, setNewProjectDescription] = useState("");
   const navigate = useNavigate();
   const { user, profile, signOut, isLoading: authLoading } = useAuth();
+  const { hasProjectPaid } = usePayment();
   
   useEffect(() => {
     if (!authLoading) {
@@ -53,7 +60,25 @@ const Projects = () => {
         throw error;
       }
       
-      setProjects(data || []);
+      const projectsWithPayment: ProjectWithPayment[] = data || [];
+      
+      // Check payment status for each project if user is logged in
+      if (user && projectsWithPayment.length > 0) {
+        const projectsWithPaymentStatus = await Promise.all(
+          projectsWithPayment.map(async (project) => {
+            try {
+              const isPaid = await hasProjectPaid(project.id);
+              return { ...project, isPaid };
+            } catch (error) {
+              console.error(`Error checking payment for project ${project.id}:`, error);
+              return project;
+            }
+          })
+        );
+        setProjects(projectsWithPaymentStatus);
+      } else {
+        setProjects(projectsWithPayment);
+      }
     } catch (error) {
       console.error('Error fetching projects:', error);
       toast.error('Failed to load projects');
@@ -206,8 +231,16 @@ const Projects = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
               <Card key={project.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <CardTitle className="text-xl text-canvas-purple">{project.name}</CardTitle>
+                <CardHeader className="relative">
+                  <CardTitle className="text-xl text-canvas-purple pr-16">{project.name}</CardTitle>
+                  {project.isPaid && (
+                    <div className="absolute top-4 right-4">
+                      <Badge className="bg-amber-500 hover:bg-amber-600">
+                        <Sparkles className="h-3 w-3 mr-1" />
+                        Premium
+                      </Badge>
+                    </div>
+                  )}
                 </CardHeader>
                 <CardContent>
                   {project.description && (

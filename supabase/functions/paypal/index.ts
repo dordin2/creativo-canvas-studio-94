@@ -33,6 +33,7 @@ async function getPayPalAccessToken(): Promise<string> {
     throw new Error('PayPal credentials are missing');
   }
 
+  console.log('Generating PayPal access token...');
   const auth = btoa(`${clientId}:${clientSecret}`);
   
   try {
@@ -52,6 +53,7 @@ async function getPayPalAccessToken(): Promise<string> {
     }
 
     const data = await response.json();
+    console.log('PayPal token generated successfully');
     return data.access_token;
   } catch (error) {
     console.error('Error getting PayPal token:', error);
@@ -63,6 +65,7 @@ async function getPayPalAccessToken(): Promise<string> {
 async function createPayPalOrder(amount: number, currency: string): Promise<any> {
   const accessToken = await getPayPalAccessToken();
   
+  console.log(`Creating PayPal order for ${amount} ${currency}...`);
   try {
     const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders`, {
       method: 'POST',
@@ -87,7 +90,9 @@ async function createPayPalOrder(amount: number, currency: string): Promise<any>
       throw new Error(`PayPal create order error: ${response.status}`);
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    console.log('PayPal order created successfully:', responseData.id);
+    return responseData;
   } catch (error) {
     console.error('Error creating PayPal order:', error);
     throw error;
@@ -98,6 +103,7 @@ async function createPayPalOrder(amount: number, currency: string): Promise<any>
 async function capturePayPalPayment(orderId: string): Promise<any> {
   const accessToken = await getPayPalAccessToken();
   
+  console.log(`Capturing PayPal payment for order ${orderId}...`);
   try {
     const response = await fetch(`${PAYPAL_BASE_URL}/v2/checkout/orders/${orderId}/capture`, {
       method: 'POST',
@@ -113,7 +119,9 @@ async function capturePayPalPayment(orderId: string): Promise<any> {
       throw new Error(`PayPal capture payment error: ${response.status}`);
     }
 
-    return await response.json();
+    const responseData = await response.json();
+    console.log('PayPal payment captured successfully:', responseData.id);
+    return responseData;
   } catch (error) {
     console.error('Error capturing PayPal payment:', error);
     throw error;
@@ -130,6 +138,8 @@ Deno.serve(async (req) => {
   try {
     const url = new URL(req.url);
     const path = url.pathname.split('/').pop();
+    
+    console.log(`Processing ${req.method} request to ${path}`);
     
     // Create order endpoint
     if (path === 'create-order' && req.method === 'POST') {
