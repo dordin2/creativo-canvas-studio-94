@@ -27,7 +27,7 @@ const LayerProperties = ({ element }: { element: DesignElement }) => {
       <div className="mt-4 bg-muted p-3 rounded-md text-sm">
         <p>Layer thumbnails show element previews:</p>
         <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
-          <li>When dragging, a small preview follows your cursor</li>
+          <li>When dragging, a thumbnail preview follows your cursor</li>
           <li>Double-click layer names to rename them</li>
           <li>Use the visibility toggle to show/hide elements</li>
         </ul>
