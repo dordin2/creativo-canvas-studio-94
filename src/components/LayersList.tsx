@@ -124,8 +124,8 @@ const LayersList = () => {
     ghost.style.left = '-1000px'; // Initially off-screen
 
     // Add image or colored box
-    const thumbnail = renderElementThumbnail(element);
-    if (typeof thumbnail === 'object') {
+    const thumbnail = createElementThumbnailDOM(element);
+    if (thumbnail) {
       ghost.appendChild(thumbnail);
     }
 
@@ -140,6 +140,39 @@ const LayersList = () => {
     ghostImageRef.current = ghost;
 
     return ghost;
+  };
+
+  // Create DOM element for thumbnail (for ghost image)
+  const createElementThumbnailDOM = (element: DesignElement): HTMLElement | null => {
+    const imgDiv = document.createElement('div');
+    imgDiv.className = "w-8 h-8 rounded-sm flex-shrink-0 flex items-center justify-center";
+    
+    if (element.type === 'circle') {
+      imgDiv.style.borderRadius = '50%';
+    } else if (element.style?.borderRadius) {
+      const borderRadius = String(element.style.borderRadius);
+      imgDiv.style.borderRadius = borderRadius;
+    }
+    
+    if (element.type === 'image' && element.dataUrl) {
+      imgDiv.style.backgroundImage = `url(${element.dataUrl})`;
+      imgDiv.style.backgroundSize = 'cover';
+      imgDiv.style.backgroundPosition = 'center';
+      return imgDiv;
+    }
+    
+    const bgColor = element.style?.backgroundColor ? String(element.style.backgroundColor) : '#8B5CF6';
+    imgDiv.style.backgroundColor = bgColor;
+    
+    // Add text content for text elements
+    if (element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph') {
+      const span = document.createElement('span');
+      span.className = "text-xs text-white overflow-hidden";
+      span.textContent = ((element.content as string) || 'T').charAt(0);
+      imgDiv.appendChild(span);
+    }
+    
+    return imgDiv;
   };
 
   // Handle mouse down to start drag
@@ -274,7 +307,7 @@ const LayersList = () => {
     draggedElementRef.current = null;
   };
 
-  // Generate thumbnail for element
+  // Render thumbnail for element in React
   const renderElementThumbnail = (element: DesignElement) => {
     if (element.type === 'image' && element.dataUrl) {
       return (
@@ -285,31 +318,6 @@ const LayersList = () => {
       );
     }
     
-    // Create a DOM element for the ghost image
-    if (ghostImageRef.current) {
-      const imgDiv = document.createElement('div');
-      imgDiv.className = "w-8 h-8 rounded-sm flex-shrink-0 flex items-center justify-center";
-      
-      if (element.type === 'circle') {
-        imgDiv.style.borderRadius = '50%';
-      } else if (element.style?.borderRadius) {
-        imgDiv.style.borderRadius = element.style.borderRadius;
-      }
-      
-      imgDiv.style.backgroundColor = element.style?.backgroundColor || '#8B5CF6';
-      
-      // Add text content for text elements
-      if (element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph') {
-        const span = document.createElement('span');
-        span.className = "text-xs text-white overflow-hidden";
-        span.textContent = (element.content as string || 'T').charAt(0);
-        imgDiv.appendChild(span);
-      }
-      
-      return imgDiv;
-    }
-    
-    // For the regular UI rendering
     return (
       <div 
         className="w-8 h-8 rounded-sm flex-shrink-0 flex items-center justify-center" 
