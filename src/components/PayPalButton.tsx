@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { PayPalScriptProvider, PayPalButtons } from "@paypal/react-paypal-js";
 import { Loader2 } from "lucide-react";
@@ -19,7 +20,7 @@ export function PayPalButton({
   onError,
   currency = "USD",
   disabled = false,
-  mode = "sandbox",
+  mode = "production",
   clientId
 }: PayPalButtonProps) {
   const [isLoading, setIsLoading] = useState(false);
@@ -29,18 +30,15 @@ export function PayPalButton({
     if (clientId) {
       setPaypalClientId(clientId);
     } else {
-      setPaypalClientId(mode === "sandbox" ? "sb" : "MISSING_PRODUCTION_CLIENT_ID");
-      
-      if (mode === "production" && !clientId) {
-        console.warn("PayPal is in production mode but no clientId was provided!");
-      }
+      console.error("Missing PayPal Client ID! Please provide a valid client ID.");
+      toast.error("Payment configuration error. Please contact support.");
     }
   }, [clientId, mode]);
 
   if (!paypalClientId) {
     return (
       <div className="p-4 border border-red-300 bg-red-50 rounded-md text-red-800">
-        Missing PayPal Client ID
+        Payment system is currently unavailable. Please try again later.
       </div>
     );
   }
@@ -88,7 +86,7 @@ export function PayPalButton({
           onError={(err) => {
             setIsLoading(false);
             console.error("PayPal payment failed:", err);
-            toast.error("Payment failed. Please try again.");
+            toast.error("Payment failed. Please try again or use a different payment method.");
             if (onError) onError(err);
           }}
           onCancel={() => {
