@@ -24,6 +24,7 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -58,6 +59,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [combinationPuzzleModal, setCombinationPuzzleModal] = useState(false);
   const [combinationMessage, setCombinationMessage] = useState('');
+  const isMobile = useIsMobile();
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -105,6 +107,38 @@ const DraggableElement = ({ element, isActive, children }: {
     }
     
     setStartPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    
+    if (isImageElement && isGameMode) {
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
+    }
+    
+    if (isGameMode) {
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
+    }
+    
+    setActiveElement(element);
+    
+    if (isEditing) return;
+    
+    if (!isSequencePuzzleElement) {
+      startDrag(e, element.position);
+      setIsDragging(true);
+    }
+    
+    if (e.touches.length > 0) {
+      const touch = e.touches[0];
+      setStartPos({ x: touch.clientX, y: touch.clientY });
+    }
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
@@ -252,12 +286,18 @@ const DraggableElement = ({ element, isActive, children }: {
       setIsDragging(false);
     };
 
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+    };
+
     if (isDragging) {
       document.addEventListener("mouseup", handleMouseUp);
+      document.addEventListener("touchend", handleTouchEnd);
     }
 
     return () => {
       document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("touchend", handleTouchEnd);
     };
   }, [isDragging]);
 
@@ -528,8 +568,16 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }
 
+  const touchFeedbackClass = isMobile ? 'touch-feedback-enabled' : '';
+  
+  const mobileTouchStyles = isMobile ? {
+    boxShadow: isActive ? '0 0 0 2px rgba(99, 102, 241, 0.8)' : 'none',
+    padding: element.type === 'image' ? '0' : undefined
+  } : {};
+
   const combinedStyle = {
     ...elementStyle,
+    ...mobileTouchStyles,
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
     cursor: isGameMode 
@@ -548,9 +596,10 @@ const DraggableElement = ({ element, isActive, children }: {
     <div
       id={`element-${element.id}`}
       ref={ref}
-      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+      className={`canvas-element ${touchFeedbackClass} ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
       style={combinedStyle}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
       draggable={isGameMode && isImageElement ? false : undefined}

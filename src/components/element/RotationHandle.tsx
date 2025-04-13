@@ -1,22 +1,27 @@
 
 import { CSSProperties } from "react";
 import { useDesignState } from "@/context/DesignContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface RotationHandleProps {
   show: boolean;
-  onRotateStart: (e: React.MouseEvent) => void;
+  onRotateStart: (e: React.MouseEvent | React.TouchEvent) => void;
 }
 
 const RotationHandle = ({ show, onRotateStart }: RotationHandleProps) => {
   const { isGameMode } = useDesignState();
+  const isMobile = useIsMobile();
   
   // Don't show rotation handle in game mode
   if (!show || isGameMode) return null;
 
+  // Use larger handle for mobile
+  const handleSize = isMobile ? 32 : 24;
+
   const handleStyle: CSSProperties = {
     position: 'absolute',
-    width: '24px',
-    height: '24px',
+    width: `${handleSize}px`,
+    height: `${handleSize}px`,
     background: 'white',
     border: '2px solid #4F46E5',
     borderRadius: '50%',
@@ -43,28 +48,6 @@ const RotationHandle = ({ show, onRotateStart }: RotationHandleProps) => {
     pointerEvents: 'none',
   };
 
-  // Handle touch start event separately
-  const handleTouchStart = (e: React.TouchEvent) => {
-    // Prevent default touch behavior to avoid scrolling
-    e.preventDefault();
-    
-    // Extract the touch position and pass it to the rotation handler
-    const touch = e.touches[0];
-    
-    // Create a synthetic-like event object with the properties we need
-    const touchPoint = {
-      clientX: touch.clientX,
-      clientY: touch.clientY,
-      currentTarget: e.currentTarget,
-      target: e.target,
-      preventDefault: () => {},
-      stopPropagation: () => {},
-    };
-    
-    // Call the rotation start handler with our custom event object
-    onRotateStart(touchPoint as unknown as React.MouseEvent);
-  };
-
   return (
     <>
       <div style={lineStyle} />
@@ -72,7 +55,7 @@ const RotationHandle = ({ show, onRotateStart }: RotationHandleProps) => {
         className="rotation-handle rotation-handle-visible"
         style={handleStyle}
         onMouseDown={onRotateStart}
-        onTouchStart={handleTouchStart}
+        onTouchStart={onRotateStart}
       >
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M4 15C4 16.0609 4.42143 17.0783 5.17157 17.8284C5.92172 18.5786 6.93913 19 8 19H16C17.0609 19 18.0783 18.5786 18.8284 17.8284C19.5786 17.0783 20 16.0609 20 15V9C20 7.93913 19.5786 6.92172 18.8284 6.17157C18.0783 5.42143 17.0609 5 16 5H8C6.93913 5 5.92172 5.42143 5.17157 6.17157C4.42143 6.92172 4 7.93913 4 9" 

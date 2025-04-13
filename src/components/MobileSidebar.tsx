@@ -17,19 +17,34 @@ import {
 import { useDesignState, ElementType } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { useRef, useEffect } from "react";
 
 const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { addElement } = useDesignState();
   const { t, language } = useLanguage();
+  const containerRef = useRef<HTMLDivElement>(null);
 
-  // Color swatches for backgrounds
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      e.stopPropagation();
+    };
+    
+    container.addEventListener('touchmove', handleTouchMove, { passive: true });
+    
+    return () => {
+      container.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+
   const colorSwatches = [
     "#FFFFFF", "#F3F4F6", "#E5E7EB", "#D1D5DB",
     "#FEE2E2", "#FEE7AA", "#D1FAE5", "#DBEAFE",
     "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"
   ];
 
-  // Pre-defined gradient backgrounds
   const gradients = [
     "linear-gradient(to right, #fc466b, #3f5efb)",
     "linear-gradient(to right, #8a2387, #e94057, #f27121)",
@@ -38,7 +53,6 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
     "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"
   ];
 
-  // Handle puzzle options
   const handleImagePuzzleClick = () => {
     addElement('puzzle' as ElementType, {
       puzzleConfig: {
@@ -142,9 +156,12 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
   };
 
   return (
-    <div className={`mobile-sidebar ${language === 'he' ? 'rtl' : 'ltr'} w-full`}>
+    <div 
+      ref={containerRef}
+      className={`mobile-sidebar ${language === 'he' ? 'rtl' : 'ltr'} w-full overflow-y-auto max-h-[80vh]`}
+    >
       <Tabs defaultValue="elements" className="w-full">
-        <TabsList className="grid grid-cols-3 w-full mb-4">
+        <TabsList className="grid grid-cols-3 w-full mb-4 sticky top-0 bg-background z-10">
           <TabsTrigger value="elements">{t('sidebar.elements')}</TabsTrigger>
           <TabsTrigger value="text">{t('sidebar.text')}</TabsTrigger>
           <TabsTrigger value="background">{t('sidebar.background')}</TabsTrigger>
