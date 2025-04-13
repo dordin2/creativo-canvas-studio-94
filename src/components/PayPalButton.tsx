@@ -16,7 +16,7 @@ interface PayPalButtonProps {
 
 // Add your PayPal Client ID here
 // In a production environment, you should store this in environment variables or Supabase Edge Functions
-const PAYPAL_CLIENT_ID = "AZ5Q6WLBRk-fwCGh7bX9C-Xe-JTM9xd2HbPZ8QKgsjHYlDcGAk15J5wdnxC-ZH5BpEy4kBfBXRBSyJiq";
+const PAYPAL_CLIENT_ID = "AZwEgfZLDSoREaSLUAZwgKf0FCP18klIIm96COD37XSTJEKCuzXzJHWLN0oWRxJ7MayOfGJ5MaY-xJcC";
 
 export function PayPalButton({
   amount,
