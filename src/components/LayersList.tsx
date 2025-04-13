@@ -105,6 +105,127 @@ const LayersList = () => {
     setShowMoveDialog(true);
   };
 
+  // Generate element thumbnail
+  const renderElementThumbnail = (element: DesignElement) => {
+    // Define common style for the thumbnail container
+    const commonStyle = "w-8 h-8 flex-shrink-0 flex items-center justify-center border rounded";
+    
+    switch (element.type) {
+      case 'rectangle':
+        return (
+          <div 
+            className={commonStyle}
+            style={{ 
+              backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
+              borderRadius: element.style?.borderRadius as string || '0',
+              borderColor: element.style?.borderColor as string || 'transparent',
+              borderWidth: element.style?.borderWidth ? `${element.style.borderWidth}px` : '0',
+            }}
+          />
+        );
+      case 'circle':
+        return (
+          <div 
+            className={commonStyle}
+            style={{ 
+              backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
+              borderRadius: '50%',
+              borderColor: element.style?.borderColor as string || 'transparent',
+              borderWidth: element.style?.borderWidth ? `${element.style.borderWidth}px` : '0',
+            }}
+          />
+        );
+      case 'triangle':
+        return (
+          <div className={`${commonStyle} bg-transparent relative`}>
+            <div 
+              style={{ 
+                width: 0,
+                height: 0,
+                borderLeft: '10px solid transparent',
+                borderRight: '10px solid transparent',
+                borderBottom: `20px solid ${element.style?.backgroundColor as string || '#8B5CF6'}`,
+              }}
+            />
+          </div>
+        );
+      case 'line':
+        return (
+          <div className={`${commonStyle} bg-transparent`}>
+            <div 
+              style={{ 
+                width: '80%',
+                height: `${element.style?.strokeWidth || 2}px`,
+                backgroundColor: element.style?.stroke as string || '#8B5CF6',
+              }}
+            />
+          </div>
+        );
+      case 'heading':
+      case 'subheading':
+      case 'paragraph':
+        return (
+          <div 
+            className={`${commonStyle} flex items-center justify-center bg-gray-100 text-xs font-medium overflow-hidden`}
+            style={{
+              color: element.style?.color as string || '#000000',
+            }}
+          >
+            {element.type === 'heading' ? 'H' : element.type === 'subheading' ? 'S' : 'P'}
+          </div>
+        );
+      case 'image':
+        return (
+          <div 
+            className={`${commonStyle} bg-gray-200 overflow-hidden`}
+          >
+            {element.dataUrl ? (
+              <img src={element.dataUrl} alt="Thumbnail" className="object-cover w-full h-full" />
+            ) : (
+              <div className="text-xs text-gray-500">IMG</div>
+            )}
+          </div>
+        );
+      case 'puzzle':
+        return (
+          <div className={`${commonStyle} bg-yellow-100 text-yellow-700 font-bold text-xs`}>
+            PZL
+          </div>
+        );
+      case 'sequencePuzzle':
+        return (
+          <div className={`${commonStyle} bg-green-100 text-green-700 font-bold text-xs`}>
+            SEQ
+          </div>
+        );
+      case 'clickSequencePuzzle':
+        return (
+          <div className={`${commonStyle} bg-blue-100 text-blue-700 font-bold text-xs`}>
+            CLK
+          </div>
+        );
+      case 'sliderPuzzle':
+        return (
+          <div className={`${commonStyle} bg-purple-100 text-purple-700 font-bold text-xs`}>
+            SLD
+          </div>
+        );
+      default:
+        return (
+          <div className={`${commonStyle} bg-gray-100`}>
+            <div 
+              style={{ 
+                width: '70%',
+                height: '70%',
+                backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
+                borderRadius: element.style?.borderRadius as string || '0',
+              }}
+            />
+          </div>
+        );
+    }
+  };
+
   // Improved drag and drop handlers
   const handleDragStart = (e: React.DragEvent, element: DesignElement, index: number) => {
     // Prevent the default drag ghost image
@@ -128,17 +249,16 @@ const LayersList = () => {
       preview.style.top = `${e.clientY + 15}px`;
       preview.style.left = `${e.clientX + 15}px`;
       
-      // Create thumbnail element
-      const elementType = element.type;
-      let backgroundColor = element.style?.backgroundColor as string || '#8B5CF6';
-      let borderRadius = elementType === 'circle' ? '50%' : (element.style?.borderRadius as string || '0');
-      
       // Set the preview content
       preview.innerHTML = `
-        <div
-          style="width: 20px; height: 20px; background-color: ${backgroundColor}; border-radius: ${borderRadius}; margin-right: 8px;"
-        ></div>
-        <span style="font-size: 14px; white-space: nowrap;">${getElementName(element)}</span>
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 flex-shrink-0 rounded-sm overflow-hidden" style="
+            ${element.type === 'circle' ? 'border-radius: 50%;' : ''}
+            ${element.type === 'image' && element.dataUrl ? `background-image: url(${element.dataUrl}); background-size: cover;` : ''}
+            ${element.type !== 'image' ? `background-color: ${element.style?.backgroundColor || '#8B5CF6'};` : ''}
+          "></div>
+          <span class="text-sm font-medium whitespace-nowrap">${getElementName(element)}</span>
+        </div>
       `;
       
       // Add the element to the document
@@ -254,13 +374,8 @@ const LayersList = () => {
                   <GripVertical className="h-4 w-4 text-gray-400" />
                 </div>
                 
-                <div 
-                  className="w-4 h-4 rounded-sm flex-shrink-0" 
-                  style={{ 
-                    backgroundColor: element.style?.backgroundColor as string || '#8B5CF6',
-                    borderRadius: element.type === 'circle' ? '50%' : element.style?.borderRadius as string || '0' 
-                  }}
-                ></div>
+                {/* Replace the simple color block with our new thumbnail renderer */}
+                {renderElementThumbnail(element)}
                 
                 {editingNameId === element.id ? (
                   <form 

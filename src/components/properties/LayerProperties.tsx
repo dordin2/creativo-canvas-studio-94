@@ -24,6 +24,15 @@ const LayerProperties = ({ element }: { element: DesignElement }) => {
         </ul>
       </div>
 
+      <div className="mt-4 bg-muted p-3 rounded-md text-sm">
+        <p>Layer thumbnails help you identify elements:</p>
+        <ul className="list-disc pl-5 mt-2 space-y-1 text-muted-foreground">
+          <li>Each thumbnail shows a preview of the element</li>
+          <li>Double-click layer names to rename them</li>
+          <li>Use the visibility toggle to show/hide elements</li>
+        </ul>
+      </div>
+
       <div className="mt-2 text-sm text-muted-foreground">
         Canvas: {currentCanvas?.name || 'Current Canvas'}
       </div>
