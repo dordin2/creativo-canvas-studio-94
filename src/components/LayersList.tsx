@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+
+import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -22,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DesignElement } from "@/types/designTypes"; 
+import { DesignElement } from "@/types/designTypes";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { updateElementsOrder } from "@/utils/layerUtils";
 
@@ -47,8 +48,6 @@ const LayersList = () => {
   const [selectedTargetCanvas, setSelectedTargetCanvas] = useState<string>('');
   const [draggedElement, setDraggedElement] = useState<DesignElement | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  
-  const dragPreviewRef = useRef<HTMLDivElement | null>(null);
 
   const layerElements = [...elements]
     .filter(element => element.type !== 'background')
@@ -62,10 +61,12 @@ const LayersList = () => {
   const handleDuplicate = (element: DesignElement) => {
     console.log("LayersList - Original element to duplicate:", element);
     
+    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("LayersList - Duplicate props before adding:", duplicateProps);
     
+    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
@@ -101,7 +102,9 @@ const LayersList = () => {
     setShowMoveDialog(true);
   };
 
+  // Generate element thumbnail
   const renderElementThumbnail = (element: DesignElement) => {
+    // Define common style for the thumbnail container
     const commonStyle = "w-8 h-8 flex-shrink-0 flex items-center justify-center border rounded";
     
     switch (element.type) {
@@ -220,64 +223,119 @@ const LayersList = () => {
     }
   };
 
+  // Improved drag and drop handlers
   const handleDragStart = (e: React.DragEvent, element: DesignElement, index: number) => {
-    e.preventDefault();
+    // Set the drag image to nothing (transparent)
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(emptyImg, 0, 0);
     
+    // Set data for the drag operation
     e.dataTransfer.setData('text/plain', element.id);
     e.dataTransfer.effectAllowed = 'move';
     
+    // Update state to reflect dragging
     setDraggedElement(element);
-    setDragOverIndex(null);
     
-    const preview = document.createElement('div');
-    preview.id = 'layer-drag-preview';
-    preview.className = 'fixed bg-white px-3 py-2 rounded-md shadow-lg border z-[9999] pointer-events-none flex items-center gap-2';
-    preview.style.position = 'fixed';
-    preview.style.left = `${e.clientX + 15}px`;
-    preview.style.top = `${e.clientY + 15}px`;
-    preview.style.zIndex = '9999';
-    preview.style.pointerEvents = 'none';
-    preview.style.display = 'flex';
-    preview.style.transform = 'translate(0, 0)';
-    
+    // Create thumbnail element that follows cursor
     const thumbnail = document.createElement('div');
-    thumbnail.className = 'w-6 h-6 flex-shrink-0 rounded-sm overflow-hidden';
+    thumbnail.id = 'drag-thumbnail';
+    thumbnail.style.position = 'fixed';
+    thumbnail.style.pointerEvents = 'none';
+    thumbnail.style.zIndex = '9999';
+    thumbnail.style.left = `${e.clientX}px`;
+    thumbnail.style.top = `${e.clientY}px`;
+    thumbnail.style.transform = 'translate(-50%, -50%)';
+    thumbnail.style.opacity = '0.8';
+    thumbnail.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+    thumbnail.style.borderRadius = '4px';
+    thumbnail.style.background = 'white';
+    thumbnail.style.padding = '6px';
+    thumbnail.style.display = 'flex';
+    thumbnail.style.alignItems = 'center';
+    thumbnail.style.gap = '8px';
     
-    if (element.type === 'circle') {
-      thumbnail.style.borderRadius = '50%';
+    // Create thumbnail content based on element type
+    const thumbnailContent = document.createElement('div');
+    thumbnailContent.style.display = 'flex';
+    thumbnailContent.style.alignItems = 'center';
+    thumbnailContent.style.gap = '8px';
+    
+    const elementThumb = document.createElement('div');
+    elementThumb.style.width = '20px';
+    elementThumb.style.height = '20px';
+    elementThumb.style.flexShrink = '0';
+    
+    // Style the thumbnail based on element type
+    switch(element.type) {
+      case 'rectangle':
+        elementThumb.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+        elementThumb.style.borderRadius = (element.style?.borderRadius as string) || '0';
+        break;
+      case 'circle':
+        elementThumb.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+        elementThumb.style.borderRadius = '50%';
+        break;
+      case 'triangle':
+        elementThumb.style.width = '0';
+        elementThumb.style.height = '0';
+        elementThumb.style.borderLeft = '10px solid transparent';
+        elementThumb.style.borderRight = '10px solid transparent';
+        elementThumb.style.borderBottom = `20px solid ${(element.style?.backgroundColor as string) || '#8B5CF6'}`;
+        break;
+      case 'image':
+        if (element.dataUrl) {
+          elementThumb.style.backgroundImage = `url(${element.dataUrl})`;
+          elementThumb.style.backgroundSize = 'cover';
+          elementThumb.style.backgroundPosition = 'center';
+        } else {
+          elementThumb.style.backgroundColor = '#e2e8f0';
+          elementThumb.textContent = 'IMG';
+          elementThumb.style.display = 'flex';
+          elementThumb.style.alignItems = 'center';
+          elementThumb.style.justifyContent = 'center';
+          elementThumb.style.fontSize = '8px';
+          elementThumb.style.color = '#64748b';
+        }
+        break;
+      default:
+        elementThumb.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+        break;
     }
     
-    if (element.type === 'image' && element.dataUrl) {
-      thumbnail.style.backgroundImage = `url(${element.dataUrl})`;
-      thumbnail.style.backgroundSize = 'cover';
-    } else {
-      thumbnail.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
-    }
+    const elementName = document.createElement('span');
+    elementName.textContent = getElementName(element);
+    elementName.style.fontSize = '12px';
+    elementName.style.fontWeight = '500';
+    elementName.style.whiteSpace = 'nowrap';
+    elementName.style.maxWidth = '100px';
+    elementName.style.overflow = 'hidden';
+    elementName.style.textOverflow = 'ellipsis';
     
-    const name = document.createElement('span');
-    name.className = 'text-sm font-medium whitespace-nowrap';
-    name.textContent = getElementName(element);
+    thumbnailContent.appendChild(elementThumb);
+    thumbnailContent.appendChild(elementName);
+    thumbnail.appendChild(thumbnailContent);
+    document.body.appendChild(thumbnail);
     
-    preview.appendChild(thumbnail);
-    preview.appendChild(name);
+    // Add event listener to move the thumbnail with the cursor
+    const moveListener = (moveEvent: MouseEvent) => {
+      thumbnail.style.left = `${moveEvent.clientX}px`;
+      thumbnail.style.top = `${moveEvent.clientY}px`;
+    };
     
-    document.body.appendChild(preview);
+    // Add event listener to clean up
+    const endListener = () => {
+      document.removeEventListener('mousemove', moveListener);
+      document.removeEventListener('mouseup', endListener);
+      document.removeEventListener('dragend', endListener);
+      if (thumbnail && thumbnail.parentNode) {
+        thumbnail.parentNode.removeChild(thumbnail);
+      }
+    };
     
-    dragPreviewRef.current = preview;
-    
-    window.addEventListener('mousemove', handleMouseMove);
-  };
-  
-  const handleMouseMove = (e: MouseEvent) => {
-    if (dragPreviewRef.current) {
-      dragPreviewRef.current.style.left = `${e.clientX + 15}px`;
-      dragPreviewRef.current.style.top = `${e.clientY + 15}px`;
-      
-      const customEvent = new CustomEvent('layer-drag-over', {
-        detail: { clientX: e.clientX, clientY: e.clientY }
-      });
-      document.dispatchEvent(customEvent);
-    }
+    document.addEventListener('mousemove', moveListener);
+    document.addEventListener('mouseup', endListener);
+    document.addEventListener('dragend', endListener);
   };
   
   const handleDragOver = (e: React.DragEvent, index: number) => {
@@ -294,12 +352,11 @@ const LayersList = () => {
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
     
-    if (dragPreviewRef.current && dragPreviewRef.current.parentNode) {
-      dragPreviewRef.current.parentNode.removeChild(dragPreviewRef.current);
-      dragPreviewRef.current = null;
+    // Remove any thumbnail that might be left
+    const existingThumbnail = document.getElementById('drag-thumbnail');
+    if (existingThumbnail && existingThumbnail.parentNode) {
+      existingThumbnail.parentNode.removeChild(existingThumbnail);
     }
-    
-    window.removeEventListener('mousemove', handleMouseMove);
     
     if (!draggedElement) return;
     
@@ -310,13 +367,17 @@ const LayersList = () => {
       return;
     }
 
+    // Get the current canvas elements
     const currentCanvas = canvases[activeCanvasIndex];
     if (!currentCanvas) return;
 
+    // Create a copy of the elements to work with
     const updatedElements = [...currentCanvas.elements];
     
+    // Update the layers based on new order
     const newElements = updateElementsOrder(updatedElements, sourceIndex, targetIndex, layerElements);
     
+    // Update the canvas with the new elements
     const updatedCanvases = [...canvases];
     updatedCanvases[activeCanvasIndex] = {
       ...currentCanvas,
@@ -325,39 +386,21 @@ const LayersList = () => {
     
     setCanvases(updatedCanvases);
     
+    // Reset drag state
     setDraggedElement(null);
     setDragOverIndex(null);
   };
 
-  const handleDragEnd = (e: React.DragEvent) => {
-    if (dragPreviewRef.current && dragPreviewRef.current.parentNode) {
-      dragPreviewRef.current.parentNode.removeChild(dragPreviewRef.current);
-      dragPreviewRef.current = null;
+  const handleDragEnd = () => {
+    // Remove any thumbnail that might be left
+    const existingThumbnail = document.getElementById('drag-thumbnail');
+    if (existingThumbnail && existingThumbnail.parentNode) {
+      existingThumbnail.parentNode.removeChild(existingThumbnail);
     }
     
-    window.removeEventListener('mousemove', handleMouseMove);
-    
     setDraggedElement(null);
     setDragOverIndex(null);
   };
-
-  useEffect(() => {
-    const styleElement = document.createElement('style');
-    styleElement.textContent = `
-      .layer-item-dragging {
-        opacity: 0.5;
-      }
-      .layer-drop-target {
-        border-color: #3b82f6 !important;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
-      }
-    `;
-    document.head.appendChild(styleElement);
-    
-    return () => {
-      document.head.removeChild(styleElement);
-    };
-  }, []);
 
   return (
     <div className="border rounded-md p-4 mt-4">
@@ -375,15 +418,12 @@ const LayersList = () => {
               key={element.id}
               className={`p-2 border rounded-md flex items-center justify-between ${
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
-              } ${dragOverIndex === index ? "layer-drop-target" : ""} 
-              ${draggedElement?.id === element.id ? "layer-item-dragging" : ""}
+              } ${dragOverIndex === index ? "border-blue-500 bg-blue-50" : ""} 
+              ${draggedElement?.id === element.id ? "opacity-50" : "opacity-100"}
               cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
-              onMouseDown={(e) => {
-                if ((e.target as HTMLElement).closest('.cursor-grab')) {
-                  handleDragStart(e as unknown as React.DragEvent, element, index);
-                }
-              }}
+              draggable={true}
+              onDragStart={(e) => handleDragStart(e, element, index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
@@ -394,6 +434,7 @@ const LayersList = () => {
                   <GripVertical className="h-4 w-4 text-gray-400" />
                 </div>
                 
+                {/* Replace the simple color block with our new thumbnail renderer */}
                 {renderElementThumbnail(element)}
                 
                 {editingNameId === element.id ? (
