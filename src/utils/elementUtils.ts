@@ -1,4 +1,3 @@
-
 import { DesignElement, FileMetadata } from "@/types/designTypes";
 
 /**

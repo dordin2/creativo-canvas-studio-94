@@ -25,6 +25,8 @@ const ImageProperties = ({
   const [rotation, setRotation] = useState(getRotation(element));
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
+  const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
+  const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
@@ -38,20 +40,32 @@ const ImageProperties = ({
 
   useEffect(() => {
     // Try to recover image from cache if we have a cache key but no dataUrl
-    if (element.cacheKey && !element.dataUrl) {
-      const cachedImage = getImageFromCache(element.cacheKey);
-      if (cachedImage) {
-        console.log("ImageProperties - Recovered image from cache:", element.cacheKey);
-        updateElement(element.id, {
-          dataUrl: cachedImage
-        });
+    const loadImages = async () => {
+      if (element.cacheKey) {
+        if (!imageSrc) {
+          const cachedImage = await getImageFromCache(element.cacheKey);
+          if (cachedImage) {
+            console.log("ImageProperties - Recovered image from cache:", element.cacheKey);
+            setImageSrc(cachedImage);
+          }
+        }
+        
+        if (!thumbnailSrc) {
+          const cachedThumbnail = await getImageFromCache(element.cacheKey, true);
+          if (cachedThumbnail) {
+            console.log("ImageProperties - Recovered thumbnail from cache");
+            setThumbnailSrc(cachedThumbnail);
+          }
+        }
       }
-    }
+    };
+    
+    loadImages();
     
     // Calculate image stats for display
-    if (element.dataUrl || element.src) {
-      const size = element.dataUrl ? 
-        estimateDataUrlSize(element.dataUrl) :
+    if (imageSrc || element.src) {
+      const size = imageSrc ? 
+        estimateDataUrlSize(imageSrc) :
         0;
       
       let sizeStr = 'Unknown';
@@ -74,14 +88,16 @@ const ImageProperties = ({
         dimensions
       });
     }
-  }, [element.id, element.cacheKey, element.dataUrl, element.src, element.file, element.originalSize]);
+  }, [element.id, element.cacheKey, imageSrc, thumbnailSrc, element.src, element.file, element.originalSize]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value;
     updateElement(element.id, {
-      src: e.target.value,
+      src: url,
       dataUrl: undefined,
       file: undefined
     });
+    setImageSrc(url);
   };
   
   const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -142,9 +158,8 @@ const ImageProperties = ({
   };
   
   const renderImagePreview = () => {
-    // If we have a thumbnailDataUrl, use it until the full image is loaded
-    const thumbnailSrc = element.thumbnailDataUrl;
-    const mainSrc = element.dataUrl || element.src;
+    // If we have a thumbnailSrc, use it until the full image is loaded
+    const mainSrc = imageSrc || element.src;
     
     if (!mainSrc) {
       return (

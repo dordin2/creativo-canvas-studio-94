@@ -32,6 +32,7 @@ const DraggableElement = ({ element, isActive, children }: {
 }) => {
   const { 
     updateElement, 
+    updateElementWithoutHistory,
     setActiveElement, 
     removeElement, 
     addElement, 
@@ -574,12 +575,27 @@ const DraggableElement = ({ element, isActive, children }: {
   if (isImageElement && element.type === 'image') {
     const originalStyle = { ...elementStyle };
     
-    if (element.dataUrl || element.src) {
+    if (element.dataUrl || element.src || element.cacheKey) {
       const handleImageLoad = () => {
         setImageLoaded(true);
       };
       
+      // Use progressive loading with thumbnail then full image
       if (element.thumbnailDataUrl && !imageLoaded) {
+        const loadMainImage = async () => {
+          if (!element.dataUrl && element.cacheKey) {
+            // Try to load the full image from cache if not already loaded
+            const cachedImage = await getImageFromCache(element.cacheKey);
+            if (cachedImage) {
+              // We can't modify element directly, so we'll update it through the context
+              updateElementWithoutHistory(element.id, { dataUrl: cachedImage });
+            }
+          }
+        };
+        
+        // Start loading the full resolution image
+        loadMainImage();
+        
         const thumbnailImg = (
           <img 
             src={element.thumbnailDataUrl}

@@ -1,32 +1,39 @@
 
 import { toast } from "sonner";
 import { DesignElement } from "@/types/designTypes";
+import { 
+  saveImageToStorage, 
+  getImageFromStorage, 
+  getThumbnailFromStorage,
+  pruneImageStorage
+} from "./imageStorageDB";
 
-// Create a local cache to store image data with memory limits
-const MAX_CACHE_SIZE = 50 * 1024 * 1024; // 50MB cache limit
+// Default image processing settings
 const IMAGE_QUALITY = 0.85; // Default quality setting for WebP compression
-const MAX_DIMENSION = 300; // Default preview max dimension
-const THUMBNAIL_DIMENSION = 100; // Thumbnail size for lightweight previews
+const MAX_DIMENSION = 1200; // Default max dimension for full images
+const THUMBNAIL_DIMENSION = 150; // Thumbnail size for lightweight previews
+const WEBP_SUPPORT = !!window.createImageBitmap; // Check for WebP support
 
-// Cache implementation with size tracking
-class ImageCache {
+// Memory cache for rapidly accessing recently used images
+class ImageMemoryCache {
   private cache: Map<string, string> = new Map();
   private thumbnailCache: Map<string, string> = new Map();
   private cacheSize: number = 0;
+  private readonly MAX_CACHE_SIZE = 20 * 1024 * 1024; // 20MB in-memory cache limit
   
   set(key: string, dataUrl: string, isThumbnail: boolean = false): void {
     const targetCache = isThumbnail ? this.thumbnailCache : this.cache;
     const dataSize = this.getDataUrlSize(dataUrl);
     
     // Check if we need to evict items from cache
-    if (this.cacheSize + dataSize > MAX_CACHE_SIZE) {
+    if (this.cacheSize + dataSize > this.MAX_CACHE_SIZE) {
       this.evictOldestEntries(dataSize);
     }
     
     targetCache.set(key, dataUrl);
     this.cacheSize += dataSize;
     
-    console.log(`ImageCache - Added image to ${isThumbnail ? 'thumbnail' : 'main'} cache:`, {
+    console.log(`ImageMemoryCache - Added image to ${isThumbnail ? 'thumbnail' : 'main'} cache:`, {
       key,
       size: (dataSize / 1024).toFixed(2) + 'KB',
       totalCacheSize: (this.cacheSize / 1024 / 1024).toFixed(2) + 'MB'
@@ -54,7 +61,7 @@ class ImageCache {
       freedSpace += size;
       
       if (freedSpace >= requiredSpace) {
-        console.log("ImageCache - Evicted thumbnails to free space:", 
+        console.log("ImageMemoryCache - Evicted thumbnails to free space:", 
                    (freedSpace / 1024).toFixed(2) + 'KB');
         return;
       }
@@ -68,10 +75,10 @@ class ImageCache {
       this.cacheSize -= size;
       freedSpace += size;
       
-      console.log("ImageCache - Evicted image from cache:", key);
+      console.log("ImageMemoryCache - Evicted image from cache:", key);
       
       if (freedSpace >= requiredSpace) {
-        console.log("ImageCache - Total freed space:", 
+        console.log("ImageMemoryCache - Total freed space:", 
                    (freedSpace / 1024).toFixed(2) + 'KB');
         return;
       }
@@ -79,23 +86,41 @@ class ImageCache {
   }
 }
 
-// Initialize the cache
-const imageCache = new ImageCache();
+// Initialize the memory cache
+const memoryCache = new ImageMemoryCache();
 
 /**
  * Compresses an image to WebP format with the specified quality
  */
 async function compressImageToWebP(
   imageDataUrl: string, 
-  quality: number = IMAGE_QUALITY
-): Promise<string> {
+  quality: number = IMAGE_QUALITY,
+  maxWidth: number = MAX_DIMENSION,
+  maxHeight: number = MAX_DIMENSION
+): Promise<{ dataUrl: string; width: number; height: number }> {
   return new Promise((resolve, reject) => {
     const img = new Image();
     
     img.onload = () => {
+      // Calculate scaled dimensions while maintaining aspect ratio
+      let targetWidth = img.naturalWidth;
+      let targetHeight = img.naturalHeight;
+      
+      if (targetWidth > maxWidth || targetHeight > maxHeight) {
+        if (targetWidth / targetHeight > maxWidth / maxHeight) {
+          // Width constrained
+          targetHeight = Math.round((targetHeight / targetWidth) * maxWidth);
+          targetWidth = maxWidth;
+        } else {
+          // Height constrained
+          targetWidth = Math.round((targetWidth / targetHeight) * maxHeight);
+          targetHeight = maxHeight;
+        }
+      }
+      
       const canvas = document.createElement('canvas');
-      canvas.width = img.naturalWidth;
-      canvas.height = img.naturalHeight;
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
       
       const ctx = canvas.getContext('2d');
       if (!ctx) {
@@ -103,22 +128,34 @@ async function compressImageToWebP(
         return;
       }
       
-      // Draw image on canvas
-      ctx.drawImage(img, 0, 0);
+      // Enable smooth scaling
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       
-      // Convert to WebP with specified quality
+      // Draw image on canvas
+      ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+      
+      // Try to convert to WebP with specified quality
       try {
-        const webpDataUrl = canvas.toDataURL('image/webp', quality);
-        resolve(webpDataUrl);
-      } catch (err) {
-        console.error('WebP conversion failed, falling back to JPEG:', err);
-        try {
+        if (WEBP_SUPPORT) {
+          const webpDataUrl = canvas.toDataURL('image/webp', quality);
+          resolve({ 
+            dataUrl: webpDataUrl, 
+            width: targetWidth, 
+            height: targetHeight 
+          });
+        } else {
           // Fallback to JPEG if WebP is not supported
           const jpegDataUrl = canvas.toDataURL('image/jpeg', quality);
-          resolve(jpegDataUrl);
-        } catch (jpegErr) {
-          reject(new Error('Image compression failed'));
+          resolve({ 
+            dataUrl: jpegDataUrl, 
+            width: targetWidth, 
+            height: targetHeight 
+          });
         }
+      } catch (err) {
+        console.error('WebP/JPEG conversion failed:', err);
+        reject(new Error('Image compression failed'));
       }
     };
     
@@ -172,8 +209,13 @@ async function createThumbnail(imageDataUrl: string): Promise<string> {
       
       // Convert to WebP with higher compression for thumbnails
       try {
-        const thumbnailDataUrl = canvas.toDataURL('image/webp', 0.7);
-        resolve(thumbnailDataUrl);
+        if (WEBP_SUPPORT) {
+          const thumbnailDataUrl = canvas.toDataURL('image/webp', 0.7);
+          resolve(thumbnailDataUrl);
+        } else {
+          const thumbnailDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+          resolve(thumbnailDataUrl);
+        }
       } catch (err) {
         console.error('Thumbnail creation failed:', err);
         reject(new Error('Failed to create thumbnail'));
@@ -206,16 +248,40 @@ export const processImageUpload = (
       try {
         const originalDataUrl = e.target.result as string;
         
-        // Compress image to WebP
-        const compressedDataUrl = await compressImageToWebP(originalDataUrl);
+        // Compress image to WebP/JPEG
+        const { dataUrl: compressedDataUrl, width, height } = 
+          await compressImageToWebP(originalDataUrl);
         
         // Create thumbnail for lightweight previews
         const thumbnailDataUrl = await createThumbnail(compressedDataUrl);
         
-        // Cache both versions
-        const cacheKey = `img_${file.name}_${file.size}_${file.lastModified}`;
-        imageCache.set(cacheKey, compressedDataUrl);
-        imageCache.set(`${cacheKey}_thumbnail`, thumbnailDataUrl, true);
+        // Generate unique cache key
+        const cacheKey = `img_${file.name}_${Date.now()}_${file.size}`;
+        
+        // Store in memory cache for immediate access
+        memoryCache.set(cacheKey, compressedDataUrl);
+        memoryCache.set(`${cacheKey}_thumbnail`, thumbnailDataUrl, true);
+        
+        // Store in IndexedDB for persistent storage
+        const elementId = `temp_${cacheKey}`; // Temporary ID until element is created
+        await saveImageToStorage(
+          elementId,
+          compressedDataUrl,
+          thumbnailDataUrl,
+          {
+            fileMetadata: {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              lastModified: file.lastModified
+            },
+            originalSize: {  
+              width,
+              height
+            },
+            cacheKey
+          }
+        );
         
         // Log compression results
         const originalSize = Math.round(originalDataUrl.length / 1024);
@@ -229,61 +295,32 @@ export const processImageUpload = (
           spaceReduction: `${originalSize - compressedSize}KB (${100 - compressionRatio}%)`
         });
         
-        // Create a new image element to get dimensions
-        const img = new Image();
-        img.onload = () => {
-          // Get the natural dimensions
-          const naturalWidth = img.naturalWidth;
-          const naturalHeight = img.naturalHeight;
-          
-          // Calculate scaled dimensions
-          let scaledWidth = naturalWidth;
-          let scaledHeight = naturalHeight;
-          
-          // Scale down only if larger than target size
-          if (naturalWidth > MAX_DIMENSION || naturalHeight > MAX_DIMENSION) {
-            if (naturalWidth > naturalHeight) {
-              // Landscape orientation
-              scaledWidth = MAX_DIMENSION;
-              scaledHeight = (naturalHeight / naturalWidth) * MAX_DIMENSION;
-            } else {
-              // Portrait or square orientation
-              scaledHeight = MAX_DIMENSION;
-              scaledWidth = (naturalWidth / naturalHeight) * MAX_DIMENSION;
-            }
+        // Clear loading toast
+        toast.dismiss(loadingToast);
+        
+        // Return processed image data
+        onSuccess({ 
+          dataUrl: compressedDataUrl, 
+          thumbnailDataUrl, 
+          src: undefined, 
+          file: file, 
+          cacheKey, 
+          size: {
+            width,
+            height
+          },
+          originalSize: {  
+            width,
+            height
           }
-          
-          // Clear loading toast
-          toast.dismiss(loadingToast);
-          
-          // Provide the processed image data
-          onSuccess({ 
-            dataUrl: compressedDataUrl, 
-            thumbnailDataUrl, // Store thumbnail for lightweight previews
-            src: undefined, // Clear external URL when using local file
-            file: file, // Store original file reference
-            cacheKey, // Store cache key for retrieval
-            size: {
-              width: scaledWidth,
-              height: scaledHeight
-            },
-            originalSize: {  
-              width: naturalWidth,
-              height: naturalHeight
-            }
-          });
-          
-          toast.success("Image optimized and uploaded");
-        };
+        });
         
-        img.onerror = () => {
-          toast.dismiss(loadingToast);
-          toast.error("Failed to load image dimensions");
-        };
+        // Run pruning operation in background to manage storage size
+        pruneImageStorage().catch(err => {
+          console.error("Failed to prune image storage:", err);
+        });
         
-        // Set the source to the WebP data URL
-        img.src = compressedDataUrl;
-        
+        toast.success("Image optimized and uploaded");
       } catch (error) {
         console.error("Image processing error:", error);
         toast.dismiss(loadingToast);
@@ -301,19 +338,76 @@ export const processImageUpload = (
 };
 
 /**
- * Retrieves an image from the cache by its cache key
- * @param cacheKey The key to lookup in the cache
- * @param thumbnail Whether to retrieve the thumbnail version
+ * Updates the element ID in storage after the element has been created
  */
-export const getImageFromCache = (cacheKey: string, thumbnail: boolean = false): string | undefined => {
-  return imageCache.get(cacheKey, thumbnail);
+export const updateImageElementId = async (tempId: string, permanentId: string): Promise<void> => {
+  try {
+    // Load image data from temporary ID
+    const imageData = await getImageFromStorage(tempId);
+    const thumbnailData = await getThumbnailFromStorage(tempId);
+    
+    if (imageData && thumbnailData) {
+      // Get metadata from the temporary ID
+      const metadata = await getImageFromStorage(`metadata_${tempId}`);
+      const metadataObj = metadata ? JSON.parse(metadata) : {};
+      
+      // Save with permanent ID
+      await saveImageToStorage(
+        permanentId,
+        imageData,
+        thumbnailData,
+        metadataObj
+      );
+      
+      // Remove temporary data
+      deleteImageFromStorage(tempId);
+    }
+  } catch (error) {
+    console.error("Failed to update image element ID:", error);
+  }
+};
+
+/**
+ * Retrieves an image from storage (first tries memory cache, then IndexedDB)
+ */
+export const getImageFromCache = async (
+  cacheKey: string, 
+  thumbnail: boolean = false
+): Promise<string | undefined> => {
+  // First try memory cache
+  const cachedImage = memoryCache.get(cacheKey, thumbnail);
+  if (cachedImage) {
+    return cachedImage;
+  }
+  
+  // Then try persistent storage
+  try {
+    const storageKey = thumbnail ? `${cacheKey}_thumbnail` : cacheKey;
+    const imageData = thumbnail ? 
+      await getThumbnailFromStorage(storageKey) : 
+      await getImageFromStorage(storageKey);
+    
+    if (imageData) {
+      // Store in memory cache for future access
+      memoryCache.set(cacheKey, imageData, thumbnail);
+      return imageData;
+    }
+  } catch (error) {
+    console.error("Error retrieving image from storage:", error);
+  }
+  
+  return undefined;
 };
 
 /**
  * Stores an image in the cache
  */
-export const storeImageInCache = (cacheKey: string, dataUrl: string, isThumbnail: boolean = false): void => {
-  imageCache.set(cacheKey, dataUrl, isThumbnail);
+export const storeImageInCache = (
+  cacheKey: string, 
+  dataUrl: string, 
+  isThumbnail: boolean = false
+): void => {
+  memoryCache.set(cacheKey, dataUrl, isThumbnail);
 };
 
 /**
@@ -325,4 +419,21 @@ export const estimateDataUrlSize = (dataUrl: string | undefined): number => {
   // Base64 is ~4/3 of binary size
   const base64Length = dataUrl.substring(dataUrl.indexOf(',') + 1).length;
   return Math.ceil(base64Length * 0.75);
+};
+
+/**
+ * Deletes an image from all storage layers
+ */
+export const deleteImageFromCache = async (cacheKey: string): Promise<void> => {
+  try {
+    // Remove from memory cache
+    memoryCache.get(cacheKey)?.length && memoryCache.set(cacheKey, "");
+    memoryCache.get(`${cacheKey}_thumbnail`)?.length && memoryCache.set(`${cacheKey}_thumbnail`, "");
+    
+    // Remove from persistent storage
+    await deleteImageFromStorage(cacheKey);
+    await deleteImageFromStorage(`${cacheKey}_thumbnail`);
+  } catch (error) {
+    console.error("Error deleting image from cache:", error);
+  }
 };
