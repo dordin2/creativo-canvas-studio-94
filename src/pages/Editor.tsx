@@ -267,7 +267,7 @@ const Editor = () => {
             <span className="sr-only">Save Project</span>
           </Button>
           
-          {selectedId && (
+          {activeElement && (
             <Drawer>
               <DrawerTrigger asChild>
                 <Button variant="ghost" size="icon" className="aspect-square">
