@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
@@ -47,7 +48,6 @@ const LayersList = () => {
   const [selectedTargetCanvas, setSelectedTargetCanvas] = useState<string>('');
   const [draggedElement, setDraggedElement] = useState<DesignElement | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
-  const thumbnailRef = useRef<HTMLDivElement | null>(null);
 
   const layerElements = [...elements]
     .filter(element => element.type !== 'background')
@@ -61,10 +61,12 @@ const LayersList = () => {
   const handleDuplicate = (element: DesignElement) => {
     console.log("LayersList - Original element to duplicate:", element);
     
+    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("LayersList - Duplicate props before adding:", duplicateProps);
     
+    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
@@ -100,7 +102,9 @@ const LayersList = () => {
     setShowMoveDialog(true);
   };
 
+  // Generate element thumbnail
   const renderElementThumbnail = (element: DesignElement) => {
+    // Define common style for the thumbnail container
     const commonStyle = "w-8 h-8 flex-shrink-0 flex items-center justify-center border rounded";
     
     switch (element.type) {
@@ -219,11 +223,21 @@ const LayersList = () => {
     }
   };
 
+  // Improved drag and drop handlers
   const handleDragStart = (e: React.DragEvent, element: DesignElement, index: number) => {
-    e.preventDefault();
+    // Set the drag image to nothing (transparent)
+    const emptyImg = new Image();
+    emptyImg.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7';
+    e.dataTransfer.setDragImage(emptyImg, 0, 0);
+    
+    // Set data for the drag operation
     e.dataTransfer.setData('text/plain', element.id);
     e.dataTransfer.effectAllowed = 'move';
+    
+    // Update state to reflect dragging
     setDraggedElement(element);
+    
+    // Create thumbnail element that follows cursor
     const thumbnail = document.createElement('div');
     thumbnail.id = 'drag-thumbnail';
     thumbnail.style.position = 'fixed';
@@ -240,71 +254,55 @@ const LayersList = () => {
     thumbnail.style.display = 'flex';
     thumbnail.style.alignItems = 'center';
     thumbnail.style.gap = '8px';
+    
+    // Create thumbnail content based on element type
     const thumbnailContent = document.createElement('div');
     thumbnailContent.style.display = 'flex';
     thumbnailContent.style.alignItems = 'center';
     thumbnailContent.style.gap = '8px';
-    const elementThumbContainer = document.createElement('div');
-    elementThumbContainer.style.width = '20px';
-    elementThumbContainer.style.height = '20px';
-    elementThumbContainer.style.flexShrink = '0';
+    
+    const elementThumb = document.createElement('div');
+    elementThumb.style.width = '20px';
+    elementThumb.style.height = '20px';
+    elementThumb.style.flexShrink = '0';
+    
+    // Style the thumbnail based on element type
     switch(element.type) {
       case 'rectangle':
-        elementThumbContainer.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
-        elementThumbContainer.style.borderRadius = (element.style?.borderRadius as string) || '0';
+        elementThumb.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+        elementThumb.style.borderRadius = (element.style?.borderRadius as string) || '0';
         break;
       case 'circle':
-        elementThumbContainer.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
-        elementThumbContainer.style.borderRadius = '50%';
+        elementThumb.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+        elementThumb.style.borderRadius = '50%';
         break;
       case 'triangle':
-        elementThumbContainer.style.width = '0';
-        elementThumbContainer.style.height = '0';
-        elementThumbContainer.style.borderLeft = '10px solid transparent';
-        elementThumbContainer.style.borderRight = '10px solid transparent';
-        elementThumbContainer.style.borderBottom = `20px solid ${(element.style?.backgroundColor as string) || '#8B5CF6'}`;
+        elementThumb.style.width = '0';
+        elementThumb.style.height = '0';
+        elementThumb.style.borderLeft = '10px solid transparent';
+        elementThumb.style.borderRight = '10px solid transparent';
+        elementThumb.style.borderBottom = `20px solid ${(element.style?.backgroundColor as string) || '#8B5CF6'}`;
         break;
       case 'image':
         if (element.dataUrl) {
-          elementThumbContainer.style.backgroundImage = `url(${element.dataUrl})`;
-          elementThumbContainer.style.backgroundSize = 'cover';
-          elementThumbContainer.style.backgroundPosition = 'center';
+          elementThumb.style.backgroundImage = `url(${element.dataUrl})`;
+          elementThumb.style.backgroundSize = 'cover';
+          elementThumb.style.backgroundPosition = 'center';
         } else {
-          elementThumbContainer.style.backgroundColor = '#e2e8f0';
-          elementThumbContainer.textContent = 'IMG';
-          elementThumbContainer.style.display = 'flex';
-          elementThumbContainer.style.alignItems = 'center';
-          elementThumbContainer.style.justifyContent = 'center';
-          elementThumbContainer.style.fontSize = '8px';
-          elementThumbContainer.style.color = '#64748b';
+          elementThumb.style.backgroundColor = '#e2e8f0';
+          elementThumb.textContent = 'IMG';
+          elementThumb.style.display = 'flex';
+          elementThumb.style.alignItems = 'center';
+          elementThumb.style.justifyContent = 'center';
+          elementThumb.style.fontSize = '8px';
+          elementThumb.style.color = '#64748b';
         }
         break;
-      case 'heading':
-      case 'subheading':
-      case 'paragraph':
-        elementThumbContainer.style.backgroundColor = '#f3f4f6';
-        elementThumbContainer.style.display = 'flex';
-        elementThumbContainer.style.alignItems = 'center';
-        elementThumbContainer.style.justifyContent = 'center';
-        elementThumbContainer.textContent = element.type === 'heading' ? 'H' : element.type === 'subheading' ? 'S' : 'P';
-        elementThumbContainer.style.fontSize = '10px';
-        elementThumbContainer.style.fontWeight = '600';
-        elementThumbContainer.style.color = (element.style?.color as string) || '#000';
-        break;
-      case 'puzzle':
-        elementThumbContainer.style.backgroundColor = '#fef3c7';
-        elementThumbContainer.style.display = 'flex';
-        elementThumbContainer.style.alignItems = 'center';
-        elementThumbContainer.style.justifyContent = 'center';
-        elementThumbContainer.textContent = 'PZL';
-        elementThumbContainer.style.fontSize = '8px';
-        elementThumbContainer.style.fontWeight = '600';
-        elementThumbContainer.style.color = '#b45309';
-        break;
       default:
-        elementThumbContainer.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+        elementThumb.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
         break;
     }
+    
     const elementName = document.createElement('span');
     elementName.textContent = getElementName(element);
     elementName.style.fontSize = '12px';
@@ -313,26 +311,33 @@ const LayersList = () => {
     elementName.style.maxWidth = '100px';
     elementName.style.overflow = 'hidden';
     elementName.style.textOverflow = 'ellipsis';
-    thumbnailContent.appendChild(elementThumbContainer);
+    
+    thumbnailContent.appendChild(elementThumb);
     thumbnailContent.appendChild(elementName);
     thumbnail.appendChild(thumbnailContent);
     document.body.appendChild(thumbnail);
-    thumbnailRef.current = thumbnail;
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleDragEnd);
-    const draggedItem = document.getElementById(`layer-${element.id}`);
-    if (draggedItem) {
-      draggedItem.classList.add('opacity-50');
-    }
+    
+    // Add event listener to move the thumbnail with the cursor
+    const moveListener = (moveEvent: MouseEvent) => {
+      thumbnail.style.left = `${moveEvent.clientX}px`;
+      thumbnail.style.top = `${moveEvent.clientY}px`;
+    };
+    
+    // Add event listener to clean up
+    const endListener = () => {
+      document.removeEventListener('mousemove', moveListener);
+      document.removeEventListener('mouseup', endListener);
+      document.removeEventListener('dragend', endListener);
+      if (thumbnail && thumbnail.parentNode) {
+        thumbnail.parentNode.removeChild(thumbnail);
+      }
+    };
+    
+    document.addEventListener('mousemove', moveListener);
+    document.addEventListener('mouseup', endListener);
+    document.addEventListener('dragend', endListener);
   };
-
-  const handleMouseMove = (e: MouseEvent) => {
-    if (thumbnailRef.current) {
-      thumbnailRef.current.style.left = `${e.clientX}px`;
-      thumbnailRef.current.style.top = `${e.clientY}px`;
-    }
-  };
-
+  
   const handleDragOver = (e: React.DragEvent, index: number) => {
     e.preventDefault();
     if (draggedElement) {
@@ -346,40 +351,55 @@ const LayersList = () => {
 
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
+    
+    // Remove any thumbnail that might be left
+    const existingThumbnail = document.getElementById('drag-thumbnail');
+    if (existingThumbnail && existingThumbnail.parentNode) {
+      existingThumbnail.parentNode.removeChild(existingThumbnail);
+    }
+    
     if (!draggedElement) return;
+    
     const sourceIndex = layerElements.findIndex(el => el.id === draggedElement.id);
     if (sourceIndex === -1 || sourceIndex === targetIndex) {
       setDraggedElement(null);
       setDragOverIndex(null);
       return;
     }
+
+    // Get the current canvas elements
     const currentCanvas = canvases[activeCanvasIndex];
     if (!currentCanvas) return;
+
+    // Create a copy of the elements to work with
     const updatedElements = [...currentCanvas.elements];
+    
+    // Update the layers based on new order
     const newElements = updateElementsOrder(updatedElements, sourceIndex, targetIndex, layerElements);
+    
+    // Update the canvas with the new elements
     const updatedCanvases = [...canvases];
     updatedCanvases[activeCanvasIndex] = {
       ...currentCanvas,
       elements: newElements
     };
+    
     setCanvases(updatedCanvases);
+    
+    // Reset drag state
     setDraggedElement(null);
     setDragOverIndex(null);
   };
 
   const handleDragEnd = () => {
-    if (thumbnailRef.current && thumbnailRef.current.parentNode) {
-      thumbnailRef.current.parentNode.removeChild(thumbnailRef.current);
-      thumbnailRef.current = null;
+    // Remove any thumbnail that might be left
+    const existingThumbnail = document.getElementById('drag-thumbnail');
+    if (existingThumbnail && existingThumbnail.parentNode) {
+      existingThumbnail.parentNode.removeChild(existingThumbnail);
     }
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleDragEnd);
+    
     setDraggedElement(null);
     setDragOverIndex(null);
-    const dragItems = document.querySelectorAll('.layer-item');
-    dragItems.forEach(item => {
-      item.classList.remove('opacity-50');
-    });
   };
 
   return (
@@ -396,24 +416,27 @@ const LayersList = () => {
           layerElements.map((element, index) => (
             <div 
               key={element.id}
-              id={`layer-${element.id}`}
-              className={`layer-item p-2 border rounded-md flex items-center justify-between ${
+              className={`p-2 border rounded-md flex items-center justify-between ${
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
               } ${dragOverIndex === index ? "border-blue-500 bg-blue-50" : ""} 
               ${draggedElement?.id === element.id ? "opacity-50" : "opacity-100"}
-              cursor-grab ${element.isHidden ? "opacity-50" : ""}`}
+              cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
               draggable={true}
               onDragStart={(e) => handleDragStart(e, element, index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
+              onDragEnd={handleDragEnd}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <div className="cursor-grab flex items-center justify-center">
                   <GripVertical className="h-4 w-4 text-gray-400" />
                 </div>
+                
+                {/* Replace the simple color block with our new thumbnail renderer */}
                 {renderElementThumbnail(element)}
+                
                 {editingNameId === element.id ? (
                   <form 
                     onSubmit={(e) => {
@@ -446,6 +469,7 @@ const LayersList = () => {
                   </div>
                 )}
               </div>
+
               <div className="flex items-center gap-1 flex-shrink-0">
                 <TooltipProvider>
                   <Tooltip>
@@ -579,23 +603,6 @@ const LayersList = () => {
           </div>
         </DialogContent>
       </Dialog>
-
-      <style>
-        {`
-        .layer-item.opacity-50 {
-          opacity: 0.5;
-        }
-        
-        .layer-item:hover {
-          background-color: #f9fafb;
-        }
-        
-        #drag-thumbnail {
-          pointer-events: none;
-          user-select: none;
-        }
-        `}
-      </style>
     </div>
   );
 };
