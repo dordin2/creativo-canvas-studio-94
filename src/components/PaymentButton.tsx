@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Heart, UserCheck, User } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -25,7 +24,6 @@ export function PaymentButton({ projectId, currency = "USD" }: PaymentButtonProp
 
     const checkUserPayments = async () => {
       try {
-        // Check if user has any completed payments
         const { data, error } = await supabase
           .from("payments")
           .select("*")
@@ -35,7 +33,6 @@ export function PaymentButton({ projectId, currency = "USD" }: PaymentButtonProp
 
         if (error) throw error;
         
-        // User is pro if they have at least one completed payment
         setIsPro(data && data.length > 0);
       } catch (error) {
         console.error("Error checking user status:", error);
@@ -63,23 +60,15 @@ export function PaymentButton({ projectId, currency = "USD" }: PaymentButtonProp
       {user ? (
         <>
           {isPro ? (
-            <>
-              <UserCheck className="mr-2 h-4 w-4 text-green-500" />
-              Pro
-            </>
+            <UserCheck className="mr-2 h-4 w-4 text-green-500" />
           ) : (
-            <>
-              <User className="mr-2 h-4 w-4 text-gray-500" />
-              Regular
-            </>
+            <User className="mr-2 h-4 w-4 text-gray-500" />
           )}
         </>
       ) : (
-        <>
-          <Heart className="mr-2 h-4 w-4 text-red-500" />
-          Support Project
-        </>
+        <Heart className="mr-2 h-4 w-4 text-red-500" />
       )}
+      {user ? (isPro ? "Pro" : "") : "Support Project"}
     </Button>
   );
 }
