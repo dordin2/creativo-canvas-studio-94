@@ -5,7 +5,8 @@ import {
   saveImageToStorage, 
   getImageFromStorage, 
   getThumbnailFromStorage,
-  pruneImageStorage
+  pruneImageStorage,
+  deleteImageFromStorage
 } from "./imageStorageDB";
 
 // Default image processing settings
