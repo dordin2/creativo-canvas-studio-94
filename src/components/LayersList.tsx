@@ -1,5 +1,4 @@
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -23,7 +22,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DesignElement } from "@/types/designTypes"; // Added this import to fix the TypeScript errors
+import { DesignElement } from "@/types/designTypes"; 
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { updateElementsOrder } from "@/utils/layerUtils";
 
@@ -49,7 +48,6 @@ const LayersList = () => {
   const [draggedElement, setDraggedElement] = useState<DesignElement | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   
-  // Create an invisible element for the drag preview instead of using DOM manipulation
   const dragPreviewRef = useRef<HTMLDivElement | null>(null);
 
   const layerElements = [...elements]
@@ -64,12 +62,10 @@ const LayersList = () => {
   const handleDuplicate = (element: DesignElement) => {
     console.log("LayersList - Original element to duplicate:", element);
     
-    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("LayersList - Duplicate props before adding:", duplicateProps);
     
-    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
@@ -105,9 +101,7 @@ const LayersList = () => {
     setShowMoveDialog(true);
   };
 
-  // Generate element thumbnail
   const renderElementThumbnail = (element: DesignElement) => {
-    // Define common style for the thumbnail container
     const commonStyle = "w-8 h-8 flex-shrink-0 flex items-center justify-center border rounded";
     
     switch (element.type) {
@@ -226,43 +220,63 @@ const LayersList = () => {
     }
   };
 
-  // Improved drag and drop handlers
   const handleDragStart = (e: React.DragEvent, element: DesignElement, index: number) => {
-    // Prevent the default drag ghost image
-    const img = new Image();
-    img.src = 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7'; // Transparent 1x1 pixel
-    e.dataTransfer.setDragImage(img, 0, 0);
+    e.preventDefault();
     
-    // Set data for the drag operation
     e.dataTransfer.setData('text/plain', element.id);
     e.dataTransfer.effectAllowed = 'move';
     
-    // Update state to reflect dragging
     setDraggedElement(element);
+    setDragOverIndex(null);
     
-    // Set the custom preview in a fixed position that won't interfere with the UI
+    const preview = document.createElement('div');
+    preview.id = 'layer-drag-preview';
+    preview.className = 'fixed bg-white px-3 py-2 rounded-md shadow-lg border z-[9999] pointer-events-none flex items-center gap-2';
+    preview.style.position = 'fixed';
+    preview.style.left = `${e.clientX + 15}px`;
+    preview.style.top = `${e.clientY + 15}px`;
+    preview.style.zIndex = '9999';
+    preview.style.pointerEvents = 'none';
+    preview.style.display = 'flex';
+    preview.style.transform = 'translate(0, 0)';
+    
+    const thumbnail = document.createElement('div');
+    thumbnail.className = 'w-6 h-6 flex-shrink-0 rounded-sm overflow-hidden';
+    
+    if (element.type === 'circle') {
+      thumbnail.style.borderRadius = '50%';
+    }
+    
+    if (element.type === 'image' && element.dataUrl) {
+      thumbnail.style.backgroundImage = `url(${element.dataUrl})`;
+      thumbnail.style.backgroundSize = 'cover';
+    } else {
+      thumbnail.style.backgroundColor = (element.style?.backgroundColor as string) || '#8B5CF6';
+    }
+    
+    const name = document.createElement('span');
+    name.className = 'text-sm font-medium whitespace-nowrap';
+    name.textContent = getElementName(element);
+    
+    preview.appendChild(thumbnail);
+    preview.appendChild(name);
+    
+    document.body.appendChild(preview);
+    
+    dragPreviewRef.current = preview;
+    
+    window.addEventListener('mousemove', handleMouseMove);
+  };
+  
+  const handleMouseMove = (e: MouseEvent) => {
     if (dragPreviewRef.current) {
-      const preview = dragPreviewRef.current;
+      dragPreviewRef.current.style.left = `${e.clientX + 15}px`;
+      dragPreviewRef.current.style.top = `${e.clientY + 15}px`;
       
-      // Position the preview near the cursor but out of the way
-      preview.style.display = 'flex';
-      preview.style.top = `${e.clientY + 15}px`;
-      preview.style.left = `${e.clientX + 15}px`;
-      
-      // Set the preview content
-      preview.innerHTML = `
-        <div class="flex items-center gap-2">
-          <div class="w-6 h-6 flex-shrink-0 rounded-sm overflow-hidden" style="
-            ${element.type === 'circle' ? 'border-radius: 50%;' : ''}
-            ${element.type === 'image' && element.dataUrl ? `background-image: url(${element.dataUrl}); background-size: cover;` : ''}
-            ${element.type !== 'image' ? `background-color: ${element.style?.backgroundColor || '#8B5CF6'};` : ''}
-          "></div>
-          <span class="text-sm font-medium whitespace-nowrap">${getElementName(element)}</span>
-        </div>
-      `;
-      
-      // Add the element to the document
-      document.body.appendChild(preview);
+      const customEvent = new CustomEvent('layer-drag-over', {
+        detail: { clientX: e.clientX, clientY: e.clientY }
+      });
+      document.dispatchEvent(customEvent);
     }
   };
   
@@ -270,12 +284,6 @@ const LayersList = () => {
     e.preventDefault();
     if (draggedElement) {
       setDragOverIndex(index);
-      
-      // Update the position of the drag preview to follow the cursor
-      if (dragPreviewRef.current) {
-        dragPreviewRef.current.style.top = `${e.clientY + 15}px`;
-        dragPreviewRef.current.style.left = `${e.clientX + 15}px`;
-      }
     }
   };
 
@@ -286,10 +294,12 @@ const LayersList = () => {
   const handleDrop = (e: React.DragEvent, targetIndex: number) => {
     e.preventDefault();
     
-    // Hide the drag preview
-    if (dragPreviewRef.current) {
-      dragPreviewRef.current.style.display = 'none';
+    if (dragPreviewRef.current && dragPreviewRef.current.parentNode) {
+      dragPreviewRef.current.parentNode.removeChild(dragPreviewRef.current);
+      dragPreviewRef.current = null;
     }
+    
+    window.removeEventListener('mousemove', handleMouseMove);
     
     if (!draggedElement) return;
     
@@ -300,17 +310,13 @@ const LayersList = () => {
       return;
     }
 
-    // Get the current canvas elements
     const currentCanvas = canvases[activeCanvasIndex];
     if (!currentCanvas) return;
 
-    // Create a copy of the elements to work with
     const updatedElements = [...currentCanvas.elements];
     
-    // Update the layers based on new order
     const newElements = updateElementsOrder(updatedElements, sourceIndex, targetIndex, layerElements);
     
-    // Update the canvas with the new elements
     const updatedCanvases = [...canvases];
     updatedCanvases[activeCanvasIndex] = {
       ...currentCanvas,
@@ -319,20 +325,39 @@ const LayersList = () => {
     
     setCanvases(updatedCanvases);
     
-    // Reset drag state
     setDraggedElement(null);
     setDragOverIndex(null);
   };
 
-  const handleDragEnd = () => {
-    // Hide the drag preview when drag ends
-    if (dragPreviewRef.current) {
-      dragPreviewRef.current.style.display = 'none';
+  const handleDragEnd = (e: React.DragEvent) => {
+    if (dragPreviewRef.current && dragPreviewRef.current.parentNode) {
+      dragPreviewRef.current.parentNode.removeChild(dragPreviewRef.current);
+      dragPreviewRef.current = null;
     }
+    
+    window.removeEventListener('mousemove', handleMouseMove);
     
     setDraggedElement(null);
     setDragOverIndex(null);
   };
+
+  useEffect(() => {
+    const styleElement = document.createElement('style');
+    styleElement.textContent = `
+      .layer-item-dragging {
+        opacity: 0.5;
+      }
+      .layer-drop-target {
+        border-color: #3b82f6 !important;
+        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+      }
+    `;
+    document.head.appendChild(styleElement);
+    
+    return () => {
+      document.head.removeChild(styleElement);
+    };
+  }, []);
 
   return (
     <div className="border rounded-md p-4 mt-4">
@@ -340,14 +365,6 @@ const LayersList = () => {
         <Layers className="h-5 w-5 text-canvas-purple" />
         <h3 className="font-medium">Layers ({canvases[activeCanvasIndex]?.name || 'Current Canvas'})</h3>
       </div>
-
-      {/* Custom drag preview element positioned absolutely and hidden by default */}
-      <div 
-        ref={dragPreviewRef} 
-        className="fixed bg-white px-3 py-2 rounded-md shadow-lg border z-[9999] pointer-events-none items-center"
-        style={{ display: 'none' }}
-        aria-hidden="true"
-      ></div>
 
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
         {layerElements.length === 0 ? (
@@ -358,12 +375,15 @@ const LayersList = () => {
               key={element.id}
               className={`p-2 border rounded-md flex items-center justify-between ${
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
-              } ${dragOverIndex === index ? "border-blue-500 bg-blue-50" : ""} 
-              ${draggedElement?.id === element.id ? "opacity-50" : "opacity-100"}
+              } ${dragOverIndex === index ? "layer-drop-target" : ""} 
+              ${draggedElement?.id === element.id ? "layer-item-dragging" : ""}
               cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
-              draggable={true}
-              onDragStart={(e) => handleDragStart(e, element, index)}
+              onMouseDown={(e) => {
+                if ((e.target as HTMLElement).closest('.cursor-grab')) {
+                  handleDragStart(e as unknown as React.DragEvent, element, index);
+                }
+              }}
               onDragOver={(e) => handleDragOver(e, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
@@ -374,7 +394,6 @@ const LayersList = () => {
                   <GripVertical className="h-4 w-4 text-gray-400" />
                 </div>
                 
-                {/* Replace the simple color block with our new thumbnail renderer */}
                 {renderElementThumbnail(element)}
                 
                 {editingNameId === element.id ? (
