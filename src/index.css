@@ -1,148 +1,58 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
-@layer base {
-  :root {
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
 
-    --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
- 
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
- 
-    --secondary: 240 4.8% 95.9%;
-    --secondary-foreground: 240 5.9% 10%;
- 
-    --muted: 240 4.8% 95.9%;
-    --muted-foreground: 240 3.8% 46.1%;
- 
-    --accent: 240 4.8% 95.9%;
-    --accent-foreground: 240 5.9% 10%;
- 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 240 5.9% 90%;
-    --input: 240 5.9% 90%;
-    --ring: 240 10% 3.9%;
- 
-    --radius: 0.5rem;
-  }
- 
-  .dark {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
- 
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
- 
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
- 
-    --primary: 0 0% 98%;
-    --primary-foreground: 240 5.9% 10%;
- 
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
- 
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
- 
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
- 
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 240 4.9% 83.9%;
-  }
-}
- 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
-
-/* Custom CSS for mobile touch interactions */
-@media (max-width: 768px) {
-  .touch-feedback-enabled {
-    -webkit-tap-highlight-color: rgba(99, 102, 241, 0.1);
-  }
-  
-  .touch-feedback-enabled:active {
-    transform: scale(0.98);
-    transition: transform 0.1s ease;
-  }
-  
-  .resize-handle {
-    /* Make touch targets larger on mobile */
-    min-width: 20px !important;
-    min-height: 20px !important;
-    margin: -4px;
-  }
-  
-  .rotation-handle {
-    /* Make rotation handle larger and easier to grab on mobile */
-    min-width: 36px !important;
-    min-height: 36px !important;
-  }
-  
-  /* Prevent scrolling issues */
-  .drawer-content, .mobile-sidebar, .properties-panel {
-    overscroll-behavior: contain;
-  }
-  
-  /* Add momentum scrolling for better mobile experience */
-  .drawer-content, .mobile-sidebar, .properties-panel {
-    -webkit-overflow-scrolling: touch;
-  }
-}
-
-/* CSS for scroll containment in mobile drawers */
-.drawer-content {
-  overscroll-behavior: contain;
-}
-
-/* Canvas specific styles */
-.canvas-container {
-  position: relative;
-  overflow: hidden;
-  background-color: #f8f9fa;
-  user-select: none;
-  touch-action: pan-x pan-y;
-}
-
-.fixed-canvas-container {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100vh;
-  overflow: hidden;
-  user-select: none;
-  z-index: 1;
-}
-
-.game-mode-image {
-  pointer-events: auto;
-}
-
-/* Custom canvas colors */
 :root {
   --canvas-purple: #8B5CF6;
-  --canvas-purple-light: #C4B5FD;
-  --canvas-purple-dark: #7C3AED;
+  --background: #ffffff;
+  --foreground: #0F172A;
+}
+
+.dark {
+  --background: #0F172A;
+  --foreground: #F8FAFC;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: 'Inter', sans-serif;
+  overscroll-behavior: none;
+}
+
+/* For preventing touch drag issues on iOS */
+.canvas-element {
+  touch-action: none;
+}
+
+/* Make drawer content scroll properly on mobile */
+.drawer-content-inner {
+  -webkit-overflow-scrolling: touch; /* Momentum scrolling for iOS */
+  overscroll-behavior: contain; /* Prevent scrolling to parent */
+  max-height: 80vh; /* Cap the height */
+}
+
+/* Mobile-specific touch improvements */
+@media (max-width: 768px) {
+  .resize-handle {
+    /* Larger hit area for touch targets on mobile */
+    min-width: 24px;
+    min-height: 24px;
+    transform: translate(-50%, -50%) scale(1.2);
+  }
+  
+  .element-controls button {
+    /* Increase size of control buttons on mobile */
+    min-width: 40px;
+    min-height: 40px;
+  }
+  
+  /* Prevent pull-to-refresh on mobile */
+  html, body {
+    overscroll-behavior-y: contain;
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+  }
 }

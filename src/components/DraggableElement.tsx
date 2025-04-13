@@ -77,67 +77,68 @@ const DraggableElement = ({ element, isActive, children }: {
   
   const isInInventory = element.inInventory || inventoryItems.some(item => item.elementId === element.id);
   
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    e.stopPropagation();
-    
-    if (isImageElement && isGameMode) {
-      e.preventDefault();
+  const handleInputEvents = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('touches' in e) {
+      e.stopPropagation();
       
-      if (hasInteraction) {
-        handleInteraction();
+      if (isImageElement && isGameMode) {
+        e.preventDefault();
+        
+        if (hasInteraction) {
+          handleInteraction();
+        }
+        return;
       }
-      return;
-    }
-    
-    if (isGameMode) {
-      if (hasInteraction) {
-        handleInteraction();
+      
+      if (isGameMode) {
+        if (hasInteraction) {
+          handleInteraction();
+        }
+        return;
       }
-      return;
-    }
-    
-    setActiveElement(element);
-    
-    if (isEditing) return;
-    
-    if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
-    }
-    
-    setStartPos({ x: e.clientX, y: e.clientY });
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    e.stopPropagation();
-    
-    if (isImageElement && isGameMode) {
-      if (hasInteraction) {
-        handleInteraction();
+      
+      setActiveElement(element);
+      
+      if (isEditing) return;
+      
+      if (!isSequencePuzzleElement) {
+        startDrag(e, element.position);
+        setIsDragging(true);
       }
-      return;
-    }
-    
-    if (isGameMode) {
-      if (hasInteraction) {
-        handleInteraction();
+      
+      if (e.touches && e.touches[0]) {
+        setStartPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
       }
-      return;
-    }
-    
-    setActiveElement(element);
-    
-    if (isEditing) return;
-    
-    if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
-    }
-    
-    if (e.touches.length > 0) {
-      const touch = e.touches[0];
-      setStartPos({ x: touch.clientX, y: touch.clientY });
+    } else {
+      if (e.button !== 0) return;
+      e.stopPropagation();
+      
+      if (isImageElement && isGameMode) {
+        e.preventDefault();
+        
+        if (hasInteraction) {
+          handleInteraction();
+        }
+        return;
+      }
+      
+      if (isGameMode) {
+        if (hasInteraction) {
+          handleInteraction();
+        }
+        return;
+      }
+      
+      setActiveElement(element);
+      
+      if (isEditing) return;
+      
+      if (!isSequencePuzzleElement) {
+        startDrag(e, element.position);
+        setIsDragging(true);
+      }
+      
+      setStartPos({ x: e.clientX, y: e.clientY });
     }
   };
 
@@ -568,16 +569,8 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }
 
-  const touchFeedbackClass = isMobile ? 'touch-feedback-enabled' : '';
-  
-  const mobileTouchStyles = isMobile ? {
-    boxShadow: isActive ? '0 0 0 2px rgba(99, 102, 241, 0.8)' : 'none',
-    padding: element.type === 'image' ? '0' : undefined
-  } : {};
-
   const combinedStyle = {
     ...elementStyle,
-    ...mobileTouchStyles,
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
     cursor: isGameMode 
@@ -596,25 +589,35 @@ const DraggableElement = ({ element, isActive, children }: {
     <div
       id={`element-${element.id}`}
       ref={ref}
-      className={`canvas-element ${touchFeedbackClass} ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
       style={combinedStyle}
-      onMouseDown={handleMouseDown}
-      onTouchStart={handleTouchStart}
+      onMouseDown={handleInputEvents}
+      onTouchStart={handleInputEvents}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
       draggable={isGameMode && isImageElement ? false : undefined}
     >
       {childContent}
-      {showInteractionIndicator && (
-        <div className={indicatorStyles} title={
-          interactionType === 'canvasNavigation' 
-            ? "Click to navigate to another canvas" 
-            : interactionType === 'addToInventory'
-              ? "Click to add to inventory"
-              : interactionType === 'combinable'
-                ? "Can be combined with inventory items"
-                : ""
-        }></div>
+      {(hasInteraction && !isActive && !isDragging) && (
+        <div 
+          className={isMobile ? "absolute bottom-0 right-0 w-4 h-4 rounded-full animate-pulse" : "absolute bottom-0 right-0 w-3 h-3 rounded-full animate-pulse"}
+          style={{
+            backgroundColor: 
+              interactionType === 'canvasNavigation' ? '#3B82F6' : 
+              interactionType === 'addToInventory' ? '#10B981' : 
+              interactionType === 'combinable' ? '#8B5CF6' : 
+              '#6366F1'
+          }}
+          title={
+            interactionType === 'canvasNavigation' 
+              ? "Click to navigate to another canvas" 
+              : interactionType === 'addToInventory'
+                ? "Click to add to inventory"
+                : interactionType === 'combinable'
+                  ? "Can be combined with inventory items"
+                  : ""
+          }
+        ></div>
       )}
     </div>
   );

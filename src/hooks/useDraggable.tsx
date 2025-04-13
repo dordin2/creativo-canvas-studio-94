@@ -1,7 +1,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 interface Position {
   x: number;
@@ -15,9 +14,9 @@ export const useDraggable = (elementId: string) => {
   const elementInitialPos = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
   const animationFrame = useRef<number | null>(null);
+  const touchStartTime = useRef<number>(0);
   const mousePosition = useRef<Position>({ x: 0, y: 0 });
-  const touchPosition = useRef<Position>({ x: 0, y: 0 });
-  const isMobile = useIsMobile();
+  const isTouchDevice = useRef<boolean>(false);
 
   // Find the current element to access its properties
   const currentElement = elements.find(el => el.id === elementId);
@@ -115,6 +114,7 @@ export const useDraggable = (elementId: string) => {
     };
   }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
 
+  // Mouse events handler
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
@@ -157,6 +157,38 @@ export const useDraggable = (elementId: string) => {
       });
     };
 
+    const handleMouseUp = () => {
+      if (!isTouchDevice.current) {
+        setIsDragging(false);
+        
+        // If we actually dragged (not just clicked), commit the final position to history
+        if (isDragStarted.current) {
+          // Reset willChange property when dragging ends
+          if (currentElement) {
+            updateElementWithoutHistory(elementId, {
+              style: {
+                ...currentElement.style,
+                willChange: 'auto',
+              }
+            });
+          }
+          
+          commitToHistory();
+          isDragStarted.current = false;
+        }
+        
+        startPosition.current = null;
+        elementInitialPos.current = null;
+        
+        // Cancel any pending animation frame
+        if (animationFrame.current !== null) {
+          cancelAnimationFrame(animationFrame.current);
+          animationFrame.current = null;
+        }
+      }
+    };
+
+    // Touch event handlers
     const handleTouchMove = (e: TouchEvent) => {
       if (!isDragging || !startPosition.current || !elementInitialPos.current || e.touches.length === 0) return;
       
@@ -165,14 +197,14 @@ export const useDraggable = (elementId: string) => {
         return;
       }
       
-      // Prevent scrolling while dragging on mobile
+      // Prevent default to avoid scrolling while dragging
       e.preventDefault();
       
-      // Get the first touch point
+      // Get the first touch
       const touch = e.touches[0];
       
       // Update current touch position immediately for responsive feel
-      touchPosition.current = { x: touch.clientX, y: touch.clientY };
+      mousePosition.current = { x: touch.clientX, y: touch.clientY };
 
       // Mark that we've started dragging (for history tracking)
       if (!isDragStarted.current) {
@@ -187,8 +219,8 @@ export const useDraggable = (elementId: string) => {
       // Use requestAnimationFrame for smooth updates
       animationFrame.current = requestAnimationFrame(() => {
         // Calculate the new position
-        const deltaX = touchPosition.current.x - startPosition.current!.x;
-        const deltaY = touchPosition.current.y - startPosition.current!.y;
+        const deltaX = mousePosition.current.x - startPosition.current!.x;
+        const deltaY = mousePosition.current.y - startPosition.current!.y;
 
         const newX = elementInitialPos.current!.x + deltaX;
         const newY = elementInitialPos.current!.y + deltaY;
@@ -204,35 +236,6 @@ export const useDraggable = (elementId: string) => {
       });
     };
 
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      
-      // If we actually dragged (not just clicked), commit the final position to history
-      if (isDragStarted.current) {
-        // Reset willChange property when dragging ends
-        if (currentElement) {
-          updateElementWithoutHistory(elementId, {
-            style: {
-              ...currentElement.style,
-              willChange: 'auto',
-            }
-          });
-        }
-        
-        commitToHistory();
-        isDragStarted.current = false;
-      }
-      
-      startPosition.current = null;
-      elementInitialPos.current = null;
-      
-      // Cancel any pending animation frame
-      if (animationFrame.current !== null) {
-        cancelAnimationFrame(animationFrame.current);
-        animationFrame.current = null;
-      }
-    };
-    
     const handleTouchEnd = () => {
       setIsDragging(false);
       
@@ -254,6 +257,7 @@ export const useDraggable = (elementId: string) => {
       
       startPosition.current = null;
       elementInitialPos.current = null;
+      isTouchDevice.current = false;
       
       // Cancel any pending animation frame
       if (animationFrame.current !== null) {
@@ -263,16 +267,22 @@ export const useDraggable = (elementId: string) => {
     };
 
     if (isDragging) {
+      // Set up mouse events
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
+      
+      // Set up touch events
       window.addEventListener('touchmove', handleTouchMove, { passive: false });
       window.addEventListener('touchend', handleTouchEnd);
       window.addEventListener('touchcancel', handleTouchEnd);
     }
 
     return () => {
+      // Clean up mouse events
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
+      
+      // Clean up touch events
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchEnd);
@@ -288,30 +298,35 @@ export const useDraggable = (elementId: string) => {
   const startDrag = (e: React.MouseEvent | React.TouchEvent, initialPosition: Position) => {
     // Don't start drag for static images in game mode
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
-      if ('preventDefault' in e) e.preventDefault();
+      e.preventDefault();
       return;
     }
     
-    // Prevent browser's native drag behavior for images and puzzle elements
-    if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
-      if ('preventDefault' in e) e.preventDefault();
-    }
-    
-    if ('stopPropagation' in e) e.stopPropagation();
-    setIsDragging(true);
-
-    // Handle different event types (mouse vs touch)
-    if ('touches' in e && e.touches.length > 0) {
+    // Differentiate between mouse and touch events
+    if ('touches' in e) {
       // Touch event
+      e.stopPropagation();
+      isTouchDevice.current = true;
+      touchStartTime.current = Date.now();
+      
       const touch = e.touches[0];
+      setIsDragging(true);
       startPosition.current = { x: touch.clientX, y: touch.clientY };
-    } else if ('clientX' in e) {
+      elementInitialPos.current = initialPosition;
+      isDragStarted.current = false; // Reset the drag started flag
+    } else {
       // Mouse event
+      // Prevent browser's native drag behavior for images and puzzle elements
+      if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
+        e.preventDefault();
+      }
+      
+      e.stopPropagation();
+      setIsDragging(true);
       startPosition.current = { x: e.clientX, y: e.clientY };
+      elementInitialPos.current = initialPosition;
+      isDragStarted.current = false; // Reset the drag started flag
     }
-    
-    elementInitialPos.current = initialPosition;
-    isDragStarted.current = false; // Reset the drag started flag
     
     // Set willChange to transform for better performance during drag
     if (currentElement) {

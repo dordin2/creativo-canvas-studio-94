@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef } from "react";
+
+import { useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { useIsMobile } from "@/hooks/use-mobile";
 
 export const useElementResize = (element: DesignElement) => {
   const { updateElement } = useDesignState();
@@ -10,24 +10,24 @@ export const useElementResize = (element: DesignElement) => {
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [originalAspectRatio, setOriginalAspectRatio] = useState<number | null>(null);
-  const lastTouchDistance = useRef<number | null>(null);
-  const isMobile = useIsMobile();
+  const [isTouchResize, setIsTouchResize] = useState(false);
 
   const handleResizeStart = (e: React.MouseEvent | React.TouchEvent, direction: string) => {
-    if ('stopPropagation' in e) e.stopPropagation();
-    if ('preventDefault' in e) e.preventDefault();
+    e.stopPropagation();
+    e.preventDefault();
     
     setIsResizing(true);
     setResizeDirection(direction);
     
-    // Handle mouse events
-    if ('clientX' in e) {
-      setStartPos({ x: e.clientX, y: e.clientY });
-    } 
-    // Handle touch events
-    else if ('touches' in e && e.touches.length === 1) {
+    if ('touches' in e) {
+      // Touch event
+      setIsTouchResize(true);
       const touch = e.touches[0];
       setStartPos({ x: touch.clientX, y: touch.clientY });
+    } else {
+      // Mouse event
+      setIsTouchResize(false);
+      setStartPos({ x: e.clientX, y: e.clientY });
     }
     
     const width = element.size?.width || 100;
@@ -50,52 +50,8 @@ export const useElementResize = (element: DesignElement) => {
     }
   };
 
-  const handlePinchToZoom = (e: TouchEvent) => {
-    if (e.touches.length !== 2) return;
-    
-    const touch1 = e.touches[0];
-    const touch2 = e.touches[1];
-    const distance = Math.sqrt(
-      Math.pow(touch2.clientX - touch1.clientX, 2) + 
-      Math.pow(touch2.clientY - touch1.clientY, 2)
-    );
-    
-    if (lastTouchDistance.current === null) {
-      lastTouchDistance.current = distance;
-      return;
-    }
-    
-    const scaleFactor = distance / lastTouchDistance.current;
-    lastTouchDistance.current = distance;
-    
-    let newWidth = element.size?.width || 100;
-    let newHeight = element.size?.height || 100;
-    
-    newWidth = Math.max(20, Math.round(newWidth * scaleFactor));
-    
-    if (element.type === 'image' || originalAspectRatio) {
-      const aspectRatio = originalAspectRatio || (element.size?.width || 100) / (element.size?.height || 100);
-      newHeight = Math.round(newWidth / aspectRatio);
-    } else {
-      newHeight = Math.max(20, Math.round(newHeight * scaleFactor));
-    }
-    
-    const centerX = (touch1.clientX + touch2.clientX) / 2;
-    const centerY = (touch1.clientY + touch2.clientY) / 2;
-    
-    const elementCenterX = element.position.x + (element.size?.width || 100) / 2;
-    const elementCenterY = element.position.y + (element.size?.height || 100) / 2;
-    
-    const newX = element.position.x - (newWidth - (element.size?.width || 100)) / 2;
-    const newY = element.position.y - (newHeight - (element.size?.height || 100)) / 2;
-    
-    updateElement(element.id, {
-      size: { width: newWidth, height: newHeight },
-      position: { x: Math.round(newX), y: Math.round(newY) }
-    });
-  };
-
   const updateElementSize = (newWidth: number, newHeight: number, newX: number, newY: number) => {
+    // Round values to eliminate sub-pixel rendering issues that cause jumping
     updateElement(element.id, {
       size: { 
         width: Math.round(newWidth), 
@@ -110,7 +66,7 @@ export const useElementResize = (element: DesignElement) => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (isResizing && resizeDirection) {
+      if (isResizing && resizeDirection && !isTouchResize) {
         const deltaX = e.clientX - startPos.x;
         const deltaY = e.clientY - startPos.y;
         
@@ -122,6 +78,7 @@ export const useElementResize = (element: DesignElement) => {
         let newX = startPosition.x;
         let newY = startPosition.y;
         
+        // Calculate new dimensions and position based on resize direction
         if (resizeDirection.includes('e')) {
           newWidth = Math.max(20, startSize.width + deltaX);
         }
@@ -142,26 +99,68 @@ export const useElementResize = (element: DesignElement) => {
           newY = startPosition.y + (startSize.height - newHeight);
         }
         
+        // Handle aspect ratio preservation for images and other elements that need it
         if (maintainAspectRatio && originalAspectRatio) {
-          if (resizeDirection === 'nw' || resizeDirection === 'ne' || 
-              resizeDirection === 'sw' || resizeDirection === 'se') {
+          if (resizeDirection === 'nw') {
+            // For northwest corner, adjust both width and height proportionally
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
+              // Width is driving dimension
               newWidth = Math.max(20, startSize.width - deltaX);
               newHeight = newWidth / originalAspectRatio;
               newX = startPosition.x + (startSize.width - newWidth);
               newY = startPosition.y + (startSize.height - newHeight);
             } else {
+              // Height is driving dimension
               newHeight = Math.max(20, startSize.height - deltaY);
               newWidth = newHeight * originalAspectRatio;
               newX = startPosition.x + (startSize.width - newWidth);
               newY = startPosition.y + (startSize.height - newHeight);
             }
+          } else if (resizeDirection === 'ne') {
+            // For northeast corner
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+              // Width is driving dimension
+              newWidth = Math.max(20, startSize.width + deltaX);
+              newHeight = newWidth / originalAspectRatio;
+              newY = startPosition.y + (startSize.height - newHeight);
+            } else {
+              // Height is driving dimension
+              newHeight = Math.max(20, startSize.height - deltaY);
+              newWidth = newHeight * originalAspectRatio;
+              newY = startPosition.y + (startSize.height - newHeight);
+            }
+          } else if (resizeDirection === 'sw') {
+            // For southwest corner
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+              // Width is driving dimension
+              newWidth = Math.max(20, startSize.width - deltaX);
+              newHeight = newWidth / originalAspectRatio;
+              newX = startPosition.x + (startSize.width - newWidth);
+            } else {
+              // Height is driving dimension
+              newHeight = Math.max(20, startSize.height + deltaY);
+              newWidth = newHeight * originalAspectRatio;
+              newX = startPosition.x + (startSize.width - newWidth);
+            }
+          } else if (resizeDirection === 'se') {
+            // For southeast corner
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+              // Width is driving dimension
+              newWidth = Math.max(20, startSize.width + deltaX);
+              newHeight = newWidth / originalAspectRatio;
+            } else {
+              // Height is driving dimension
+              newHeight = Math.max(20, startSize.height + deltaY);
+              newWidth = newHeight * originalAspectRatio;
+            }
           } else if (resizeDirection === 'n' || resizeDirection === 's') {
+            // For north or south sides, adjust width based on height
             newWidth = newHeight * originalAspectRatio;
             if (resizeDirection === 'n') {
               newY = startPosition.y + (startSize.height - newHeight);
             }
           } else if (resizeDirection === 'e' || resizeDirection === 'w') {
+            // For east or west sides, adjust height based on width
             newHeight = newWidth / originalAspectRatio;
             if (resizeDirection === 'w') {
               newX = startPosition.x + (startSize.width - newWidth);
@@ -169,21 +168,16 @@ export const useElementResize = (element: DesignElement) => {
           }
         }
         
+        // Update element with both new size and position in a single update
         updateElementSize(newWidth, newHeight, newX, newY);
       }
     };
 
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isResizing) return;
-      
-      if (e.touches.length === 2) {
+      if (isResizing && resizeDirection && isTouchResize && e.touches.length > 0) {
+        // Prevent default to avoid scrolling while resizing
         e.preventDefault();
-        handlePinchToZoom(e);
-        return;
-      }
-      
-      if (resizeDirection && e.touches.length === 1) {
-        e.preventDefault();
+        
         const touch = e.touches[0];
         const deltaX = touch.clientX - startPos.x;
         const deltaY = touch.clientY - startPos.y;
@@ -196,6 +190,8 @@ export const useElementResize = (element: DesignElement) => {
         let newX = startPosition.x;
         let newY = startPosition.y;
         
+        // Handle pinch-to-zoom resize for touch - simplified for single touch point
+        // Calculate new dimensions and position based on resize direction
         if (resizeDirection.includes('e')) {
           newWidth = Math.max(20, startSize.width + deltaX);
         }
@@ -216,26 +212,68 @@ export const useElementResize = (element: DesignElement) => {
           newY = startPosition.y + (startSize.height - newHeight);
         }
         
+        // Handle aspect ratio preservation for images and other elements that need it
         if (maintainAspectRatio && originalAspectRatio) {
-          if (resizeDirection === 'nw' || resizeDirection === 'ne' || 
-              resizeDirection === 'sw' || resizeDirection === 'se') {
+          if (resizeDirection === 'nw') {
+            // For northwest corner, adjust both width and height proportionally
             if (Math.abs(deltaX) > Math.abs(deltaY)) {
+              // Width is driving dimension
               newWidth = Math.max(20, startSize.width - deltaX);
               newHeight = newWidth / originalAspectRatio;
               newX = startPosition.x + (startSize.width - newWidth);
               newY = startPosition.y + (startSize.height - newHeight);
             } else {
+              // Height is driving dimension
               newHeight = Math.max(20, startSize.height - deltaY);
               newWidth = newHeight * originalAspectRatio;
               newX = startPosition.x + (startSize.width - newWidth);
               newY = startPosition.y + (startSize.height - newHeight);
             }
+          } else if (resizeDirection === 'ne') {
+            // For northeast corner
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+              // Width is driving dimension
+              newWidth = Math.max(20, startSize.width + deltaX);
+              newHeight = newWidth / originalAspectRatio;
+              newY = startPosition.y + (startSize.height - newHeight);
+            } else {
+              // Height is driving dimension
+              newHeight = Math.max(20, startSize.height - deltaY);
+              newWidth = newHeight * originalAspectRatio;
+              newY = startPosition.y + (startSize.height - newHeight);
+            }
+          } else if (resizeDirection === 'sw') {
+            // For southwest corner
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+              // Width is driving dimension
+              newWidth = Math.max(20, startSize.width - deltaX);
+              newHeight = newWidth / originalAspectRatio;
+              newX = startPosition.x + (startSize.width - newWidth);
+            } else {
+              // Height is driving dimension
+              newHeight = Math.max(20, startSize.height + deltaY);
+              newWidth = newHeight * originalAspectRatio;
+              newX = startPosition.x + (startSize.width - newWidth);
+            }
+          } else if (resizeDirection === 'se') {
+            // For southeast corner
+            if (Math.abs(deltaX) > Math.abs(deltaY)) {
+              // Width is driving dimension
+              newWidth = Math.max(20, startSize.width + deltaX);
+              newHeight = newWidth / originalAspectRatio;
+            } else {
+              // Height is driving dimension
+              newHeight = Math.max(20, startSize.height + deltaY);
+              newWidth = newHeight * originalAspectRatio;
+            }
           } else if (resizeDirection === 'n' || resizeDirection === 's') {
+            // For north or south sides, adjust width based on height
             newWidth = newHeight * originalAspectRatio;
             if (resizeDirection === 'n') {
               newY = startPosition.y + (startSize.height - newHeight);
             }
           } else if (resizeDirection === 'e' || resizeDirection === 'w') {
+            // For east or west sides, adjust height based on width
             newHeight = newWidth / originalAspectRatio;
             if (resizeDirection === 'w') {
               newX = startPosition.x + (startSize.width - newWidth);
@@ -243,36 +281,34 @@ export const useElementResize = (element: DesignElement) => {
           }
         }
         
+        // Update element with both new size and position in a single update
         updateElementSize(newWidth, newHeight, newX, newY);
       }
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
       setIsResizing(false);
       setResizeDirection(null);
-      lastTouchDistance.current = null;
-    };
-    
-    const handleTouchEnd = () => {
-      setIsResizing(false);
-      setResizeDirection(null);
-      lastTouchDistance.current = null;
+      setIsTouchResize(false);
     };
 
     if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-      document.addEventListener("touchmove", handleTouchMove, { passive: false });
-      document.addEventListener("touchend", handleTouchEnd);
-      document.addEventListener("touchcancel", handleTouchEnd);
+      if (isTouchResize) {
+        document.addEventListener("touchmove", handleTouchMove, { passive: false });
+        document.addEventListener("touchend", handleEnd);
+        document.addEventListener("touchcancel", handleEnd);
+      } else {
+        document.addEventListener("mousemove", handleMouseMove);
+        document.addEventListener("mouseup", handleEnd);
+      }
     }
 
     return () => {
       document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mouseup", handleEnd);
       document.removeEventListener("touchmove", handleTouchMove);
-      document.removeEventListener("touchend", handleTouchEnd);
-      document.removeEventListener("touchcancel", handleTouchEnd);
+      document.removeEventListener("touchend", handleEnd);
+      document.removeEventListener("touchcancel", handleEnd);
     };
   }, [
     isResizing,
@@ -282,7 +318,8 @@ export const useElementResize = (element: DesignElement) => {
     resizeDirection, 
     element, 
     updateElement,
-    originalAspectRatio
+    originalAspectRatio,
+    isTouchResize
   ]);
 
   return {
