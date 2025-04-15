@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
-import { Minus, Plus, RotateCcw, Maximize, Minimize } from "lucide-react";
+import { Minus, Plus, RotateCcw } from "lucide-react";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
@@ -33,7 +33,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
-  const [isFullscreenActive, setIsFullscreenActive] = useState(false);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -88,30 +87,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       window.removeEventListener("resize", handleResize);
     };
   }, [isGameMode, isMobileView]);
-  
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreenActive(!!document.fullscreenElement);
-    };
-
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
-  
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
   
   const handleZoomIn = () => {
     setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
@@ -463,18 +438,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             </button>
             <button onClick={handleResetZoom} title="Reset Zoom">
               <RotateCcw size={16} />
-            </button>
-          </div>
-        )}
-        
-        {isGameMode && !isMobileView && (
-          <div className="fullscreen-controls">
-            <button 
-              onClick={toggleFullscreen} 
-              title={isFullscreenActive ? "Exit Fullscreen" : "Enter Fullscreen"}
-              className="fullscreen-button"
-            >
-              {isFullscreenActive ? <Minimize size={18} /> : <Maximize size={18} />}
             </button>
           </div>
         )}
