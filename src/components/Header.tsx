@@ -1,6 +1,5 @@
-
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
+import { Download, Share, Undo, Redo, Layers, Menu, Shield } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
@@ -10,6 +9,8 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LayersList from "./LayersList";
 import { useProject } from "@/context/ProjectContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 import {
   Drawer,
   DrawerContent,
@@ -21,26 +22,24 @@ const Header = () => {
   const { t, language } = useLanguage();
   const { projectId } = useProject();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleDownload = () => {
     if (!canvasRef) return;
     
     try {
-      // Create a temporary canvas to draw everything
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       const canvasElement = canvasRef;
       
-      // Set the canvas dimensions
       canvas.width = canvasElement.clientWidth;
       canvas.height = canvasElement.clientHeight;
       
       if (ctx) {
-        // Draw white background
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw the HTML content
         const data = new XMLSerializer().serializeToString(canvasElement);
         const img = new Image();
         const svgBlob = new Blob([data], { type: "image/svg+xml;charset=utf-8" });
@@ -54,7 +53,6 @@ const Header = () => {
             .toDataURL("image/png")
             .replace("image/png", "image/octet-stream");
           
-          // Trigger download
           const link = document.createElement("a");
           link.download = "canvas-design.png";
           link.href = imgURI;
@@ -75,6 +73,13 @@ const Header = () => {
     toast.info(t('toast.info.share'));
   };
 
+  const navigateToAdmin = () => {
+    navigate('/admin');
+    toast.success("מעבר לממשק האדמין");
+  };
+
+  const isSpecificUser = user?.email === "dordin2@gmail.com";
+
   if (isMobile) {
     return (
       <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
@@ -85,6 +90,17 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          {isSpecificUser && (
+            <Button 
+              variant="outline" 
+              onClick={navigateToAdmin}
+              className="bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              אדמין
+            </Button>
+          )}
+          
           <GameModeToggle />
           
           <Drawer>
@@ -152,6 +168,20 @@ const Header = () => {
         </div>
         <div className="h-6 w-px bg-gray-200 mx-1"></div>
         <LanguageSwitcher />
+        
+        {isSpecificUser && (
+          <>
+            <div className="h-6 w-px bg-gray-200 mx-1"></div>
+            <Button 
+              variant="outline" 
+              onClick={navigateToAdmin}
+              className="bg-blue-100 text-blue-800 border-blue-300 hover:bg-blue-200"
+            >
+              <Shield className="h-4 w-4 mr-2" />
+              אדמין
+            </Button>
+          </>
+        )}
       </div>
       
       <div className="flex items-center gap-4">
