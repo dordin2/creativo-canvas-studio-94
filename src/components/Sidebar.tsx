@@ -12,7 +12,8 @@ import {
   MoveHorizontal,
   MousePointerClick,
   SlidersHorizontal,
-  SlidersVertical
+  SlidersVertical,
+  Video
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -169,6 +170,12 @@ const Sidebar = () => {
                     onClick={() => addElement('image')}>
               <Image className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.image')}</span>
+            </Button>
+            
+            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
+                    onClick={() => addElement('video')}>
+              <Video className="h-5 w-5" />
+              <span className="text-xs">{language === 'en' ? 'Video' : 'וידאו'}</span>
             </Button>
             
             <Popover>

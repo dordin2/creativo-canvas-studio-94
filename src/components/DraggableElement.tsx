@@ -10,6 +10,7 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
+import VideoElement from "./element/VideoElement";
 import InteractionMessageModal from "./element/InteractionMessageModal";
 import PuzzleModal from "./element/PuzzleModal";
 import SequencePuzzleModal from "./element/SequencePuzzleModal";
@@ -24,7 +25,8 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
+import { getImageFromCache } from "@/utils/imageUploader";
+import { getVideoFromCache } from "@/utils/videoProcessor";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -71,6 +73,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
   const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
+  const isVideoElement = element.type === 'video';
   
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
@@ -82,7 +85,7 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    if (isImageElement && isGameMode) {
+    if ((isImageElement || isVideoElement) && isGameMode) {
       e.preventDefault();
       
       if (hasInteraction) {
@@ -406,6 +409,13 @@ const DraggableElement = ({ element, isActive, children }: {
         onClick={handlePuzzleClick}
       />
     );
+  } else if (element.type === 'video') {
+    childContent = (
+      <VideoElement
+        element={element}
+        isGameMode={isGameMode}
+      />
+    );
   }
 
   if ((isInInventory || element.isHidden) && !isActive) {
@@ -541,22 +551,22 @@ const DraggableElement = ({ element, isActive, children }: {
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute' as 'absolute',
-    border: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
-    outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
-    boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
-    backgroundColor: isGameMode && isImageElement ? 'transparent' : elementStyle.backgroundColor,
+    border: (isGameMode && (isImageElement || isVideoElement)) ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
+    outline: (isGameMode && (isImageElement || isVideoElement)) ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
+    boxShadow: (isGameMode && (isImageElement || isVideoElement)) ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
+    backgroundColor: (isGameMode && (isImageElement || isVideoElement)) ? 'transparent' : elementStyle.backgroundColor,
   };
 
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
     <div
       id={`element-${element.id}`}
       ref={ref}
-      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${(isGameMode && (isImageElement || isVideoElement)) ? 'game-mode-media' : ''}`}
       style={combinedStyle}
       onMouseDown={handleMouseDown}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
-      draggable={isGameMode && isImageElement ? false : undefined}
+      draggable={(isGameMode && (isImageElement || isVideoElement)) ? false : undefined}
     >
       {childContent}
       {showInteractionIndicator && (
@@ -623,6 +633,29 @@ const DraggableElement = ({ element, isActive, children }: {
           </div>
         );
       }
+    }
+  }
+
+  if (isVideoElement && element.type === 'video') {
+    const originalStyle = { ...elementStyle };
+    
+    if (element.dataUrl || element.src || element.cacheKey) {
+      const loadFullVideo = async () => {
+        if (!element.dataUrl && element.cacheKey) {
+          // Try to load the full video from cache if not already loaded
+          const cachedVideo = await getVideoFromCache(element.cacheKey);
+          if (cachedVideo) {
+            // We can't modify element directly, so we'll update it through the context
+            updateElementWithoutHistory(element.id, { 
+              dataUrl: cachedVideo.dataUrl,
+              videoDuration: cachedVideo.duration
+            });
+          }
+        }
+      };
+      
+      // Start loading the full video
+      loadFullVideo();
     }
   }
 
