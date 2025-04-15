@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -12,7 +13,8 @@ import {
   MoveHorizontal,
   MousePointerClick,
   SlidersHorizontal,
-  SlidersVertical
+  SlidersVertical,
+  Video
 } from "lucide-react";
 import { useDesignState, ElementType } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -181,6 +183,12 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
                     onClick={() => handleAddElement('image')}>
               <Image className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.image')}</span>
+            </Button>
+            
+            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
+                    onClick={() => handleAddElement('video')}>
+              <Video className="h-5 w-5" />
+              <span className="text-xs">{language === 'en' ? 'Video' : 'וידאו'}</span>
             </Button>
             
             <Drawer>

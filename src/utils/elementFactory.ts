@@ -1,3 +1,4 @@
+
 import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
 // Default positions for new elements
@@ -17,6 +18,17 @@ export const getDefaultImageSize = (canvasRef: HTMLDivElement | null) => {
   // Calculate a reasonable default size based on canvas size
   const width = Math.min(200, canvasRef.clientWidth * 0.3);
   const height = Math.min(150, canvasRef.clientHeight * 0.3);
+  
+  return { width, height };
+};
+
+// Get default placeholder size for videos (16:9 aspect ratio)
+export const getDefaultVideoSize = (canvasRef: HTMLDivElement | null) => {
+  if (!canvasRef) return { width: 320, height: 180 };
+  
+  // Calculate a reasonable default size based on canvas size (16:9 aspect ratio)
+  const width = Math.min(320, canvasRef.clientWidth * 0.4);
+  const height = width * (9/16); // Maintain 16:9 aspect ratio
   
   return { width, height };
 };
@@ -114,6 +126,24 @@ export const createNewElement = (
         size: initialSize,
         originalSize: props?.originalSize || initialSize, // Store original dimensions
         style: { transform: 'rotate(0deg)' },
+        layer
+      };
+      
+    case 'video':
+      // Get default size or use provided size
+      const videoSize = props?.size || getDefaultVideoSize(props?.canvasRef);
+      
+      return {
+        id: generateId(),
+        type,
+        position,
+        size: videoSize,
+        originalSize: props?.originalSize || videoSize,
+        style: { transform: 'rotate(0deg)' },
+        videoDuration: props?.videoDuration || 0,
+        isPlaying: false,
+        videoVolume: 1,
+        currentTime: 0,
         layer
       };
       

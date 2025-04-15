@@ -15,6 +15,7 @@ import {
   createNewElement 
 } from "@/utils/elementFactory";
 import { processImageUpload } from "@/utils/imageUploader";
+import { processVideoUpload } from "@/utils/videoProcessor";
 import { getHighestLayer, handleBackgroundLayer } from "@/utils/layerUtils";
 import { useLanguage } from "@/context/LanguageContext";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
@@ -278,6 +279,22 @@ export const DesignProvider = ({
     );
   };
   
+  const handleVideoUpload = (id: string, file: File) => {
+    const canvasDimensions = canvasRef ? {
+      width: canvasRef.clientWidth,
+      height: canvasRef.clientHeight
+    } : undefined;
+    
+    processVideoUpload(
+      file, 
+      (updatedData) => {
+        updateElement(id, updatedData);
+      },
+      canvasDimensions?.width,
+      canvasDimensions?.height
+    );
+  };
+  
   const addElement = (type: ElementType, props?: any): DesignElement => {
     if (!canvases || activeCanvasIndex < 0 || activeCanvasIndex >= canvases.length) {
       console.error("Invalid canvas state when trying to add element");
@@ -287,6 +304,10 @@ export const DesignProvider = ({
     
     const position = getDefaultPosition(canvasRef);
     const newLayer = getHighestLayer(elements);
+    
+    if (type === 'video' || type === 'image') {
+      props = { ...props, canvasRef };
+    }
     
     if (type === 'background') {
       const { elements: updatedElements, newElement } = handleBackgroundLayer(elements, props);
@@ -329,6 +350,15 @@ export const DesignProvider = ({
       
       if (props.thumbnailDataUrl) {
         console.log("DesignContext - Image has thumbnail preview");
+      }
+    }
+    
+    if (type === 'video' && props?.dataUrl) {
+      console.log("DesignContext - Creating new video element with dataUrl:", 
+        props.dataUrl ? "exists" : "missing");
+      
+      if (props.thumbnailDataUrl) {
+        console.log("DesignContext - Video has thumbnail preview");
       }
     }
     
@@ -674,6 +704,7 @@ export const DesignProvider = ({
     updateElementLayer,
     getHighestLayer: () => getHighestLayer(elements),
     handleImageUpload,
+    handleVideoUpload,
     undo,
     redo,
     canUndo: historyIndex > 0,
