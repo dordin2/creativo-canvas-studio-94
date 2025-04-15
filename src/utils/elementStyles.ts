@@ -27,6 +27,21 @@ export const applyRotation = (element: DesignElement, rotation: number): void =>
   element.style.transform = newTransform.trim();
 };
 
+// Extract text style properties from an element 
+export const getTextStyle = (element: DesignElement): CSSProperties => {
+  return {
+    color: element.style?.color as string,
+    fontFamily: element.style?.fontFamily as string,
+    fontSize: element.style?.fontSize as string,
+    fontWeight: element.style?.fontWeight as string,
+    textAlign: element.style?.textAlign as "left" | "center" | "right" | "justify" | undefined,
+    lineHeight: element.style?.lineHeight as string,
+    letterSpacing: element.style?.letterSpacing as string,
+    fontStyle: element.style?.fontStyle as string,
+    textDecoration: element.style?.textDecoration as string,
+  };
+};
+
 // Gets the appropriate style object for an element
 export const getElementStyle = (element: DesignElement, isDragging: boolean): CSSProperties => {
   const common: CSSProperties = {
@@ -80,7 +95,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
         fontFamily: element.style?.fontFamily as string,
         fontSize: element.style?.fontSize as string,
         fontWeight: element.style?.fontWeight as string,
-        textAlign: element.style?.textAlign as string,
+        textAlign: element.style?.textAlign as "left" | "center" | "right" | "justify" | undefined,
         lineHeight: element.style?.lineHeight as string,
         letterSpacing: element.style?.letterSpacing as string,
         padding: element.style?.padding as string,

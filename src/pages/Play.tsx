@@ -130,7 +130,7 @@ const Play = () => {
   }
   
   return (
-    <ProjectProvider initialData={{ projectId, projectName: projectDetails.name }}>
+    <ProjectProvider>
       <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
         <div className="h-screen w-screen overflow-hidden relative">
           <div className="fixed-canvas-container z-1">
