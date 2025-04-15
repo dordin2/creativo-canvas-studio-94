@@ -14,6 +14,7 @@ import Play from "./pages/Play";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Payment from "./pages/Payment";
+import Admin from "./pages/Admin";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -70,6 +71,16 @@ const App = () => (
                 <AuthProvider>
                   <ProtectedRoute>
                     <Payment />
+                  </ProtectedRoute>
+                </AuthProvider>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <AuthProvider>
+                  <ProtectedRoute>
+                    <Admin />
                   </ProtectedRoute>
                 </AuthProvider>
               } 
