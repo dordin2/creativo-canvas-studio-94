@@ -53,6 +53,65 @@ export const useElementResize = (element: DesignElement) => {
     });
   };
 
+  // New helper function to resize with aspect ratio
+  const resizeWithAspectRatio = (
+    deltaX: number, 
+    deltaY: number, 
+    direction: string
+  ) => {
+    if (!originalAspectRatio) return null;
+    
+    // Calculate the new dimensions based on both deltas
+    let newWidth = startSize.width;
+    let newHeight = startSize.height;
+    let newX = startPosition.x;
+    let newY = startPosition.y;
+    
+    // Determine which delta would produce the larger change relative to original dimensions
+    // This creates smoother transitions and prevents "jumps"
+    const widthChange = Math.abs(deltaX / startSize.width);
+    const heightChange = Math.abs(deltaY / startSize.height);
+    
+    // Apply the larger effect for consistent resizing
+    if (widthChange >= heightChange) {
+      // Width-driven resize
+      if (direction.includes('e')) {
+        // Right side
+        newWidth = Math.max(20, startSize.width + deltaX);
+        newHeight = newWidth / originalAspectRatio;
+      } else if (direction.includes('w')) {
+        // Left side
+        newWidth = Math.max(20, startSize.width - deltaX);
+        newX = startPosition.x + (startSize.width - newWidth);
+        newHeight = newWidth / originalAspectRatio;
+      }
+    } else {
+      // Height-driven resize
+      if (direction.includes('s')) {
+        // Bottom side
+        newHeight = Math.max(20, startSize.height + deltaY);
+        newWidth = newHeight * originalAspectRatio;
+      } else if (direction.includes('n')) {
+        // Top side
+        newHeight = Math.max(20, startSize.height - deltaY);
+        newY = startPosition.y + (startSize.height - newHeight);
+        newWidth = newHeight * originalAspectRatio;
+      }
+    }
+    
+    // For corner resizing, ensure position is correctly adjusted
+    if (direction === 'nw' || direction === 'ne' || direction === 'sw' || direction === 'se') {
+      if (direction.includes('n')) {
+        newY = startPosition.y + (startSize.height - newHeight);
+      }
+      if (direction.includes('w')) {
+        newX = startPosition.x + (startSize.width - newWidth);
+      }
+    }
+    
+    return { newWidth, newHeight, newX, newY };
+  };
+
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (isResizing && resizeDirection) {
@@ -67,121 +126,78 @@ export const useElementResize = (element: DesignElement) => {
         let newX = startPosition.x;
         let newY = startPosition.y;
         
-        // Common scaling functions for consistent behavior
-        const scaleWidth = (widthChange: number) => {
-          const tempWidth = Math.max(20, startSize.width + widthChange);
+        // Corner resize handling with improved aspect ratio preservation
+        if (resizeDirection.length === 2) {
+          // Two-character direction means corner (ne, nw, se, sw)
           if (maintainAspectRatio && originalAspectRatio) {
-            return {
-              width: tempWidth,
-              height: tempWidth / originalAspectRatio
-            };
-          }
-          return { width: tempWidth, height: newHeight };
-        };
-        
-        const scaleHeight = (heightChange: number) => {
-          const tempHeight = Math.max(20, startSize.height + heightChange);
-          if (maintainAspectRatio && originalAspectRatio) {
-            return {
-              width: tempHeight * originalAspectRatio,
-              height: tempHeight
-            };
-          }
-          return { width: newWidth, height: tempHeight };
-        };
-        
-        // Process resize based on direction with consistent math for all handles
-        if (resizeDirection === 'e') {
-          // East - right edge
-          const scaled = scaleWidth(deltaX);
-          newWidth = scaled.width;
-          newHeight = scaled.height;
-        } 
-        else if (resizeDirection === 'w') {
-          // West - left edge
-          const scaled = scaleWidth(-deltaX);
-          newWidth = scaled.width;
-          newHeight = scaled.height;
-          newX = startPosition.x + (startSize.width - newWidth);
-        } 
-        else if (resizeDirection === 's') {
-          // South - bottom edge
-          const scaled = scaleHeight(deltaY);
-          newWidth = scaled.width;
-          newHeight = scaled.height;
-        } 
-        else if (resizeDirection === 'n') {
-          // North - top edge
-          const scaled = scaleHeight(-deltaY);
-          newWidth = scaled.width;
-          newHeight = scaled.height;
-          newY = startPosition.y + (startSize.height - newHeight);
-        } 
-        else if (resizeDirection === 'ne') {
-          // Northeast - top right corner
-          // Choose the dominant dimension for consistent behavior
-          if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            const scaled = scaleWidth(deltaX);
-            newWidth = scaled.width;
-            newHeight = scaled.height;
-            newY = startPosition.y + (startSize.height - newHeight);
+            // Use our new helper function for consistent corner resizing
+            const aspectResult = resizeWithAspectRatio(deltaX, deltaY, resizeDirection);
+            if (aspectResult) {
+              ({ newWidth, newHeight, newX, newY } = aspectResult);
+            }
           } else {
-            const scaled = scaleHeight(-deltaY);
-            newWidth = scaled.width;
-            newHeight = scaled.height;
-            newY = startPosition.y + (startSize.height - newHeight);
+            // Handle non-aspect ratio corners
+            switch (resizeDirection) {
+              case 'ne':
+                newWidth = Math.max(20, startSize.width + deltaX);
+                newHeight = Math.max(20, startSize.height - deltaY);
+                newY = startPosition.y + (startSize.height - newHeight);
+                break;
+              case 'nw':
+                newWidth = Math.max(20, startSize.width - deltaX);
+                newHeight = Math.max(20, startSize.height - deltaY);
+                newX = startPosition.x + (startSize.width - newWidth);
+                newY = startPosition.y + (startSize.height - newHeight);
+                break;
+              case 'se':
+                newWidth = Math.max(20, startSize.width + deltaX);
+                newHeight = Math.max(20, startSize.height + deltaY);
+                break;
+              case 'sw':
+                newWidth = Math.max(20, startSize.width - deltaX);
+                newHeight = Math.max(20, startSize.height + deltaY);
+                newX = startPosition.x + (startSize.width - newWidth);
+                break;
+            }
           }
         } 
-        else if (resizeDirection === 'nw') {
-          // Northwest - top left corner
-          if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            const scaled = scaleWidth(-deltaX);
-            newWidth = scaled.width;
-            newHeight = scaled.height;
-            newX = startPosition.x + (startSize.width - newWidth);
-            newY = startPosition.y + (startSize.height - newHeight);
-          } else {
-            const scaled = scaleHeight(-deltaY);
-            newWidth = scaled.width;
-            newHeight = scaled.height;
-            newX = startPosition.x + (startSize.width - newWidth);
-            newY = startPosition.y + (startSize.height - newHeight);
-          }
-        } 
-        else if (resizeDirection === 'se') {
-          // Southeast - bottom right corner
-          if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            const scaled = scaleWidth(deltaX);
-            newWidth = scaled.width;
-            newHeight = scaled.height;
-          } else {
-            const scaled = scaleHeight(deltaY);
-            newWidth = scaled.width;
-            newHeight = scaled.height;
-          }
-        } 
-        else if (resizeDirection === 'sw') {
-          // Southwest - bottom left corner
-          if (Math.abs(deltaX) > Math.abs(deltaY)) {
-            const scaled = scaleWidth(-deltaX);
-            newWidth = scaled.width;
-            newHeight = scaled.height;
-            newX = startPosition.x + (startSize.width - newWidth);
-          } else {
-            const scaled = scaleHeight(deltaY);
-            newWidth = scaled.width;
-            newHeight = scaled.height;
-            newX = startPosition.x + (startSize.width - newWidth);
+        // Edge resize handling
+        else {
+          switch (resizeDirection) {
+            case 'e':
+              // East - right edge
+              newWidth = Math.max(20, startSize.width + deltaX);
+              if (maintainAspectRatio && originalAspectRatio) {
+                newHeight = newWidth / originalAspectRatio;
+              }
+              break;
+            case 'w':
+              // West - left edge
+              newWidth = Math.max(20, startSize.width - deltaX);
+              newX = startPosition.x + (startSize.width - newWidth);
+              if (maintainAspectRatio && originalAspectRatio) {
+                newHeight = newWidth / originalAspectRatio;
+              }
+              break;
+            case 's':
+              // South - bottom edge
+              newHeight = Math.max(20, startSize.height + deltaY);
+              if (maintainAspectRatio && originalAspectRatio) {
+                newWidth = newHeight * originalAspectRatio;
+              }
+              break;
+            case 'n':
+              // North - top edge
+              newHeight = Math.max(20, startSize.height - deltaY);
+              newY = startPosition.y + (startSize.height - newHeight);
+              if (maintainAspectRatio && originalAspectRatio) {
+                newWidth = newHeight * originalAspectRatio;
+              }
+              break;
           }
         }
         
-        // Ensure all values are properly rounded for visual stability
-        newWidth = Math.round(newWidth);
-        newHeight = Math.round(newHeight);
-        newX = Math.round(newX);
-        newY = Math.round(newY);
-        
-        // Apply the changes
+        // Apply the changes with consistent rounding
         updateElementSize(newWidth, newHeight, newX, newY);
       }
     };
