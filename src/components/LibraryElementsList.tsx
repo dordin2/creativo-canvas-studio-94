@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
@@ -17,7 +18,7 @@ export function LibraryElementsList() {
   const [elements, setElements] = useState<LibraryElement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [processingElement, setProcessingElement] = useState<string | null>(null);
-  const { addElement, canvasRef, handleImageUpload } = useDesignState();
+  const { addElement, canvasRef, handleImageUpload, updateElement } = useDesignState();
   const { language } = useLanguage();
   
   useEffect(() => {
@@ -90,20 +91,38 @@ export function LibraryElementsList() {
       
       const blob = await response.blob();
       
-      const file = new File([blob], element.name || "library-image.png", { 
-        type: blob.type || "image/png" 
-      });
+      // Create a dataURL from the blob to display immediately
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
       
-      const newElement = addElement('image', {
-        imageName: element.name,
-        alt: element.name
-      });
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        
+        // Create a File object as well (needed for processing)
+        const file = new File([blob], element.name || "library-image.png", { 
+          type: blob.type || "image/png" 
+        });
+        
+        // Add the element with the dataUrl already set so it displays immediately
+        const newElement = addElement('image', {
+          imageName: element.name,
+          alt: element.name,
+          dataUrl: dataUrl, // Add the dataUrl immediately
+          file: file
+        });
+        
+        // Process the image in the background for optimization
+        handleImageUpload(newElement.id, file);
+        
+        toast.success(language === 'en' 
+          ? `Added ${element.name} to canvas` 
+          : `${element.name} נוסף לקנבס`);
+      };
       
-      handleImageUpload(newElement.id, file);
+      reader.onerror = () => {
+        throw new Error('Failed to read image data');
+      };
       
-      toast.success(language === 'en' 
-        ? `Added ${element.name} to canvas` 
-        : `${element.name} נוסף לקנבס`);
     } catch (error) {
       console.error("Error adding element to canvas:", error);
       toast.error(language === 'en' 
