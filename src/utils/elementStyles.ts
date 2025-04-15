@@ -1,157 +1,87 @@
+import { CSSProperties } from "react";
+import { DesignElement } from "@/context/DesignContext";
 
-import { CSSProperties } from 'react';
-import { DesignElement } from '@/types/designTypes';
-
-// Extracts rotation value from an element's style object
 export const getRotation = (element: DesignElement): number => {
-  const transform = (element.style?.transform as string) || '';
-  const match = transform.match(/rotate\(([^)]+)deg\)/);
-  return match ? parseFloat(match[1]) : 0;
+  if (!element.style?.transform) return 0;
+  const match = element.style.transform.toString().match(/rotate\((-?\d+)deg\)/);
+  return match ? parseInt(match[1], 10) : 0;
 };
 
-// Applies rotation to an element without affecting other transforms
-export const applyRotation = (element: DesignElement, rotation: number): void => {
-  // Get current transform string
-  const transform = (element.style?.transform as string) || '';
-  
-  // Replace existing rotation or add new rotation
-  const newTransform = transform.includes('rotate(')
-    ? transform.replace(/rotate\([^)]+\)/, `rotate(${rotation}deg)`)
-    : transform + ` rotate(${rotation}deg)`;
-  
-  // Return the updated style object
-  if (!element.style) {
-    element.style = {};
+export const getFontSize = (element: DesignElement): string => {
+  if (element.style?.fontSize) {
+    return element.style.fontSize as string;
   }
   
-  element.style.transform = newTransform.trim();
+  if (element.type === 'heading') return '24px';
+  if (element.type === 'subheading') return '18px';
+  return '16px';
 };
 
-// Extract text style properties from an element 
 export const getTextStyle = (element: DesignElement): CSSProperties => {
+  const fontSize = getFontSize(element);
+  
+  const fontWeight = element.style?.fontWeight || (
+    element.type === 'heading' ? 'bold' : 
+    element.type === 'subheading' ? '600' : 'normal'
+  );
+  
+  const fontStyle = (element.style?.fontStyle as string) || 'normal';
+  
+  const textDecoration = (element.style?.textDecoration as string) || 'none';
+  
   return {
-    color: element.style?.color as string,
-    fontFamily: element.style?.fontFamily as string,
-    fontSize: element.style?.fontSize as string,
-    fontWeight: element.style?.fontWeight as string,
-    textAlign: element.style?.textAlign as "left" | "center" | "right" | "justify" | undefined,
-    lineHeight: element.style?.lineHeight as string,
-    letterSpacing: element.style?.letterSpacing as string,
-    fontStyle: element.style?.fontStyle as string,
-    textDecoration: element.style?.textDecoration as string,
+    fontSize,
+    fontWeight,
+    color: element.style?.color as string || '#1F2937',
+    fontStyle,
+    textDecoration,
+    padding: '0',
+    margin: '0',
+    fontFamily: 'inherit',
+    lineHeight: 'inherit',
+    overflow: 'hidden'
   };
 };
 
-// Gets the appropriate style object for an element with performance optimizations
 export const getElementStyle = (element: DesignElement, isDragging: boolean): CSSProperties => {
-  // Only include properties that affect layout and visible style
-  // to reduce unnecessary style calculations
-  const common: CSSProperties = {
+  // Special styles for puzzle elements
+  const isPuzzleElement = element.type === 'sequencePuzzle' || element.type === 'puzzle';
+  const isImageElement = element.type === 'image';
+  
+  // Extract rotation from transform to apply it directly at the top level
+  const rotation = getRotation(element);
+  
+  // Use Math.round to ensure consistent positioning
+  const left = Math.round(element.position.x);
+  const top = Math.round(element.position.y);
+  const width = element.size?.width ? Math.round(element.size.width) : undefined;
+  const height = element.size?.height ? Math.round(element.size.height) : undefined;
+  
+  // Create a clean object for the style to avoid reference issues
+  const style: CSSProperties & { userDrag?: string } = {
+    ...element.style,
     position: 'absolute',
-    left: element.position.x,
-    top: element.position.y,
+    left,
+    top,
+    width,
+    height,
+    cursor: isDragging ? 'move' : 'grab',
+    border: 'none',
     zIndex: element.layer,
-    transform: element.style?.transform as string,
-    cursor: isDragging ? 'grabbing' : 'grab',
-    borderRadius: (element.style?.borderRadius as string) || undefined,
-    // Add will-change for elements that will be animated/dragged
+    touchAction: 'none',
+    userSelect: 'none',
+    // Use clean transform with direct rotation to avoid compounding transforms
+    transform: `rotate(${rotation}deg)`,
+    // Apply hardware acceleration for smoother rendering
     willChange: isDragging ? 'transform' : 'auto',
+    transition: isDragging ? 'none' : 'transform 0.05s ease-out',
+    boxSizing: 'border-box',
   };
-  
-  const width = element.size?.width;
-  const height = element.size?.height;
-  
-  if (width) {
-    common.width = typeof width === 'string' ? width : `${width}px`;
+
+  // Prevent browser's default drag behavior for image elements
+  if (isImageElement) {
+    style.userDrag = 'none' as any;
   }
-  
-  if (height) {
-    common.height = typeof height === 'string' ? height : `${height}px`;
-  }
-  
-  if (element.isHidden) {
-    common.opacity = 0;
-  }
-  
-  switch (element.type) {
-    case 'rectangle':
-    case 'circle':
-    case 'triangle':
-    case 'line':
-      return {
-        ...common,
-        backgroundColor: element.style?.backgroundColor as string,
-        border: element.style?.border as string,
-        boxShadow: element.style?.boxShadow as string,
-        outline: element.style?.outline as string,
-        ...(element.type === 'circle' ? { borderRadius: '50%' } : {}),
-        ...(element.type === 'triangle' ? {
-          clipPath: 'polygon(50% 0%, 0% 100%, 100% 100%)'
-        } : {})
-      };
-      
-    case 'heading':
-    case 'subheading':
-    case 'paragraph':
-      return {
-        ...common,
-        color: element.style?.color as string,
-        fontFamily: element.style?.fontFamily as string,
-        fontSize: element.style?.fontSize as string,
-        fontWeight: element.style?.fontWeight as string,
-        textAlign: element.style?.textAlign as "left" | "center" | "right" | "justify" | undefined,
-        lineHeight: element.style?.lineHeight as string,
-        letterSpacing: element.style?.letterSpacing as string,
-        padding: element.style?.padding as string,
-        backgroundColor: element.style?.backgroundColor as string,
-        border: element.style?.border as string,
-        boxShadow: element.style?.boxShadow as string,
-        outline: element.style?.outline as string,
-        minWidth: '50px',
-        minHeight: '20px',
-      };
-      
-    case 'image':
-    case 'video':
-      return {
-        ...common,
-        borderRadius: (element.style?.borderRadius as string) || undefined,
-        border: element.style?.border as string,
-        boxShadow: element.style?.boxShadow as string,
-        outline: element.style?.outline as string,
-        overflow: 'hidden',
-        backgroundColor: element.style?.backgroundColor as string || 'transparent',
-        // Add properties to optimize rendering
-        backfaceVisibility: 'hidden',
-        WebkitBackfaceVisibility: 'hidden', // For Safari support
-      };
-      
-    case 'background':
-      return {
-        ...common,
-        zIndex: 0,
-        backgroundColor: element.style?.backgroundColor as string,
-        backgroundImage: element.style?.backgroundImage as string,
-        opacity: element.style?.opacity as string || '1',
-        cursor: 'default',
-      };
-      
-    case 'puzzle':
-    case 'sequencePuzzle':
-    case 'clickSequencePuzzle':
-    case 'sliderPuzzle':
-      return {
-        ...common,
-        backgroundColor: element.style?.backgroundColor as string || '#f3f4f6',
-        border: element.style?.border as string || '1px solid #e5e7eb',
-        borderRadius: (element.style?.borderRadius as string) || '8px',
-        boxShadow: element.style?.boxShadow as string || '0 1px 3px rgba(0,0,0,0.1)',
-        outline: element.style?.outline as string,
-        overflow: 'hidden',
-        padding: '8px',
-      };
-      
-    default:
-      return common;
-  }
+
+  return style;
 };

@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { 
@@ -118,7 +117,7 @@ export const DesignProvider = ({
 
     toast.success("Item added to inventory");
   };
-
+  
   const removeFromInventory = (elementId: string) => {
     const inventoryItem = inventoryItems.find(item => item.elementId === elementId);
     if (!inventoryItem) return;
@@ -235,7 +234,6 @@ export const DesignProvider = ({
     setHistoryIndex(newHistoryIndex);
   }, [history, historyIndex]);
   
-  // Make sure elements is properly initialized with fallback to empty array
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
     ? (canvases[activeCanvasIndex]?.elements || []) 
     : [];
@@ -265,17 +263,25 @@ export const DesignProvider = ({
   }, [canvases, addToHistory]);
   
   const handleImageUpload = (id: string, file: File) => {
-    processImageUpload(file, (updatedData) => {
-      updateElement(id, updatedData);
-    });
+    const canvasDimensions = canvasRef ? {
+      width: canvasRef.clientWidth,
+      height: canvasRef.clientHeight
+    } : undefined;
+    
+    processImageUpload(
+      file, 
+      (updatedData) => {
+        updateElement(id, updatedData);
+      },
+      canvasDimensions?.width,
+      canvasDimensions?.height
+    );
   };
   
   const addElement = (type: ElementType, props?: any): DesignElement => {
-    // Make sure canvases and activeCanvasIndex are valid before proceeding
     if (!canvases || activeCanvasIndex < 0 || activeCanvasIndex >= canvases.length) {
       console.error("Invalid canvas state when trying to add element");
       toast.error("Could not add element: invalid canvas state");
-      // Return a default element to prevent further errors
       return createNewElement(type, { x: 0, y: 0 }, 0, props);
     }
     
@@ -320,6 +326,10 @@ export const DesignProvider = ({
     if (type === 'image' && props?.dataUrl) {
       console.log("DesignContext - Creating new image element with dataUrl length:", 
         props.dataUrl.length);
+      
+      if (props.thumbnailDataUrl) {
+        console.log("DesignContext - Image has thumbnail preview");
+      }
     }
     
     const updatedCanvases = [...canvases];
@@ -524,6 +534,10 @@ export const DesignProvider = ({
       if (elementToMove.dataUrl) {
         elementCopy.dataUrl = elementToMove.dataUrl;
       }
+      
+      if (elementToMove.thumbnailDataUrl) {
+        elementCopy.thumbnailDataUrl = elementToMove.thumbnailDataUrl;
+      }
     }
     
     const updatedCanvases = [...canvases];
@@ -632,7 +646,6 @@ export const DesignProvider = ({
     }
   }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
-  // Initialize history
   useEffect(() => {
     if (history.length === 0 && canvases.length > 0) {
       addToHistory(canvases);

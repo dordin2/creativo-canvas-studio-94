@@ -10,7 +10,6 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
-import VideoElement from "./element/VideoElement";
 import InteractionMessageModal from "./element/InteractionMessageModal";
 import PuzzleModal from "./element/PuzzleModal";
 import SequencePuzzleModal from "./element/SequencePuzzleModal";
@@ -25,6 +24,7 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
+import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -33,6 +33,7 @@ const DraggableElement = ({ element, isActive, children }: {
 }) => {
   const { 
     updateElement, 
+    updateElementWithoutHistory,
     setActiveElement, 
     removeElement, 
     addElement, 
@@ -59,6 +60,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const [isDropTarget, setIsDropTarget] = useState(false);
   const [combinationPuzzleModal, setCombinationPuzzleModal] = useState(false);
   const [combinationMessage, setCombinationMessage] = useState('');
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -69,7 +71,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
   const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
-  const isVideoElement = element.type === 'video';
   
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
@@ -405,10 +406,6 @@ const DraggableElement = ({ element, isActive, children }: {
         onClick={handlePuzzleClick}
       />
     );
-  } else if (element.type === 'video') {
-    childContent = (
-      <VideoElement element={element} />
-    );
   }
 
   if ((isInInventory || element.isHidden) && !isActive) {
@@ -575,6 +572,59 @@ const DraggableElement = ({ element, isActive, children }: {
       )}
     </div>
   );
+
+  if (isImageElement && element.type === 'image') {
+    const originalStyle = { ...elementStyle };
+    
+    if (element.dataUrl || element.src || element.cacheKey) {
+      const handleImageLoad = () => {
+        setImageLoaded(true);
+      };
+      
+      // Use progressive loading with thumbnail then full image
+      if (element.thumbnailDataUrl && !imageLoaded) {
+        const loadMainImage = async () => {
+          if (!element.dataUrl && element.cacheKey) {
+            // Try to load the full image from cache if not already loaded
+            const cachedImage = await getImageFromCache(element.cacheKey);
+            if (cachedImage) {
+              // We can't modify element directly, so we'll update it through the context
+              updateElementWithoutHistory(element.id, { dataUrl: cachedImage });
+            }
+          }
+        };
+        
+        // Start loading the full resolution image
+        loadMainImage();
+        
+        const thumbnailImg = (
+          <img 
+            src={element.thumbnailDataUrl}
+            alt="Element thumbnail"
+            className="w-full h-full object-contain blur-[1px]"
+            style={{ position: 'absolute', top: 0, left: 0, transition: 'opacity 0.2s' }}
+          />
+        );
+        
+        const mainImg = (
+          <img 
+            src={element.dataUrl || element.src}
+            alt="Element"
+            className={`w-full h-full object-contain ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={handleImageLoad}
+            style={{ transition: 'opacity 0.3s' }}
+          />
+        );
+        
+        children = (
+          <div className="relative w-full h-full">
+            {!imageLoaded && thumbnailImg}
+            {mainImg}
+          </div>
+        );
+      }
+    }
+  }
 
   return (
     <>

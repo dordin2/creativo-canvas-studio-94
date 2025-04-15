@@ -1,251 +1,226 @@
+import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
-import { DesignElement, ElementType, generateId } from "@/types/designTypes";
-
+// Default positions for new elements
 export const getDefaultPosition = (canvasRef: HTMLDivElement | null) => {
-  if (!canvasRef) {
-    return { x: 100, y: 100 };
-  }
-  
-  const { width, height } = canvasRef.getBoundingClientRect();
+  if (!canvasRef) return { x: 100, y: 100 };
   
   return {
-    x: width / 2 - 75,
-    y: height / 2 - 75
+    x: canvasRef.clientWidth / 2 - 50,
+    y: canvasRef.clientHeight / 2 - 50
   };
 };
 
-// Creates a new element with default properties based on type
+// Get default placeholder size for images
+export const getDefaultImageSize = (canvasRef: HTMLDivElement | null) => {
+  if (!canvasRef) return { width: 200, height: 150 };
+  
+  // Calculate a reasonable default size based on canvas size
+  const width = Math.min(200, canvasRef.clientWidth * 0.3);
+  const height = Math.min(150, canvasRef.clientHeight * 0.3);
+  
+  return { width, height };
+};
+
+// Factory function to create new elements
 export const createNewElement = (
   type: ElementType, 
-  position: { x: number; y: number },
+  position: { x: number; y: number }, 
   layer: number,
   props?: any
 ): DesignElement => {
-  const id = generateId();
-  const defaultProps = {};
-  
   switch (type) {
     case 'rectangle':
       return {
-        id,
+        id: generateId(),
         type,
         position,
-        size: { width: 150, height: 100 },
-        style: { backgroundColor: '#4299e1', borderRadius: '0px' },
-        layer,
-        ...defaultProps,
-        ...props
+        size: { width: 100, height: 80 },
+        style: { backgroundColor: '#8B5CF6', borderRadius: '4px', transform: 'rotate(0deg)' },
+        layer
       };
-    
+      
     case 'circle':
       return {
-        id,
+        id: generateId(),
         type,
         position,
         size: { width: 100, height: 100 },
-        style: { backgroundColor: '#ed64a6' },
-        layer,
-        ...defaultProps,
-        ...props
+        style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
+        layer
       };
-    
+      
     case 'triangle':
       return {
-        id,
+        id: generateId(),
         type,
         position,
-        size: { width: 100, height: 100 },
-        style: { backgroundColor: '#48bb78' },
-        layer,
-        ...defaultProps,
-        ...props
+        size: { width: 50, height: 100 },
+        style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
+        layer
       };
-    
+      
     case 'line':
       return {
-        id,
+        id: generateId(),
         type,
         position,
-        size: { width: 150, height: 2 },
-        style: { backgroundColor: '#000000' },
-        layer,
-        ...defaultProps,
-        ...props
+        size: { width: 100, height: 2 },
+        style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
+        layer
       };
-    
+      
     case 'heading':
       return {
-        id,
+        id: generateId(),
         type,
         position,
-        content: 'Heading Text',
-        style: { 
-          color: '#1a202c', 
-          fontSize: '24px', 
-          fontWeight: 'bold',
-          textAlign: 'left'
-        },
-        layer,
-        ...defaultProps,
-        ...props
+        content: 'Add a heading',
+        size: { width: 300, height: 50 },
+        style: { color: '#1F2937', transform: 'rotate(0deg)' },
+        layer
       };
-    
+      
     case 'subheading':
       return {
-        id,
+        id: generateId(),
         type,
         position,
-        content: 'Subheading Text',
-        style: { 
-          color: '#4a5568', 
-          fontSize: '18px', 
-          fontWeight: 'semibold',
-          textAlign: 'left'
-        },
-        layer,
-        ...defaultProps,
-        ...props
+        content: 'Add a subheading',
+        size: { width: 250, height: 40 },
+        style: { color: '#1F2937', transform: 'rotate(0deg)' },
+        layer
       };
-    
+      
     case 'paragraph':
       return {
-        id,
+        id: generateId(),
         type,
         position,
-        content: 'Paragraph text. Click to edit.',
-        style: { 
-          color: '#4a5568', 
-          fontSize: '16px',
-          textAlign: 'left'
-        },
-        layer,
-        ...defaultProps,
-        ...props
+        content: 'Add your text here. Click to edit this text.',
+        size: { width: 300, height: 100 },
+        style: { color: '#1F2937', transform: 'rotate(0deg)' },
+        layer
       };
-    
+      
     case 'image':
+      // If props includes size, use that; otherwise, use default
+      // Props will include size for uploaded images that have been scaled
+      const initialSize = props?.size || { width: 200, height: 150 };
+      
       return {
-        id,
+        id: generateId(),
+        type,
+        position,
+        size: initialSize,
+        originalSize: props?.originalSize || initialSize, // Store original dimensions
+        style: { transform: 'rotate(0deg)' },
+        layer
+      };
+      
+    case 'background':
+      return {
+        id: generateId(),
+        type,
+        position: { x: 0, y: 0 },
+        style: props?.gradient 
+          ? { background: props.gradient } 
+          : { backgroundColor: props?.color || '#FFFFFF' },
+        layer: 0 // Background is always at layer 0
+      };
+
+    case 'puzzle':
+      const puzzleType = props?.puzzleConfig?.type || 'image';
+      return {
+        id: generateId(),
         type,
         position,
         size: { width: 150, height: 150 },
-        src: '',
+        style: { backgroundColor: '#F3F4F6', borderRadius: '8px', transform: 'rotate(0deg)' },
         layer,
-        ...defaultProps,
-        ...props
-      };
-      
-    case 'video':
-      return {
-        id,
-        type,
-        position,
-        size: { width: 320, height: 240 },
-        src: '',
-        style: { 
-          controls: 'true', 
-          autoplay: 'false', 
-          loop: 'false', 
-          muted: 'false' 
-        },
-        layer,
-        ...defaultProps,
-        ...props
-      };
-    
-    case 'background':
-      return {
-        id,
-        type,
-        position: { x: 0, y: 0 },
-        size: { width: '100%', height: '100%' },
-        style: props?.gradient 
-          ? { backgroundImage: props.gradient } 
-          : { backgroundColor: props?.color || '#ffffff' },
-        layer: 0,
-        ...defaultProps,
-        ...props
-      };
-    
-    case 'puzzle':
-      return {
-        id,
-        type,
-        position,
-        size: { width: 300, height: 150 },
         puzzleConfig: props?.puzzleConfig || {
           name: 'Puzzle',
-          type: 'image',
+          type: puzzleType as PuzzleType,
           placeholders: 3,
           images: [],
-          solution: [0, 0, 0]
-        },
-        layer,
-        ...defaultProps,
-        ...props
+          solution: [],
+          maxNumber: puzzleType === 'number' ? 9 : undefined,
+          maxLetter: puzzleType === 'alphabet' ? 'Z' : undefined
+        }
       };
-    
+
     case 'sequencePuzzle':
       return {
-        id,
+        id: generateId(),
         type,
         position,
         size: { width: 350, height: 150 },
+        style: { backgroundColor: '#EFF6FF', borderRadius: '8px', transform: 'rotate(0deg)' },
+        layer,
         sequencePuzzleConfig: props?.sequencePuzzleConfig || {
-          name: 'Sequence Puzzle',
+          name: props?.name || 'Sequence Puzzle',
           images: [],
           solution: [],
           currentOrder: []
-        },
-        layer,
-        ...defaultProps,
-        ...props
+        }
       };
       
     case 'clickSequencePuzzle':
       return {
-        id,
+        id: generateId(),
         type,
         position,
         size: { width: 350, height: 150 },
+        style: { backgroundColor: '#E8F5E9', borderRadius: '8px', transform: 'rotate(0deg)' }, // Green background to differentiate
+        layer,
         clickSequencePuzzleConfig: props?.clickSequencePuzzleConfig || {
-          name: 'Click Sequence Puzzle',
+          name: props?.name || 'Click Sequence Puzzle',
           images: [],
           solution: [],
           clickedIndices: []
-        },
-        layer,
-        ...defaultProps,
-        ...props
+        }
       };
       
     case 'sliderPuzzle':
+      const orientation = props?.sliderPuzzleConfig?.orientation || 'horizontal';
+      const sliderCount = props?.sliderPuzzleConfig?.sliderCount || 3;
+      const maxValue = props?.sliderPuzzleConfig?.maxValue || 10;
+      
+      // Generate initial values and solution
+      const initialValues = Array(sliderCount).fill(0);
+      const solution = Array(sliderCount).fill(0).map(() => Math.floor(Math.random() * maxValue));
+      
       return {
-        id,
+        id: generateId(),
         type,
         position,
-        size: { width: 350, height: 200 },
-        sliderPuzzleConfig: props?.sliderPuzzleConfig || {
-          name: 'Slider Puzzle',
-          orientation: 'horizontal',
-          sliderCount: 3,
-          solution: [5, 7, 3],
-          currentValues: [0, 0, 0],
-          maxValue: 10
+        size: { 
+          width: orientation === 'horizontal' ? 300 : 150, 
+          height: orientation === 'horizontal' ? 150 : 300 
+        },
+        style: { 
+          backgroundColor: '#F0F9FF', // Light blue background
+          borderRadius: '8px', 
+          transform: 'rotate(0deg)' 
         },
         layer,
-        ...defaultProps,
-        ...props
+        sliderPuzzleConfig: props?.sliderPuzzleConfig || {
+          name: props?.name || 'Slider Puzzle',
+          orientation: orientation as SliderOrientation,
+          sliderCount,
+          solution,
+          currentValues: initialValues,
+          maxValue
+        }
       };
-    
+      
     default:
       return {
-        id,
-        type,
+        id: generateId(),
+        type: 'rectangle',
         position,
-        layer,
-        ...defaultProps,
-        ...props
+        size: { width: 100, height: 80 },
+        style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
+        layer
       };
   }
 };

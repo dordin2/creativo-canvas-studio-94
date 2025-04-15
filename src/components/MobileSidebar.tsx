@@ -14,11 +14,11 @@ import {
   SlidersHorizontal,
   SlidersVertical
 } from "lucide-react";
-import { useDesignState } from "@/context/DesignContext";
+import { useDesignState, ElementType } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 
-const Sidebar = () => {
+const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { addElement } = useDesignState();
   const { t, language } = useLanguage();
 
@@ -40,7 +40,7 @@ const Sidebar = () => {
 
   // Handle puzzle options
   const handleImagePuzzleClick = () => {
-    addElement('puzzle', {
+    addElement('puzzle' as ElementType, {
       puzzleConfig: {
         name: language === 'en' ? 'Image Puzzle' : 'פאזל תמונה',
         type: 'image',
@@ -49,10 +49,11 @@ const Sidebar = () => {
         solution: [0, 0, 0]
       }
     });
+    onClose();
   };
 
   const handleNumberPuzzleClick = () => {
-    addElement('puzzle', {
+    addElement('puzzle' as ElementType, {
       puzzleConfig: {
         name: language === 'en' ? 'Number Lock' : 'מנעול מספרים',
         type: 'number',
@@ -62,10 +63,11 @@ const Sidebar = () => {
         maxNumber: 9
       }
     });
+    onClose();
   };
 
   const handleAlphabetPuzzleClick = () => {
-    addElement('puzzle', {
+    addElement('puzzle' as ElementType, {
       puzzleConfig: {
         name: language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות',
         type: 'alphabet',
@@ -75,10 +77,11 @@ const Sidebar = () => {
         maxLetter: 'Z'
       }
     });
+    onClose();
   };
 
   const handleSequencePuzzleClick = () => {
-    addElement('sequencePuzzle', {
+    addElement('sequencePuzzle' as ElementType, {
       name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
       sequencePuzzleConfig: {
         name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
@@ -87,10 +90,11 @@ const Sidebar = () => {
         currentOrder: []
       }
     });
+    onClose();
   };
   
   const handleClickSequencePuzzleClick = () => {
-    addElement('clickSequencePuzzle', {
+    addElement('clickSequencePuzzle' as ElementType, {
       name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
       clickSequencePuzzleConfig: {
         name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
@@ -99,10 +103,11 @@ const Sidebar = () => {
         clickedIndices: []
       }
     });
+    onClose();
   };
 
   const handleHorizontalSliderPuzzleClick = () => {
-    addElement('sliderPuzzle', {
+    addElement('sliderPuzzle' as ElementType, {
       name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
       sliderPuzzleConfig: {
         name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
@@ -113,10 +118,11 @@ const Sidebar = () => {
         maxValue: 10
       }
     });
+    onClose();
   };
 
   const handleVerticalSliderPuzzleClick = () => {
-    addElement('sliderPuzzle', {
+    addElement('sliderPuzzle' as ElementType, {
       name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
       sliderPuzzleConfig: {
         name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
@@ -127,37 +133,43 @@ const Sidebar = () => {
         maxValue: 10
       }
     });
+    onClose();
+  };
+
+  const handleAddElement = (type: ElementType, config = {}) => {
+    addElement(type, config);
+    onClose();
   };
 
   return (
-    <div className={`sidebar-panel border-r flex flex-col ${language === 'he' ? 'rtl' : 'ltr'}`}>
-      <Tabs defaultValue="elements" className="flex-1 flex flex-col">
-        <TabsList className="grid grid-cols-3 mx-2 mt-2">
+    <div className={`mobile-sidebar ${language === 'he' ? 'rtl' : 'ltr'} w-full`}>
+      <Tabs defaultValue="elements" className="w-full">
+        <TabsList className="grid grid-cols-3 w-full mb-4">
           <TabsTrigger value="elements">{t('sidebar.elements')}</TabsTrigger>
           <TabsTrigger value="text">{t('sidebar.text')}</TabsTrigger>
           <TabsTrigger value="background">{t('sidebar.background')}</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="elements" className="flex-1 overflow-auto p-4">
+        <TabsContent value="elements" className="pb-16">
           <h3 className="text-sm font-medium mb-3">{t('sidebar.shapes')}</h3>
           <div className="grid grid-cols-2 gap-2 mb-6">
             <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" 
-                    onClick={() => addElement('rectangle')}>
+                    onClick={() => handleAddElement('rectangle')}>
               <Square className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.rectangle')}</span>
             </Button>
             <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={() => addElement('circle')}>
+                    onClick={() => handleAddElement('circle')}>
               <Circle className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.circle')}</span>
             </Button>
             <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={() => addElement('triangle')}>
+                    onClick={() => handleAddElement('triangle')}>
               <Triangle className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.triangle')}</span>
             </Button>
             <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={() => addElement('line')}>
+                    onClick={() => handleAddElement('line')}>
               <div className="w-5 h-0.5 bg-current"></div>
               <span className="text-xs">{t('sidebar.line')}</span>
             </Button>
@@ -166,20 +178,21 @@ const Sidebar = () => {
           <h3 className="text-sm font-medium mb-3">{t('sidebar.media')}</h3>
           <div className="grid grid-cols-2 gap-2">
             <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={() => addElement('image')}>
+                    onClick={() => handleAddElement('image')}>
               <Image className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.image')}</span>
             </Button>
             
-            <Popover>
-              <PopoverTrigger asChild>
+            <Drawer>
+              <DrawerTrigger asChild>
                 <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center">
                   <Lock className="h-5 w-5" />
                   <span className="text-xs">{t('sidebar.puzzle')}</span>
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-60 p-2">
-                <div className="grid gap-2">
+              </DrawerTrigger>
+              <DrawerContent className="px-4 pb-8">
+                <div className="grid gap-2 mt-6">
+                  <h3 className="text-lg font-medium mb-2">{t('sidebar.puzzle')}</h3>
                   <Button
                     variant="outline" 
                     className="justify-start"
@@ -205,8 +218,8 @@ const Sidebar = () => {
                     {t('sidebar.alphabet.lock')}
                   </Button>
                 </div>
-              </PopoverContent>
-            </Popover>
+              </DrawerContent>
+            </Drawer>
             
             <Button 
               variant="outline" 
@@ -226,15 +239,16 @@ const Sidebar = () => {
               <span className="text-xs">{language === 'en' ? 'Click Sequence' : 'רצף קליקים'}</span>
             </Button>
             
-            <Popover>
-              <PopoverTrigger asChild>
+            <Drawer>
+              <DrawerTrigger asChild>
                 <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center">
                   <SlidersHorizontal className="h-5 w-5 text-purple-600" />
                   <span className="text-xs">{language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים'}</span>
                 </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-60 p-2">
-                <div className="grid gap-2">
+              </DrawerTrigger>
+              <DrawerContent className="px-4 pb-8">
+                <div className="grid gap-2 mt-6">
+                  <h3 className="text-lg font-medium mb-2">{language === 'en' ? 'Slider Puzzles' : 'פאזל מחוונים'}</h3>
                   <Button
                     variant="outline" 
                     className="justify-start"
@@ -252,38 +266,38 @@ const Sidebar = () => {
                     {language === 'en' ? 'Vertical Sliders' : 'מחוונים אנכיים'}
                   </Button>
                 </div>
-              </PopoverContent>
-            </Popover>
+              </DrawerContent>
+            </Drawer>
           </div>
         </TabsContent>
         
-        <TabsContent value="text" className="flex-1 overflow-auto p-4">
+        <TabsContent value="text" className="pb-16">
           <h3 className="text-sm font-medium mb-3">{t('sidebar.text.styles')}</h3>
           <div className="flex flex-col gap-2">
-            <Button variant="outline" className="justify-start h-12" onClick={() => addElement('heading')}>
+            <Button variant="outline" className="justify-start h-12" onClick={() => handleAddElement('heading')}>
               <Text className="h-4 w-4 mr-2" />
               <span className="text-lg font-bold">{t('sidebar.heading')}</span>
             </Button>
-            <Button variant="outline" className="justify-start h-12" onClick={() => addElement('subheading')}>
+            <Button variant="outline" className="justify-start h-12" onClick={() => handleAddElement('subheading')}>
               <Text className="h-4 w-4 mr-2" />
               <span className="text-base font-semibold">{t('sidebar.subheading')}</span>
             </Button>
-            <Button variant="outline" className="justify-start h-12" onClick={() => addElement('paragraph')}>
+            <Button variant="outline" className="justify-start h-12" onClick={() => handleAddElement('paragraph')}>
               <Text className="h-4 w-4 mr-2" />
               <span className="text-sm">{t('sidebar.paragraph')}</span>
             </Button>
           </div>
         </TabsContent>
         
-        <TabsContent value="background" className="flex-1 overflow-auto p-4">
+        <TabsContent value="background" className="pb-16">
           <h3 className="text-sm font-medium mb-3">{t('sidebar.solid.colors')}</h3>
           <div className="grid grid-cols-4 gap-2 mb-6">
             {colorSwatches.map((color, index) => (
               <button
                 key={index}
-                className="w-12 h-12 rounded border hover:scale-105 transition-transform"
+                className="w-full aspect-square rounded border hover:scale-105 transition-transform"
                 style={{ backgroundColor: color }}
-                onClick={() => addElement('background', { color })}
+                onClick={() => handleAddElement('background', { color })}
                 aria-label={`Background color ${color}`}
               />
             ))}
@@ -296,7 +310,7 @@ const Sidebar = () => {
                 key={index}
                 className="w-full h-12 rounded border hover:scale-105 transition-transform"
                 style={{ background: gradient }}
-                onClick={() => addElement('background', { gradient })}
+                onClick={() => handleAddElement('background', { gradient })}
                 aria-label={`Gradient background ${index + 1}`}
               />
             ))}
@@ -307,4 +321,4 @@ const Sidebar = () => {
   );
 };
 
-export default Sidebar;
+export default MobileSidebar;

@@ -18,7 +18,6 @@ export type ElementType =
   | 'subheading'
   | 'paragraph'
   | 'image'
-  | 'video'
   | 'background'
   | 'puzzle'
   | 'sequencePuzzle'
@@ -116,6 +115,7 @@ export interface DesignElement {
   content?: string;
   src?: string;
   dataUrl?: string;
+  thumbnailDataUrl?: string; // Added for optimized image previews
   file?: File;
   cacheKey?: string;
   fileMetadata?: FileMetadata;
