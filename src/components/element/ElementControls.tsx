@@ -31,7 +31,6 @@ const ElementControls = ({
 }: ElementControlsProps) => {
   const { updateElement, removeElement, addElement, canvases } = useDesignState();
   
-  // Don't render controls at all if the element is hidden or it's the background
   if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
     return null;
   }
@@ -39,7 +38,6 @@ const ElementControls = ({
   const showResizeHandles = isActive;
   const showRotationHandle = isActive;
   
-  // Round dimensions to ensure consistency with the element
   const elementDimensions = {
     width: element.size?.width ? Math.round(element.size.width) : 0,
     height: element.size?.height ? Math.round(element.size.height) : 0
@@ -48,15 +46,36 @@ const ElementControls = ({
   const handleDuplicate = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    console.log("ElementControls - Original element to duplicate:", element);
+    console.log("ElementControls - Starting duplication of element:", element.id, element.type);
     
-    // Use the utility function to prepare the element for duplication
+    if (element.type === 'image') {
+      console.log("ElementControls - Image element details before duplication:", {
+        hasDataUrl: !!element.dataUrl,
+        dataUrlLength: element.dataUrl ? element.dataUrl.length : 0,
+        hasThumbnail: !!element.thumbnailDataUrl,
+        hasSrc: !!element.src,
+        hasCacheKey: !!element.cacheKey,
+        originalSize: element.originalSize,
+        size: element.size,
+        position: element.position,
+        style: element.style
+      });
+    }
+    
     const duplicateProps = prepareElementForDuplication(element);
     
-    console.log("ElementControls - Duplicate props before adding:", duplicateProps);
+    console.log("ElementControls - Duplicate props prepared:", {
+      type: element.type,
+      hasDataUrl: element.type === 'image' ? !!duplicateProps.dataUrl : 'n/a',
+      dataUrlLength: element.type === 'image' && duplicateProps.dataUrl ? duplicateProps.dataUrl.length : 0,
+      size: duplicateProps.size,
+      originalSize: duplicateProps.originalSize,
+      style: duplicateProps.style
+    });
     
-    // Add the duplicated element
-    addElement(element.type, duplicateProps);
+    const newElement = addElement(element.type, duplicateProps);
+    
+    console.log("ElementControls - Duplication complete, new element ID:", newElement.id);
   };
 
   const handleToggleVisibility = (e: React.MouseEvent) => {
@@ -70,7 +89,6 @@ const ElementControls = ({
     e.stopPropagation();
     const currentInteraction = element.interaction || { type: 'none' };
     
-    // Toggle between 'none' and the last selected interaction type or default to 'puzzle'
     const newType = currentInteraction.type === 'none' ? 
       (currentInteraction.type === 'none' ? 'puzzle' : currentInteraction.type) : 
       'none';
@@ -91,23 +109,18 @@ const ElementControls = ({
   const isVisible = !element.isHidden;
   const isInteractive = element.interaction?.type !== 'none' && element.interaction?.type !== undefined;
   
-  // Check if the element is a puzzle type - don't show interactive button for puzzles
   const isPuzzleElement = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'].includes(element.type);
 
-  // Check if this element has canvas navigation interaction
   const hasCanvasNavigation = element.interaction?.type === 'canvasNavigation';
   const targetCanvasName = hasCanvasNavigation && element.interaction?.targetCanvasId 
     ? canvases.find(c => c.id === element.interaction?.targetCanvasId)?.name || 'Unknown Canvas'
     : '';
 
-  // Get the current rotation directly from the element style for consistent transforms
   const rotation = getRotation(element);
   
-  // Use exact positioning with Math.round to ensure consistency
   const posX = Math.round(element.position.x);
   const posY = Math.round(element.position.y);
   
-  // Apply the same transformation to the frame as the element has
   const frameStyle = {
     position: 'absolute' as const,
     left: posX,

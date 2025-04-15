@@ -323,12 +323,25 @@ export const DesignProvider = ({
     
     const newElement = createNewElement(type, position, newLayer, props);
     
-    if (type === 'image' && props?.dataUrl) {
-      console.log("DesignContext - Creating new image element with dataUrl length:", 
-        props.dataUrl.length);
+    if (type === 'image') {
+      if (props?.dataUrl) {
+        console.log("DesignContext - Creating new image element with dataUrl length:", 
+          props.dataUrl.length);
+        
+        if (props.thumbnailDataUrl) {
+          console.log("DesignContext - Image has thumbnail preview");
+        }
+      }
       
-      if (props.thumbnailDataUrl) {
-        console.log("DesignContext - Image has thumbnail preview");
+      if (props) {
+        if (props.size) newElement.size = { ...props.size };
+        if (props.originalSize) newElement.originalSize = { ...props.originalSize };
+        if (props.style) newElement.style = { ...props.style };
+        if (props.dataUrl) newElement.dataUrl = props.dataUrl;
+        if (props.thumbnailDataUrl) newElement.thumbnailDataUrl = props.thumbnailDataUrl;
+        if (props.src) newElement.src = props.src;
+        if (props.cacheKey) newElement.cacheKey = props.cacheKey;
+        if (props.fileMetadata) newElement.fileMetadata = { ...props.fileMetadata };
       }
     }
     
