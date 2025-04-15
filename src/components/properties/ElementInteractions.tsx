@@ -1,6 +1,7 @@
 
 import { useState } from "react";
-import { DesignElement, useDesignState, InteractionType, MessagePosition } from "@/context/DesignContext";
+import { DesignElement, useDesignState, InteractionType } from "@/context/DesignContext";
+import { MessagePosition } from "@/types/designTypes";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

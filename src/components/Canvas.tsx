@@ -6,6 +6,7 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
+import VideoElement from "./element/VideoElement";
 
 interface CanvasProps {
   isFullscreen?: boolean;
@@ -333,6 +334,16 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
                   </div>
                 )}
               </div>
+            </DraggableElement>
+          );
+          
+        case 'video':
+          return (
+            <DraggableElement key={element.id} element={element} isActive={isActive}>
+              <VideoElement 
+                element={element} 
+                isGameMode={isGameMode} 
+              />
             </DraggableElement>
           );
           

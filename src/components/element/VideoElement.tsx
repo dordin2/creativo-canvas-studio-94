@@ -1,4 +1,3 @@
-
 import React, { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Play, Pause, Volume2, VolumeX, Maximize, MinusCircle, PlusCircle } from "lucide-react";
@@ -41,7 +40,6 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     }
   }, [element.dataUrl, element.currentTime, element.videoVolume, element.isPlaying]);
   
-  // Update duration once video is loaded
   const handleLoadedMetadata = () => {
     if (videoRef.current) {
       const videoDuration = videoRef.current.duration;
@@ -54,7 +52,6 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     }
   };
   
-  // Toggle play/pause
   const togglePlay = (e: React.MouseEvent) => {
     e.stopPropagation();
     
@@ -73,7 +70,6 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     updateElementWithoutHistory(element.id, { isPlaying: !isPlaying });
   };
   
-  // Toggle mute
   const toggleMute = (e: React.MouseEvent) => {
     e.stopPropagation();
     
@@ -84,7 +80,6 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     setIsMuted(newMuteState);
   };
   
-  // Handle volume change
   const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
     
@@ -105,7 +100,6 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     updateElementWithoutHistory(element.id, { videoVolume: newVolume });
   };
   
-  // Handle seeking in the video
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
     e.stopPropagation();
     
@@ -117,14 +111,12 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     updateElementWithoutHistory(element.id, { currentTime: newTime });
   };
   
-  // Update current time as video plays
   const handleTimeUpdate = () => {
     if (videoRef.current) {
       setCurrentTime(videoRef.current.currentTime);
     }
   };
   
-  // Toggle fullscreen
   const toggleFullscreen = (e: React.MouseEvent) => {
     e.stopPropagation();
     
@@ -145,20 +137,17 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     }
   };
   
-  // Handle video loading issues
   const handleVideoError = () => {
     console.error("Video failed to load:", element.dataUrl);
     toast.error("Failed to load video");
   };
   
-  // Format time in MM:SS format
   const formatTime = (timeInSeconds: number): string => {
     const minutes = Math.floor(timeInSeconds / 60);
     const seconds = Math.floor(timeInSeconds % 60);
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
   
-  // Handle mouse enter/leave to show/hide controls
   const handleMouseEnter = () => {
     setShowControls(true);
   };
@@ -167,7 +156,6 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     setShowControls(false);
   };
   
-  // Render a placeholder if no video is available
   if (!element.dataUrl && !element.thumbnailDataUrl) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-md">
@@ -197,7 +185,6 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
       
       {isGameMode ? (
         <div className="absolute inset-0" onClick={(e) => e.stopPropagation()}>
-          {/* Game mode has simpler controls on click */}
           <div 
             className="absolute inset-0 flex items-center justify-center cursor-pointer" 
             onClick={togglePlay}
@@ -211,7 +198,6 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
         </div>
       ) : (
         <>
-          {/* Editing mode has full controls */}
           {showControls && (
             <div className="absolute bottom-0 left-0 right-0 p-2 bg-black bg-opacity-50 space-y-2">
               <div className="flex items-center justify-between">
