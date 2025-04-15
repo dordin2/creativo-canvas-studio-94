@@ -5,6 +5,7 @@ import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { FileImage, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { processImageUpload } from "@/utils/imageUploader";
 
 interface LibraryElement {
   id: string;
@@ -16,7 +17,8 @@ interface LibraryElement {
 export function LibraryElementsList() {
   const [elements, setElements] = useState<LibraryElement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { addElement } = useDesignState();
+  const [processingElement, setProcessingElement] = useState<string | null>(null);
+  const { addElement, canvasRef } = useDesignState();
   const { language } = useLanguage();
   
   // Fetch library elements on component mount
@@ -75,7 +77,7 @@ export function LibraryElementsList() {
   }, [language]);
   
   // Add library element to canvas
-  const handleAddElementToCanvas = (element: LibraryElement) => {
+  const handleAddElementToCanvas = async (element: LibraryElement) => {
     // If there's no image URL, don't proceed
     if (!element.imageUrl) {
       toast.error(language === 'en' 
@@ -84,23 +86,63 @@ export function LibraryElementsList() {
       return;
     }
     
-    // Create a unique ID for the added element
     try {
-      // Add the image element to the canvas with the library image
-      addElement('image', {
-        imageUrl: element.imageUrl,
-        imageName: element.name,
-        aspectRatio: 1 // Default aspect ratio, will adjust based on actual image
+      setProcessingElement(element.id);
+      
+      // Fetch the image as a blob
+      const response = await fetch(element.imageUrl);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch image: ${response.statusText}`);
+      }
+      
+      const blob = await response.blob();
+      
+      // Convert to a File object
+      const file = new File([blob], element.name || "library-image.png", { 
+        type: blob.type || "image/png" 
       });
       
-      toast.success(language === 'en' 
-        ? `Added ${element.name} to canvas` 
-        : `${element.name} נוסף לקנבס`);
+      // Get canvas dimensions for appropriate scaling
+      const canvasDimensions = canvasRef ? {
+        width: canvasRef.clientWidth,
+        height: canvasRef.clientHeight
+      } : undefined;
+      
+      // Process the image and add to canvas
+      const loadingToast = toast.loading(language === 'en' ? "Processing image..." : "מעבד תמונה...");
+      
+      // Create a new element first
+      const newElement = addElement('image', {
+        imageName: element.name,
+        alt: element.name
+      });
+      
+      // Process the image and update the element
+      processImageUpload(
+        file,
+        (imageData) => {
+          // Update the element with the processed image data
+          addElement('image', {
+            ...imageData,
+            imageName: element.name,
+            alt: element.name
+          });
+          
+          toast.dismiss(loadingToast);
+          toast.success(language === 'en' 
+            ? `Added ${element.name} to canvas` 
+            : `${element.name} נוסף לקנבס`);
+        },
+        canvasDimensions?.width,
+        canvasDimensions?.height
+      );
     } catch (error) {
       console.error("Error adding element to canvas:", error);
       toast.error(language === 'en' 
         ? "Failed to add element to canvas" 
         : "הוספת האלמנט לקנבס נכשלה");
+    } finally {
+      setProcessingElement(null);
     }
   };
   
@@ -135,9 +177,12 @@ export function LibraryElementsList() {
           key={element.id}
           className="bg-white border rounded-md overflow-hidden hover:shadow-md transition-shadow p-1"
           onClick={() => handleAddElementToCanvas(element)}
+          disabled={processingElement === element.id}
         >
           <div className="aspect-square flex items-center justify-center overflow-hidden bg-slate-50">
-            {element.imageUrl ? (
+            {processingElement === element.id ? (
+              <Loader2 className="h-5 w-5 animate-spin text-primary" />
+            ) : element.imageUrl ? (
               <img 
                 src={element.imageUrl} 
                 alt={element.name}
