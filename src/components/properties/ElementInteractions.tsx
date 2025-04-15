@@ -1,6 +1,6 @@
 
 import { useState } from "react";
-import { DesignElement, useDesignState, InteractionType } from "@/context/DesignContext";
+import { DesignElement, useDesignState, InteractionType, MessagePosition } from "@/context/DesignContext";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -58,9 +58,12 @@ const ElementInteractions = ({ element }: ElementInteractionsProps) => {
   };
   
   const handleMessagePositionChange = (position: string) => {
+    // Ensure we're using a valid MessagePosition value
+    const validPosition = position as MessagePosition;
+    
     const updatedInteraction = {
       ...interaction,
-      messagePosition: position
+      messagePosition: validPosition
     };
     
     updateElement(element.id, { interaction: updatedInteraction });

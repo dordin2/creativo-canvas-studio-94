@@ -20,7 +20,6 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
   const [showControls, setShowControls] = useState(false);
   const { updateElement, updateElementWithoutHistory, isGameMode: globalGameMode } = useDesignState();
   
-  // Load video and update duration when element changes
   useEffect(() => {
     if (videoRef.current && element.dataUrl) {
       // Set current time if specified
@@ -135,16 +134,21 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
       videoRef.current.requestFullscreen().then(() => {
         setIsFullscreen(true);
       }).catch(err => {
-        toast.error("Failed to enter fullscreen");
-        console.error("Fullscreen error:", err);
+        console.error("Failed to enter fullscreen:", err);
       });
     } else {
       document.exitFullscreen().then(() => {
         setIsFullscreen(false);
       }).catch(err => {
-        console.error("Exit fullscreen error:", err);
+        console.error("Failed to exit fullscreen:", err);
       });
     }
+  };
+  
+  // Handle video loading issues
+  const handleVideoError = () => {
+    console.error("Video failed to load:", element.dataUrl);
+    toast.error("Failed to load video");
   };
   
   // Format time in MM:SS format
@@ -154,7 +158,7 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
   };
   
-  // Show/hide controls on hover
+  // Handle mouse enter/leave to show/hide controls
   const handleMouseEnter = () => {
     setShowControls(true);
   };
@@ -163,189 +167,106 @@ const VideoElement: React.FC<VideoElementProps> = ({ element, isGameMode }) => {
     setShowControls(false);
   };
   
-  // Update video current time in the element data every second
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      if (videoRef.current && isPlaying) {
-        updateElementWithoutHistory(element.id, { currentTime: videoRef.current.currentTime });
-      }
-    }, 1000);
-    
-    return () => clearInterval(intervalId);
-  }, [element.id, isPlaying, updateElementWithoutHistory]);
-  
-  // Clean up when component unmounts
-  useEffect(() => {
-    return () => {
-      if (videoRef.current && videoRef.current.src.startsWith('blob:')) {
-        // Save current state before unmounting
-        updateElementWithoutHistory(element.id, {
-          currentTime: videoRef.current.currentTime,
-          isPlaying: !videoRef.current.paused,
-          videoVolume: videoRef.current.volume
-        });
-      }
-    };
-  }, [element.id, updateElementWithoutHistory]);
-  
-  // Handle end of video
-  const handleVideoEnded = () => {
-    setIsPlaying(false);
-    updateElementWithoutHistory(element.id, { isPlaying: false, currentTime: 0 });
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-    }
-  };
-  
-  // Ensure we exit fullscreen when switching to game mode or changing active element
-  useEffect(() => {
-    if (isFullscreen && globalGameMode) {
-      document.exitFullscreen().catch(err => {
-        console.error("Exit fullscreen error:", err);
-      });
-      setIsFullscreen(false);
-    }
-  }, [globalGameMode, isFullscreen]);
-  
-  // Simplify controls in game mode
-  const renderGameModeControls = () => {
-    if (!showControls) return null;
-    
+  // Render a placeholder if no video is available
+  if (!element.dataUrl && !element.thumbnailDataUrl) {
     return (
-      <div 
-        className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 flex items-center justify-between"
-        onClick={e => e.stopPropagation()}
-      >
-        <button 
-          className="text-white p-1 rounded hover:bg-gray-700"
-          onClick={togglePlay}
-        >
-          {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-        </button>
-        
-        <div className="flex-1 mx-2">
-          <input
-            type="range"
-            min="0"
-            max={duration}
-            value={currentTime}
-            onChange={handleSeek}
-            className="w-full h-1 bg-gray-300 rounded appearance-none cursor-pointer"
-          />
-        </div>
-        
-        <button 
-          className="text-white p-1 rounded hover:bg-gray-700"
-          onClick={toggleMute}
-        >
-          {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-        </button>
+      <div className="w-full h-full flex items-center justify-center bg-gray-100 rounded-md">
+        <p className="text-gray-500">No video source</p>
       </div>
     );
-  };
-  
-  // Full controls for edit mode
-  const renderEditModeControls = () => {
-    if (!showControls) return null;
-    
-    return (
-      <div 
-        className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 p-2 flex flex-col gap-2"
-        onClick={e => e.stopPropagation()}
-      >
-        {/* Progress bar */}
-        <div className="flex items-center gap-2">
-          <span className="text-white text-xs">{formatTime(currentTime)}</span>
-          <div className="flex-1">
-            <input
-              type="range"
-              min="0"
-              max={duration}
-              value={currentTime}
-              onChange={handleSeek}
-              className="w-full h-1 bg-gray-300 rounded appearance-none cursor-pointer"
-            />
-          </div>
-          <span className="text-white text-xs">{formatTime(duration)}</span>
-        </div>
-        
-        {/* Controls */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button 
-              className="text-white p-1 rounded hover:bg-gray-700"
-              onClick={togglePlay}
-              title={isPlaying ? "Pause" : "Play"}
-            >
-              {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-            </button>
-            
-            <div className="flex items-center">
-              <button 
-                className="text-white p-1 rounded hover:bg-gray-700"
-                onClick={toggleMute}
-                title={isMuted ? "Unmute" : "Mute"}
-              >
-                {isMuted ? <VolumeX size={16} /> : <Volume2 size={16} />}
-              </button>
-              
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.1"
-                value={volume}
-                onChange={handleVolumeChange}
-                className="w-20 h-1 bg-gray-300 rounded appearance-none cursor-pointer mx-1"
-              />
-            </div>
-          </div>
-          
-          <button 
-            className="text-white p-1 rounded hover:bg-gray-700"
-            onClick={toggleFullscreen}
-            title="Fullscreen"
-          >
-            <Maximize size={16} />
-          </button>
-        </div>
-      </div>
-    );
-  };
+  }
   
   return (
     <div 
-      className="relative w-full h-full video-element"
+      className="video-element w-full h-full relative rounded-md overflow-hidden"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      {!element.dataUrl && (
-        <div className="flex items-center justify-center w-full h-full bg-gray-100 rounded">
-          <span className="text-gray-500 text-sm">No video selected</span>
+      <video
+        ref={videoRef}
+        src={element.dataUrl as string}
+        poster={element.thumbnailDataUrl as string}
+        className="w-full h-full object-contain"
+        onLoadedMetadata={handleLoadedMetadata}
+        onTimeUpdate={handleTimeUpdate}
+        onError={handleVideoError}
+        playsInline
+        preload="metadata"
+        style={{ background: 'black' }}
+      />
+      
+      {isGameMode ? (
+        <div className="absolute inset-0" onClick={(e) => e.stopPropagation()}>
+          {/* Game mode has simpler controls on click */}
+          <div 
+            className="absolute inset-0 flex items-center justify-center cursor-pointer" 
+            onClick={togglePlay}
+          >
+            {!isPlaying && (
+              <div className="w-16 h-16 rounded-full bg-black bg-opacity-50 flex items-center justify-center">
+                <Play className="h-8 w-8 text-white" />
+              </div>
+            )}
+          </div>
         </div>
+      ) : (
+        <>
+          {/* Editing mode has full controls */}
+          {showControls && (
+            <div className="absolute bottom-0 left-0 right-0 p-2 bg-black bg-opacity-50 space-y-2">
+              <div className="flex items-center justify-between">
+                <button 
+                  onClick={togglePlay}
+                  className="p-1 text-white rounded hover:bg-gray-700"
+                >
+                  {isPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                </button>
+                
+                <div className="flex-1 mx-2">
+                  <div className="text-xs text-white">
+                    {formatTime(currentTime)} / {formatTime(duration)}
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max={duration || 100}
+                    step="0.1"
+                    value={currentTime}
+                    onChange={handleSeek}
+                    className="w-full h-1"
+                  />
+                </div>
+                
+                <div className="flex items-center">
+                  <button 
+                    onClick={toggleMute}
+                    className="p-1 text-white rounded hover:bg-gray-700"
+                  >
+                    {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+                  </button>
+                  
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={volume}
+                    onChange={handleVolumeChange}
+                    className="w-16 h-1 mx-1"
+                  />
+                  
+                  <button 
+                    onClick={toggleFullscreen}
+                    className="p-1 text-white rounded hover:bg-gray-700"
+                  >
+                    <Maximize className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+        </>
       )}
-      
-      {element.dataUrl && (
-        <video
-          ref={videoRef}
-          src={element.dataUrl}
-          className="w-full h-full object-contain"
-          onTimeUpdate={handleTimeUpdate}
-          onLoadedMetadata={handleLoadedMetadata}
-          onEnded={handleVideoEnded}
-          onClick={e => {
-            if (isGameMode) {
-              togglePlay(e);
-            }
-          }}
-          style={{ cursor: isGameMode ? "pointer" : "move" }}
-          poster={element.thumbnailDataUrl}
-          playsInline
-        />
-      )}
-      
-      {element.dataUrl && isGameMode && renderGameModeControls()}
-      {element.dataUrl && !isGameMode && renderEditModeControls()}
     </div>
   );
 };

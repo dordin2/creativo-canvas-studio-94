@@ -50,49 +50,59 @@ export const processVideoUpload = async (
     // Create object URL for the video file
     const videoUrl = URL.createObjectURL(file);
     
-    // Get video metadata (duration, dimensions)
-    const metadata = await getVideoMetadata(videoUrl);
+    // Show loading toast
+    const loadingToast = toast.loading("Processing video...");
     
-    // Generate a thumbnail from the video
-    const thumbnailDataUrl = await generateVideoThumbnail(videoUrl, metadata);
-    
-    // Calculate appropriate size while maintaining aspect ratio
-    const { width, height } = calculateAspectRatio(
-      metadata.width, 
-      metadata.height, 
-      maxWidth, 
-      maxHeight
-    );
-    
-    // Store the video in cache
-    const processedVideo: ProcessedVideo = {
-      dataUrl: videoUrl,
-      thumbnailDataUrl,
-      duration: metadata.duration,
-      width: metadata.width,
-      height: metadata.height,
-      size: { width, height },
-      originalSize: { width: metadata.width, height: metadata.height }
-    };
-    
-    videoCache.set(cacheKey, processedVideo);
-    
-    // Update the element with the processed video data
-    onComplete({
-      dataUrl: videoUrl,
-      thumbnailDataUrl,
-      videoDuration: metadata.duration,
-      originalSize: { width: metadata.width, height: metadata.height },
-      size: { width, height },
-      cacheKey,
-      fileMetadata: {
-        name: file.name,
-        type: file.type,
-        size: file.size,
-        lastModified: file.lastModified
-      }
-    });
-    
+    try {
+      // Get video metadata (duration, dimensions)
+      const metadata = await getVideoMetadata(videoUrl);
+      
+      // Generate a thumbnail from the video
+      const thumbnailDataUrl = await generateVideoThumbnail(videoUrl, metadata);
+      
+      // Calculate appropriate size while maintaining aspect ratio
+      const { width, height } = calculateAspectRatio(
+        metadata.width, 
+        metadata.height, 
+        maxWidth, 
+        maxHeight
+      );
+      
+      // Store the video in cache
+      const processedVideo: ProcessedVideo = {
+        dataUrl: videoUrl,
+        thumbnailDataUrl,
+        duration: metadata.duration,
+        width: metadata.width,
+        height: metadata.height,
+        size: { width, height },
+        originalSize: { width: metadata.width, height: metadata.height }
+      };
+      
+      videoCache.set(cacheKey, processedVideo);
+      
+      // Update the element with the processed video data
+      onComplete({
+        dataUrl: videoUrl,
+        thumbnailDataUrl,
+        videoDuration: metadata.duration,
+        originalSize: { width: metadata.width, height: metadata.height },
+        size: { width, height },
+        cacheKey,
+        fileMetadata: {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          lastModified: file.lastModified
+        }
+      });
+      
+      toast.dismiss(loadingToast);
+      toast.success("Video processed successfully");
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      throw error; // Re-throw to be caught by the outer try/catch
+    }
   } catch (error) {
     console.error("Error processing video:", error);
     toast.error("Error processing video. Please try again.");
@@ -111,7 +121,14 @@ const getVideoMetadata = (videoUrl: string): Promise<VideoMetadata> => {
   return new Promise((resolve, reject) => {
     const video = document.createElement('video');
     
+    // Set a timeout to prevent hanging if video loading takes too long
+    const timeout = setTimeout(() => {
+      video.remove();
+      reject(new Error("Video metadata loading timeout"));
+    }, 10000); // 10-second timeout
+    
     video.onloadedmetadata = () => {
+      clearTimeout(timeout);
       const metadata: VideoMetadata = {
         duration: video.duration,
         width: video.videoWidth,
@@ -122,6 +139,7 @@ const getVideoMetadata = (videoUrl: string): Promise<VideoMetadata> => {
     };
     
     video.onerror = () => {
+      clearTimeout(timeout);
       video.remove();
       reject(new Error("Failed to load video metadata"));
     };
@@ -147,8 +165,16 @@ const generateVideoThumbnail = async (
       return;
     }
     
+    // Set a timeout to prevent hanging
+    const timeout = setTimeout(() => {
+      video.remove();
+      canvas.remove();
+      reject(new Error("Thumbnail generation timeout"));
+    }, 10000); // 10-second timeout
+    
     video.onloadeddata = () => {
       try {
+        clearTimeout(timeout);
         // Set canvas dimensions to match video
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
@@ -165,11 +191,13 @@ const generateVideoThumbnail = async (
         
         resolve(thumbnailDataUrl);
       } catch (error) {
+        clearTimeout(timeout);
         reject(error);
       }
     };
     
     video.onerror = () => {
+      clearTimeout(timeout);
       video.remove();
       canvas.remove();
       reject(new Error("Failed to generate video thumbnail"));
@@ -235,8 +263,12 @@ export const clearVideoCache = (): void => {
   videoCache.clear();
 };
 
-// Initialize IndexedDB to store video data persistently
+// Initialize video caching system
 export const initVideoStorage = (): void => {
-  // Implementation for persistent storage if needed
+  // Register beforeunload event to clean up video URLs
+  window.addEventListener('beforeunload', () => {
+    clearVideoCache();
+  });
+  
   console.log("Video storage initialized");
 };
