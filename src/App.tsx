@@ -47,11 +47,11 @@ const App = () => (
               element={
                 <AuthProvider>
                   <ProtectedRoute>
-                    <DesignProvider>
-                      <ProjectProvider>
+                    <ProjectProvider>
+                      <DesignProvider>
                         <Editor />
-                      </ProjectProvider>
-                    </DesignProvider>
+                      </DesignProvider>
+                    </ProjectProvider>
                   </ProtectedRoute>
                 </AuthProvider>
               } 
