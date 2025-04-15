@@ -24,48 +24,83 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
     pointerEvents: 'auto',
   };
 
+  // Helper function to create handles with better touch targets
+  const createResizeHandle = (position: string, cursorType: string, direction: string) => {
+    // Define positioning based on handle location
+    let positionStyle: CSSProperties = {};
+    let transform = 'translate(-50%, -50%)';
+    
+    switch (position) {
+      case 'nw':
+        positionStyle = { top: '0px', left: '0px' };
+        transform = 'translate(-50%, -50%)';
+        break;
+      case 'n':
+        positionStyle = { top: '0px', left: '50%' };
+        transform = 'translate(-50%, -50%)';
+        break;
+      case 'ne':
+        positionStyle = { top: '0px', right: '0px', left: 'auto' };
+        transform = 'translate(50%, -50%)';
+        break;
+      case 'e':
+        positionStyle = { top: '50%', right: '0px', left: 'auto' };
+        transform = 'translate(50%, -50%)';
+        break;
+      case 'se':
+        positionStyle = { bottom: '0px', right: '0px', top: 'auto', left: 'auto' };
+        transform = 'translate(50%, 50%)';
+        break;
+      case 's':
+        positionStyle = { bottom: '0px', left: '50%', top: 'auto' };
+        transform = 'translate(-50%, 50%)';
+        break;
+      case 'sw':
+        positionStyle = { bottom: '0px', left: '0px', top: 'auto' };
+        transform = 'translate(-50%, 50%)';
+        break;
+      case 'w':
+        positionStyle = { top: '50%', left: '0px' };
+        transform = 'translate(-50%, -50%)';
+        break;
+    }
+    
+    return (
+      <div 
+        className={`resize-handle resize-handle-visible cursor-${cursorType}`}
+        style={{ 
+          ...handleStyle, 
+          ...positionStyle, 
+          transform,
+          // Touch area improvement
+          touchAction: 'none',
+        }}
+        onMouseDown={(e) => onResizeStart(e, direction)}
+        onTouchStart={(e) => {
+          // Prevent scrolling when using handles on touch devices
+          e.preventDefault();
+          const touch = e.touches[0];
+          const mouseEvent = new MouseEvent('mousedown', {
+            clientX: touch.clientX,
+            clientY: touch.clientY,
+            bubbles: true,
+          });
+          onResizeStart(mouseEvent, direction);
+        }}
+      />
+    );
+  };
+
   return (
     <>
-      <div 
-        className="resize-handle resize-handle-visible cursor-nw-resize"
-        style={{ ...handleStyle, top: '0px', left: '0px', transform: 'translate(-50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "nw")}
-      />
-      <div 
-        className="resize-handle resize-handle-visible cursor-n-resize"
-        style={{ ...handleStyle, top: '0px', left: '50%', transform: 'translate(-50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "n")}
-      />
-      <div 
-        className="resize-handle resize-handle-visible cursor-ne-resize"
-        style={{ ...handleStyle, top: '0px', right: '0px', left: 'auto', transform: 'translate(50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "ne")}
-      />
-      <div 
-        className="resize-handle resize-handle-visible cursor-e-resize"
-        style={{ ...handleStyle, top: '50%', right: '0px', left: 'auto', transform: 'translate(50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "e")}
-      />
-      <div 
-        className="resize-handle resize-handle-visible cursor-se-resize"
-        style={{ ...handleStyle, bottom: '0px', right: '0px', top: 'auto', left: 'auto', transform: 'translate(50%, 50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "se")}
-      />
-      <div 
-        className="resize-handle resize-handle-visible cursor-s-resize"
-        style={{ ...handleStyle, bottom: '0px', left: '50%', top: 'auto', transform: 'translate(-50%, 50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "s")}
-      />
-      <div 
-        className="resize-handle resize-handle-visible cursor-sw-resize"
-        style={{ ...handleStyle, bottom: '0px', left: '0px', top: 'auto', transform: 'translate(-50%, 50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "sw")}
-      />
-      <div 
-        className="resize-handle resize-handle-visible cursor-w-resize"
-        style={{ ...handleStyle, top: '50%', left: '0px', transform: 'translate(-50%, -50%)' }}
-        onMouseDown={(e) => onResizeStart(e, "w")}
-      />
+      {createResizeHandle('nw', 'nw-resize', 'nw')}
+      {createResizeHandle('n', 'n-resize', 'n')}
+      {createResizeHandle('ne', 'ne-resize', 'ne')}
+      {createResizeHandle('e', 'e-resize', 'e')}
+      {createResizeHandle('se', 'se-resize', 'se')}
+      {createResizeHandle('s', 's-resize', 's')}
+      {createResizeHandle('sw', 'sw-resize', 'sw')}
+      {createResizeHandle('w', 'w-resize', 'w')}
     </>
   );
 };
