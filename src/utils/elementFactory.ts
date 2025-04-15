@@ -93,12 +93,17 @@ export const createNewElement = (
       };
       
     case 'image':
+      const defaultSize = { width: 200, height: 150 };
+      
+      // If props includes size, use that; otherwise, use default
+      const initialSize = props?.size || defaultSize;
+      
       return {
         id: generateId(),
         type,
         position,
-        size: { width: 200, height: 150 }, // Default size until image is loaded
-        originalSize: { width: 200, height: 150 }, // Default original size
+        size: initialSize, // Use provided size if available
+        originalSize: props?.originalSize || initialSize, // Store original dimensions
         style: { transform: 'rotate(0deg)' },
         layer
       };

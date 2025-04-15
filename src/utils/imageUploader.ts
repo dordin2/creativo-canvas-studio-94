@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { DesignElement } from "@/types/designTypes";
 import { 
@@ -14,6 +13,7 @@ const IMAGE_QUALITY = 0.85; // Default quality setting for WebP compression
 const MAX_DIMENSION = 1200; // Default max dimension for full images
 const THUMBNAIL_DIMENSION = 150; // Thumbnail size for lightweight previews
 const WEBP_SUPPORT = !!window.createImageBitmap; // Check for WebP support
+const MAX_CANVAS_IMAGE_SIZE_PERCENT = 0.6; // Maximum percentage of canvas dimension an image should initially occupy
 
 // Memory cache for rapidly accessing recently used images
 class ImageMemoryCache {
@@ -231,9 +231,52 @@ async function createThumbnail(imageDataUrl: string): Promise<string> {
   });
 }
 
+/**
+ * Calculates a scaled size for an image that's appropriate for the canvas dimensions
+ * This ensures large images don't immediately take up the whole canvas on upload
+ */
+function calculateAppropriateImageSize(
+  originalWidth: number, 
+  originalHeight: number, 
+  canvasWidth: number = window.innerWidth * 0.7, // Approximate canvas width if not provided
+  canvasHeight: number = window.innerHeight * 0.7 // Approximate canvas height if not provided
+): { width: number; height: number } {
+  // Calculate the maximum dimensions based on canvas size
+  const maxCanvasWidth = canvasWidth * MAX_CANVAS_IMAGE_SIZE_PERCENT;
+  const maxCanvasHeight = canvasHeight * MAX_CANVAS_IMAGE_SIZE_PERCENT;
+  
+  // Start with original dimensions
+  let targetWidth = originalWidth;
+  let targetHeight = originalHeight;
+  
+  // Scale down if the image is larger than our target maximum canvas percentage
+  if (targetWidth > maxCanvasWidth || targetHeight > maxCanvasHeight) {
+    // Determine which dimension is the limiting factor
+    const widthRatio = maxCanvasWidth / targetWidth;
+    const heightRatio = maxCanvasHeight / targetHeight;
+    
+    // Use the smaller ratio to ensure the image fits within constraints
+    const ratio = Math.min(widthRatio, heightRatio);
+    
+    // Apply the scaling
+    targetWidth = Math.round(targetWidth * ratio);
+    targetHeight = Math.round(targetHeight * ratio);
+    
+    console.log("imageUploader - Image scaled to fit canvas:", {
+      originalSize: `${originalWidth}x${originalHeight}`,
+      scaledSize: `${targetWidth}x${targetHeight}`,
+      scaleFactor: ratio.toFixed(2)
+    });
+  }
+  
+  return { width: targetWidth, height: targetHeight };
+}
+
 export const processImageUpload = (
   file: File, 
-  onSuccess: (data: Partial<DesignElement>) => void
+  onSuccess: (data: Partial<DesignElement>) => void,
+  canvasWidth?: number,
+  canvasHeight?: number
 ): void => {
   if (!file.type.startsWith('image/')) {
     toast.error("Please upload a valid image file");
@@ -255,6 +298,9 @@ export const processImageUpload = (
         
         // Create thumbnail for lightweight previews
         const thumbnailDataUrl = await createThumbnail(compressedDataUrl);
+        
+        // Calculate an appropriate display size based on canvas dimensions
+        const appropriateSize = calculateAppropriateImageSize(width, height, canvasWidth, canvasHeight);
         
         // Generate unique cache key
         const cacheKey = `img_${file.name}_${Date.now()}_${file.size}`;
@@ -293,7 +339,9 @@ export const processImageUpload = (
           originalSize: `${originalSize}KB`,
           compressedSize: `${compressedSize}KB`,
           compressionRatio: `${compressionRatio}%`,
-          spaceReduction: `${originalSize - compressedSize}KB (${100 - compressionRatio}%)`
+          spaceReduction: `${originalSize - compressedSize}KB (${100 - compressionRatio}%)`,
+          originalDimensions: `${width}x${height}px`,
+          displayDimensions: `${appropriateSize.width}x${appropriateSize.height}px`
         });
         
         // Clear loading toast
@@ -306,10 +354,7 @@ export const processImageUpload = (
           src: undefined, 
           file: file, 
           cacheKey, 
-          size: {
-            width,
-            height
-          },
+          size: appropriateSize,  // Use the appropriate scaled size
           originalSize: {  
             width,
             height
