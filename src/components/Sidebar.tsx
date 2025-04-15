@@ -15,7 +15,7 @@ import {
   SlidersVertical,
   Globe
 } from "lucide-react";
-import { useDesignState } from "@/context/DesignContext";
+import { useDesignState } from "@/context/DesignState";
 import { useLanguage } from "@/context/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LibraryElementsList } from "./LibraryElementsList";
@@ -161,11 +161,9 @@ const Sidebar = () => {
           <TabsTrigger value="elements">{t('sidebar.elements')}</TabsTrigger>
           <TabsTrigger value="text">{t('sidebar.text')}</TabsTrigger>
           <TabsTrigger value="background">{t('sidebar.background')}</TabsTrigger>
-          {!isAdmin && (
-            <TabsTrigger value="library">
-              <Globe className="h-4 w-4" />
-            </TabsTrigger>
-          )}
+          <TabsTrigger value="library">
+            <Globe className="h-4 w-4" />
+          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="elements" className="flex-1 overflow-auto p-4">
@@ -333,14 +331,12 @@ const Sidebar = () => {
           </div>
         </TabsContent>
         
-        {!isAdmin && (
-          <TabsContent value="library" className="flex-1 overflow-auto">
-            <h3 className="text-sm font-medium p-4 pb-2">
-              {language === 'en' ? 'Public Elements' : 'אלמנטים ציבוריים'}
-            </h3>
-            <LibraryElementsList />
-          </TabsContent>
-        )}
+        <TabsContent value="library" className="flex-1 overflow-auto">
+          <h3 className="text-sm font-medium p-4 pb-2">
+            {language === 'en' ? 'Public Elements' : 'אלמנטים ציבוריים'}
+          </h3>
+          <LibraryElementsList />
+        </TabsContent>
       </Tabs>
     </div>
   );

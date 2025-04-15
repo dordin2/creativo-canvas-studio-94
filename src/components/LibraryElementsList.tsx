@@ -31,19 +31,32 @@ export function LibraryElementsList() {
           .select('*')
           .order('created_at', { ascending: false });
           
-        if (error) throw error;
+        if (error) {
+          console.error("Supabase error:", error);
+          throw error;
+        }
+        
+        console.log("Fetched library elements:", data);
         
         // Get image URLs for all elements
         const elementsWithUrls = await Promise.all(
           (data || []).map(async (element) => {
-            const { data: urlData } = await supabase.storage
-              .from('library')
-              .getPublicUrl(element.image_path);
-              
-            return { 
-              ...element, 
-              imageUrl: urlData.publicUrl 
-            };
+            try {
+              const { data: urlData } = await supabase.storage
+                .from('library')
+                .getPublicUrl(element.image_path);
+                
+              return { 
+                ...element, 
+                imageUrl: urlData.publicUrl 
+              };
+            } catch (urlError) {
+              console.error(`Error getting URL for element ${element.id}:`, urlError);
+              return {
+                ...element,
+                imageUrl: undefined
+              };
+            }
           })
         );
         
