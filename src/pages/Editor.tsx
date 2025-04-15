@@ -11,7 +11,7 @@ import { useDesignState } from "@/context/DesignContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil } from "lucide-react";
+import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil, Fullscreen, Minimize } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { PaymentButton } from "@/components/PaymentButton";
@@ -40,7 +40,8 @@ const Editor = () => {
   const isMobile = useIsMobile();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
-
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  
   useEffect(() => {
     if (!projectId) {
       navigate('/');
@@ -55,6 +56,30 @@ const Editor = () => {
       setShowMobileProperties(true);
     }
   }, [activeElement, isMobile]);
+  
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
 
   const loadProjectData = async () => {
     try {
@@ -307,6 +332,16 @@ const Editor = () => {
             <span className="text-sm">Exit</span>
           </Button>
         </div>
+        
+        <div className="absolute bottom-4 right-4 z-[100]">
+          <Button 
+            variant="secondary" 
+            className="shadow-md bg-white hover:bg-gray-100 px-2 py-1"
+            onClick={toggleFullscreen}
+          >
+            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Fullscreen className="h-4 w-4" />}
+          </Button>
+        </div>
       </div>
     );
   }
@@ -399,6 +434,16 @@ const Editor = () => {
             >
               <ChevronLeft className="mr-1" />
               Exit Game Mode
+            </Button>
+          </div>
+          <div className="absolute bottom-4 right-4 z-[100]">
+            <Button 
+              variant="secondary" 
+              className="shadow-md bg-white hover:bg-gray-100"
+              onClick={toggleFullscreen}
+            >
+              {isFullscreen ? <Minimize className="mr-1" /> : <Fullscreen className="mr-1" />}
+              {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             </Button>
           </div>
         </>
