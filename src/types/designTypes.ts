@@ -1,3 +1,4 @@
+
 import { CSSProperties } from "react";
 
 export type Json =
@@ -17,7 +18,6 @@ export type ElementType =
   | 'subheading'
   | 'paragraph'
   | 'image'
-  | 'video'
   | 'background'
   | 'puzzle'
   | 'sequencePuzzle'
@@ -116,10 +116,6 @@ export interface DesignElement {
   src?: string;
   dataUrl?: string;
   thumbnailDataUrl?: string; // Added for optimized image previews
-  videoDuration?: number; // Added for video duration in seconds
-  isPlaying?: boolean; // Added for video playback state
-  videoVolume?: number; // Added for video volume control
-  currentTime?: number; // Added for video playback position
   file?: File;
   cacheKey?: string;
   fileMetadata?: FileMetadata;
@@ -172,7 +168,6 @@ export interface DesignContextType {
   updateElementLayer: (id: string, newLayer: number) => void;
   getHighestLayer: () => number;
   handleImageUpload: (id: string, file: File) => void;
-  handleVideoUpload: (id: string, file: File) => void; // Added for video uploads
   undo: () => void;
   redo: () => void;
   canUndo: boolean;
