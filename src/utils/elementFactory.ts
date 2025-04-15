@@ -1,4 +1,3 @@
-
 import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
 // Default positions for new elements
@@ -9,6 +8,17 @@ export const getDefaultPosition = (canvasRef: HTMLDivElement | null) => {
     x: canvasRef.clientWidth / 2 - 50,
     y: canvasRef.clientHeight / 2 - 50
   };
+};
+
+// Get default placeholder size for images
+export const getDefaultImageSize = (canvasRef: HTMLDivElement | null) => {
+  if (!canvasRef) return { width: 200, height: 150 };
+  
+  // Calculate a reasonable default size based on canvas size
+  const width = Math.min(200, canvasRef.clientWidth * 0.3);
+  const height = Math.min(150, canvasRef.clientHeight * 0.3);
+  
+  return { width, height };
 };
 
 // Factory function to create new elements
@@ -93,16 +103,15 @@ export const createNewElement = (
       };
       
     case 'image':
-      const defaultSize = { width: 200, height: 150 };
-      
       // If props includes size, use that; otherwise, use default
-      const initialSize = props?.size || defaultSize;
+      // Props will include size for uploaded images that have been scaled
+      const initialSize = props?.size || { width: 200, height: 150 };
       
       return {
         id: generateId(),
         type,
         position,
-        size: initialSize, // Use provided size if available
+        size: initialSize,
         originalSize: props?.originalSize || initialSize, // Store original dimensions
         style: { transform: 'rotate(0deg)' },
         layer
