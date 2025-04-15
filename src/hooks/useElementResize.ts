@@ -67,97 +67,121 @@ export const useElementResize = (element: DesignElement) => {
         let newX = startPosition.x;
         let newY = startPosition.y;
         
-        // Calculate new dimensions and position based on resize direction
-        if (resizeDirection.includes('e')) {
-          newWidth = Math.max(20, startSize.width + deltaX);
-        }
+        // Common scaling functions for consistent behavior
+        const scaleWidth = (widthChange: number) => {
+          const tempWidth = Math.max(20, startSize.width + widthChange);
+          if (maintainAspectRatio && originalAspectRatio) {
+            return {
+              width: tempWidth,
+              height: tempWidth / originalAspectRatio
+            };
+          }
+          return { width: tempWidth, height: newHeight };
+        };
         
-        if (resizeDirection.includes('w')) {
-          const widthChange = deltaX;
-          newWidth = Math.max(20, startSize.width - widthChange);
+        const scaleHeight = (heightChange: number) => {
+          const tempHeight = Math.max(20, startSize.height + heightChange);
+          if (maintainAspectRatio && originalAspectRatio) {
+            return {
+              width: tempHeight * originalAspectRatio,
+              height: tempHeight
+            };
+          }
+          return { width: newWidth, height: tempHeight };
+        };
+        
+        // Process resize based on direction with consistent math for all handles
+        if (resizeDirection === 'e') {
+          // East - right edge
+          const scaled = scaleWidth(deltaX);
+          newWidth = scaled.width;
+          newHeight = scaled.height;
+        } 
+        else if (resizeDirection === 'w') {
+          // West - left edge
+          const scaled = scaleWidth(-deltaX);
+          newWidth = scaled.width;
+          newHeight = scaled.height;
           newX = startPosition.x + (startSize.width - newWidth);
-        }
-        
-        if (resizeDirection.includes('s')) {
-          newHeight = Math.max(20, startSize.height + deltaY);
-        }
-        
-        if (resizeDirection.includes('n')) {
-          const heightChange = deltaY;
-          newHeight = Math.max(20, startSize.height - heightChange);
+        } 
+        else if (resizeDirection === 's') {
+          // South - bottom edge
+          const scaled = scaleHeight(deltaY);
+          newWidth = scaled.width;
+          newHeight = scaled.height;
+        } 
+        else if (resizeDirection === 'n') {
+          // North - top edge
+          const scaled = scaleHeight(-deltaY);
+          newWidth = scaled.width;
+          newHeight = scaled.height;
           newY = startPosition.y + (startSize.height - newHeight);
-        }
-        
-        // Handle aspect ratio preservation for images and other elements that need it
-        if (maintainAspectRatio && originalAspectRatio) {
-          if (resizeDirection === 'nw') {
-            // For northwest corner, adjust both width and height proportionally
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-              // Width is driving dimension
-              newWidth = Math.max(20, startSize.width - deltaX);
-              newHeight = newWidth / originalAspectRatio;
-              newX = startPosition.x + (startSize.width - newWidth);
-              newY = startPosition.y + (startSize.height - newHeight);
-            } else {
-              // Height is driving dimension
-              newHeight = Math.max(20, startSize.height - deltaY);
-              newWidth = newHeight * originalAspectRatio;
-              newX = startPosition.x + (startSize.width - newWidth);
-              newY = startPosition.y + (startSize.height - newHeight);
-            }
-          } else if (resizeDirection === 'ne') {
-            // For northeast corner
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-              // Width is driving dimension
-              newWidth = Math.max(20, startSize.width + deltaX);
-              newHeight = newWidth / originalAspectRatio;
-              newY = startPosition.y + (startSize.height - newHeight);
-            } else {
-              // Height is driving dimension
-              newHeight = Math.max(20, startSize.height - deltaY);
-              newWidth = newHeight * originalAspectRatio;
-              newY = startPosition.y + (startSize.height - newHeight);
-            }
-          } else if (resizeDirection === 'sw') {
-            // For southwest corner
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-              // Width is driving dimension
-              newWidth = Math.max(20, startSize.width - deltaX);
-              newHeight = newWidth / originalAspectRatio;
-              newX = startPosition.x + (startSize.width - newWidth);
-            } else {
-              // Height is driving dimension
-              newHeight = Math.max(20, startSize.height + deltaY);
-              newWidth = newHeight * originalAspectRatio;
-              newX = startPosition.x + (startSize.width - newWidth);
-            }
-          } else if (resizeDirection === 'se') {
-            // For southeast corner
-            if (Math.abs(deltaX) > Math.abs(deltaY)) {
-              // Width is driving dimension
-              newWidth = Math.max(20, startSize.width + deltaX);
-              newHeight = newWidth / originalAspectRatio;
-            } else {
-              // Height is driving dimension
-              newHeight = Math.max(20, startSize.height + deltaY);
-              newWidth = newHeight * originalAspectRatio;
-            }
-          } else if (resizeDirection === 'n' || resizeDirection === 's') {
-            // For north or south sides, adjust width based on height
-            newWidth = newHeight * originalAspectRatio;
-            if (resizeDirection === 'n') {
-              newY = startPosition.y + (startSize.height - newHeight);
-            }
-          } else if (resizeDirection === 'e' || resizeDirection === 'w') {
-            // For east or west sides, adjust height based on width
-            newHeight = newWidth / originalAspectRatio;
-            if (resizeDirection === 'w') {
-              newX = startPosition.x + (startSize.width - newWidth);
-            }
+        } 
+        else if (resizeDirection === 'ne') {
+          // Northeast - top right corner
+          // Choose the dominant dimension for consistent behavior
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            const scaled = scaleWidth(deltaX);
+            newWidth = scaled.width;
+            newHeight = scaled.height;
+            newY = startPosition.y + (startSize.height - newHeight);
+          } else {
+            const scaled = scaleHeight(-deltaY);
+            newWidth = scaled.width;
+            newHeight = scaled.height;
+            newY = startPosition.y + (startSize.height - newHeight);
+          }
+        } 
+        else if (resizeDirection === 'nw') {
+          // Northwest - top left corner
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            const scaled = scaleWidth(-deltaX);
+            newWidth = scaled.width;
+            newHeight = scaled.height;
+            newX = startPosition.x + (startSize.width - newWidth);
+            newY = startPosition.y + (startSize.height - newHeight);
+          } else {
+            const scaled = scaleHeight(-deltaY);
+            newWidth = scaled.width;
+            newHeight = scaled.height;
+            newX = startPosition.x + (startSize.width - newWidth);
+            newY = startPosition.y + (startSize.height - newHeight);
+          }
+        } 
+        else if (resizeDirection === 'se') {
+          // Southeast - bottom right corner
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            const scaled = scaleWidth(deltaX);
+            newWidth = scaled.width;
+            newHeight = scaled.height;
+          } else {
+            const scaled = scaleHeight(deltaY);
+            newWidth = scaled.width;
+            newHeight = scaled.height;
+          }
+        } 
+        else if (resizeDirection === 'sw') {
+          // Southwest - bottom left corner
+          if (Math.abs(deltaX) > Math.abs(deltaY)) {
+            const scaled = scaleWidth(-deltaX);
+            newWidth = scaled.width;
+            newHeight = scaled.height;
+            newX = startPosition.x + (startSize.width - newWidth);
+          } else {
+            const scaled = scaleHeight(deltaY);
+            newWidth = scaled.width;
+            newHeight = scaled.height;
+            newX = startPosition.x + (startSize.width - newWidth);
           }
         }
         
-        // Update element with both new size and position in a single update
+        // Ensure all values are properly rounded for visual stability
+        newWidth = Math.round(newWidth);
+        newHeight = Math.round(newHeight);
+        newX = Math.round(newX);
+        newY = Math.round(newY);
+        
+        // Apply the changes
         updateElementSize(newWidth, newHeight, newX, newY);
       }
     };
