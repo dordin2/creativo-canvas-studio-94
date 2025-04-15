@@ -26,14 +26,14 @@ export function UserStatus() {
       if (!user) return;
       
       try {
-        const { data, error } = await supabase.rpc('get_user_role');
+        const { data, error } = await supabase.rpc('is_admin');
         
         if (error) {
           console.error("Error checking admin status:", error);
           return;
         }
         
-        setIsAdmin(data === 'admin');
+        setIsAdmin(data);
       } catch (error) {
         console.error("Error checking admin status:", error);
       }

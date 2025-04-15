@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo, Layers, Menu, Shield } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
@@ -16,6 +17,8 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Header = () => {
   const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
@@ -24,6 +27,28 @@ const Header = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase.rpc('is_admin');
+        
+        if (error) {
+          console.error("Error checking admin status:", error);
+          return;
+        }
+        
+        setIsAdmin(data);
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+      }
+    };
+    
+    checkAdminStatus();
+  }, [user]);
 
   const handleDownload = () => {
     if (!canvasRef) return;
@@ -78,8 +103,6 @@ const Header = () => {
     toast.success("מעבר לממשק האדמין");
   };
 
-  const isSpecificUser = user?.email === "dordin2@gmail.com";
-
   if (isMobile) {
     return (
       <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
@@ -90,7 +113,7 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          {isSpecificUser && (
+          {isAdmin && (
             <Button 
               variant="outline" 
               onClick={navigateToAdmin}
@@ -169,7 +192,7 @@ const Header = () => {
         <div className="h-6 w-px bg-gray-200 mx-1"></div>
         <LanguageSwitcher />
         
-        {isSpecificUser && (
+        {isAdmin && (
           <>
             <div className="h-6 w-px bg-gray-200 mx-1"></div>
             <Button 
