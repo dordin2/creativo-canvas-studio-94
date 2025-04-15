@@ -11,18 +11,10 @@ import { useDesignState } from "@/context/DesignContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil, Fullscreen, Minimize } from "lucide-react";
+import { ChevronLeft, Save, Share2, Globe, Lock } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { PaymentButton } from "@/components/PaymentButton";
-import { useIsMobile } from "@/hooks/use-mobile";
-import MobileSidebar from "@/components/MobileSidebar";
-import MobileProperties from "@/components/MobileProperties";
-import { 
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -33,15 +25,10 @@ const Editor = () => {
     toggleGameMode, 
     canvases, 
     activeCanvasIndex, 
-    setCanvases: updateCanvases,
-    activeElement
+    setCanvases: updateCanvases
   } = useDesignState();
   const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
-  const isMobile = useIsMobile();
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
-  const [showMobileProperties, setShowMobileProperties] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  
+
   useEffect(() => {
     if (!projectId) {
       navigate('/');
@@ -50,36 +37,6 @@ const Editor = () => {
     
     loadProjectData();
   }, [projectId]);
-
-  useEffect(() => {
-    if (isMobile && activeElement) {
-      setShowMobileProperties(true);
-    }
-  }, [activeElement, isMobile]);
-  
-  useEffect(() => {
-    const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
-    };
-    
-    document.addEventListener('fullscreenchange', handleFullscreenChange);
-    
-    return () => {
-      document.removeEventListener('fullscreenchange', handleFullscreenChange);
-    };
-  }, []);
-
-  const toggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
-      }
-    }
-  };
 
   const loadProjectData = async () => {
     try {
@@ -178,174 +135,6 @@ const Editor = () => {
     );
   }
 
-  if (isMobile && !isGameMode) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden">
-        <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={goBackToProjects}
-              className="mr-1"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-lg font-semibold text-canvas-purple truncate max-w-[160px]">{projectName}</h1>
-          </div>
-          <div className="flex gap-2">
-            <PaymentButton projectId={projectId} />
-            
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="outline" size="icon" className="bg-white p-2">
-                  <Menu className="h-4 w-4" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="px-4 pt-2 pb-8">
-                <div className="space-y-4 mt-4">
-                  <h3 className="font-medium text-lg">Project Options</h3>
-                  <div className="grid gap-2">
-                    <Button 
-                      onClick={toggleProjectVisibility}
-                      variant="outline"
-                      className="justify-start"
-                    >
-                      {isPublic ? (
-                        <Globe className="mr-2 h-4 w-4 text-green-500" />
-                      ) : (
-                        <Lock className="mr-2 h-4 w-4 text-red-500" />
-                      )}
-                      {isPublic ? 'Public' : 'Private'}
-                    </Button>
-                    <Button 
-                      onClick={handleShareGame}
-                      variant="outline"
-                      className="justify-start"
-                    >
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Share Game
-                    </Button>
-                    <Button 
-                      onClick={handleSaveProject}
-                      className="bg-canvas-purple hover:bg-canvas-purple/90 justify-start"
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Project
-                    </Button>
-                  </div>
-                </div>
-              </DrawerContent>
-            </Drawer>
-          </div>
-        </div>
-        
-        <Header />
-        
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="z-10 relative">
-            <CanvasTabs />
-          </div>
-          <div className="flex-1 relative z-1">
-            <Canvas />
-          </div>
-        </div>
-        
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30">
-          <Drawer>
-            <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="aspect-square">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Add Elements" 
-                  className="h-6 w-6"
-                />
-                <span className="sr-only">Add Elements</span>
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="px-4 pb-6">
-              <div className="mt-2">
-                <MobileSidebar 
-                  isOpen={showMobileSidebar} 
-                  onClose={() => setShowMobileSidebar(false)} 
-                />
-              </div>
-            </DrawerContent>
-          </Drawer>
-          
-          <Button variant="ghost" size="icon" className="aspect-square" onClick={toggleGameMode}>
-            <img 
-              src="/placeholder.svg" 
-              alt="Preview Game" 
-              className="h-6 w-6"
-            />
-            <span className="sr-only">Preview Game</span>
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="aspect-square" 
-            onClick={handleSaveProject}
-          >
-            <Save className="h-6 w-6 text-canvas-purple" />
-            <span className="sr-only">Save Project</span>
-          </Button>
-          
-          {activeElement && (
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="aspect-square">
-                  <Pencil className="h-6 w-6" />
-                  <span className="sr-only">Edit Properties</span>
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="px-0 pb-4">
-                <MobileProperties />
-              </DrawerContent>
-            </Drawer>
-          )}
-        </div>
-      </div>
-    );
-  }
-
-  if (isMobile && isGameMode) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
-        <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
-          <div className="fixed-canvas-container">
-            <Canvas isFullscreen={true} isMobileView={true} />
-          </div>
-        </div>
-        
-        <InventoryPanel />
-        <InventoryIcon />
-        
-        <div className="absolute bottom-4 left-4 z-[100]">
-          <Button 
-            variant="secondary" 
-            className="shadow-md bg-white hover:bg-gray-100 px-2 py-1"
-            onClick={toggleGameMode}
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            <span className="text-sm">Exit</span>
-          </Button>
-        </div>
-        
-        <div className="absolute bottom-4 right-4 z-[100]">
-          <Button 
-            variant="secondary" 
-            className="shadow-md bg-white hover:bg-gray-100 px-2 py-1"
-            onClick={toggleFullscreen}
-          >
-            {isFullscreen ? <Minimize className="h-4 w-4" /> : <Fullscreen className="h-4 w-4" />}
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
       {!isGameMode && (
@@ -434,16 +223,6 @@ const Editor = () => {
             >
               <ChevronLeft className="mr-1" />
               Exit Game Mode
-            </Button>
-          </div>
-          <div className="absolute bottom-4 right-4 z-[100]">
-            <Button 
-              variant="secondary" 
-              className="shadow-md bg-white hover:bg-gray-100"
-              onClick={toggleFullscreen}
-            >
-              {isFullscreen ? <Minimize className="mr-1" /> : <Fullscreen className="mr-1" />}
-              {isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}
             </Button>
           </div>
         </>

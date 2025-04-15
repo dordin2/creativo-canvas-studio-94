@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { 
@@ -15,7 +16,6 @@ import {
   createNewElement 
 } from "@/utils/elementFactory";
 import { processImageUpload } from "@/utils/imageUploader";
-import { processVideoUpload } from "@/utils/videoProcessor";
 import { getHighestLayer, handleBackgroundLayer } from "@/utils/layerUtils";
 import { useLanguage } from "@/context/LanguageContext";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
@@ -118,7 +118,7 @@ export const DesignProvider = ({
 
     toast.success("Item added to inventory");
   };
-  
+
   const removeFromInventory = (elementId: string) => {
     const inventoryItem = inventoryItems.find(item => item.elementId === elementId);
     if (!inventoryItem) return;
@@ -235,6 +235,7 @@ export const DesignProvider = ({
     setHistoryIndex(newHistoryIndex);
   }, [history, historyIndex]);
   
+  // Make sure elements is properly initialized with fallback to empty array
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
     ? (canvases[activeCanvasIndex]?.elements || []) 
     : [];
@@ -264,50 +265,22 @@ export const DesignProvider = ({
   }, [canvases, addToHistory]);
   
   const handleImageUpload = (id: string, file: File) => {
-    const canvasDimensions = canvasRef ? {
-      width: canvasRef.clientWidth,
-      height: canvasRef.clientHeight
-    } : undefined;
-    
-    processImageUpload(
-      file, 
-      (updatedData) => {
-        updateElement(id, updatedData);
-      },
-      canvasDimensions?.width,
-      canvasDimensions?.height
-    );
-  };
-  
-  const handleVideoUpload = (id: string, file: File) => {
-    const canvasDimensions = canvasRef ? {
-      width: canvasRef.clientWidth,
-      height: canvasRef.clientHeight
-    } : undefined;
-    
-    processVideoUpload(
-      file, 
-      (updatedData) => {
-        updateElement(id, updatedData);
-      },
-      canvasDimensions?.width,
-      canvasDimensions?.height
-    );
+    processImageUpload(file, (updatedData) => {
+      updateElement(id, updatedData);
+    });
   };
   
   const addElement = (type: ElementType, props?: any): DesignElement => {
+    // Make sure canvases and activeCanvasIndex are valid before proceeding
     if (!canvases || activeCanvasIndex < 0 || activeCanvasIndex >= canvases.length) {
       console.error("Invalid canvas state when trying to add element");
       toast.error("Could not add element: invalid canvas state");
+      // Return a default element to prevent further errors
       return createNewElement(type, { x: 0, y: 0 }, 0, props);
     }
     
     const position = getDefaultPosition(canvasRef);
     const newLayer = getHighestLayer(elements);
-    
-    if (type === 'video' || type === 'image') {
-      props = { ...props, canvasRef };
-    }
     
     if (type === 'background') {
       const { elements: updatedElements, newElement } = handleBackgroundLayer(elements, props);
@@ -347,19 +320,6 @@ export const DesignProvider = ({
     if (type === 'image' && props?.dataUrl) {
       console.log("DesignContext - Creating new image element with dataUrl length:", 
         props.dataUrl.length);
-      
-      if (props.thumbnailDataUrl) {
-        console.log("DesignContext - Image has thumbnail preview");
-      }
-    }
-    
-    if (type === 'video' && props?.dataUrl) {
-      console.log("DesignContext - Creating new video element with dataUrl:", 
-        props.dataUrl ? "exists" : "missing");
-      
-      if (props.thumbnailDataUrl) {
-        console.log("DesignContext - Video has thumbnail preview");
-      }
     }
     
     const updatedCanvases = [...canvases];
@@ -564,10 +524,6 @@ export const DesignProvider = ({
       if (elementToMove.dataUrl) {
         elementCopy.dataUrl = elementToMove.dataUrl;
       }
-      
-      if (elementToMove.thumbnailDataUrl) {
-        elementCopy.thumbnailDataUrl = elementToMove.thumbnailDataUrl;
-      }
     }
     
     const updatedCanvases = [...canvases];
@@ -676,6 +632,7 @@ export const DesignProvider = ({
     }
   }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
+  // Initialize history
   useEffect(() => {
     if (history.length === 0 && canvases.length > 0) {
       addToHistory(canvases);
@@ -704,7 +661,6 @@ export const DesignProvider = ({
     updateElementLayer,
     getHighestLayer: () => getHighestLayer(elements),
     handleImageUpload,
-    handleVideoUpload,
     undo,
     redo,
     canUndo: historyIndex > 0,

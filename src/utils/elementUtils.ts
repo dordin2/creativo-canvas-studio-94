@@ -15,11 +15,6 @@ export const prepareElementForDuplication = (element: DesignElement): Partial<De
       duplicate.dataUrl = element.dataUrl;
     }
     
-    // Preserve the thumbnail dataUrl if it exists
-    if (element.thumbnailDataUrl) {
-      duplicate.thumbnailDataUrl = element.thumbnailDataUrl;
-    }
-    
     // Preserve the external source URL if it exists
     if (element.src) {
       duplicate.src = element.src;
@@ -50,7 +45,6 @@ export const prepareElementForDuplication = (element: DesignElement): Partial<De
     console.log("elementUtils - Image element duplicated with data:", {
       dataUrl: duplicate.dataUrl ? "exists" : "missing",
       dataUrlLength: duplicate.dataUrl ? duplicate.dataUrl.length : 0,
-      thumbnailExists: !!duplicate.thumbnailDataUrl,
       src: duplicate.src,
       cacheKey: duplicate.cacheKey,
       fileMetadata: duplicate.fileMetadata,
@@ -86,10 +80,6 @@ export const cloneImageElement = (element: DesignElement): Partial<DesignElement
   // Ensure image-specific properties are properly preserved
   if (element.dataUrl) {
     clone.dataUrl = element.dataUrl;
-  }
-  
-  if (element.thumbnailDataUrl) {
-    clone.thumbnailDataUrl = element.thumbnailDataUrl;
   }
   
   if (element.src) {

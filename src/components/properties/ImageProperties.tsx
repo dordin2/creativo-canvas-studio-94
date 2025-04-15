@@ -1,13 +1,12 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Image as ImageIcon } from "lucide-react";
+import { Upload } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
-import { getImageFromCache, estimateDataUrlSize } from "@/utils/imageUploader";
+import { getImageFromCache } from "@/utils/imageUploader";
 import { getRotation } from "@/utils/elementStyles";
 
 const ImageProperties = ({
@@ -23,10 +22,6 @@ const ImageProperties = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
   const [rotation, setRotation] = useState(getRotation(element));
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
-  const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
-  const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
@@ -40,74 +35,29 @@ const ImageProperties = ({
 
   useEffect(() => {
     // Try to recover image from cache if we have a cache key but no dataUrl
-    const loadImages = async () => {
-      if (element.cacheKey) {
-        if (!imageSrc) {
-          const cachedImage = await getImageFromCache(element.cacheKey);
-          if (cachedImage) {
-            console.log("ImageProperties - Recovered image from cache:", element.cacheKey);
-            setImageSrc(cachedImage);
-          }
-        }
-        
-        if (!thumbnailSrc) {
-          const cachedThumbnail = await getImageFromCache(element.cacheKey, true);
-          if (cachedThumbnail) {
-            console.log("ImageProperties - Recovered thumbnail from cache");
-            setThumbnailSrc(cachedThumbnail);
-          }
-        }
+    if (element.cacheKey && !element.dataUrl) {
+      const cachedImage = getImageFromCache(element.cacheKey);
+      if (cachedImage) {
+        console.log("ImageProperties - Recovered image from cache:", element.cacheKey);
+        updateElement(element.id, {
+          dataUrl: cachedImage
+        });
       }
-    };
-    
-    loadImages();
-    
-    // Calculate image stats for display
-    if (imageSrc || element.src) {
-      const size = imageSrc ? 
-        estimateDataUrlSize(imageSrc) :
-        0;
-      
-      let sizeStr = 'Unknown';
-      if (size > 0) {
-        sizeStr = size > 1024 * 1024 ? 
-          `${(size / (1024 * 1024)).toFixed(2)}MB` : 
-          `${(size / 1024).toFixed(2)}KB`;
-      } else if (element.file) {
-        sizeStr = element.file.size > 1024 * 1024 ? 
-          `${(element.file.size / (1024 * 1024)).toFixed(2)}MB` : 
-          `${(element.file.size / 1024).toFixed(2)}KB`;
-      }
-      
-      const dimensions = element.originalSize ? 
-        `${element.originalSize.width} × ${element.originalSize.height}px` :
-        'Unknown';
-      
-      setImageStats({
-        size: sizeStr,
-        dimensions
-      });
     }
-  }, [element.id, element.cacheKey, imageSrc, thumbnailSrc, element.src, element.file, element.originalSize]);
+  }, [element.id, element.cacheKey, element.dataUrl]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
     updateElement(element.id, {
-      src: url,
+      src: e.target.value,
       dataUrl: undefined,
       file: undefined
     });
-    setImageSrc(url);
   };
   
   const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
     const file = e.target.files[0];
     console.log("ImageProperties - Selected file:", file.name, file.type, file.size);
-    
-    // Reset the image loaded state before loading new image
-    setImageLoaded(false);
-    
     handleImageUpload(element.id, file);
   };
   
@@ -153,46 +103,20 @@ const ImageProperties = ({
     handleRotationChange([boundedRotation]);
   };
   
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-  };
-  
-  const renderImagePreview = () => {
-    // If we have a thumbnailSrc, use it until the full image is loaded
-    const mainSrc = imageSrc || element.src;
-    
-    if (!mainSrc) {
-      return (
-        <div className="w-full h-32 flex items-center justify-center bg-muted rounded-md">
-          <ImageIcon className="w-8 h-8 text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">No image</span>
-        </div>
-      );
+  useEffect(() => {
+    // Log image data for debugging
+    if (element.type === 'image') {
+      console.log("ImageProperties - Current image data:", {
+        dataUrl: element.dataUrl ? `${element.dataUrl.substring(0, 30)}...` : "missing",
+        dataUrlLength: element.dataUrl?.length || 0,
+        src: element.src,
+        fileExists: !!element.file,
+        fileName: element.file?.name,
+        cacheKey: element.cacheKey,
+        originalSize: element.originalSize
+      });
     }
-    
-    return (
-      <div className="mt-4 border rounded-md p-2 bg-background relative">
-        {!imageLoaded && thumbnailSrc && (
-          <img 
-            src={thumbnailSrc} 
-            alt="Preview loading" 
-            className="w-full h-32 object-contain blur-[2px]" 
-          />
-        )}
-        <img 
-          src={mainSrc} 
-          alt="Preview" 
-          className={`w-full h-32 object-contain ${!imageLoaded ? 'opacity-0 absolute' : 'opacity-100'}`}
-          onLoad={handleImageLoad}
-          onError={(e) => {
-            console.error("Image failed to load:", mainSrc ? "src exists" : "no src");
-            e.currentTarget.src = "/placeholder.svg";
-            setImageLoaded(true);
-          }}
-        />
-      </div>
-    );
-  };
+  }, [element]);
   
   return <div className="space-y-4">
       <div>
@@ -209,19 +133,6 @@ const ImageProperties = ({
           {element.fileMetadata && !element.file && <p className="text-xs text-muted-foreground">
               {element.fileMetadata.name} (duplicated)
           </p>}
-          
-          {imageStats && (
-            <div className="text-xs text-muted-foreground mt-1">
-              <div className="flex justify-between">
-                <span>Size:</span>
-                <span className="font-medium">{imageStats.size}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Dimensions:</span>
-                <span className="font-medium">{imageStats.dimensions}</span>
-              </div>
-            </div>
-          )}
         </div>
       </div>
       
@@ -240,7 +151,17 @@ const ImageProperties = ({
         </div>
       </div>
       
-      {renderImagePreview()}
+      {(element.dataUrl || element.src) && <div className="mt-4 border rounded-md p-2 bg-background">
+          <img 
+            src={element.dataUrl || element.src} 
+            alt="Preview" 
+            className="w-full h-32 object-contain" 
+            onError={(e) => {
+              console.error("Image failed to load:", element.dataUrl ? "dataUrl exists" : "no dataUrl", element.src);
+              e.currentTarget.src = "/placeholder.svg";
+            }}
+          />
+        </div>}
       
       <div className="space-y-4">
         <Label>Rotation</Label>
