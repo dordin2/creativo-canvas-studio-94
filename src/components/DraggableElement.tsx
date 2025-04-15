@@ -10,6 +10,7 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
+import VideoElement from "./element/VideoElement";
 import InteractionMessageModal from "./element/InteractionMessageModal";
 import PuzzleModal from "./element/PuzzleModal";
 import SequencePuzzleModal from "./element/SequencePuzzleModal";
@@ -68,6 +69,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
   const isSliderPuzzleElement = element.type === 'sliderPuzzle';
   const isImageElement = element.type === 'image';
+  const isVideoElement = element.type === 'video';
   
   const hasInteraction = element.interaction?.type && element.interaction.type !== 'none';
   const interactionType = element.interaction?.type || 'none';
@@ -402,6 +404,10 @@ const DraggableElement = ({ element, isActive, children }: {
         element={element}
         onClick={handlePuzzleClick}
       />
+    );
+  } else if (element.type === 'video') {
+    childContent = (
+      <VideoElement element={element} />
     );
   }
 

@@ -1,3 +1,4 @@
+
 import { DesignElement, FileMetadata } from "@/types/designTypes";
 
 /**
@@ -43,6 +44,48 @@ export const prepareElementForDuplication = (element: DesignElement): Partial<De
     }
     
     console.log("elementUtils - Image element duplicated with data:", {
+      dataUrl: duplicate.dataUrl ? "exists" : "missing",
+      dataUrlLength: duplicate.dataUrl ? duplicate.dataUrl.length : 0,
+      src: duplicate.src,
+      cacheKey: duplicate.cacheKey,
+      fileMetadata: duplicate.fileMetadata,
+      originalSize: duplicate.originalSize
+    });
+  }
+  
+  // Handle video element type
+  if (element.type === 'video') {
+    // Explicitly preserve the dataUrl
+    if (element.dataUrl) {
+      duplicate.dataUrl = element.dataUrl;
+    }
+    
+    // Preserve the external source URL if it exists
+    if (element.src) {
+      duplicate.src = element.src;
+    }
+    
+    // Preserve cache key if it exists
+    if (element.cacheKey) {
+      duplicate.cacheKey = element.cacheKey;
+    }
+    
+    // File objects can't be cloned via JSON
+    if (element.file) {
+      duplicate.fileMetadata = {
+        name: element.file.name,
+        type: element.file.type,
+        size: element.file.size,
+        lastModified: element.file.lastModified
+      };
+    }
+    
+    // Make sure original dimensions are preserved
+    if (element.originalSize) {
+      duplicate.originalSize = { ...element.originalSize };
+    }
+    
+    console.log("elementUtils - Video element duplicated with data:", {
       dataUrl: duplicate.dataUrl ? "exists" : "missing",
       dataUrlLength: duplicate.dataUrl ? duplicate.dataUrl.length : 0,
       src: duplicate.src,

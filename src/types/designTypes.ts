@@ -18,6 +18,7 @@ export type ElementType =
   | 'subheading'
   | 'paragraph'
   | 'image'
+  | 'video'
   | 'background'
   | 'puzzle'
   | 'sequencePuzzle'
