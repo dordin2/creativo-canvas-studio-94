@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import React, { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
 import { Minus, Plus, RotateCcw, Maximize, Minimize } from "lucide-react";
@@ -467,17 +467,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           </div>
         )}
         
-        {isGameMode && !isMobileView && (
-          <div className="fullscreen-controls">
-            <button 
-              onClick={toggleFullscreen} 
-              title={isFullscreenActive ? "Exit Fullscreen" : "Enter Fullscreen"}
-              className="fullscreen-button"
-            >
-              {isFullscreenActive ? <Minimize size={18} /> : <Maximize size={18} />}
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );
