@@ -1,11 +1,13 @@
 
+import { useRef, useState } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { processVideoUpload } from "@/utils/videoProcessor";
-import { useRef } from "react";
+import { Slider } from "@/components/ui/slider";
+import { getRotation } from "@/utils/elementStyles";
 
 interface VideoPropertiesProps {
   element: DesignElement;
@@ -14,13 +16,21 @@ interface VideoPropertiesProps {
 const VideoProperties = ({ element }: VideoPropertiesProps) => {
   const { updateElement } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [rotation, setRotation] = useState(getRotation(element));
   
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) {
-      processVideoUpload(file, (updatedData) => {
+    if (!file) return;
+    
+    setIsProcessing(true);
+    
+    try {
+      await processVideoUpload(file, (updatedData) => {
         updateElement(element.id, updatedData);
       });
+    } finally {
+      setIsProcessing(false);
     }
   };
   
@@ -67,6 +77,14 @@ const VideoProperties = ({ element }: VideoPropertiesProps) => {
     });
   };
   
+  const handleRotationChange = (value: number[]) => {
+    const newRotation = Math.round(value[0]);
+    setRotation(newRotation);
+    updateElement(element.id, {
+      style: { ...element.style, transform: `rotate(${newRotation}deg)` }
+    });
+  };
+  
   return (
     <div className="space-y-4">
       <div>
@@ -82,8 +100,9 @@ const VideoProperties = ({ element }: VideoPropertiesProps) => {
           variant="outline" 
           className="w-full mt-1"
           onClick={() => fileInputRef.current?.click()}
+          disabled={isProcessing}
         >
-          Upload new video
+          {isProcessing ? "Processing..." : "Upload new video"}
         </Button>
       </div>
       
@@ -95,6 +114,31 @@ const VideoProperties = ({ element }: VideoPropertiesProps) => {
           onChange={handleExternalUrlChange}
           className="mt-1"
         />
+      </div>
+      
+      <div>
+        <Label>Rotation</Label>
+        <div className="space-y-2">
+          <Slider
+            value={[rotation]}
+            min={-180}
+            max={180}
+            step={1}
+            onValueChange={handleRotationChange}
+            className="my-4"
+          />
+          <div className="flex gap-4 items-center">
+            <Input 
+              type="number" 
+              value={rotation}
+              onChange={(e) => handleRotationChange([Number(e.target.value) || 0])}
+              min={-360}
+              max={360}
+              className="w-24"
+            />
+            <span className="text-sm">degrees</span>
+          </div>
+        </div>
       </div>
       
       <div className="flex flex-col space-y-2 mt-4">
@@ -134,6 +178,17 @@ const VideoProperties = ({ element }: VideoPropertiesProps) => {
           <Label htmlFor="muted">Muted</Label>
         </div>
       </div>
+      
+      {element.dataUrl && (
+        <div className="mt-4 rounded-md overflow-hidden">
+          <video 
+            src={element.dataUrl}
+            controls
+            muted
+            className="w-full h-32 object-contain bg-gray-100"
+          />
+        </div>
+      )}
     </div>
   );
 };

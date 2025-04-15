@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,8 @@ const ImageProperties = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
   const [rotation, setRotation] = useState(getRotation(element));
+  const [isUploading, setIsUploading] = useState(false);
+  const [imageSize, setImageSize] = useState<string>("");
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
@@ -31,7 +34,12 @@ const ImageProperties = ({
     }
     
     setRotation(getRotation(element));
-  }, [element.id, element.originalSize, element.size, element]);
+    
+    // Calculate image size for display
+    if (element.file) {
+      setImageSize(`${(element.file.size / 1024).toFixed(1)} KB`);
+    }
+  }, [element.id, element.originalSize, element.size, element, element.file]);
 
   useEffect(() => {
     // Try to recover image from cache if we have a cache key but no dataUrl
@@ -44,7 +52,7 @@ const ImageProperties = ({
         });
       }
     }
-  }, [element.id, element.cacheKey, element.dataUrl]);
+  }, [element.id, element.cacheKey, element.dataUrl, updateElement]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     updateElement(element.id, {
@@ -54,11 +62,18 @@ const ImageProperties = ({
     });
   };
   
-  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
+    
     const file = e.target.files[0];
-    console.log("ImageProperties - Selected file:", file.name, file.type, file.size);
-    handleImageUpload(element.id, file);
+    setIsUploading(true);
+    
+    try {
+      console.log("ImageProperties - Selected file:", file.name, file.type, file.size);
+      await handleImageUpload(element.id, file);
+    } finally {
+      setIsUploading(false);
+    }
   };
   
   const triggerFileInput = () => {
@@ -103,32 +118,29 @@ const ImageProperties = ({
     handleRotationChange([boundedRotation]);
   };
   
-  useEffect(() => {
-    // Log image data for debugging
-    if (element.type === 'image') {
-      console.log("ImageProperties - Current image data:", {
-        dataUrl: element.dataUrl ? `${element.dataUrl.substring(0, 30)}...` : "missing",
-        dataUrlLength: element.dataUrl?.length || 0,
-        src: element.src,
-        fileExists: !!element.file,
-        fileName: element.file?.name,
-        cacheKey: element.cacheKey,
-        originalSize: element.originalSize
-      });
-    }
-  }, [element]);
-  
-  return <div className="space-y-4">
+  return (
+    <div className="space-y-4">
       <div>
         <Label>Upload Image</Label>
         <div className="mt-2 flex flex-col gap-2">
-          <input type="file" ref={fileInputRef} onChange={handleImageFileSelect} accept="image/*" className="hidden" />
-          <Button variant="outline" onClick={triggerFileInput} className="w-full flex items-center justify-center">
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            onChange={handleImageFileSelect} 
+            accept="image/*" 
+            className="hidden" 
+          />
+          <Button 
+            variant="outline" 
+            onClick={triggerFileInput} 
+            className="w-full flex items-center justify-center"
+            disabled={isUploading}
+          >
             <Upload className="h-4 w-4 mr-2" />
-            {element.file ? "Change Image" : "Choose Image"}
+            {isUploading ? "Processing..." : (element.file ? "Change Image" : "Choose Image")}
           </Button>
           {element.file && <p className="text-xs text-muted-foreground">
-              {element.file.name}
+              {element.file.name} {imageSize && `(${imageSize})`}
           </p>}
           {element.fileMetadata && !element.file && <p className="text-xs text-muted-foreground">
               {element.fileMetadata.name} (duplicated)
@@ -151,17 +163,20 @@ const ImageProperties = ({
         </div>
       </div>
       
-      {(element.dataUrl || element.src) && <div className="mt-4 border rounded-md p-2 bg-background">
+      {(element.dataUrl || element.src) && (
+        <div className="mt-4 border rounded-md p-2 bg-background">
           <img 
             src={element.dataUrl || element.src} 
             alt="Preview" 
             className="w-full h-32 object-contain" 
+            loading="lazy" 
             onError={(e) => {
               console.error("Image failed to load:", element.dataUrl ? "dataUrl exists" : "no dataUrl", element.src);
               e.currentTarget.src = "/placeholder.svg";
             }}
           />
-        </div>}
+        </div>
+      )}
       
       <div className="space-y-4">
         <Label>Rotation</Label>
@@ -189,7 +204,8 @@ const ImageProperties = ({
           </div>
         </div>
       </div>
-    </div>;
+    </div>
+  );
 };
 
 export default ImageProperties;

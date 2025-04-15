@@ -42,8 +42,10 @@ export const getTextStyle = (element: DesignElement): CSSProperties => {
   };
 };
 
-// Gets the appropriate style object for an element
+// Gets the appropriate style object for an element with performance optimizations
 export const getElementStyle = (element: DesignElement, isDragging: boolean): CSSProperties => {
+  // Only include properties that affect layout and visible style
+  // to reduce unnecessary style calculations
   const common: CSSProperties = {
     position: 'absolute',
     left: element.position.x,
@@ -52,6 +54,8 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     transform: element.style?.transform as string,
     cursor: isDragging ? 'grabbing' : 'grab',
     borderRadius: (element.style?.borderRadius as string) || undefined,
+    // Add will-change for elements that will be animated/dragged
+    willChange: isDragging ? 'transform' : 'auto',
   };
   
   const width = element.size?.width;
@@ -117,6 +121,9 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
         outline: element.style?.outline as string,
         overflow: 'hidden',
         backgroundColor: element.style?.backgroundColor as string || 'transparent',
+        // Add properties to optimize rendering
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden', // For Safari support
       };
       
     case 'background':
