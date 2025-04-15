@@ -24,7 +24,7 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
+import { getImageFromCache } from "@/utils/imageUploader";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
