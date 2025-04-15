@@ -3,8 +3,6 @@ import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { KeyRound, Mail, Shield } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { 
   Card,
   CardContent,
@@ -15,290 +13,156 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { 
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger
+} from "@/components/ui/alert-dialog";
+import { Shield, Key, Mail } from "lucide-react";
 
 const AccountSettings = () => {
-  const { user, profile } = useAuth();
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [resetEmailSent, setResetEmailSent] = useState(false);
+  const { user } = useAuth();
+  const [isResetting, setIsResetting] = useState(false);
+  const [email, setEmail] = useState("");
   
-  // Handle password change
-  const handlePasswordChange = async () => {
-    if (!user) return;
-    
-    if (newPassword !== confirmPassword) {
-      toast.error("New passwords don't match.");
-      return;
-    }
-    
-    if (newPassword.length < 8) {
-      toast.error("Password must be at least 8 characters long.");
+  // For changing password
+  const handleResetPassword = async () => {
+    if (!email) {
+      toast.error("Please enter your email address.");
       return;
     }
     
     try {
-      setLoading(true);
+      setIsResetting(true);
       
-      // First verify the current password by signing in
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: user.email || '',
-        password: currentPassword,
-      });
-      
-      if (signInError) {
-        toast.error("Current password is incorrect.");
-        throw signInError;
-      }
-      
-      // Then update the password
-      const { error: updateError } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-      
-      if (updateError) throw updateError;
-      
-      toast.success("Password changed successfully.");
-      
-      // Reset the form
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-      
-    } catch (error) {
-      console.error("Error changing password:", error);
-      toast.error("Failed to change password.");
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Handle password reset via email
-  const handlePasswordResetEmail = async () => {
-    if (!user || !user.email) return;
-    
-    try {
-      setLoading(true);
-      
-      const { error } = await supabase.auth.resetPasswordForEmail(user.email, {
-        redirectTo: `${window.location.origin}/auth/reset-password`,
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/auth/reset-password',
       });
       
       if (error) throw error;
       
-      setResetEmailSent(true);
       toast.success("Password reset link sent to your email.");
-      
-    } catch (error) {
-      console.error("Error sending password reset email:", error);
-      toast.error("Failed to send password reset email.");
+    } catch (error: any) {
+      console.error("Error sending reset password email:", error);
+      toast.error(error.message || "Failed to send reset email. Please try again.");
     } finally {
-      setLoading(false);
+      setIsResetting(false);
     }
   };
   
   return (
-    <div className="space-y-8">
-      <h2 className="text-2xl font-bold">Account Settings</h2>
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Account Settings</h2>
+      </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Shield className="h-5 w-5 mr-2 text-amber-500" />
-            Security Settings
-          </CardTitle>
-          <CardDescription>
-            Manage your account security and password settings
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <h3 className="text-lg font-medium mb-1">Change Password</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Update your password to maintain account security
-              </p>
-              
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button>
-                    <KeyRound className="h-4 w-4 mr-2" />
-                    Change Password
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Change Your Password</DialogTitle>
-                  </DialogHeader>
-                  
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="current-password">Current Password</Label>
-                      <Input
-                        id="current-password"
-                        type="password"
-                        value={currentPassword}
-                        onChange={(e) => setCurrentPassword(e.target.value)}
-                        placeholder="Enter current password"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="new-password">New Password</Label>
-                      <Input
-                        id="new-password"
-                        type="password"
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Enter new password"
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirm New Password</Label>
-                      <Input
-                        id="confirm-password"
-                        type="password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="Confirm new password"
-                      />
-                    </div>
-                    
-                    <div className="text-sm text-gray-500">
-                      <p>Password requirements:</p>
-                      <ul className="list-disc ml-5 mt-1">
-                        <li>At least 8 characters long</li>
-                        <li>Include a mix of letters, numbers and symbols for best security</li>
-                      </ul>
-                    </div>
-                  </div>
-                  
-                  <DialogFooter>
-                    <DialogClose asChild>
-                      <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <Button 
-                      onClick={handlePasswordChange} 
-                      disabled={loading || !currentPassword || !newPassword || !confirmPassword}
-                    >
-                      {loading ? "Changing..." : "Change Password"}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+      <div className="grid md:grid-cols-2 gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Shield className="mr-2 h-5 w-5 text-blue-500" />
+              Admin Account
+            </CardTitle>
+            <CardDescription>
+              Manage your admin account settings and security
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <div className="text-sm">
+                <span className="font-medium">User ID:</span>
+                <span className="ml-2 text-gray-500">{user?.id}</span>
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Email:</span>
+                <span className="ml-2 text-gray-500">{user?.email}</span>
+              </div>
+              <div className="text-sm">
+                <span className="font-medium">Role:</span>
+                <span className="ml-2 bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-xs font-medium">
+                  Admin
+                </span>
+              </div>
             </div>
-            
-            <div className="pt-4 border-t">
-              <h3 className="text-lg font-medium mb-1">Forgot Password</h3>
-              <p className="text-sm text-gray-500 mb-4">
-                Request a password reset link via email
-              </p>
-              
-              <Dialog>
-                <DialogTrigger asChild>
-                  <Button variant="outline">
-                    <Mail className="h-4 w-4 mr-2" />
-                    Send Reset Link
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Reset Password</DialogTitle>
-                  </DialogHeader>
-                  
-                  {resetEmailSent ? (
-                    <div className="py-6 text-center">
-                      <Mail className="h-12 w-12 mx-auto text-primary mb-4" />
-                      <h3 className="text-lg font-medium mb-2">Email Sent</h3>
-                      <p className="text-gray-500 mb-4">
-                        A password reset link has been sent to your email address: <br />
-                        <span className="font-medium">{user?.email}</span>
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        Check your inbox and follow the instructions to reset your password.
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="py-4">
-                      <p className="mb-4">
-                        We'll send a secure password reset link to your email address:
-                        <br />
-                        <span className="font-medium">{user?.email}</span>
-                      </p>
-                      
-                      <div className="text-sm text-gray-500 bg-amber-50 border border-amber-200 rounded-md p-3">
-                        <p className="font-medium text-amber-700 mb-1">Security Note:</p>
-                        <p>
-                          The link will expire in 24 hours and can only be used once.
-                          For security reasons, we recommend not sharing this email with anyone.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                  
-                  <DialogFooter>
-                    <DialogClose asChild>
-                      <Button variant="outline">Close</Button>
-                    </DialogClose>
-                    {!resetEmailSent && (
-                      <Button 
-                        onClick={handlePasswordResetEmail} 
-                        disabled={loading}
-                      >
-                        {loading ? "Sending..." : "Send Reset Link"}
-                      </Button>
-                    )}
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Key className="mr-2 h-5 w-5 text-orange-500" />
+              Password Management
+            </CardTitle>
+            <CardDescription>
+              Reset your password securely
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email">Confirm your email</Label>
+                <div className="flex gap-2">
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder={user?.email || "Enter your email"}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+          <CardFooter>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="outline" className="w-full">
+                  <Mail className="mr-2 h-4 w-4" />
+                  Send Password Reset Email
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reset your password?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    We'll send a secure link to your email that will allow you to reset your password. This link will expire after 1 hour for security.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={isResetting}
+                    onClick={handleResetPassword}
+                  >
+                    {isResetting ? "Sending..." : "Send Reset Link"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardFooter>
+        </Card>
+      </div>
       
-      <Card>
-        <CardHeader>
-          <CardTitle>Account Information</CardTitle>
-          <CardDescription>
-            Your account details and profile information
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-2">
-            <div className="flex justify-between">
-              <span className="text-gray-500">Email</span>
-              <span className="font-medium">{user?.email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Display Name</span>
-              <span className="font-medium">{profile?.display_name || 'Not set'}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Role</span>
-              <span className="font-medium">Admin</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-gray-500">Account Created</span>
-              <span className="font-medium">
-                {user?.created_at 
-                  ? new Date(user.created_at).toLocaleDateString() 
-                  : 'Unknown'}
-              </span>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="mt-6 bg-amber-50 border border-amber-200 p-4 rounded-md">
+        <h3 className="text-amber-800 font-medium mb-2 flex items-center">
+          <Shield className="mr-2 h-5 w-5" />
+          Security Information
+        </h3>
+        <ul className="list-disc list-inside space-y-1 text-sm text-amber-700">
+          <li>Password reset links are sent to your verified email address</li>
+          <li>For security reasons, reset links expire after 1 hour</li>
+          <li>Your new password must be at least 8 characters long</li>
+          <li>Use a combination of letters, numbers, and special characters</li>
+          <li>Never share your admin credentials with others</li>
+        </ul>
+      </div>
     </div>
   );
 };

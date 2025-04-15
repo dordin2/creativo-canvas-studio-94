@@ -284,9 +284,50 @@ const LibraryManager = () => {
                 Upload Element
               </Button>
             </DialogTrigger>
-            {/* Dialog content is duplicated, but it's easier to maintain this way */}
             <DialogContent className="sm:max-w-md">
-              {/* Same dialog content as above */}
+              <DialogHeader>
+                <DialogTitle>Upload Library Element</DialogTitle>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="file2">Element Image</Label>
+                  <Input
+                    id="file2"
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileChange}
+                  />
+                  {selectedFile && (
+                    <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+                      <FileImage className="h-4 w-4" />
+                      {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="name2">Element Name</Label>
+                  <Input
+                    id="name2"
+                    value={fileName}
+                    onChange={(e) => setFileName(e.target.value)}
+                    placeholder="Enter element name"
+                  />
+                </div>
+              </div>
+              
+              <DialogFooter>
+                <DialogClose asChild>
+                  <Button variant="outline">Cancel</Button>
+                </DialogClose>
+                <Button 
+                  onClick={handleUpload} 
+                  disabled={uploading || !selectedFile || !fileName.trim()}
+                >
+                  {uploading ? "Uploading..." : "Upload"}
+                </Button>
+              </DialogFooter>
             </DialogContent>
           </Dialog>
         </div>
