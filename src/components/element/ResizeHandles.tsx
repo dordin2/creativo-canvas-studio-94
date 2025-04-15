@@ -80,12 +80,20 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
           // Prevent scrolling when using handles on touch devices
           e.preventDefault();
           const touch = e.touches[0];
-          const mouseEvent = new MouseEvent('mousedown', {
+          // Create a React compatible MouseEvent using the properties from TouchEvent
+          // Use the correct React.MouseEvent type instead of native MouseEvent
+          const syntheticEvent = {
             clientX: touch.clientX,
             clientY: touch.clientY,
+            preventDefault: () => {},
+            stopPropagation: () => {},
+            target: e.target,
+            currentTarget: e.currentTarget,
             bubbles: true,
-          });
-          onResizeStart(mouseEvent, direction);
+            type: 'mousedown',
+          } as React.MouseEvent;
+          
+          onResizeStart(syntheticEvent, direction);
         }}
       />
     );
