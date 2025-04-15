@@ -73,6 +73,53 @@ export function LibraryElementsList() {
     fetchLibraryElements();
   }, [language]);
   
+  // Helper function to preload image and get dimensions
+  const preloadImage = (url: string): Promise<{ width: number; height: number; dataUrl: string }> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = async () => {
+        try {
+          // Get image as blob
+          const response = await fetch(url);
+          if (!response.ok) {
+            throw new Error(`Failed to fetch image: ${response.statusText}`);
+          }
+          
+          const blob = await response.blob();
+          
+          // Create a dataURL
+          const reader = new FileReader();
+          reader.readAsDataURL(blob);
+          
+          reader.onload = (e) => {
+            if (!e.target?.result) {
+              reject(new Error("Failed to create dataURL"));
+              return;
+            }
+            
+            resolve({
+              width: img.naturalWidth, 
+              height: img.naturalHeight,
+              dataUrl: e.target.result as string
+            });
+          };
+          
+          reader.onerror = () => {
+            reject(new Error("Failed to read image data"));
+          };
+        } catch (error) {
+          reject(error);
+        }
+      };
+      
+      img.onerror = () => {
+        reject(new Error(`Failed to load image from ${url}`));
+      };
+      
+      img.src = url;
+    });
+  };
+  
   const handleAddElementToCanvas = async (element: LibraryElement) => {
     if (!element.imageUrl) {
       toast.error(language === 'en' 
@@ -84,44 +131,57 @@ export function LibraryElementsList() {
     try {
       setProcessingElement(element.id);
       
+      // Preload image to get dimensions and dataUrl
+      const { width, height, dataUrl } = await preloadImage(element.imageUrl);
+      
+      // Create a File object (needed for processing)
       const response = await fetch(element.imageUrl);
       if (!response.ok) {
         throw new Error(`Failed to fetch image: ${response.statusText}`);
       }
       
       const blob = await response.blob();
+      const file = new File([blob], element.name || "library-image.png", { 
+        type: blob.type || "image/png" 
+      });
       
-      // Create a dataURL from the blob to display immediately
-      const reader = new FileReader();
-      reader.readAsDataURL(blob);
+      // Calculate appropriate size for display
+      const maxDimension = 300; // Reasonable size for initial display
+      let displayWidth = width;
+      let displayHeight = height;
       
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
-        
-        // Create a File object as well (needed for processing)
-        const file = new File([blob], element.name || "library-image.png", { 
-          type: blob.type || "image/png" 
-        });
-        
-        // Add the element with the dataUrl already set so it displays immediately
-        const newElement = addElement('image', {
-          imageName: element.name,
-          alt: element.name,
-          dataUrl: dataUrl, // Add the dataUrl immediately
-          file: file
-        });
-        
-        // Process the image in the background for optimization
-        handleImageUpload(newElement.id, file);
-        
-        toast.success(language === 'en' 
-          ? `Added ${element.name} to canvas` 
-          : `${element.name} נוסף לקנבס`);
-      };
+      if (width > maxDimension || height > maxDimension) {
+        if (width > height) {
+          displayWidth = maxDimension;
+          displayHeight = Math.round(height * (maxDimension / width));
+        } else {
+          displayHeight = maxDimension;
+          displayWidth = Math.round(width * (maxDimension / height));
+        }
+      }
       
-      reader.onerror = () => {
-        throw new Error('Failed to read image data');
-      };
+      // Add the element with all information already available
+      const newElement = addElement('image', {
+        imageName: element.name,
+        alt: element.name,
+        dataUrl: dataUrl,
+        file: file,
+        size: {
+          width: displayWidth,
+          height: displayHeight
+        },
+        originalSize: {
+          width: width,
+          height: height
+        }
+      });
+      
+      // Process the image in the background for optimization
+      handleImageUpload(newElement.id, file);
+      
+      toast.success(language === 'en' 
+        ? `Added ${element.name} to canvas` 
+        : `${element.name} נוסף לקנבס`);
       
     } catch (error) {
       console.error("Error adding element to canvas:", error);
