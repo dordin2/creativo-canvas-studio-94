@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -15,7 +16,7 @@ import {
   SlidersVertical,
   Globe
 } from "lucide-react";
-import { useDesignState } from "@/context/DesignState";
+import { useDesignState } from "@/context/DesignContext"; // Corrected import
 import { useLanguage } from "@/context/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { LibraryElementsList } from "./LibraryElementsList";
