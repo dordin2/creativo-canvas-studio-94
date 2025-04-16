@@ -1,7 +1,8 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-sonner-toast";
+import { toast } from "sonner";
 import { Canvas } from "@/types/designTypes";
 import { useAuth } from "@/context/AuthContext";
 import { Database } from "@/types/database";
@@ -53,6 +54,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       }
       
       if (projectData) {
+        // Check if this is a private project and the user has access
         if (projectData.user_id && projectData.is_public === false && user?.id !== projectData.user_id) {
           toast.error("You don't have access to this project");
           navigate('/');
@@ -62,6 +64,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         setProjectName(projectData.name);
         setIsPublic(projectData.is_public || false);
       } else {
+        // If project not found, redirect to projects page
         toast.error('Project not found');
         navigate('/');
       }
@@ -102,6 +105,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     if (!projectId) return;
     
     try {
+      // Update the project's updated_at timestamp
       const { error: projectError } = await supabase
         .from('projects')
         .update({ updated_at: new Date().toISOString() })
@@ -111,6 +115,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         throw projectError;
       }
       
+      // Check if canvas data already exists for this project
       const { data: existingCanvas, error: fetchError } = await supabase
         .from('project_canvases')
         .select('id')
@@ -121,12 +126,14 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         throw fetchError;
       }
       
+      // We need to serialize and stringify the canvas data properly
       const canvasData = {
         canvases: JSON.parse(JSON.stringify(canvases)),
         activeCanvasIndex
       };
       
       if (existingCanvas) {
+        // Update existing canvas data
         const { error: updateError } = await supabase
           .from('project_canvases')
           .update({ 
@@ -139,6 +146,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
           throw updateError;
         }
       } else {
+        // Create new canvas data
         const { error: insertError } = await supabase
           .from('project_canvases')
           .insert([{ 

@@ -1,4 +1,3 @@
-
 import * as React from "react"
 
 import type {
@@ -7,7 +6,7 @@ import type {
 } from "@/components/ui/toast"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 3000 // Reduced from 1000000
+const TOAST_REMOVE_DELAY = 1000000
 
 type ToasterToast = ToastProps & {
   id: string
@@ -91,6 +90,8 @@ export const reducer = (state: State, action: Action): State => {
     case "DISMISS_TOAST": {
       const { toastId } = action
 
+      // ! Side effects ! - This could be extracted into a dismissToast() action,
+      // but I'll keep it here for simplicity
       if (toastId) {
         addToRemoveQueue(toastId)
       } else {
@@ -130,14 +131,6 @@ const listeners: Array<(state: State) => void> = []
 let memoryState: State = { toasts: [] }
 
 function dispatch(action: Action) {
-  // For ADD_TOAST actions, filter out non-Project Saved and non-critical notifications
-  if (action.type === "ADD_TOAST") {
-    // Only allow Project Saved toast or toasts with variant (critical notifications)
-    if (action.toast.title !== "Project Saved" && !action.toast.variant) {
-      return; // Don't dispatch the action for other toasts
-    }
-  }
-
   memoryState = reducer(memoryState, action)
   listeners.forEach((listener) => {
     listener(memoryState)
@@ -147,11 +140,6 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
-  // Only allow project save or critical notifications
-  if (props.title !== "Project Saved" && !props.variant) {
-    return { id: '', dismiss: () => {}, update: () => {} };
-  }
-
   const id = genId()
 
   const update = (props: ToasterToast) =>
