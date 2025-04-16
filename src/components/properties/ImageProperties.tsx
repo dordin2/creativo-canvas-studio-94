@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -28,7 +27,6 @@ const ImageProperties = ({
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
 
-  // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
     if (element.originalSize && element.size) {
       const currentScale = Math.round((element.size.width / element.originalSize.width) * 100);
@@ -39,7 +37,6 @@ const ImageProperties = ({
   }, [element.id, element.originalSize, element.size, element]);
 
   useEffect(() => {
-    // Try to recover image from cache if we have a cache key but no dataUrl
     const loadImages = async () => {
       if (element.cacheKey) {
         if (!imageSrc) {
@@ -62,7 +59,6 @@ const ImageProperties = ({
     
     loadImages();
     
-    // Calculate image stats for display
     if (imageSrc || element.src) {
       const size = imageSrc ? 
         estimateDataUrlSize(imageSrc) :
@@ -105,7 +101,6 @@ const ImageProperties = ({
     const file = e.target.files[0];
     console.log("ImageProperties - Selected file:", file.name, file.type, file.size);
     
-    // Reset the image loaded state before loading new image
     setImageLoaded(false);
     
     handleImageUpload(element.id, file);
@@ -131,7 +126,7 @@ const ImageProperties = ({
   };
   
   const handleRotationChange = (value: number[]) => {
-    if (isGameMode) return; // No rotation in game mode
+    if (isGameMode) return;
     
     const newRotation = Math.round(value[0]);
     setRotation(newRotation);
@@ -143,11 +138,9 @@ const ImageProperties = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isGameMode) return;
     
-    // Parse input and handle non-numeric input
     const inputValue = e.target.value;
     const newRotation = parseInt(inputValue) || 0;
     
-    // Keep rotation between -360 and 360 degrees
     const boundedRotation = Math.max(-360, Math.min(360, newRotation));
     
     handleRotationChange([boundedRotation]);
@@ -158,7 +151,6 @@ const ImageProperties = ({
   };
   
   const renderImagePreview = () => {
-    // If we have a thumbnailSrc, use it until the full image is loaded
     const mainSrc = imageSrc || element.src;
     
     if (!mainSrc) {

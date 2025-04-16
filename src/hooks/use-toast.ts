@@ -130,6 +130,14 @@ const listeners: Array<(state: State) => void> = []
 let memoryState: State = { toasts: [] }
 
 function dispatch(action: Action) {
+  // For ADD_TOAST actions, filter out non-Project Saved and non-critical notifications
+  if (action.type === "ADD_TOAST") {
+    // Only allow Project Saved toast or toasts with variant (critical notifications)
+    if (action.toast.title !== "Project Saved" && !action.toast.variant) {
+      return; // Don't dispatch the action for other toasts
+    }
+  }
+
   memoryState = reducer(memoryState, action)
   listeners.forEach((listener) => {
     listener(memoryState)

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -7,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Upload, Plus, Trash2, FileCheck, ArrowUp, ArrowDown } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-sonner-toast";
 
 const PLACEHOLDER_IMAGES = [
   "/placeholder.svg",
@@ -47,7 +46,6 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
   const handleAddImage = () => {
     if (selectedImage && !localPuzzleConfig.images.includes(selectedImage)) {
       const newImages = [...localPuzzleConfig.images, selectedImage];
-      // Default solution is sequential, adding a new image to the end of the solution
       const newSolution = [...localPuzzleConfig.solution];
       newSolution.push(newImages.length - 1);
       
@@ -64,10 +62,9 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
     const newImages = [...localPuzzleConfig.images];
     newImages.splice(index, 1);
     
-    // Update solution indices to maintain valid references
     const newSolution = localPuzzleConfig.solution
-      .filter(solutionValue => solutionValue !== index) // Remove the deleted image from solution
-      .map(solutionValue => solutionValue > index ? solutionValue - 1 : solutionValue); // Adjust indices
+      .filter(solutionValue => solutionValue !== index)
+      .map(solutionValue => solutionValue > index ? solutionValue - 1 : solutionValue);
     
     setLocalPuzzleConfig(prev => ({
       ...prev,
@@ -79,11 +76,10 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
   };
   
   const handleMoveImageUp = (index: number) => {
-    if (index === 0) return; // Already at the top
+    if (index === 0) return;
     
     const newSolution = [...localPuzzleConfig.solution];
     
-    // Swap the images in the solution array
     [newSolution[index], newSolution[index - 1]] = [newSolution[index - 1], newSolution[index]];
     
     setLocalPuzzleConfig(prev => ({
@@ -93,11 +89,10 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
   };
   
   const handleMoveImageDown = (index: number) => {
-    if (index === localPuzzleConfig.solution.length - 1) return; // Already at the bottom
+    if (index === localPuzzleConfig.solution.length - 1) return;
     
     const newSolution = [...localPuzzleConfig.solution];
     
-    // Swap the images in the solution array
     [newSolution[index], newSolution[index + 1]] = [newSolution[index + 1], newSolution[index]];
     
     setLocalPuzzleConfig(prev => ({
@@ -128,7 +123,6 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
           images: newImages,
           solution: newSolution
         }));
-        toast.success(t('toast.success.upload'));
       }
     };
     reader.onerror = () => {
@@ -163,8 +157,6 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
     if (onUpdateConfig) {
       onUpdateConfig(localPuzzleConfig);
     }
-    
-    toast.success(t('toast.success.config'));
   };
   
   const createPuzzleElement = () => {
@@ -179,7 +171,6 @@ const ClickSequencePuzzleProperties: React.FC<ClickSequencePuzzlePropertiesProps
     }
     
     addElement('clickSequencePuzzle', { clickSequencePuzzleConfig: localPuzzleConfig });
-    toast.success(t('toast.success.added'));
   };
   
   return (
