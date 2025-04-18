@@ -117,6 +117,36 @@ const DraggableElement = ({ element, isActive, children }: {
     setStartPos({ x: e.clientX, y: e.clientY });
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (element.layer === 0) return;
+    
+    if (isImageElement && isGameMode) {
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
+    }
+    
+    if (isGameMode) {
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
+    }
+    
+    setActiveElement(element);
+    
+    if (isEditing || isInteractiveMode) return;
+    
+    if (!isSequencePuzzleElement) {
+      startDrag(e, element.position);
+      setIsDragging(true);
+    }
+    
+    const touch = e.touches[0];
+    setStartPos({ x: touch.clientX, y: touch.clientY });
+  };
+
   const handleTextDoubleClick = (e: React.MouseEvent) => {
     if (isGameMode) {
       return;
@@ -588,6 +618,7 @@ const DraggableElement = ({ element, isActive, children }: {
       className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
       style={combinedStyle}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
       draggable={isGameMode && isImageElement ? false : undefined}
