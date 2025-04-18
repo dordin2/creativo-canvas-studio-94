@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { useDesignState } from "@/context/DesignState";
+import { useDesignState } from "@/context/DesignContext";
+import { useToast } from "@/hooks/use-toast";
 import { 
   Layers, 
   Eye, 
@@ -50,6 +51,8 @@ const LayersList = () => {
     setCanvases
   } = useDesignState();
   
+  const { toast } = useToast();
+
   const [editingNameId, setEditingNameId] = useState<string | null>(null);
   const [newNameValue, setNewNameValue] = useState<string>('');
   const [showMoveDialog, setShowMoveDialog] = useState<boolean>(false);
@@ -94,19 +97,35 @@ const LayersList = () => {
   };
 
   const handleSetAsBackground = (element: DesignElement) => {
-    if (element.type !== 'image' || !element.dataUrl) return;
+    if (element.type !== 'image' || !element.dataUrl) {
+      toast({
+        title: "Cannot set background",
+        description: "Only images can be set as background",
+        variant: "destructive"
+      });
+      return;
+    }
     
-    const backgroundElement = addElement('background', {
+    const currentCanvas = canvases[activeCanvasIndex];
+    const backgroundElements = currentCanvas.elements.filter(el => el.type === 'background');
+    backgroundElements.forEach(bg => removeElement(bg.id));
+    
+    addElement('background', {
       style: {
         backgroundImage: `url(${element.dataUrl})`,
         backgroundSize: 'cover',
-        backgroundPosition: 'center'
+        backgroundPosition: 'center',
+        width: '100%',
+        height: '100%'
       }
     });
     
     removeElement(element.id);
     
-    toast.success('Image set as background');
+    toast({
+      title: "Background Updated",
+      description: "Image set as canvas background",
+    });
   };
 
   const handleMoveToCanvas = () => {
