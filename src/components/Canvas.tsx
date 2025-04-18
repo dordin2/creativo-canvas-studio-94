@@ -112,18 +112,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     }
   };
   
-  const handleZoomIn = () => {
-    setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
-  };
-  
-  const handleZoomOut = () => {
-    setZoomLevel(prevZoom => Math.max(prevZoom - 0.1, 0.5));
-  };
-  
-  const handleResetZoom = () => {
-    setZoomLevel(1);
-  };
-  
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === containerRef.current && !isGameMode) {
       setActiveElement(null);
