@@ -4,9 +4,9 @@ import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
-import { Database } from '@/images/placeholder.svg';
 import { toast } from 'sonner';
 import { Library } from 'lucide-react';
+import { Database } from '@/types/database';
 
 interface LibraryElement {
   id: string;
