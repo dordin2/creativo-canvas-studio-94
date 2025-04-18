@@ -1,3 +1,4 @@
+
 import { CSSProperties } from "react";
 import { DesignElement } from "@/context/DesignContext";
 
@@ -55,6 +56,9 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
   const width = element.size?.width ? Math.round(element.size.width) : undefined;
   const height = element.size?.height ? Math.round(element.size.height) : undefined;
   
+  // Preserve original background color, defaulting to transparent
+  const backgroundColor = element.style?.backgroundColor ? element.style.backgroundColor as string : 'transparent';
+  
   const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
     position: 'absolute',
@@ -72,7 +76,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     willChange: isDragging ? 'transform' : 'auto',
     transition: isDragging ? 'none' : 'all 0.1s cubic-bezier(0.4, 0, 0.2, 1)',
     boxSizing: 'border-box',
-    backgroundColor: (element.style?.backgroundColor as string) || 'transparent'
+    backgroundColor
   };
 
   if (isImageElement) {

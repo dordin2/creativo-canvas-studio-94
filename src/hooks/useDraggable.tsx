@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -178,11 +179,15 @@ export const useDraggable = (elementId: string) => {
     elementInitialPos.current = initialPosition;
     isDragStarted.current = false;
     
+    // Make sure to preserve the original background color when setting willChange
     if (currentElement) {
+      const originalBgColor = currentElement.style?.backgroundColor || 'transparent';
+      
       updateElementWithoutHistory(elementId, {
         style: {
           ...currentElement.style,
           willChange: 'transform',
+          backgroundColor: originalBgColor
         }
       });
     }
