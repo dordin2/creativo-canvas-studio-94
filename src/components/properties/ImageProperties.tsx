@@ -222,6 +222,36 @@ const ImageProperties = ({
     );
   };
   
+  const handleSetAsBackground = () => {
+    if (element.type !== 'image' || !element.dataUrl) {
+      toast.error('Cannot set background - only images can be set as background');
+      return;
+    }
+    
+    const currentCanvas = canvases[activeCanvasIndex];
+    const backgroundElements = currentCanvas.elements.filter(el => el.type === 'background');
+    backgroundElements.forEach(bg => removeElement(bg.id));
+    
+    addElement('background', {
+      style: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        backgroundImage: `url(${element.dataUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+        zIndex: 0
+      }
+    });
+    
+    removeElement(element.id);
+    
+    toast.success('Image set as canvas background');
+  };
+
   return <div className="space-y-4">
       <div>
         <Label>Upload Image</Label>

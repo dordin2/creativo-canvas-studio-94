@@ -112,11 +112,16 @@ const LayersList = () => {
     
     addElement('background', {
       style: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
         backgroundImage: `url(${element.dataUrl})`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
-        width: '100%',
-        height: '100%'
+        backgroundRepeat: 'no-repeat',
+        zIndex: 0
       }
     });
     
