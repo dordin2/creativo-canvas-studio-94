@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo, Layers, Menu, Globe, Lock, Save } from "lucide-react";
+import { Download, Undo, Redo, Layers, Menu, Globe, Lock, Save } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminGallery } from './admin/AdminGallery';
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { LibraryModal } from './library/LibraryModal';
+
 const Header = () => {
   const {
     canvasRef,
@@ -169,10 +170,6 @@ const Header = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <Button variant="outline" className="gap-2 hover:bg-gray-50" onClick={handleShare}>
-            <Share className="h-4 w-4" />
-            <span>{t('app.share')}</span>
-          </Button>
           <Button className="gap-2 bg-gradient-to-r from-canvas-purple to-canvas-indigo hover:from-canvas-purple-dark hover:to-canvas-indigo hover:shadow-md transition-shadow button-glow" onClick={handleDownload}>
             <Download className="h-4 w-4" />
             <span>{t('app.download')}</span>
@@ -181,4 +178,5 @@ const Header = () => {
       </div>
     </header>;
 };
+
 export default Header;
