@@ -72,10 +72,11 @@ export const LibraryModal = () => {
     try {
       console.log("Adding image from gallery:", element.image_path);
       
-      // Add the image element to the scene with the src property set directly
+      // Add the image element to the scene with both src and name
       addElement('image', {
         src: element.image_path,
-        name: element.name,
+        name: element.name || 'Gallery Image',
+        dataUrl: element.image_path, // Also pass as dataUrl for compatibility
       });
       
       // Close the modal after adding

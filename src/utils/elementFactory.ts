@@ -104,7 +104,6 @@ export const createNewElement = (
       
     case 'image':
       // If props includes size, use that; otherwise, use default
-      // Props will include size for uploaded images that have been scaled
       const initialSize = props?.size || { width: 200, height: 150 };
       
       return {
@@ -112,9 +111,12 @@ export const createNewElement = (
         type,
         position,
         size: initialSize,
-        originalSize: props?.originalSize || initialSize, // Store original dimensions
+        originalSize: props?.originalSize || initialSize,
+        src: props?.src,
         style: { transform: 'rotate(0deg)' },
-        layer
+        layer,
+        dataUrl: props?.dataUrl,
+        thumbnailDataUrl: props?.thumbnailDataUrl
       };
       
     case 'background':
@@ -125,7 +127,7 @@ export const createNewElement = (
         style: props?.gradient 
           ? { background: props.gradient } 
           : { backgroundColor: props?.color || '#FFFFFF' },
-        layer: 0 // Background is always at layer 0
+        layer: 0
       };
 
     case 'puzzle':
@@ -170,7 +172,7 @@ export const createNewElement = (
         type,
         position,
         size: { width: 350, height: 150 },
-        style: { backgroundColor: '#E8F5E9', borderRadius: '8px', transform: 'rotate(0deg)' }, // Green background to differentiate
+        style: { backgroundColor: '#E8F5E9', borderRadius: '8px', transform: 'rotate(0deg)' },
         layer,
         clickSequencePuzzleConfig: props?.clickSequencePuzzleConfig || {
           name: props?.name || 'Click Sequence Puzzle',
@@ -198,7 +200,7 @@ export const createNewElement = (
           height: orientation === 'horizontal' ? 150 : 300 
         },
         style: { 
-          backgroundColor: '#F0F9FF', // Light blue background
+          backgroundColor: '#F0F9FF',
           borderRadius: '8px', 
           transform: 'rotate(0deg)' 
         },
