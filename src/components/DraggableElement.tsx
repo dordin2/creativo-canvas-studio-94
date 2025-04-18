@@ -545,7 +545,9 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     ...elementStyle,
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
-    cursor: isInteractionMode ? 'pointer' : 'move',
+    cursor: isInteractionMode ? 'pointer' : 
+           isGameMode ? (hasInteraction ? 'pointer' : 'default') :
+           isDragging ? 'grabbing' : 'grab',
     pointerEvents: element.isHidden ? 'none' : 'auto',
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,

@@ -176,7 +176,7 @@
   }
   
   .canvas-element {
-    @apply cursor-move transition-transform duration-150 relative shadow-element hover:shadow-glow;
+    @apply transition-transform duration-150 relative shadow-element hover:shadow-glow;
     will-change: transform, left, top;
     touch-action: none;
     pointer-events: auto !important;
