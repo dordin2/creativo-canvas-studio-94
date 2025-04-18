@@ -85,8 +85,9 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     if (e.button !== 0) return;
     e.stopPropagation();
     
+    setActiveElement(element);
+    
     if (isInteractionMode) {
-      setActiveElement(element);
       return;
     }
     
@@ -105,8 +106,6 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
       }
       return;
     }
-    
-    setActiveElement(element);
     
     if (isEditing) return;
     
