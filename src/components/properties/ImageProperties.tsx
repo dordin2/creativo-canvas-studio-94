@@ -8,6 +8,7 @@ import { Upload, Image as ImageIcon } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { getImageFromCache, estimateDataUrlSize } from "@/utils/imageUploader";
 import { getRotation } from "@/utils/elementStyles";
+import { toast } from "sonner";
 
 const ImageProperties = ({
   element
@@ -17,13 +18,17 @@ const ImageProperties = ({
   const {
     updateElement,
     handleImageUpload,
-    isGameMode
+    isGameMode,
+    canvases,
+    activeCanvasIndex,
+    removeElement,
+    addElement
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState<number>(100);
   const [rotation, setRotation] = useState(getRotation(element));
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
+  const [imageStats, setImageStats<{size: string, dimensions: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
@@ -332,6 +337,16 @@ const ImageProperties = ({
             <span className="text-sm">degrees</span>
           </div>
         </div>
+      </div>
+      
+      <div className="mt-4">
+        <Button 
+          onClick={handleSetAsBackground}
+          variant="outline"
+          className="w-full"
+        >
+          Set as Background
+        </Button>
       </div>
     </div>;
 };
