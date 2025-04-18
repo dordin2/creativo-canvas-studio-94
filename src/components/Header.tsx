@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
+import { Download, Share, Undo, Redo, Layers, Menu, Globe, Lock, Save } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -15,6 +15,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminGallery } from './admin/AdminGallery';
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { LibraryModal } from './library/LibraryModal';
+
 const Header = () => {
   const {
     canvasRef,
@@ -35,6 +36,8 @@ const Header = () => {
     profile
   } = useAuth();
   const isAdmin = profile?.roles?.includes('admin');
+  const isPublic = profile?.isPublic;
+
   const handleDownload = () => {
     if (!canvasRef) return;
     try {
@@ -69,9 +72,19 @@ const Header = () => {
       toast.error("Failed to download design. Please try again.");
     }
   };
+
   const handleShare = () => {
     toast.info(t('toast.info.share'));
   };
+
+  const handleSaveProject = () => {
+    // Implement save project logic here
+  };
+
+  const toggleProjectVisibility = () => {
+    // Implement toggle project visibility logic here
+  };
+
   if (isMobile) {
     return <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <div className="flex items-center">
@@ -79,6 +92,19 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handleSaveProject} className="aspect-square">
+            <Save className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={handleShare} className="aspect-square">
+            <Share className="h-5 w-5" />
+          </Button>
+          <Button variant="ghost" size="icon" onClick={toggleProjectVisibility} className="aspect-square">
+            {isPublic ? (
+              <Globe className="h-5 w-5 text-green-500" />
+            ) : (
+              <Lock className="h-5 w-5 text-red-500" />
+            )}
+          </Button>
           <GameModeToggle />
           <InteractiveModeToggle />
           <Drawer>
@@ -99,8 +125,6 @@ const Header = () => {
                     <Redo className="h-4 w-4 mr-2" />
                     {t('app.redo')}
                   </Button>
-                  
-                  
                 </div>
                 
                 <div className="pt-2">
@@ -120,6 +144,7 @@ const Header = () => {
         </div>
       </header>;
   }
+
   return <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center gap-3">
         <div className="font-bold text-xl bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
@@ -168,4 +193,5 @@ const Header = () => {
       </div>
     </header>;
 };
+
 export default Header;
