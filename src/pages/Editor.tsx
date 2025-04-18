@@ -18,6 +18,7 @@ import { PaymentButton } from "@/components/PaymentButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileSidebar from "@/components/MobileSidebar";
 import MobileProperties from "@/components/MobileProperties";
+import { LibraryModal } from "@/components/library/LibraryModal";
 import { 
   Drawer,
   DrawerContent,
@@ -169,6 +170,7 @@ const Editor = () => {
             <h1 className="text-lg font-semibold text-canvas-purple truncate max-w-[160px]">{projectName}</h1>
           </div>
           <div className="flex gap-2">
+            <LibraryModal />
             <PaymentButton projectId={projectId} />
             
             <Drawer>
@@ -327,6 +329,7 @@ const Editor = () => {
             <h1 className="text-xl font-semibold text-canvas-purple">{projectName}</h1>
           </div>
           <div className="flex gap-2">
+            <LibraryModal />
             <PaymentButton projectId={projectId} />
             <Button 
               onClick={toggleProjectVisibility}
