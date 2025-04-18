@@ -26,6 +26,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import FloatingElementsButton from "@/components/FloatingElementsButton";
+import MobileImageControls from "@/components/MobileImageControls";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +45,7 @@ const Editor = () => {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
   const isAdmin = true; // Assuming isAdmin is true for demonstration purposes
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     if (!projectId) {
@@ -59,6 +61,22 @@ const Editor = () => {
       setShowMobileProperties(true);
     }
   }, [activeElement, isMobile]);
+
+  useEffect(() => {
+    const updateCanvasSize = () => {
+      const canvas = document.querySelector('.canvas-container');
+      if (canvas) {
+        setCanvasSize({
+          width: canvas.clientWidth,
+          height: canvas.clientHeight
+        });
+      }
+    };
+
+    updateCanvasSize();
+    window.addEventListener('resize', updateCanvasSize);
+    return () => window.removeEventListener('resize', updateCanvasSize);
+  }, []);
 
   const loadProjectData = async () => {
     try {
@@ -232,61 +250,68 @@ const Editor = () => {
           </div>
         </div>
         
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30">
-          <Drawer>
-            <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="aspect-square">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Add Elements" 
-                  className="h-6 w-6"
-                />
-                <span className="sr-only">Add Elements</span>
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="px-4 pb-6">
-              <div className="mt-2">
-                <MobileSidebar 
-                  isOpen={showMobileSidebar} 
-                  onClose={() => setShowMobileSidebar(false)} 
-                />
-              </div>
-            </DrawerContent>
-          </Drawer>
-          
-          <Button variant="ghost" size="icon" className="aspect-square" onClick={toggleGameMode}>
-            <img 
-              src="/placeholder.svg" 
-              alt="Preview Game" 
-              className="h-6 w-6"
-            />
-            <span className="sr-only">Preview Game</span>
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="aspect-square" 
-            onClick={handleSaveProject}
-          >
-            <Save className="h-6 w-6 text-canvas-purple" />
-            <span className="sr-only">Save Project</span>
-          </Button>
-          
-          {activeElement && (
+        {activeElement?.type === 'image' ? (
+          <MobileImageControls 
+            element={activeElement} 
+            canvasSize={canvasSize}
+          />
+        ) : (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30">
             <Drawer>
               <DrawerTrigger asChild>
                 <Button variant="ghost" size="icon" className="aspect-square">
-                  <Pencil className="h-6 w-6" />
-                  <span className="sr-only">Edit Properties</span>
+                  <img 
+                    src="/placeholder.svg" 
+                    alt="Add Elements" 
+                    className="h-6 w-6"
+                  />
+                  <span className="sr-only">Add Elements</span>
                 </Button>
               </DrawerTrigger>
-              <DrawerContent className="px-0 pb-4">
-                <MobileProperties />
+              <DrawerContent className="px-4 pb-6">
+                <div className="mt-2">
+                  <MobileSidebar 
+                    isOpen={showMobileSidebar} 
+                    onClose={() => setShowMobileSidebar(false)} 
+                  />
+                </div>
               </DrawerContent>
             </Drawer>
-          )}
-        </div>
+            
+            <Button variant="ghost" size="icon" className="aspect-square" onClick={toggleGameMode}>
+              <img 
+                src="/placeholder.svg" 
+                alt="Preview Game" 
+                className="h-6 w-6"
+              />
+              <span className="sr-only">Preview Game</span>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="aspect-square" 
+              onClick={handleSaveProject}
+            >
+              <Save className="h-6 w-6 text-canvas-purple" />
+              <span className="sr-only">Save Project</span>
+            </Button>
+            
+            {activeElement && (
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button variant="ghost" size="icon" className="aspect-square">
+                    <Pencil className="h-6 w-6" />
+                    <span className="sr-only">Edit Properties</span>
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className="px-0 pb-4">
+                  <MobileProperties />
+                </DrawerContent>
+              </Drawer>
+            )}
+          </div>
+        )}
         <FloatingElementsButton />
       </div>
     );
