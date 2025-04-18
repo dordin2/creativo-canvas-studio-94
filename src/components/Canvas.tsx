@@ -398,8 +398,16 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full relative overflow-auto">
-      <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
-        <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''} min-h-fit`} 
+      <div 
+        className={`flex-1 flex items-center justify-center 
+          ${isGameMode ? 'game-mode-workspace p-0 m-0 overflow-auto' : 'canvas-workspace p-4'}`}
+        style={{ 
+          touchAction: 'pan-x pan-y', 
+          WebkitOverflowScrolling: 'touch' 
+        }}
+      >
+        <div 
+          className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''} min-h-fit`} 
           style={{ 
             transform: `scale(${displayZoomLevel})`, 
             transformOrigin: 'center center',
@@ -411,8 +419,9 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             width: 'fit-content',
             height: 'fit-content',
             zIndex: 1,
-            padding: isMobile ? '20px' : '0'
-          }}>
+            padding: isMobileView ? '20px' : '0'
+          }}
+        >
           <div
             ref={containerRef}
             className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`}
