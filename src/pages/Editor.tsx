@@ -41,6 +41,7 @@ const Editor = () => {
   const isMobile = useIsMobile();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
+  const isAdmin = true; // Assuming isAdmin is true for demonstration purposes
 
   useEffect(() => {
     if (!projectId) {
@@ -170,6 +171,7 @@ const Editor = () => {
             <h1 className="text-lg font-semibold text-canvas-purple truncate max-w-[160px]">{projectName}</h1>
           </div>
           <div className="flex gap-2">
+            {isAdmin && <AdminGallery />}
             <LibraryModal />
             <PaymentButton projectId={projectId} />
             
@@ -329,6 +331,7 @@ const Editor = () => {
             <h1 className="text-xl font-semibold text-canvas-purple">{projectName}</h1>
           </div>
           <div className="flex gap-2">
+            {isAdmin && <AdminGallery />}
             <LibraryModal />
             <PaymentButton projectId={projectId} />
             <Button 
