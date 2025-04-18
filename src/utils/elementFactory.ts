@@ -6,8 +6,8 @@ export const getDefaultPosition = (canvasRef: HTMLDivElement | null, elementSize
   if (!canvasRef) return { x: 100, y: 100 };
   
   return {
-    x: (canvasRef.clientWidth / 2) - (elementSize.width / 2),
-    y: (canvasRef.clientHeight / 2) - (elementSize.height / 2)
+    x: Math.max(0, (canvasRef.clientWidth / 2) - (elementSize.width / 2)),
+    y: Math.max(0, (canvasRef.clientHeight / 2) - (elementSize.height / 2))
   };
 };
 
