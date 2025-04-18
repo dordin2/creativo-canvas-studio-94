@@ -24,22 +24,22 @@ const ImageControlTabs = ({
 
   return (
     <div className="flex items-center gap-4 px-4">
-      <TabsList className="h-8">
-        <TabsTrigger
-          value="size"
-          onClick={() => setActiveTab("size")}
-          className={`px-2 py-1 ${activeTab === "size" ? "bg-gray-100" : ""}`}
-        >
-          <Maximize2 className="h-4 w-4" />
-        </TabsTrigger>
-        <TabsTrigger
-          value="rotation"
-          onClick={() => setActiveTab("rotation")}
-          className={`px-2 py-1 ${activeTab === "rotation" ? "bg-gray-100" : ""}`}
-        >
-          <RotateCw className="h-4 w-4" />
-        </TabsTrigger>
-      </TabsList>
+      <Tabs value={activeTab} onValueChange={(value: "size" | "rotation") => setActiveTab(value)}>
+        <TabsList className="h-8">
+          <TabsTrigger
+            value="size"
+            className={`px-2 py-1 ${activeTab === "size" ? "bg-gray-100" : ""}`}
+          >
+            <Maximize2 className="h-4 w-4" />
+          </TabsTrigger>
+          <TabsTrigger
+            value="rotation"
+            className={`px-2 py-1 ${activeTab === "rotation" ? "bg-gray-100" : ""}`}
+          >
+            <RotateCw className="h-4 w-4" />
+          </TabsTrigger>
+        </TabsList>
+      </Tabs>
 
       <div className="flex-1">
         <Slider
