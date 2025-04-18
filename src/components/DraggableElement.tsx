@@ -85,7 +85,6 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    // Always allow selection in interaction mode, but no dragging
     if (isInteractionMode) {
       setActiveElement(element);
       return;
@@ -556,7 +555,7 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     border: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
     outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
     boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
-    backgroundColor: isGameMode && isImageElement ? 'transparent' : elementStyle.backgroundColor,
+    backgroundColor: elementStyle.backgroundColor || 'transparent',
   };
 
   const handleElementClick = (e: React.MouseEvent) => {

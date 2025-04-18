@@ -189,7 +189,7 @@ const ElementControls = ({
                     <Button 
                       variant="outline" 
                       size="icon" 
-                      className={`h-8 w-8 bg-white ${isInteractive ? 'text-blue-600 border-blue-600' : ''}`}
+                      className={`h-8 w-8 bg-gray-50/90 backdrop-blur-sm hover:bg-gray-100/90 ${isInteractive ? 'text-blue-600 border-blue-600' : ''}`}
                       onClick={handleToggleInteractive}
                     >
                       {hasCanvasNavigation ? (
@@ -214,7 +214,7 @@ const ElementControls = ({
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8 bg-white"
+                    className="h-8 w-8 bg-gray-50/90 backdrop-blur-sm hover:bg-gray-100/90"
                     onClick={handleDuplicate}
                   >
                     <Copy className="h-4 w-4" />
@@ -232,7 +232,7 @@ const ElementControls = ({
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8 bg-white"
+                    className="h-8 w-8 bg-gray-50/90 backdrop-blur-sm hover:bg-gray-100/90"
                     onClick={handleToggleVisibility}
                   >
                     {isVisible ? (
@@ -254,7 +254,7 @@ const ElementControls = ({
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8 bg-white text-red-500"
+                    className="h-8 w-8 bg-gray-50/90 backdrop-blur-sm hover:bg-gray-100/90 text-red-500"
                     onClick={handleDelete}
                   >
                     <Trash2 className="h-4 w-4" />
