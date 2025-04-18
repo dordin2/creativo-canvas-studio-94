@@ -215,10 +215,7 @@ const Editor = () => {
           
           {activeElement && <Drawer>
               <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="aspect-square">
-                  <Pencil className="h-6 w-6" />
-                  <span className="sr-only">Edit Properties</span>
-                </Button>
+                
               </DrawerTrigger>
               <DrawerContent className="px-0 pb-4">
                 <MobileProperties />
