@@ -137,38 +137,7 @@ export const LibraryModal = () => {
           </SheetDescription>
         </SheetHeader>
         
-        {isAdmin && (
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="mt-4 w-full">
-                <Upload className="mr-2 h-4 w-4" /> Upload New Element
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Upload Element</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4">
-                <Input 
-                  type="file" 
-                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
-                  accept="image/*"
-                />
-                <Input 
-                  placeholder="Element Name" 
-                  value={imageName}
-                  onChange={(e) => setImageName(e.target.value)}
-                />
-                <Button 
-                  onClick={handleFileUpload} 
-                  disabled={!imageFile || !imageName}
-                >
-                  Upload
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-        )}
+        
         
         <div className="mt-4">
           {isLoading ? (
