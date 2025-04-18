@@ -1,12 +1,13 @@
+
 import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
-// Default positions for new elements
-export const getDefaultPosition = (canvasRef: HTMLDivElement | null) => {
+// Get canvas center point and account for element size
+export const getDefaultPosition = (canvasRef: HTMLDivElement | null, elementSize = { width: 0, height: 0 }) => {
   if (!canvasRef) return { x: 100, y: 100 };
   
   return {
-    x: canvasRef.clientWidth / 2 - 50,
-    y: canvasRef.clientHeight / 2 - 50
+    x: (canvasRef.clientWidth / 2) - (elementSize.width / 2),
+    y: (canvasRef.clientHeight / 2) - (elementSize.height / 2)
   };
 };
 
@@ -24,17 +25,64 @@ export const getDefaultImageSize = (canvasRef: HTMLDivElement | null) => {
 // Factory function to create new elements
 export const createNewElement = (
   type: ElementType, 
-  position: { x: number; y: number }, 
+  canvasRef: HTMLDivElement | null,
   layer: number,
   props?: any
 ): DesignElement => {
+  let size = { width: 100, height: 100 }; // Default size
+  
+  // Define size based on element type
+  switch (type) {
+    case 'rectangle':
+      size = { width: 100, height: 80 };
+      break;
+    case 'circle':
+      size = { width: 100, height: 100 };
+      break;
+    case 'triangle':
+      size = { width: 50, height: 100 };
+      break;
+    case 'line':
+      size = { width: 100, height: 2 };
+      break;
+    case 'heading':
+      size = { width: 300, height: 50 };
+      break;
+    case 'subheading':
+      size = { width: 250, height: 40 };
+      break;
+    case 'paragraph':
+      size = { width: 300, height: 100 };
+      break;
+    case 'image':
+      size = props?.size || getDefaultImageSize(canvasRef);
+      break;
+    case 'puzzle':
+      size = { width: 150, height: 150 };
+      break;
+    case 'sequencePuzzle':
+    case 'clickSequencePuzzle':
+      size = { width: 350, height: 150 };
+      break;
+    case 'sliderPuzzle':
+      const orientation = props?.sliderPuzzleConfig?.orientation || 'horizontal';
+      size = {
+        width: orientation === 'horizontal' ? 300 : 150,
+        height: orientation === 'horizontal' ? 150 : 300
+      };
+      break;
+  }
+  
+  // Get centered position based on element size
+  const position = getDefaultPosition(canvasRef, size);
+  
   switch (type) {
     case 'rectangle':
       return {
         id: generateId(),
         type,
         position,
-        size: { width: 100, height: 80 },
+        size,
         style: { backgroundColor: '#8B5CF6', borderRadius: '4px', transform: 'rotate(0deg)' },
         layer
       };
@@ -44,7 +92,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size: { width: 100, height: 100 },
+        size,
         style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
         layer
       };
@@ -54,7 +102,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size: { width: 50, height: 100 },
+        size,
         style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
         layer
       };
@@ -64,7 +112,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size: { width: 100, height: 2 },
+        size,
         style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
         layer
       };
@@ -75,7 +123,7 @@ export const createNewElement = (
         type,
         position,
         content: 'Add a heading',
-        size: { width: 300, height: 50 },
+        size,
         style: { color: '#1F2937', transform: 'rotate(0deg)' },
         layer
       };
@@ -86,7 +134,7 @@ export const createNewElement = (
         type,
         position,
         content: 'Add a subheading',
-        size: { width: 250, height: 40 },
+        size,
         style: { color: '#1F2937', transform: 'rotate(0deg)' },
         layer
       };
@@ -97,21 +145,18 @@ export const createNewElement = (
         type,
         position,
         content: 'Add your text here. Click to edit this text.',
-        size: { width: 300, height: 100 },
+        size,
         style: { color: '#1F2937', transform: 'rotate(0deg)' },
         layer
       };
       
     case 'image':
-      // If props includes size, use that; otherwise, use default
-      const initialSize = props?.size || { width: 200, height: 150 };
-      
       return {
         id: generateId(),
         type,
         position,
-        size: initialSize,
-        originalSize: props?.originalSize || initialSize,
+        size,
+        originalSize: props?.originalSize || size,
         src: props?.src,
         style: { transform: 'rotate(0deg)' },
         layer,
@@ -136,7 +181,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size: { width: 150, height: 150 },
+        size,
         style: { backgroundColor: '#F3F4F6', borderRadius: '8px', transform: 'rotate(0deg)' },
         layer,
         puzzleConfig: props?.puzzleConfig || {
@@ -155,7 +200,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size: { width: 350, height: 150 },
+        size,
         style: { backgroundColor: '#EFF6FF', borderRadius: '8px', transform: 'rotate(0deg)' },
         layer,
         sequencePuzzleConfig: props?.sequencePuzzleConfig || {
@@ -171,7 +216,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size: { width: 350, height: 150 },
+        size,
         style: { backgroundColor: '#E8F5E9', borderRadius: '8px', transform: 'rotate(0deg)' },
         layer,
         clickSequencePuzzleConfig: props?.clickSequencePuzzleConfig || {
@@ -195,10 +240,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size: { 
-          width: orientation === 'horizontal' ? 300 : 150, 
-          height: orientation === 'horizontal' ? 150 : 300 
-        },
+        size,
         style: { 
           backgroundColor: '#F0F9FF',
           borderRadius: '8px', 
@@ -226,3 +268,4 @@ export const createNewElement = (
       };
   }
 };
+
