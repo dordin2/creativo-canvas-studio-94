@@ -8,7 +8,6 @@ import { Upload, Image as ImageIcon } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { getImageFromCache, estimateDataUrlSize } from "@/utils/imageUploader";
 import { getRotation } from "@/utils/elementStyles";
-import { toast } from "sonner";
 
 const ImageProperties = ({
   element
@@ -18,11 +17,7 @@ const ImageProperties = ({
   const {
     updateElement,
     handleImageUpload,
-    isGameMode,
-    canvases,
-    activeCanvasIndex,
-    removeElement,
-    addElement
+    isGameMode
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState<number>(100);
@@ -227,36 +222,6 @@ const ImageProperties = ({
     );
   };
   
-  const handleSetAsBackground = () => {
-    if (element.type !== 'image' || !element.dataUrl) {
-      toast.error('Cannot set background - only images can be set as background');
-      return;
-    }
-    
-    const currentCanvas = canvases[activeCanvasIndex];
-    const backgroundElements = currentCanvas.elements.filter(el => el.type === 'background');
-    backgroundElements.forEach(bg => removeElement(bg.id));
-    
-    addElement('background', {
-      style: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        width: '100%',
-        height: '100%',
-        backgroundImage: `url(${element.dataUrl})`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
-        backgroundRepeat: 'no-repeat',
-        zIndex: 0
-      }
-    });
-    
-    removeElement(element.id);
-    
-    toast.success('Image set as canvas background');
-  };
-
   return <div className="space-y-4">
       <div>
         <Label>Upload Image</Label>
@@ -337,16 +302,6 @@ const ImageProperties = ({
             <span className="text-sm">degrees</span>
           </div>
         </div>
-      </div>
-      
-      <div className="mt-4">
-        <Button 
-          onClick={handleSetAsBackground}
-          variant="outline"
-          className="w-full"
-        >
-          Set as Background
-        </Button>
       </div>
     </div>;
 };
