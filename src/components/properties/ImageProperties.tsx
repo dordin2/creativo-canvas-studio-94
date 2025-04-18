@@ -28,7 +28,7 @@ const ImageProperties = ({
   const [scaleValue, setScaleValue] = useState<number>(100);
   const [rotation, setRotation] = useState(getRotation(element));
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageStats, setImageStats<{size: string, dimensions: string} | null>(null);
+  const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
