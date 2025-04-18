@@ -15,6 +15,7 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { LibraryModal } from './library/LibraryModal';
 
 const Header = () => {
   const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
@@ -82,6 +83,7 @@ const Header = () => {
         <div className="flex items-center gap-2">
           <GameModeToggle />
           <InteractiveModeToggle />
+          <LibraryModal />
           <Drawer>
             <DrawerTrigger asChild>
               <Button variant="outline" size="icon" className="hover:bg-gray-50">
@@ -152,6 +154,7 @@ const Header = () => {
       <div className="flex items-center gap-4">
         <GameModeToggle />
         <InteractiveModeToggle />
+        <LibraryModal />
         <div className="h-6 w-px bg-gray-200"></div>
         <div className="flex items-center gap-2">
           <Button 
