@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, CSSProperties } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
@@ -83,7 +83,6 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    // In interaction mode, only allow interaction configuration
     if (isInteractionMode) {
       setActiveElement(element);
       return;
@@ -191,12 +190,10 @@ const DraggableElement = ({ element, isActive, children }: {
   const handleDuplicate = () => {
     console.log("DraggableElement - Original element to duplicate:", element);
     
-    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("DraggableElement - Duplicate props before adding:", duplicateProps);
     
-    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
@@ -253,7 +250,6 @@ const DraggableElement = ({ element, isActive, children }: {
         break;
     }
     
-    // Trigger the actual item combination in the DesignContext
     handleItemCombination(draggedItemId, element.id);
   };
 
@@ -538,10 +534,8 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }
 
-  // Don't show controls in interaction mode unless element is active
   const shouldShowControls = !isGameMode && !isInteractionMode ? showControls : (isActive && isInteractionMode);
   
-  // Disable dragging and resizing in interaction mode
   const isDraggingDisabled = isGameMode || isInteractionMode;
   const isResizingDisabled = isGameMode || isInteractionMode;
 
@@ -594,20 +588,16 @@ const DraggableElement = ({ element, isActive, children }: {
         setImageLoaded(true);
       };
       
-      // Use progressive loading with thumbnail then full image
       if (element.thumbnailDataUrl && !imageLoaded) {
         const loadMainImage = async () => {
           if (!element.dataUrl && element.cacheKey) {
-            // Try to load the full image from cache if not already loaded
             const cachedImage = await getImageFromCache(element.cacheKey);
             if (cachedImage) {
-              // We can't modify element directly, so we'll update it through the context
               updateElementWithoutHistory(element.id, { dataUrl: cachedImage });
             }
           }
         };
         
-        // Start loading the full resolution image
         loadMainImage();
         
         const thumbnailImg = (

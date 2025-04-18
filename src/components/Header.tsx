@@ -1,11 +1,11 @@
 
+import React from "react";
 import GameModeToggle from "./GameModeToggle";
 import InteractionModeToggle from "./InteractionModeToggle";
-import ElementControls from "./element/ElementControls";
 import { useDesignState } from "@/context/DesignContext";
 
 const Header = () => {
-  const { isGameMode } = useDesignState();
+  const { isGameMode, isInteractionMode } = useDesignState();
 
   if (isGameMode) return null;
 
@@ -15,7 +15,8 @@ const Header = () => {
         <InteractionModeToggle />
         <GameModeToggle />
       </div>
-      <ElementControls />
+      {/* Only show ElementControls if in interaction mode */}
+      {isInteractionMode && <div>Interaction Mode Controls</div>}
     </div>
   );
 };
