@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Label } from "@/components/ui/label";
@@ -187,28 +186,30 @@ const InteractionProperties = ({ element }: InteractionPropertiesProps) => {
     }
   }, [element.id, element.interaction, language]);
 
-  const handleInteractionChange = (value: InteractionType) => {
-    setInteractionType(value);
+  const handleInteractionChange = (value: string) => {
+    // Cast the string value to InteractionType to satisfy TypeScript
+    const interactionType = value as InteractionType;
+    setInteractionType(interactionType);
     
     const newInteraction: InteractionConfig = {
-      type: value as InteractionType
+      type: interactionType
     };
 
-    if (value === 'message' && element.interaction?.message) {
+    if (interactionType === 'message' && element.interaction?.message) {
       newInteraction.message = element.interaction.message;
       newInteraction.messagePosition = messagePosition;
     }
     
-    if (value === 'sound' && element.interaction?.soundUrl) {
+    if (interactionType === 'sound' && element.interaction?.soundUrl) {
       newInteraction.sound = element.interaction.sound;
       newInteraction.soundUrl = element.interaction.soundUrl;
     }
     
-    if (value === 'canvasNavigation' && targetCanvasId) {
+    if (interactionType === 'canvasNavigation' && targetCanvasId) {
       newInteraction.targetCanvasId = targetCanvasId;
     }
     
-    if (value === 'puzzle') {
+    if (interactionType === 'puzzle') {
       newInteraction.puzzleType = puzzleType;
       
       if (puzzleType === 'puzzle') {
@@ -222,7 +223,7 @@ const InteractionProperties = ({ element }: InteractionPropertiesProps) => {
       }
     }
     
-    if (value === 'combinable') {
+    if (interactionType === 'combinable') {
       newInteraction.canCombineWith = canCombineWith;
       if (element.interaction?.combinationResult) {
         newInteraction.combinationResult = element.interaction.combinationResult;
@@ -312,7 +313,7 @@ const InteractionProperties = ({ element }: InteractionPropertiesProps) => {
     
     let updatedInteraction = {
       ...element.interaction,
-      type: 'puzzle',
+      type: 'puzzle' as InteractionType,
       puzzleType: type
     };
     
@@ -1905,4 +1906,3 @@ const InteractionProperties = ({ element }: InteractionPropertiesProps) => {
 };
 
 export default InteractionProperties;
-
