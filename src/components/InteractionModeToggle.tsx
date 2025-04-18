@@ -4,7 +4,12 @@ import { useDesignState } from "@/context/DesignContext";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { MousePointerClick } from "lucide-react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
 
 const InteractionModeToggle = () => {
   const { isInteractionMode, toggleInteractionMode } = useDesignState();

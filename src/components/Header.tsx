@@ -5,7 +5,7 @@ import ElementControls from "./element/ElementControls";
 import { useDesignState } from "@/context/DesignContext";
 
 const Header = () => {
-  const { isGameMode, isInteractionMode } = useDesignState();
+  const { isGameMode } = useDesignState();
 
   if (isGameMode) return null;
 

@@ -545,7 +545,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const isDraggingDisabled = isGameMode || isInteractionMode;
   const isResizingDisabled = isGameMode || isInteractionMode;
 
-  const combinedStyle = {
+  const combinedStyle: CSSProperties = {
     ...elementStyle,
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
@@ -553,7 +553,7 @@ const DraggableElement = ({ element, isActive, children }: {
     pointerEvents: element.isHidden ? 'none' : 'auto',
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
-    position: 'absolute' as 'absolute',
+    position: 'absolute',
     border: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
     outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
     boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
