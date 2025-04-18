@@ -190,31 +190,7 @@ const Editor = () => {
           </div>
         </div>
         
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30">
-          <Drawer>
-            <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="aspect-square">
-                <Menu className="h-6 w-6" />
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="px-4 pb-6">
-              <div className="mt-2">
-                <MobileSidebar isOpen={showMobileSidebar} onClose={() => setShowMobileSidebar(false)} />
-              </div>
-            </DrawerContent>
-          </Drawer>
-          
-          {activeElement && <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="aspect-square">
-                  <Pencil className="h-6 w-6" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="px-0 pb-4">
-                <MobileProperties />
-              </DrawerContent>
-            </Drawer>}
-        </div>
+        
         <FloatingElementsButton />
       </div>;
   }
