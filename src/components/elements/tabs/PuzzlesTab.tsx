@@ -1,7 +1,7 @@
 
 import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { useDesignState } from '@/context/DesignState';
+import { useDesignState } from '@/context/DesignContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Lock, Puzzle, SlidersHorizontal, MousePointerClick } from 'lucide-react';
 
