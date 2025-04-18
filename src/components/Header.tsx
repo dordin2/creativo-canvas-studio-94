@@ -22,7 +22,9 @@ const Header = () => {
     undo,
     redo,
     canUndo,
-    canRedo
+    canRedo,
+    canvases,
+    activeCanvasIndex
   } = useDesignState();
   const {
     t,
@@ -80,7 +82,7 @@ const Header = () => {
   };
 
   const handleSaveProject = () => {
-    saveProject();
+    saveProject(canvases, activeCanvasIndex);
   };
 
   if (isMobile) {
