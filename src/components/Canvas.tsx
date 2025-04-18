@@ -1,7 +1,7 @@
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
-import { Maximize, Minimize } from "lucide-react";
+import { Minus, Plus, RotateCcw, Maximize, Minimize } from "lucide-react";
 import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
@@ -30,8 +30,9 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     height: FIXED_CANVAS_HEIGHT 
   });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [isFullscreenActive, setIsFullscreenActive] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
+  const [isFullscreenActive, setIsFullscreenActive] = useState(false);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -48,15 +49,19 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         const canvasWidth = FIXED_CANVAS_WIDTH;
         const canvasHeight = FIXED_CANVAS_HEIGHT;
         
-        let scale = 1;
         if (isMobileView && isGameMode) {
           const scaleX = parentWidth / canvasWidth;
           const scaleY = parentHeight / canvasHeight;
-          scale = Math.min(scaleX, scaleY);
-        } else if (!isGameMode) {
+          const scale = Math.min(scaleX, scaleY);
+          setZoomLevel(scale);
+        } else {
           const scaleX = (parentWidth - 40) / canvasWidth;
           const scaleY = (parentHeight - 40) / canvasHeight;
-          scale = Math.min(scaleX, scaleY, 1);
+          const scale = Math.min(scaleX, scaleY, 1);
+          
+          if (!isGameMode) {
+            setZoomLevel(scale);
+          }
         }
         
         setCanvasDimensions({ width: canvasWidth, height: canvasHeight });
@@ -65,7 +70,9 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     
     handleResize();
     
-    const resizeObserver = new ResizeObserver(handleResize);
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
     
     if (parentRef.current) {
       resizeObserver.observe(parentRef.current);
@@ -103,6 +110,18 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         document.exitFullscreen();
       }
     }
+  };
+  
+  const handleZoomIn = () => {
+    setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
+  };
+  
+  const handleZoomOut = () => {
+    setZoomLevel(prevZoom => Math.max(prevZoom - 0.1, 0.5));
+  };
+  
+  const handleResetZoom = () => {
+    setZoomLevel(1);
   };
   
   const handleCanvasClick = (e: React.MouseEvent) => {
@@ -369,10 +388,31 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     background: backgroundElement.style?.background as string || undefined
   } : { backgroundColor: 'white' };
   
+  const calculateFullscreenScale = () => {
+    if (!isFullscreen && !isGameMode) return zoomLevel;
+    
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    
+    if (isMobileView) {
+      const scaleX = viewportWidth / FIXED_CANVAS_WIDTH;
+      const scaleY = viewportHeight / FIXED_CANVAS_HEIGHT;
+      return Math.min(scaleX, scaleY);
+    }
+    
+    const scaleX = viewportWidth / FIXED_CANVAS_WIDTH;
+    const scaleY = viewportHeight / FIXED_CANVAS_HEIGHT;
+    
+    return Math.min(scaleX, scaleY);
+  };
+  
+  const displayZoomLevel = (isFullscreen || isMobileView) && isGameMode ? calculateFullscreenScale() : zoomLevel;
+  
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
       <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
+          transform: `scale(${displayZoomLevel})`, 
           transformOrigin: 'center center',
           transition: 'transform 0.2s ease-out',
           position: 'absolute',
@@ -400,6 +440,21 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             {renderElements()}
           </div>
         </div>
+        
+        {!isGameMode && (
+          <div className="zoom-controls">
+            <button onClick={handleZoomOut} title="Zoom Out">
+              <Minus size={16} />
+            </button>
+            <span>{Math.round(zoomLevel * 100)}%</span>
+            <button onClick={handleZoomIn} title="Zoom In">
+              <Plus size={16} />
+            </button>
+            <button onClick={handleResetZoom} title="Reset Zoom">
+              <RotateCcw size={16} />
+            </button>
+          </div>
+        )}
         
         {isGameMode && !isMobileView && (
           <div className="fullscreen-controls">

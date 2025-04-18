@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil, ZoomIn, ZoomOut } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
-import { Canvas as CanvasType, Json, DesignElement } from "@/types/designTypes";
+import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { PaymentButton } from "@/components/PaymentButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileSidebar from "@/components/MobileSidebar";
@@ -28,7 +28,6 @@ import {
 import FloatingElementsButton from "@/components/FloatingElementsButton";
 import MobileImageControls from "@/components/mobile/MobileImageControls";
 import ImageControlTabs from "@/components/mobile/ImageControlTabs";
-import { getRotation } from "@/utils/elementStyles";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -48,7 +47,6 @@ const Editor = () => {
   const [showMobileProperties, setShowMobileProperties] = useState(false);
   const isAdmin = true; // Assuming isAdmin is true for demonstration purposes
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
-  const { updateElement } = useDesignState();
 
   useEffect(() => {
     if (!projectId) {
@@ -165,39 +163,6 @@ const Editor = () => {
     navigate('/');
   };
 
-  const handleImageResize = (value: number[], elementId: string) => {
-    const element = canvases[activeCanvasIndex].elements.find(el => el.id === elementId);
-    if (!element?.originalSize || !canvasSize.width || !canvasSize.height) return;
-    
-    const scalePercentage = value[0];
-    
-    const maxWidth = canvasSize.width;
-    const maxHeight = canvasSize.height;
-    
-    const imageAspectRatio = element.originalSize.width / element.originalSize.height;
-    const canvasAspectRatio = maxWidth / maxHeight;
-    
-    let targetWidth, targetHeight;
-    if (imageAspectRatio > canvasAspectRatio) {
-      targetWidth = maxWidth;
-      targetHeight = maxWidth / imageAspectRatio;
-    } else {
-      targetHeight = maxHeight;
-      targetWidth = maxHeight * imageAspectRatio;
-    }
-    
-    const scaleFactor = scalePercentage / 100;
-    const newWidth = Math.round(targetWidth * scaleFactor);
-    const newHeight = Math.round(targetHeight * scaleFactor);
-    
-    updateElement(elementId, {
-      size: {
-        width: newWidth,
-        height: newHeight
-      }
-    });
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -282,82 +247,108 @@ const Editor = () => {
             <CanvasTabs />
           </div>
           
-          {activeElement?.type === 'image' && (
-            <div className="flex justify-center gap-2 py-2 bg-white border-b border-gray-200">
+          <div className="flex justify-center gap-2 py-2 bg-white border-b border-gray-200">
+            {activeElement?.type === 'image' ? (
               <ImageControlTabs
                 scaleValue={activeElement ? 100 : 0}
-                rotation={getRotation(activeElement)}
-                onScaleChange={(value) => handleImageResize(value, activeElement.id)}
+                rotation={activeElement ? getRotation(activeElement) : 0}
+                onScaleChange={(value) => {
+                  if (activeElement) {
+                    const element = document.querySelector(`[data-element-id="${activeElement.id}"]`);
+                    if (element) {
+                      const rect = element.getBoundingClientRect();
+                      handleImageResize(value, rect.width, rect.height);
+                    }
+                  }
+                }}
                 onRotationChange={(value) => {
-                  updateElement(activeElement.id, {
-                    style: { ...activeElement.style, transform: `rotate(${value[0]}deg)` }
-                  });
+                  if (activeElement) {
+                    updateElement(activeElement.id, {
+                      style: { ...activeElement.style, transform: `rotate(${value[0]}deg)` }
+                    });
+                  }
                 }}
                 disabled={isGameMode}
               />
-            </div>
-          )}
+            ) : (
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => {/* Add zoom in handler */}}>
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => {/* Add zoom out handler */}}>
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
+          </div>
           
           <div className="flex-1 relative z-1">
             <Canvas />
           </div>
         </div>
         
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30">
-          <Drawer>
-            <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="aspect-square">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Add Elements" 
-                  className="h-6 w-6"
-                />
-                <span className="sr-only">Add Elements</span>
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="px-4 pb-6">
-              <div className="mt-2">
-                <MobileSidebar 
-                  isOpen={showMobileSidebar} 
-                  onClose={() => setShowMobileSidebar(false)} 
-                />
-              </div>
-            </DrawerContent>
-          </Drawer>
-          
-          <Button variant="ghost" size="icon" className="aspect-square" onClick={toggleGameMode}>
-            <img 
-              src="/placeholder.svg" 
-              alt="Preview Game" 
-              className="h-6 w-6"
-            />
-            <span className="sr-only">Preview Game</span>
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="aspect-square" 
-            onClick={handleSaveProject}
-          >
-            <Save className="h-6 w-6 text-canvas-purple" />
-            <span className="sr-only">Save Project</span>
-          </Button>
-          
-          {activeElement && (
+        {activeElement?.type === 'image' ? (
+          <MobileImageControls 
+            element={activeElement} 
+            canvasSize={canvasSize}
+          />
+        ) : (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30">
             <Drawer>
               <DrawerTrigger asChild>
                 <Button variant="ghost" size="icon" className="aspect-square">
-                  <Pencil className="h-6 w-6" />
-                  <span className="sr-only">Edit Properties</span>
+                  <img 
+                    src="/placeholder.svg" 
+                    alt="Add Elements" 
+                    className="h-6 w-6"
+                  />
+                  <span className="sr-only">Add Elements</span>
                 </Button>
               </DrawerTrigger>
-              <DrawerContent className="px-0 pb-4">
-                <MobileProperties />
+              <DrawerContent className="px-4 pb-6">
+                <div className="mt-2">
+                  <MobileSidebar 
+                    isOpen={showMobileSidebar} 
+                    onClose={() => setShowMobileSidebar(false)} 
+                  />
+                </div>
               </DrawerContent>
             </Drawer>
-          )}
-        </div>
+            
+            <Button variant="ghost" size="icon" className="aspect-square" onClick={toggleGameMode}>
+              <img 
+                src="/placeholder.svg" 
+                alt="Preview Game" 
+                className="h-6 w-6"
+              />
+              <span className="sr-only">Preview Game</span>
+            </Button>
+            
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="aspect-square" 
+              onClick={handleSaveProject}
+            >
+              <Save className="h-6 w-6 text-canvas-purple" />
+              <span className="sr-only">Save Project</span>
+            </Button>
+            
+            {activeElement && (
+              <Drawer>
+                <DrawerTrigger asChild>
+                  <Button variant="ghost" size="icon" className="aspect-square">
+                    <Pencil className="h-6 w-6" />
+                    <span className="sr-only">Edit Properties</span>
+                  </Button>
+                </DrawerTrigger>
+                <DrawerContent className="px-0 pb-4">
+                  <MobileProperties />
+                </DrawerContent>
+              </Drawer>
+            )}
+          </div>
+        )}
         <FloatingElementsButton />
       </div>
     );
