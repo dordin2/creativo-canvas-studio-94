@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,10 +5,17 @@ import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
 import { Database } from "@/types/database";
 
+type ProfileType = {
+  id: string;
+  display_name: string | null;
+  avatar_url: string | null;
+  roles?: string[];
+};
+
 type AuthContextType = {
   session: Session | null;
   user: User | null;
-  profile: any | null;
+  profile: ProfileType | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name?: string) => Promise<void>;
@@ -22,9 +28,44 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<any | null>(null);
+  const [profile, setProfile] = useState<ProfileType | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+
+  const loadUserProfile = async () => {
+    try {
+      if (!user) return;
+      
+      // Fetch both profile and roles
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id);
+
+      if (profileError) {
+        console.error('Error loading user profile:', profileError);
+        return;
+      }
+
+      if (rolesError) {
+        console.error('Error loading user roles:', rolesError);
+        return;
+      }
+
+      setProfile({
+        ...profileData,
+        roles: rolesData?.map(r => r.role) || []
+      });
+    } catch (error) {
+      console.error('Unexpected error loading user profile:', error);
+    }
+  };
 
   useEffect(() => {
     // Set up auth state listener first
@@ -61,28 +102,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       subscription.unsubscribe();
     };
   }, []);
-
-  const loadUserProfile = async () => {
-    try {
-      if (!user) return;
-      
-      // Use the correct table name that exists in the database schema
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error loading user profile:', error);
-        return;
-      }
-
-      setProfile(data);
-    } catch (error) {
-      console.error('Unexpected error loading user profile:', error);
-    }
-  };
 
   const signIn = async (email: string, password: string) => {
     try {
