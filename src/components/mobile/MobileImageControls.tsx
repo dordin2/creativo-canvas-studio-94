@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { DesignElement } from "@/types/designTypes";
 import { useDesignState } from "@/context/DesignContext";
@@ -76,15 +75,13 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0">
-      <ImageControlTabs
-        scaleValue={scaleValue}
-        rotation={rotation}
-        onScaleChange={handleImageResize}
-        onRotationChange={handleRotationChange}
-        disabled={isGameMode}
-      />
-    </div>
+    <ImageControlTabs
+      scaleValue={scaleValue}
+      rotation={rotation}
+      onScaleChange={handleImageResize}
+      onRotationChange={handleRotationChange}
+      disabled={isGameMode}
+    />
   );
 };
 

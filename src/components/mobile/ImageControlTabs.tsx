@@ -23,54 +23,34 @@ const ImageControlTabs = ({
   const [activeTab, setActiveTab] = useState<"size" | "rotation">("size");
 
   return (
-    <div className="space-y-4 p-4 bg-white border-t border-gray-200">
-      <Tabs value={activeTab} onValueChange={(value) => setActiveTab(value as "size" | "rotation")} className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="size" className="flex items-center gap-2">
-            <Maximize2 className="h-4 w-4" />
-            Size
-          </TabsTrigger>
-          <TabsTrigger value="rotation" className="flex items-center gap-2">
-            <RotateCw className="h-4 w-4" />
-            Rotation
-          </TabsTrigger>
-        </TabsList>
-      </Tabs>
+    <div className="flex items-center gap-4 px-4">
+      <TabsList className="h-8">
+        <TabsTrigger
+          value="size"
+          onClick={() => setActiveTab("size")}
+          className={`px-2 py-1 ${activeTab === "size" ? "bg-gray-100" : ""}`}
+        >
+          <Maximize2 className="h-4 w-4" />
+        </TabsTrigger>
+        <TabsTrigger
+          value="rotation"
+          onClick={() => setActiveTab("rotation")}
+          className={`px-2 py-1 ${activeTab === "rotation" ? "bg-gray-100" : ""}`}
+        >
+          <RotateCw className="h-4 w-4" />
+        </TabsTrigger>
+      </TabsList>
 
-      <div className="space-y-2">
-        {activeTab === "size" ? (
-          <>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Size</span>
-              <span className="text-sm text-muted-foreground">{scaleValue}%</span>
-            </div>
-            <Slider
-              value={[scaleValue]}
-              min={1}
-              max={100}
-              step={1}
-              onValueChange={onScaleChange}
-              disabled={disabled}
-              className="w-full"
-            />
-          </>
-        ) : (
-          <>
-            <div className="flex justify-between items-center">
-              <span className="text-sm font-medium">Rotation</span>
-              <span className="text-sm text-muted-foreground">{rotation}°</span>
-            </div>
-            <Slider
-              value={[rotation]}
-              min={-180}
-              max={180}
-              step={1}
-              onValueChange={onRotationChange}
-              disabled={disabled}
-              className="w-full"
-            />
-          </>
-        )}
+      <div className="flex-1">
+        <Slider
+          value={activeTab === "size" ? [scaleValue] : [rotation]}
+          min={activeTab === "size" ? 1 : -180}
+          max={activeTab === "size" ? 100 : 180}
+          step={1}
+          onValueChange={activeTab === "size" ? onScaleChange : onRotationChange}
+          disabled={disabled}
+          className="w-full"
+        />
       </div>
     </div>
   );

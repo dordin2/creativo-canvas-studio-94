@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/drawer";
 import FloatingElementsButton from "@/components/FloatingElementsButton";
 import MobileImageControls from "@/components/mobile/MobileImageControls";
+import ImageControlTabs from "@/components/mobile/ImageControlTabs";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -247,12 +248,38 @@ const Editor = () => {
           </div>
           
           <div className="flex justify-center gap-2 py-2 bg-white border-b border-gray-200">
-            <Button variant="outline" size="sm" onClick={() => {/* Add zoom in handler */}}>
-              <ZoomIn className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => {/* Add zoom out handler */}}>
-              <ZoomOut className="h-4 w-4" />
-            </Button>
+            {activeElement?.type === 'image' ? (
+              <ImageControlTabs
+                scaleValue={activeElement ? 100 : 0}
+                rotation={activeElement ? getRotation(activeElement) : 0}
+                onScaleChange={(value) => {
+                  if (activeElement) {
+                    const element = document.querySelector(`[data-element-id="${activeElement.id}"]`);
+                    if (element) {
+                      const rect = element.getBoundingClientRect();
+                      handleImageResize(value, rect.width, rect.height);
+                    }
+                  }
+                }}
+                onRotationChange={(value) => {
+                  if (activeElement) {
+                    updateElement(activeElement.id, {
+                      style: { ...activeElement.style, transform: `rotate(${value[0]}deg)` }
+                    });
+                  }
+                }}
+                disabled={isGameMode}
+              />
+            ) : (
+              <div className="flex gap-2">
+                <Button variant="outline" size="sm" onClick={() => {/* Add zoom in handler */}}>
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => {/* Add zoom out handler */}}>
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
           
           <div className="flex-1 relative z-1">
