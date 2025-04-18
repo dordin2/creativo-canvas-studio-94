@@ -1,0 +1,221 @@
+
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Square,
+  Circle,
+  Triangle,
+  Image,
+  Text,
+  Lock,
+  Puzzle,
+  SlidersHorizontal,
+  MousePointerClick
+} from "lucide-react";
+import { useDesignState } from "@/context/DesignContext";
+import { useLanguage } from "@/context/LanguageContext";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { LibraryModal } from "@/components/library/LibraryModal";
+
+const Sidebar = () => {
+  const { addElement } = useDesignState();
+  const { t, language } = useLanguage();
+
+  const colorSwatches = [
+    "#FFFFFF", "#F3F4F6", "#E5E7EB", "#D1D5DB",
+    "#FEE2E2", "#FEE7AA", "#D1FAE5", "#DBEAFE",
+    "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"
+  ];
+
+  const gradients = [
+    "linear-gradient(to right, #fc466b, #3f5efb)",
+    "linear-gradient(to right, #8a2387, #e94057, #f27121)",
+    "linear-gradient(to right, #00b09b, #96c93d)",
+    "linear-gradient(to right, #ff9966, #ff5e62)",
+    "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"
+  ];
+
+  return (
+    <div className={`sidebar-panel border-r flex flex-col ${language === 'he' ? 'rtl' : 'ltr'}`}>
+      <Tabs defaultValue="elements" className="flex-1 flex flex-col">
+        <TabsList className="grid grid-cols-3 mx-2 mt-2">
+          <TabsTrigger value="elements">{t('sidebar.elements')}</TabsTrigger>
+          <TabsTrigger value="text">{t('sidebar.text')}</TabsTrigger>
+          <TabsTrigger value="background">{t('sidebar.background')}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="elements" className="flex-1 overflow-auto p-4">
+          <Accordion type="single" collapsible className="space-y-4">
+            {/* Basic Shapes */}
+            <AccordionItem value="shapes" className="border rounded-lg">
+              <AccordionTrigger className="px-4">
+                <div className="flex items-center gap-2">
+                  <Square className="h-4 w-4" />
+                  <span>{t('sidebar.shapes')}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="p-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="h-12" onClick={() => addElement('rectangle')}>
+                    <Square className="h-4 w-4 mr-2" />
+                    <span>{t('sidebar.rectangle')}</span>
+                  </Button>
+                  <Button variant="outline" className="h-12" onClick={() => addElement('circle')}>
+                    <Circle className="h-4 w-4 mr-2" />
+                    <span>{t('sidebar.circle')}</span>
+                  </Button>
+                  <Button variant="outline" className="h-12" onClick={() => addElement('triangle')}>
+                    <Triangle className="h-4 w-4 mr-2" />
+                    <span>{t('sidebar.triangle')}</span>
+                  </Button>
+                  <Button variant="outline" className="h-12" onClick={() => addElement('line')}>
+                    <div className="w-4 h-0.5 bg-current mr-2" />
+                    <span>{t('sidebar.line')}</span>
+                  </Button>
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Media */}
+            <AccordionItem value="media" className="border rounded-lg">
+              <AccordionTrigger className="px-4">
+                <div className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  <span>{t('sidebar.media')}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="p-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="h-12" onClick={() => addElement('image')}>
+                    <Image className="h-4 w-4 mr-2" />
+                    <span>{t('sidebar.image')}</span>
+                  </Button>
+                  <LibraryModal />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Interactive Elements */}
+            <AccordionItem value="interactive" className="border rounded-lg">
+              <AccordionTrigger className="px-4">
+                <div className="flex items-center gap-2">
+                  <Puzzle className="h-4 w-4" />
+                  <span>{t('sidebar.interactive')}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="p-2 space-y-2">
+                {/* Image and Number Puzzles */}
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-12"
+                  onClick={() => addElement('puzzle', {
+                    puzzleConfig: {
+                      name: language === 'en' ? 'Puzzle' : 'פאזל',
+                      type: 'image',
+                      placeholders: 3,
+                      images: [],
+                      solution: [0, 0, 0]
+                    }
+                  })}
+                >
+                  <Lock className="h-4 w-4 mr-2" />
+                  <span>{language === 'en' ? 'Image/Number Puzzle' : 'פאזל תמונה/מספרים'}</span>
+                </Button>
+
+                {/* Sequence Puzzles */}
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-12"
+                  onClick={() => addElement('sequencePuzzle', {
+                    name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
+                    sequencePuzzleConfig: {
+                      name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
+                      images: [],
+                      solution: [],
+                      currentOrder: []
+                    }
+                  })}
+                >
+                  <MousePointerClick className="h-4 w-4 mr-2" />
+                  <span>{language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף'}</span>
+                </Button>
+
+                {/* Slider Puzzle */}
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-12"
+                  onClick={() => addElement('sliderPuzzle', {
+                    name: language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים',
+                    sliderPuzzleConfig: {
+                      name: language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים',
+                      orientation: 'horizontal',
+                      sliderCount: 3,
+                      solution: [5, 7, 3],
+                      currentValues: [0, 0, 0],
+                      maxValue: 10
+                    }
+                  })}
+                >
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  <span>{language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים'}</span>
+                </Button>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
+        </TabsContent>
+
+        <TabsContent value="text" className="flex-1 overflow-auto p-4">
+          <div className="flex flex-col gap-2">
+            <Button variant="outline" className="justify-start h-12" onClick={() => addElement('heading')}>
+              <Text className="h-4 w-4 mr-2" />
+              <span className="text-lg font-bold">{t('sidebar.heading')}</span>
+            </Button>
+            <Button variant="outline" className="justify-start h-12" onClick={() => addElement('subheading')}>
+              <Text className="h-4 w-4 mr-2" />
+              <span className="text-base font-semibold">{t('sidebar.subheading')}</span>
+            </Button>
+            <Button variant="outline" className="justify-start h-12" onClick={() => addElement('paragraph')}>
+              <Text className="h-4 w-4 mr-2" />
+              <span className="text-sm">{t('sidebar.paragraph')}</span>
+            </Button>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="background" className="flex-1 overflow-auto p-4">
+          <h3 className="text-sm font-medium mb-3">{t('sidebar.solid.colors')}</h3>
+          <div className="grid grid-cols-4 gap-2 mb-6">
+            {colorSwatches.map((color, index) => (
+              <button
+                key={index}
+                className="w-12 h-12 rounded border hover:scale-105 transition-transform"
+                style={{ backgroundColor: color }}
+                onClick={() => addElement('background', { color })}
+                aria-label={`Background color ${color}`}
+              />
+            ))}
+          </div>
+          
+          <h3 className="text-sm font-medium mb-3">{t('sidebar.gradients')}</h3>
+          <div className="grid grid-cols-2 gap-2">
+            {gradients.map((gradient, index) => (
+              <button
+                key={index}
+                className="w-full h-12 rounded border hover:scale-105 transition-transform"
+                style={{ background: gradient }}
+                onClick={() => addElement('background', { gradient })}
+                aria-label={`Gradient background ${index + 1}`}
+              />
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+};
+
+export default Sidebar;
