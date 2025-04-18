@@ -17,10 +17,13 @@ import {
 import { useDesignState, ElementType } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { useAuth } from "@/context/AuthContext";
 
 const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { addElement } = useDesignState();
   const { t, language } = useLanguage();
+  const { profile } = useAuth();
+  const isAdmin = profile?.roles?.includes('admin');
 
   // Color swatches for backgrounds
   const colorSwatches = [
@@ -182,6 +185,8 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => vo
               <Image className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.image')}</span>
             </Button>
+
+            <LibraryModal />
             
             <Drawer>
               <DrawerTrigger asChild>

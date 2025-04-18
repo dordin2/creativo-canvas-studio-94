@@ -17,19 +17,21 @@ import {
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { LibraryModal } from "@/components/LibraryModal";
+import { useAuth } from "@/context/AuthContext";
 
 const Sidebar = () => {
   const { addElement } = useDesignState();
   const { t, language } = useLanguage();
+  const { profile } = useAuth();
+  const isAdmin = profile?.roles?.includes('admin');
 
-  // Color swatches for backgrounds
   const colorSwatches = [
     "#FFFFFF", "#F3F4F6", "#E5E7EB", "#D1D5DB",
     "#FEE2E2", "#FEE7AA", "#D1FAE5", "#DBEAFE",
     "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"
   ];
 
-  // Pre-defined gradient backgrounds
   const gradients = [
     "linear-gradient(to right, #fc466b, #3f5efb)",
     "linear-gradient(to right, #8a2387, #e94057, #f27121)",
@@ -38,7 +40,6 @@ const Sidebar = () => {
     "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"
   ];
 
-  // Handle puzzle options
   const handleImagePuzzleClick = () => {
     addElement('puzzle', {
       puzzleConfig: {
@@ -170,6 +171,8 @@ const Sidebar = () => {
               <Image className="h-5 w-5" />
               <span className="text-xs">{t('sidebar.image')}</span>
             </Button>
+            
+            <LibraryModal />
             
             <Popover>
               <PopoverTrigger asChild>
