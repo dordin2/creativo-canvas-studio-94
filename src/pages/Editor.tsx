@@ -26,7 +26,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import FloatingElementsButton from "@/components/FloatingElementsButton";
-import MobileImageControls from "@/components/MobileImageControls";
+import MobileImageControls from "@/components/mobile/MobileImageControls";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
