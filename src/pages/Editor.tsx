@@ -227,15 +227,9 @@ const Editor = () => {
             </DrawerContent>
           </Drawer>
           
-          <Button variant="ghost" size="icon" className="aspect-square" onClick={toggleGameMode}>
-            <img src="/placeholder.svg" alt="Preview Game" className="h-6 w-6" />
-            <span className="sr-only">Preview Game</span>
-          </Button>
           
-          <Button variant="ghost" size="icon" className="aspect-square" onClick={handleSaveProject}>
-            <Save className="h-6 w-6 text-canvas-purple" />
-            <span className="sr-only">Save Project</span>
-          </Button>
+          
+          
           
           {activeElement && <Drawer>
               <DrawerTrigger asChild>
