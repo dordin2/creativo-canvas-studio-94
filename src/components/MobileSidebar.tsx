@@ -18,6 +18,7 @@ import { useDesignState, ElementType } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useAuth } from "@/context/AuthContext";
+import { LibraryModal } from "@/components/library/LibraryModal";
 
 const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) => {
   const { addElement } = useDesignState();

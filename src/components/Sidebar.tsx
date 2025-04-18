@@ -17,7 +17,7 @@ import {
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { LibraryModal } from "@/components/LibraryModal";
+import { LibraryModal } from "@/components/library/LibraryModal";
 import { useAuth } from "@/context/AuthContext";
 
 const Sidebar = () => {
