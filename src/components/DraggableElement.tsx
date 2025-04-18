@@ -553,9 +553,16 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute',
     backgroundColor: (element.style?.backgroundColor as string) || 'transparent',
-    border: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
-    outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
-    boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
+    border: isGameMode && isImageElement ? 'none' : 
+           isInteractionMode && isActive ? '2px solid #6366F1' :
+           isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : 
+           elementStyle.border,
+    outline: isGameMode && isImageElement ? 'none' : 
+            isInteractionMode && isActive ? '2px solid #6366F1' :
+            isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : 
+            elementStyle.outline,
+    boxShadow: isGameMode && isImageElement ? 'none' : 
+              (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
   };
 
   const handleElementClick = (e: React.MouseEvent) => {

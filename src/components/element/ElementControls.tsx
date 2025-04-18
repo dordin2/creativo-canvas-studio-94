@@ -130,7 +130,7 @@ const ElementControls = ({
     transform: `rotate(${rotation}deg)`,
     pointerEvents: 'none' as const,
     zIndex: 1000 + element.layer,
-    border: isActive ? '1px solid #6366F1' : 'none',
+    border: isActive ? (isInteractionMode ? '2px solid #6366F1' : '1px solid #6366F1') : 'none',
     opacity: 1,
     boxSizing: 'border-box' as const,
     borderRadius: '2px',
