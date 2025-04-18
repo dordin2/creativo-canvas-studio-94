@@ -21,7 +21,7 @@ export const ImagesTab = ({ onClose }: ImagesTabProps) => {
   const [elements, setElements] = useState<LibraryElement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { profile } = useAuth();
-  const { addElement, canvasRef } = useDesignState();
+  const { addElement, canvasRef, handleImageUpload } = useDesignState();
   const isAdmin = profile?.roles?.includes('admin');
 
   const fetchElements = async () => {
@@ -44,10 +44,6 @@ export const ImagesTab = ({ onClose }: ImagesTabProps) => {
 
   const handleElementClick = async (element: LibraryElement) => {
     try {
-      const newElement = addElement('image', {
-        name: element.name
-      });
-
       const response = await fetch(element.image_path);
       const blob = await response.blob();
       const file = new File([blob], element.name || 'gallery-image.png', { 
@@ -55,12 +51,13 @@ export const ImagesTab = ({ onClose }: ImagesTabProps) => {
         lastModified: new Date().getTime()
       });
 
+      const newElement = addElement('image', {
+        name: element.name
+      });
+
+      handleImageUpload(newElement.id, file);
       onClose();
 
-      addElement('image', {
-        name: element.name,
-        file: file
-      });
     } catch (error) {
       console.error('Error adding element:', error);
       toast.error('Failed to add element');
