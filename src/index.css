@@ -115,6 +115,32 @@
     cursor: none !important;
   }
 
+  /* Game mode specific styles */
+  .game-mode-workspace * {
+    cursor: default !important;
+  }
+
+  .game-mode-workspace .canvas-element {
+    cursor: default !important;
+  }
+
+  /* When in game mode, only show pointer cursor on interactive elements */
+  .game-mode-workspace .canvas-element[data-interactive="true"] {
+    cursor: pointer !important;
+  }
+
+  :fullscreen .game-mode-workspace * {
+    cursor: default !important;
+  }
+
+  :fullscreen .canvas-element {
+    cursor: default !important;
+  }
+
+  :fullscreen .canvas-element[data-interactive="true"] {
+    cursor: pointer !important;
+  }
+  
   #cursor-preview {
     pointer-events: none;
     position: fixed;

@@ -26,11 +26,7 @@ import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { getImageFromCache } from "@/utils/imageUploader";
 
-const DraggableElement = ({ element, isActive, children }: {
-  element: DesignElement;
-  isActive: boolean;
-  children: React.ReactNode;
-}) => {
+const DraggableElement = ({ element, children, isActive = false }: DraggableElementProps) => {
   const { 
     updateElement, 
     updateElementWithoutHistory,
@@ -554,12 +550,23 @@ const DraggableElement = ({ element, isActive, children }: {
     backgroundColor: isGameMode && isImageElement ? 'transparent' : elementStyle.backgroundColor,
   };
 
+  const handleElementClick = (e: React.MouseEvent) => {
+    if (isGameMode && hasInteraction && !isDragging) {
+      e.stopPropagation();
+      handleInteraction();
+    }
+  };
+
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
     <div
       id={`element-${element.id}`}
       ref={ref}
-      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+      className={`canvas-element ${isDragging ? 'dragging' : ''} ${
+        element.isHidden ? 'opacity-0 pointer-events-none' : ''
+      }`}
       style={combinedStyle}
+      onClick={handleElementClick}
+      data-interactive={element.interaction?.type ? "true" : "false"}
       onMouseDown={!isDraggingDisabled ? handleMouseDown : undefined}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
