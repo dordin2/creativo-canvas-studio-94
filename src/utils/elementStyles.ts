@@ -1,3 +1,4 @@
+
 import { CSSProperties } from "react";
 import { DesignElement } from "@/context/DesignContext";
 
@@ -41,7 +42,8 @@ export const getTextStyle = (element: DesignElement): CSSProperties => {
     overflow: 'hidden',
     willChange: 'auto',
     transform: 'translateZ(0)',
-    backfaceVisibility: 'hidden'
+    backfaceVisibility: 'hidden',
+    backgroundColor: '#FFFFFF'
   };
 };
 
@@ -72,7 +74,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     willChange: isDragging ? 'transform' : 'auto',
     transition: isDragging ? 'none' : 'transform 0.1s cubic-bezier(0.4, 0, 0.2, 1)',
     boxSizing: 'border-box',
-    backgroundColor: element.style?.backgroundColor || 'transparent'
+    backgroundColor: (element.style?.backgroundColor as string) || 'transparent'
   };
 
   if (isImageElement) {
