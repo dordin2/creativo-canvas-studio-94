@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -148,6 +147,24 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
                 >
                   <MousePointerClick className="h-4 w-4 mr-2" />
                   <span>{language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף'}</span>
+                </Button>
+
+                {/* Click Sequence Puzzle */}
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-12"
+                  onClick={() => handleAddElement('clickSequencePuzzle', {
+                    name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
+                    clickSequencePuzzleConfig: {
+                      name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
+                      images: [],
+                      solution: [],
+                      clickedIndices: []
+                    }
+                  })}
+                >
+                  <MousePointerClick className="h-4 w-4 mr-2" />
+                  <span>{language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים'}</span>
                 </Button>
 
                 {/* Slider Puzzle */}
