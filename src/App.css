@@ -1,4 +1,3 @@
-
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -128,7 +127,21 @@
   
   /* Adjust canvas workspace for mobile */
   .canvas-workspace {
-    touch-action: none;
+    touch-action: pan-x pan-y;
+    -webkit-overflow-scrolling: touch;
+    min-height: calc(100vh - 200px);
+  }
+  
+  /* Handle landscape orientation */
+  @media (orientation: landscape) {
+    .canvas-workspace {
+      min-height: calc(100vh - 100px);
+      overflow-y: auto;
+    }
+    
+    .canvas-container {
+      margin: 20px 0;
+    }
   }
   
   /* Ensure popover menus are visible on mobile */
