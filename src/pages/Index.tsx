@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
 import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import Canvas from "@/components/Canvas";
 import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
@@ -10,6 +9,7 @@ import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft } from "lucide-react";
+import BottomBar from "@/components/BottomBar";
 
 const Index = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -41,11 +41,6 @@ const Index = () => {
     <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
       {!isGameMode && <Header />}
       <div className={`flex flex-1 overflow-hidden ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
-        {!isGameMode && (
-          <div className="flex-shrink-0 w-64">
-            <Sidebar />
-          </div>
-        )}
         <div className="flex-1 overflow-hidden flex flex-col">
           {!isGameMode ? (
             <>
@@ -64,6 +59,7 @@ const Index = () => {
           </div>
         )}
       </div>
+      {!isGameMode && <BottomBar />}
       {isGameMode && (
         <>
           <InventoryPanel />
