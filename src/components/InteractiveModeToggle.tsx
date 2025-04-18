@@ -1,7 +1,7 @@
 
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
-import { Switch } from "@/components/ui/switch";
-import { Eye, Brush } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Brush, Zap } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const InteractiveModeToggle = () => {
@@ -11,27 +11,24 @@ const InteractiveModeToggle = () => {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center relative">
-            <Switch
-              id="interactive-mode"
-              checked={isInteractiveMode}
-              onCheckedChange={toggleInteractiveMode}
-              className="w-[72px] h-7"
-            >
-              <div className="absolute inset-y-0 left-2 flex items-center pointer-events-none">
-                <Brush className={`h-5 w-5 transition-colors ${!isInteractiveMode ? 'text-canvas-purple' : 'text-gray-400'}`} />
-              </div>
-              <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
-                <Eye className={`h-5 w-5 transition-colors ${isInteractiveMode ? 'text-canvas-purple' : 'text-gray-400'}`} />
-              </div>
-            </Switch>
-          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={toggleInteractiveMode}
+            className="relative"
+          >
+            {isInteractiveMode ? (
+              <Zap className="h-5 w-5 text-canvas-purple transition-colors" />
+            ) : (
+              <Brush className="h-5 w-5 text-canvas-purple transition-colors" />
+            )}
+          </Button>
         </TooltipTrigger>
         <TooltipContent side="bottom">
           <p>
             {isInteractiveMode 
-              ? 'Exit Interactive Mode' 
-              : 'Enter Style Mode'}
+              ? 'חזרה למצב עריכה'
+              : 'מעבר למצב אינטראקטיבי'}
           </p>
         </TooltipContent>
       </Tooltip>
