@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -26,15 +27,12 @@ const ImageProperties = ({
   const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
-  const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null);
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
     if (element.originalSize && element.size) {
-      // Calculate current scale based on how much of the canvas width is filled
-      const canvasWidth = document.querySelector('.canvas-container')?.clientWidth || 800;
-      const currentScale = Math.round((element.size.width / canvasWidth) * 100);
-      setScaleValue(Math.min(currentScale, 100) || 50); // Default to 50% if calculation fails
+      const currentScale = Math.round((element.size.width / element.originalSize.width) * 100);
+      setScaleValue(currentScale || 100);
     }
     
     setRotation(getRotation(element));
@@ -119,43 +117,15 @@ const ImageProperties = ({
   
   const handleImageResize = (value: number[]) => {
     if (!element.originalSize) return;
-    
-    // Get canvas dimensions
-    const canvasContainer = document.querySelector('.canvas-container');
-    if (!canvasContainer) return;
-    
-    const canvasWidth = canvasContainer.clientWidth;
-    const canvasHeight = canvasContainer.clientHeight;
-    
-    // Calculate scale factor (0-1) from slider value (0-100)
-    const scaleFactor = value[0] / 100;
-    
-    // Calculate the maximum dimensions that would fit in the canvas
-    // while maintaining aspect ratio
-    const imageAspectRatio = element.originalSize.width / element.originalSize.height;
-    const canvasAspectRatio = canvasWidth / canvasHeight;
-    
-    let maxWidth, maxHeight;
-    
-    if (imageAspectRatio > canvasAspectRatio) {
-      // Image is wider relative to canvas - fit to width
-      maxWidth = canvasWidth;
-      maxHeight = canvasWidth / imageAspectRatio;
-    } else {
-      // Image is taller relative to canvas - fit to height
-      maxHeight = canvasHeight;
-      maxWidth = canvasHeight * imageAspectRatio;
-    }
-    
-    // Apply the scale factor to the maximum dimensions
-    const targetWidth = maxWidth * scaleFactor;
-    const targetHeight = maxHeight * scaleFactor;
-    
-    setScaleValue(value[0]);
+    const scalePercentage = value[0];
+    setScaleValue(scalePercentage);
+    const scaleFactor = scalePercentage / 100;
+    const newWidth = Math.round(element.originalSize.width * scaleFactor);
+    const newHeight = Math.round(element.originalSize.height * scaleFactor);
     updateElement(element.id, {
       size: {
-        width: Math.round(targetWidth),
-        height: Math.round(targetHeight)
+        width: newWidth,
+        height: newHeight
       }
     });
   };
@@ -257,20 +227,13 @@ const ImageProperties = ({
       
       <div className="mt-4">
         <div className="flex items-center justify-between mb-2">
-          <Label>Image Size</Label>
+          <Label>Resize Image</Label>
           <span className="text-sm font-medium">{scaleValue}%</span>
         </div>
-        <Slider 
-          value={[scaleValue]} 
-          min={1} 
-          max={100} 
-          step={1} 
-          onValueChange={handleImageResize} 
-          className="mb-2" 
-        />
+        <Slider value={[scaleValue]} min={10} max={200} step={1} onValueChange={handleImageResize} className="mb-2" />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Smaller</span>
-          <span>Fill Canvas</span>
+          <span>10%</span>
+          <span>200%</span>
         </div>
         <div className="text-sm mt-2">
           {element.size?.width} × {element.size?.height} px
