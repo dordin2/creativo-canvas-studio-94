@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -13,7 +13,7 @@ import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil, ZoomIn, ZoomOut } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
-import { Canvas as CanvasType, Json } from "@/types/designTypes";
+import { Canvas as CanvasType, Json, DesignElement } from "@/types/designTypes";
 import { PaymentButton } from "@/components/PaymentButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileSidebar from "@/components/MobileSidebar";
@@ -29,8 +29,6 @@ import FloatingElementsButton from "@/components/FloatingElementsButton";
 import MobileImageControls from "@/components/mobile/MobileImageControls";
 import ImageControlTabs from "@/components/mobile/ImageControlTabs";
 import { getRotation } from "@/utils/elementStyles";
-import { useDesignState } from "@/context/DesignContext";
-import { DesignElement } from "@/types/designTypes";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
