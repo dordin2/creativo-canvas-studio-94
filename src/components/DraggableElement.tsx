@@ -85,20 +85,8 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     if (e.button !== 0) return;
     e.stopPropagation();
     
+    // Always set active element, even in interaction mode
     setActiveElement(element);
-    
-    if (isInteractionMode) {
-      return;
-    }
-    
-    if (isImageElement && isGameMode) {
-      e.preventDefault();
-      
-      if (hasInteraction) {
-        handleInteraction();
-      }
-      return;
-    }
     
     if (isGameMode) {
       if (hasInteraction) {
@@ -109,7 +97,8 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     
     if (isEditing) return;
     
-    if (!isSequencePuzzleElement) {
+    // Only allow dragging in edit mode
+    if (!isInteractionMode && !isSequencePuzzleElement) {
       startDrag(e, element.position);
       setIsDragging(true);
     }

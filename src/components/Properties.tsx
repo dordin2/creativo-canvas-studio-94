@@ -11,12 +11,10 @@ const Properties = () => {
     return <NoElementSelected />;
   }
   
-  // In interaction mode, show interaction properties for the active element
-  if (isInteractionMode) {
-    return <InteractionProperties element={activeElement} />;
-  }
-  
-  return <ElementProperties element={activeElement} />;
+  // Show either interaction properties or regular properties based on mode
+  return isInteractionMode ? 
+    <InteractionProperties element={activeElement} /> : 
+    <ElementProperties element={activeElement} />;
 };
 
 export default Properties;
