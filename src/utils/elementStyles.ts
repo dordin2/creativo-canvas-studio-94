@@ -26,6 +26,7 @@ export const getTextStyle = (element: DesignElement): CSSProperties => {
   );
   
   const fontStyle = (element.style?.fontStyle as string) || 'normal';
+  
   const textDecoration = (element.style?.textDecoration as string) || 'none';
   
   return {
@@ -38,26 +39,25 @@ export const getTextStyle = (element: DesignElement): CSSProperties => {
     margin: '0',
     fontFamily: 'inherit',
     lineHeight: 'inherit',
-    overflow: 'hidden',
-    willChange: 'transform',
-    transform: 'translateZ(0)',
-    backfaceVisibility: 'hidden'
+    overflow: 'hidden'
   };
 };
 
 export const getElementStyle = (element: DesignElement, isDragging: boolean): CSSProperties => {
+  // Special styles for puzzle elements
   const isPuzzleElement = element.type === 'sequencePuzzle' || element.type === 'puzzle';
   const isImageElement = element.type === 'image';
   
+  // Extract rotation from transform to apply it directly at the top level
   const rotation = getRotation(element);
+  
+  // Use Math.round to ensure consistent positioning
   const left = Math.round(element.position.x);
   const top = Math.round(element.position.y);
   const width = element.size?.width ? Math.round(element.size.width) : undefined;
   const height = element.size?.height ? Math.round(element.size.height) : undefined;
   
-  // Preserve original background color, defaulting to transparent
-  const backgroundColor = element.style?.backgroundColor ? element.style.backgroundColor as string : 'transparent';
-  
+  // Create a clean object for the style to avoid reference issues
   const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
     position: 'absolute',
@@ -70,14 +70,15 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     zIndex: element.layer,
     touchAction: 'none',
     userSelect: 'none',
-    transform: `translateZ(0) rotate(${rotation}deg)`,
-    backfaceVisibility: 'hidden',
+    // Use clean transform with direct rotation to avoid compounding transforms
+    transform: `rotate(${rotation}deg)`,
+    // Apply hardware acceleration for smoother rendering
     willChange: isDragging ? 'transform' : 'auto',
-    transition: isDragging ? 'none' : 'all 0.1s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: isDragging ? 'none' : 'transform 0.05s ease-out',
     boxSizing: 'border-box',
-    backgroundColor
   };
 
+  // Prevent browser's default drag behavior for image elements
   if (isImageElement) {
     style.userDrag = 'none' as any;
   }

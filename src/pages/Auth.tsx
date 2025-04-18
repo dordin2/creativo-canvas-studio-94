@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
@@ -18,7 +19,7 @@ const Auth = () => {
   
   // Redirect if already authenticated
   if (user) {
-    navigate("/projects");
+    navigate("/");
     return null;
   }
   
@@ -28,7 +29,6 @@ const Auth = () => {
     
     try {
       await signIn(email, password);
-      navigate("/projects");
     } finally {
       setLoading(false);
     }

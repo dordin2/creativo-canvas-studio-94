@@ -27,7 +27,6 @@ interface DesignProviderProps {
     canvases?: Canvas[];
     activeCanvasIndex?: number;
     isGameMode?: boolean;
-    isInteractionMode?: boolean;
   };
 }
 
@@ -55,7 +54,6 @@ export const DesignProvider = ({
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
   } | null>(null);
-  const [isInteractionMode, setIsInteractionMode] = useState<boolean>(initialState.isInteractionMode || false);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
@@ -78,13 +76,6 @@ export const DesignProvider = ({
     setIsGameMode(prev => !prev);
     if (isGameMode) {
       setActiveElement(null);
-    }
-  };
-  
-  const toggleInteractionMode = () => {
-    setIsInteractionMode(prev => !prev);
-    if (isGameMode) {
-      toggleGameMode();
     }
   };
   
@@ -332,25 +323,12 @@ export const DesignProvider = ({
     
     const newElement = createNewElement(type, position, newLayer, props);
     
-    if (type === 'image') {
-      if (props?.dataUrl) {
-        console.log("DesignContext - Creating new image element with dataUrl length:", 
-          props.dataUrl.length);
-        
-        if (props.thumbnailDataUrl) {
-          console.log("DesignContext - Image has thumbnail preview");
-        }
-      }
+    if (type === 'image' && props?.dataUrl) {
+      console.log("DesignContext - Creating new image element with dataUrl length:", 
+        props.dataUrl.length);
       
-      if (props) {
-        if (props.size) newElement.size = { ...props.size };
-        if (props.originalSize) newElement.originalSize = { ...props.originalSize };
-        if (props.style) newElement.style = { ...props.style };
-        if (props.dataUrl) newElement.dataUrl = props.dataUrl;
-        if (props.thumbnailDataUrl) newElement.thumbnailDataUrl = props.thumbnailDataUrl;
-        if (props.src) newElement.src = props.src;
-        if (props.cacheKey) newElement.cacheKey = props.cacheKey;
-        if (props.fileMetadata) newElement.fileMetadata = { ...props.fileMetadata };
+      if (props.thumbnailDataUrl) {
+        console.log("DesignContext - Image has thumbnail preview");
       }
     }
     
@@ -711,9 +689,7 @@ export const DesignProvider = ({
     removeFromInventory,
     setDraggedInventoryItem,
     handleItemCombination,
-    setCanvases,
-    isInteractionMode,
-    toggleInteractionMode,
+    setCanvases
   };
   
   return (

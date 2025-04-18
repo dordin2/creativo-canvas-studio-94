@@ -14,7 +14,6 @@ import Play from "./pages/Play";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Payment from "./pages/Payment";
-import Admin from "./pages/Admin";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -27,12 +26,11 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            {/* Redirect root to auth page */}
             <Route 
               path="/" 
               element={
                 <AuthProvider>
-                  <Navigate to="/auth" replace />
+                  <Projects />
                 </AuthProvider>
               } 
             />
@@ -41,16 +39,6 @@ const App = () => (
               element={
                 <AuthProvider>
                   <Auth />
-                </AuthProvider>
-              } 
-            />
-            <Route 
-              path="/projects" 
-              element={
-                <AuthProvider>
-                  <ProtectedRoute>
-                    <Projects />
-                  </ProtectedRoute>
                 </AuthProvider>
               } 
             />
@@ -86,16 +74,7 @@ const App = () => (
                 </AuthProvider>
               } 
             />
-            <Route 
-              path="/admin" 
-              element={
-                <AuthProvider>
-                  <ProtectedRoute>
-                    <Admin />
-                  </ProtectedRoute>
-                </AuthProvider>
-              } 
-            />
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>

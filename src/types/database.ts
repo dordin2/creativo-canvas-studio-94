@@ -90,75 +90,15 @@ export type Database = {
         }
         Relationships: []
       }
-      library_elements: {
-        Row: {
-          id: string
-          name: string
-          image_path: string
-          created_at: string
-          created_by: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          image_path: string
-          created_at?: string
-          created_by: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          image_path?: string
-          created_at?: string
-          created_by?: string
-        }
-        Relationships: []
-      }
-      user_roles: {
-        Row: {
-          id: string
-          user_id: string
-          role: 'admin' | 'user'
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          user_id: string
-          role?: 'admin' | 'user'
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          user_id?: string
-          role?: 'admin' | 'user'
-          created_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_roles_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      get_user_role: {
-        Args: Record<string, never>
-        Returns: string
-      }
-      is_admin: {
-        Args: Record<string, never>
-        Returns: boolean
-      }
+      [_ in never]: never
     }
     Enums: {
-      app_role: 'admin' | 'user'
+      [_ in never]: never
     }
     CompositeTypes: {
       [_ in never]: never

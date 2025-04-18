@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from "react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -135,10 +136,10 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
         onClose();
       }
     }}>
-      <DialogContent className={`sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl bg-white ${language === 'he' ? 'rtl' : 'ltr'}`}>
+      <DialogContent className={`sm:max-w-md md:max-w-xl lg:max-w-3xl xl:max-w-4xl ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <DialogHeader>
           <DialogTitle className="text-xl">{clickSequencePuzzleConfig.name}</DialogTitle>
-          <DialogDescription className="sr-only">Interactive puzzle - click to solve</DialogDescription>
+          <DialogDescription className="sr-only">{language === 'en' ? 'Click images in the correct order' : 'לחץ על התמונות בסדר הנכון'}</DialogDescription>
           <DialogClose asChild>
             <Button 
               variant="ghost" 
@@ -154,36 +155,59 @@ const ClickSequencePuzzleModal: React.FC<ClickSequencePuzzleModalProps> = ({ isO
         
         <div className="py-6">
           {clickSequencePuzzleConfig.images.length > 0 ? (
-            <div className="flex flex-row justify-center gap-4 flex-wrap">
-              {clickSequencePuzzleConfig.images.map((image, index) => (
-                <div 
-                  key={index} 
-                  onClick={() => !solved && handleImageClick(index)}
-                  className={`relative transition-transform cursor-pointer hover:scale-105 ${solved ? 'cursor-default' : ''}`}
-                >
-                  <div className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border rounded overflow-hidden flex items-center justify-center bg-white shadow-sm">
-                    <img 
-                      src={image} 
-                      alt={`Sequence image ${index + 1}`}
-                      className="max-w-full max-h-full object-contain bg-white"
-                    />
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-6">
+              {/* Images grid */}
+              <div className="flex flex-row justify-center items-center gap-4 flex-wrap">
+                {clickSequencePuzzleConfig.images.map((image, index) => {
+                  return (
+                    <div 
+                      key={index}
+                      onClick={() => handleImageClick(index)}
+                      className="relative transition-transform cursor-pointer hover:scale-105"
+                    >
+                      <div className="flex flex-col items-center">
+                        <div className="w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 border-2 border-gray-300 rounded-md overflow-hidden hover:border-blue-500 bg-white relative flex items-center justify-center">
+                          <img
+                            src={image}
+                            alt={`Image ${index + 1}`}
+                            className="max-w-full max-h-full object-contain"
+                          />
+                        </div>
+                        <div className="text-xs text-center mt-1">
+                          {language === 'en' ? `Image ${index + 1}` : `תמונה ${index + 1}`}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              
+              <div className="text-center text-sm text-gray-500 mt-2">
+                {language === 'en' 
+                  ? 'Click on the images in the correct sequence order' 
+                  : 'לחץ על התמונות בסדר הנכון'}
+              </div>
             </div>
           ) : (
-            <div className="text-center py-10 bg-white">
+            <div className="text-center py-10">
               <p className="text-gray-500">
                 {language === 'en' ? 'No images available for this puzzle.' : 'אין תמונות זמינות לפאזל זה.'}
+              </p>
+              <p className="text-sm mt-2">
+                {language === 'en' ? 'Please add images in the puzzle properties.' : 'אנא הוסף תמונות במאפייני הפאזל.'}
               </p>
             </div>
           )}
         </div>
-
+        
         {solved && (
-          <div className="flex items-center justify-center text-green-600 gap-2 p-4 bg-green-50 rounded-lg border border-green-100">
-            <CheckCircle className="h-5 w-5" />
-            <span>{t('puzzle.modal.solved')}</span>
+          <div className="p-4 bg-green-50 border border-green-200 rounded-md mb-4">
+            <div className="flex items-center justify-center text-green-600 gap-2">
+              <CheckCircle className="h-6 w-6" />
+              <span className="text-lg font-semibold">
+                {language === 'en' ? 'Puzzle solved correctly!' : 'הפאזל נפתר בהצלחה!'}
+              </span>
+            </div>
           </div>
         )}
       </DialogContent>

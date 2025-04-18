@@ -80,8 +80,8 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
           // Prevent scrolling when using handles on touch devices
           e.preventDefault();
           const touch = e.touches[0];
-          
-          // Create a compatible synthetic event with all required properties
+          // Create a React compatible MouseEvent using the properties from TouchEvent
+          // Use the correct React.MouseEvent type instead of native MouseEvent
           const syntheticEvent = {
             clientX: touch.clientX,
             clientY: touch.clientY,
@@ -91,27 +91,7 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
             currentTarget: e.currentTarget,
             bubbles: true,
             type: 'mousedown',
-            // Add missing properties required by React.MouseEvent
-            altKey: false,
-            button: 0,
-            buttons: 1,
-            ctrlKey: false,
-            metaKey: false,
-            shiftKey: false,
-            relatedTarget: null,
-            screenX: touch.screenX,
-            screenY: touch.screenY,
-            pageX: touch.pageX || touch.clientX,
-            pageY: touch.pageY || touch.clientY,
-            // These are typically used in mouse events
-            movementX: 0,
-            movementY: 0,
-            detail: 0,
-            view: window,
-            // Ensure we have all event methods
-            getModifierState: () => false,
-            nativeEvent: touch
-          } as unknown as React.MouseEvent;
+          } as React.MouseEvent;
           
           onResizeStart(syntheticEvent, direction);
         }}

@@ -29,15 +29,17 @@ const ElementControls = ({
   onRotateStart,
   showControls
 }: ElementControlsProps) => {
-  const { updateElement, removeElement, addElement, canvases, isInteractionMode } = useDesignState();
+  const { updateElement, removeElement, addElement, canvases } = useDesignState();
   
+  // Don't render controls at all if the element is hidden or it's the background
   if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
     return null;
   }
 
-  const showResizeHandles = isActive && !isInteractionMode;
-  const showRotationHandle = isActive && !isInteractionMode;
+  const showResizeHandles = isActive;
+  const showRotationHandle = isActive;
   
+  // Round dimensions to ensure consistency with the element
   const elementDimensions = {
     width: element.size?.width ? Math.round(element.size.width) : 0,
     height: element.size?.height ? Math.round(element.size.height) : 0
@@ -46,36 +48,15 @@ const ElementControls = ({
   const handleDuplicate = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    console.log("ElementControls - Starting duplication of element:", element.id, element.type);
+    console.log("ElementControls - Original element to duplicate:", element);
     
-    if (element.type === 'image') {
-      console.log("ElementControls - Image element details before duplication:", {
-        hasDataUrl: !!element.dataUrl,
-        dataUrlLength: element.dataUrl ? element.dataUrl.length : 0,
-        hasThumbnail: !!element.thumbnailDataUrl,
-        hasSrc: !!element.src,
-        hasCacheKey: !!element.cacheKey,
-        originalSize: element.originalSize,
-        size: element.size,
-        position: element.position,
-        style: element.style
-      });
-    }
-    
+    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
-    console.log("ElementControls - Duplicate props prepared:", {
-      type: element.type,
-      hasDataUrl: element.type === 'image' ? !!duplicateProps.dataUrl : 'n/a',
-      dataUrlLength: element.type === 'image' && duplicateProps.dataUrl ? duplicateProps.dataUrl.length : 0,
-      size: duplicateProps.size,
-      originalSize: duplicateProps.originalSize,
-      style: duplicateProps.style
-    });
+    console.log("ElementControls - Duplicate props before adding:", duplicateProps);
     
-    const newElement = addElement(element.type, duplicateProps);
-    
-    console.log("ElementControls - Duplication complete, new element ID:", newElement.id);
+    // Add the duplicated element
+    addElement(element.type, duplicateProps);
   };
 
   const handleToggleVisibility = (e: React.MouseEvent) => {
@@ -89,6 +70,7 @@ const ElementControls = ({
     e.stopPropagation();
     const currentInteraction = element.interaction || { type: 'none' };
     
+    // Toggle between 'none' and the last selected interaction type or default to 'puzzle'
     const newType = currentInteraction.type === 'none' ? 
       (currentInteraction.type === 'none' ? 'puzzle' : currentInteraction.type) : 
       'none';
@@ -109,18 +91,23 @@ const ElementControls = ({
   const isVisible = !element.isHidden;
   const isInteractive = element.interaction?.type !== 'none' && element.interaction?.type !== undefined;
   
+  // Check if the element is a puzzle type - don't show interactive button for puzzles
   const isPuzzleElement = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'].includes(element.type);
 
+  // Check if this element has canvas navigation interaction
   const hasCanvasNavigation = element.interaction?.type === 'canvasNavigation';
   const targetCanvasName = hasCanvasNavigation && element.interaction?.targetCanvasId 
     ? canvases.find(c => c.id === element.interaction?.targetCanvasId)?.name || 'Unknown Canvas'
     : '';
 
+  // Get the current rotation directly from the element style for consistent transforms
   const rotation = getRotation(element);
   
+  // Use exact positioning with Math.round to ensure consistency
   const posX = Math.round(element.position.x);
   const posY = Math.round(element.position.y);
   
+  // Apply the same transformation to the frame as the element has
   const frameStyle = {
     position: 'absolute' as const,
     left: posX,
@@ -130,11 +117,10 @@ const ElementControls = ({
     transform: `rotate(${rotation}deg)`,
     pointerEvents: 'none' as const,
     zIndex: 1000 + element.layer,
-    border: isActive ? (isInteractionMode ? '2px solid #6366F1' : '1px solid #6366F1') : 'none',
+    border: isActive ? '1px solid #6366F1' : 'none',
     opacity: 1,
     boxSizing: 'border-box' as const,
     borderRadius: '2px',
-    backgroundColor: 'transparent'
   };
 
   return (
@@ -157,21 +143,17 @@ const ElementControls = ({
           boxSizing: 'border-box',
         }}
       >
-        {!isInteractionMode && (
-          <>
-            <ResizeHandles
-              show={showResizeHandles}
-              onResizeStart={onResizeStart}
-            />
-            
-            <RotationHandle
-              show={showRotationHandle}
-              onRotateStart={onRotateStart}
-            />
-          </>
-        )}
+        <ResizeHandles
+          show={showResizeHandles}
+          onResizeStart={onResizeStart}
+        />
         
-        {isActive && !isInteractionMode && (
+        <RotationHandle
+          show={showRotationHandle}
+          onRotateStart={onRotateStart}
+        />
+        
+        {isActive && (
           <div 
             className="element-controls"
             style={{
@@ -190,7 +172,7 @@ const ElementControls = ({
                     <Button 
                       variant="outline" 
                       size="icon" 
-                      className={`h-8 w-8 bg-gray-50/90 backdrop-blur-sm hover:bg-gray-100/90 ${isInteractive ? 'text-blue-600 border-blue-600' : ''}`}
+                      className={`h-8 w-8 bg-white ${isInteractive ? 'text-blue-600 border-blue-600' : ''}`}
                       onClick={handleToggleInteractive}
                     >
                       {hasCanvasNavigation ? (
@@ -215,7 +197,7 @@ const ElementControls = ({
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8 bg-gray-50/90 backdrop-blur-sm hover:bg-gray-100/90"
+                    className="h-8 w-8 bg-white"
                     onClick={handleDuplicate}
                   >
                     <Copy className="h-4 w-4" />
@@ -233,7 +215,7 @@ const ElementControls = ({
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8 bg-gray-50/90 backdrop-blur-sm hover:bg-gray-100/90"
+                    className="h-8 w-8 bg-white"
                     onClick={handleToggleVisibility}
                   >
                     {isVisible ? (
@@ -255,7 +237,7 @@ const ElementControls = ({
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8 bg-gray-50/90 backdrop-blur-sm hover:bg-gray-100/90 text-red-500"
+                    className="h-8 w-8 bg-white text-red-500"
                     onClick={handleDelete}
                   >
                     <Trash2 className="h-4 w-4" />

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
@@ -13,50 +12,24 @@ import {
   MoveHorizontal,
   MousePointerClick,
   SlidersHorizontal,
-  SlidersVertical,
-  Globe
+  SlidersVertical
 } from "lucide-react";
-import { useDesignState } from "@/context/DesignContext"; // Corrected import
+import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { LibraryElementsList } from "./LibraryElementsList";
-import { useAuth } from "@/context/AuthContext";
-import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
 
 const Sidebar = () => {
   const { addElement } = useDesignState();
   const { t, language } = useLanguage();
-  const { user } = useAuth();
-  const [isAdmin, setIsAdmin] = useState(false);
-  
-  useEffect(() => {
-    const checkAdminStatus = async () => {
-      if (!user) return;
-      
-      try {
-        const { data, error } = await supabase.rpc('is_admin');
-        
-        if (error) {
-          console.error("Error checking admin status:", error);
-          return;
-        }
-        
-        setIsAdmin(data);
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-      }
-    };
-    
-    checkAdminStatus();
-  }, [user]);
 
+  // Color swatches for backgrounds
   const colorSwatches = [
     "#FFFFFF", "#F3F4F6", "#E5E7EB", "#D1D5DB",
     "#FEE2E2", "#FEE7AA", "#D1FAE5", "#DBEAFE",
     "#8B5CF6", "#EC4899", "#F59E0B", "#10B981"
   ];
 
+  // Pre-defined gradient backgrounds
   const gradients = [
     "linear-gradient(to right, #fc466b, #3f5efb)",
     "linear-gradient(to right, #8a2387, #e94057, #f27121)",
@@ -65,6 +38,7 @@ const Sidebar = () => {
     "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"
   ];
 
+  // Handle puzzle options
   const handleImagePuzzleClick = () => {
     addElement('puzzle', {
       puzzleConfig: {
@@ -158,13 +132,10 @@ const Sidebar = () => {
   return (
     <div className={`sidebar-panel border-r flex flex-col ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <Tabs defaultValue="elements" className="flex-1 flex flex-col">
-        <TabsList className="grid grid-cols-4 mx-2 mt-2">
+        <TabsList className="grid grid-cols-3 mx-2 mt-2">
           <TabsTrigger value="elements">{t('sidebar.elements')}</TabsTrigger>
           <TabsTrigger value="text">{t('sidebar.text')}</TabsTrigger>
           <TabsTrigger value="background">{t('sidebar.background')}</TabsTrigger>
-          <TabsTrigger value="library">
-            <Globe className="h-4 w-4" />
-          </TabsTrigger>
         </TabsList>
         
         <TabsContent value="elements" className="flex-1 overflow-auto p-4">
@@ -330,13 +301,6 @@ const Sidebar = () => {
               />
             ))}
           </div>
-        </TabsContent>
-        
-        <TabsContent value="library" className="flex-1 overflow-auto">
-          <h3 className="text-sm font-medium p-4 pb-2">
-            {language === 'en' ? 'Public Elements' : 'אלמנטים ציבוריים'}
-          </h3>
-          <LibraryElementsList />
         </TabsContent>
       </Tabs>
     </div>

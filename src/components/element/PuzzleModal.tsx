@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -126,14 +127,14 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
                 {Array.from({ length: puzzleConfig.placeholders }).map((_, idx) => (
                   <div key={idx} className="relative">
                     <div 
-                      className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border rounded overflow-hidden cursor-pointer transition-all hover:brightness-90 active:scale-95 flex items-center justify-center bg-white shadow-sm"
+                      className="w-24 h-24 sm:w-28 sm:h-28 md:w-32 md:h-32 border rounded overflow-hidden cursor-pointer transition-all hover:brightness-90 active:scale-95 flex items-center justify-center bg-white"
                       onClick={() => cyclePlaceholder(idx)}
                     >
                       {currentStates[idx] !== undefined && puzzleConfig.images[currentStates[idx]] && (
                         <img 
                           src={puzzleConfig.images[currentStates[idx]]} 
                           alt={`Puzzle piece ${idx + 1}`}
-                          className="max-w-full max-h-full object-contain bg-white"
+                          className="max-w-full max-h-full object-contain"
                         />
                       )}
                     </div>
@@ -141,7 +142,7 @@ const PuzzleModal: React.FC<PuzzleModalProps> = ({ isOpen, onClose, element }) =
                 ))}
               </div>
             ) : (
-              <div className="text-center py-10 bg-white">
+              <div className="text-center py-10">
                 <p className="text-gray-500">
                   {language === 'en' ? 'No images available for this puzzle.' : 'אין תמונות זמינות לפאזל זה.'}
                 </p>
