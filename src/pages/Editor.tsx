@@ -24,6 +24,7 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import FloatingElementsButton from "@/components/FloatingElementsButton";
 import MobileImageControls from "@/components/mobile/MobileImageControls";
 import ImageControlTabs from "@/components/mobile/ImageControlTabs";
+
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
   const {
@@ -54,6 +55,7 @@ const Editor = () => {
     width: 0,
     height: 0
   });
+
   useEffect(() => {
     if (!projectId) {
       navigate('/');
@@ -61,11 +63,13 @@ const Editor = () => {
     }
     loadProjectData();
   }, [projectId]);
+
   useEffect(() => {
     if (isMobile && activeElement) {
       setShowMobileProperties(true);
     }
   }, [activeElement, isMobile]);
+
   useEffect(() => {
     const updateCanvasSize = () => {
       const canvas = document.querySelector('.canvas-container');
@@ -80,6 +84,7 @@ const Editor = () => {
     window.addEventListener('resize', updateCanvasSize);
     return () => window.removeEventListener('resize', updateCanvasSize);
   }, []);
+
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
@@ -111,6 +116,7 @@ const Editor = () => {
       setIsLoading(false);
     }
   };
+
   const handleSaveProject = async () => {
     try {
       await saveProject(canvases, activeCanvasIndex);
@@ -119,6 +125,7 @@ const Editor = () => {
       toast.error('Failed to save project');
     }
   };
+
   const handleShareGame = () => {
     const shareUrl = `${window.location.origin}/play/${projectId}`;
     if (navigator.clipboard) {
@@ -132,6 +139,7 @@ const Editor = () => {
       promptManualCopy(shareUrl);
     }
   };
+
   const promptManualCopy = (url: string) => {
     toast.info(<div>
         <p>Copy this link to share your game:</p>
@@ -140,9 +148,11 @@ const Editor = () => {
         </div>
       </div>);
   };
+
   const goBackToProjects = () => {
     navigate('/');
   };
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -153,6 +163,7 @@ const Editor = () => {
         </div>
       </div>;
   }
+
   if (isMobile && !isGameMode) {
     return <div className="flex flex-col h-screen overflow-hidden">
         <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
@@ -196,35 +207,50 @@ const Editor = () => {
           </div>
         </div>
         
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30">
-          <Drawer>
-            <DrawerTrigger asChild>
-              
-            </DrawerTrigger>
-            <DrawerContent className="px-4 pb-6">
-              <div className="mt-2">
-                <MobileSidebar isOpen={showMobileSidebar} onClose={() => setShowMobileSidebar(false)} />
-              </div>
-            </DrawerContent>
-          </Drawer>
-          
-          <Button variant="ghost" size="icon" className="aspect-square" onClick={handleShareGame}>
-            <Share2 className="h-6 w-6" />
-            <span className="sr-only">Share Game</span>
+        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-4 py-3 z-30">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex flex-col items-center gap-1"
+            onClick={handleSaveProject}
+          >
+            <Save className="h-5 w-5" />
+            <span className="text-xs">Save</span>
           </Button>
-          
-          {activeElement && <Drawer>
-              <DrawerTrigger asChild>
-                
-              </DrawerTrigger>
-              <DrawerContent className="px-0 pb-4">
-                <MobileProperties />
-              </DrawerContent>
-            </Drawer>}
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex flex-col items-center gap-1"
+            onClick={toggleProjectVisibility}
+          >
+            {isPublic ? (
+              <>
+                <Globe className="h-5 w-5 text-green-500" />
+                <span className="text-xs">Public</span>
+              </>
+            ) : (
+              <>
+                <Lock className="h-5 w-5 text-red-500" />
+                <span className="text-xs">Private</span>
+              </>
+            )}
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            className="flex flex-col items-center gap-1"
+            onClick={handleShareGame}
+          >
+            <Share2 className="h-5 w-5" />
+            <span className="text-xs">Share</span>
+          </Button>
         </div>
         <FloatingElementsButton />
       </div>;
   }
+
   if (isMobile && isGameMode) {
     return <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
@@ -244,6 +270,7 @@ const Editor = () => {
         </div>
       </div>;
   }
+
   return <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
       {!isGameMode && <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
           <div className="flex items-center">
@@ -305,4 +332,5 @@ const Editor = () => {
       {!isGameMode && <FloatingElementsButton />}
     </div>;
 };
+
 export default Editor;
