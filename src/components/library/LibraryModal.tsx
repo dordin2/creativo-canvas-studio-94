@@ -5,8 +5,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Library } from 'lucide-react';
+import { Library, Trash2, Upload } from 'lucide-react';
 import { Database } from '@/types/database';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface LibraryElement {
   id: string;
@@ -18,7 +20,10 @@ interface LibraryElement {
 export const LibraryModal = () => {
   const [elements, setElements] = useState<LibraryElement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const { user } = useAuth();
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imageName, setImageName] = useState('');
+  const { user, profile } = useAuth();
+  const isAdmin = profile?.roles?.includes('admin');
 
   const fetchLibraryElements = async () => {
     try {
@@ -34,6 +39,65 @@ export const LibraryModal = () => {
       toast.error('Failed to load library elements');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteElement = async (elementId: string) => {
+    try {
+      const { error } = await supabase
+        .from('library_elements')
+        .delete()
+        .eq('id', elementId);
+
+      if (error) throw error;
+      
+      toast.success('Element deleted successfully');
+      fetchLibraryElements();
+    } catch (error) {
+      console.error('Error deleting element:', error);
+      toast.error('Failed to delete element');
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!imageFile || !imageName) {
+      toast.error('Please select an image and provide a name');
+      return;
+    }
+
+    try {
+      // Upload image to storage
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('library_elements')
+        .upload(fileName, imageFile);
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('library_elements')
+        .getPublicUrl(fileName);
+
+      // Insert metadata into library_elements
+      const { error: insertError } = await supabase
+        .from('library_elements')
+        .insert({
+          name: imageName,
+          image_path: urlData.publicUrl,
+          created_by: user?.id
+        });
+
+      if (insertError) throw insertError;
+
+      toast.success('Element uploaded successfully');
+      fetchLibraryElements();
+      setImageFile(null);
+      setImageName('');
+    } catch (error) {
+      console.error('Error uploading element:', error);
+      toast.error('Failed to upload element');
     }
   };
 
@@ -56,6 +120,39 @@ export const LibraryModal = () => {
           </SheetDescription>
         </SheetHeader>
         
+        {isAdmin && (
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="mt-4 w-full">
+                <Upload className="mr-2 h-4 w-4" /> Upload New Element
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Upload Element</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4">
+                <Input 
+                  type="file" 
+                  onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  accept="image/*"
+                />
+                <Input 
+                  placeholder="Element Name" 
+                  value={imageName}
+                  onChange={(e) => setImageName(e.target.value)}
+                />
+                <Button 
+                  onClick={handleFileUpload} 
+                  disabled={!imageFile || !imageName}
+                >
+                  Upload
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+        
         <div className="mt-4">
           {isLoading ? (
             <div className="flex items-center justify-center h-32">
@@ -70,7 +167,7 @@ export const LibraryModal = () => {
               {elements.map((element) => (
                 <div 
                   key={element.id} 
-                  className="border rounded-lg p-2 hover:bg-gray-50 transition-colors"
+                  className="border rounded-lg p-2 hover:bg-gray-50 transition-colors relative"
                 >
                   <img 
                     src={element.image_path} 
@@ -81,6 +178,16 @@ export const LibraryModal = () => {
                   <p className="text-xs text-gray-500">
                     {new Date(element.created_at).toLocaleDateString()}
                   </p>
+                  {isAdmin && (
+                    <Button 
+                      variant="destructive" 
+                      size="icon" 
+                      className="absolute top-2 right-2"
+                      onClick={() => handleDeleteElement(element.id)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
