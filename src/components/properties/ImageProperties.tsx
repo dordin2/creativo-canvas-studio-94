@@ -31,8 +31,10 @@ const ImageProperties = ({
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
     if (element.originalSize && element.size) {
-      const currentScale = Math.round((element.size.width / element.originalSize.width) * 100);
-      setScaleValue(currentScale || 100);
+      // Calculate current scale based on how much of the canvas width is filled
+      const canvasWidth = document.querySelector('.canvas-container')?.clientWidth || 800;
+      const currentScale = Math.round((element.size.width / canvasWidth) * 100);
+      setScaleValue(Math.min(currentScale, 100) || 50); // Default to 50% if calculation fails
     }
     
     setRotation(getRotation(element));
@@ -116,23 +118,40 @@ const ImageProperties = ({
   };
   
   const handleImageResize = (value: number[]) => {
-    if (!element.originalSize || !canvasRef) return;
-    
-    const scalePercentage = value[0];
-    setScaleValue(scalePercentage);
+    if (!element.originalSize) return;
     
     // Get canvas dimensions
-    const canvasWidth = canvasRef.clientWidth;
-    const canvasHeight = canvasRef.clientHeight;
+    const canvasContainer = document.querySelector('.canvas-container');
+    if (!canvasContainer) return;
     
-    // Calculate the target width based on canvas size
-    const targetWidth = (canvasWidth * scalePercentage) / 100;
+    const canvasWidth = canvasContainer.clientWidth;
+    const canvasHeight = canvasContainer.clientHeight;
     
-    // Maintain aspect ratio
-    const aspectRatio = element.originalSize.width / element.originalSize.height;
-    const targetHeight = targetWidth / aspectRatio;
+    // Calculate scale factor (0-1) from slider value (0-100)
+    const scaleFactor = value[0] / 100;
     
-    // Update element size
+    // Calculate the maximum dimensions that would fit in the canvas
+    // while maintaining aspect ratio
+    const imageAspectRatio = element.originalSize.width / element.originalSize.height;
+    const canvasAspectRatio = canvasWidth / canvasHeight;
+    
+    let maxWidth, maxHeight;
+    
+    if (imageAspectRatio > canvasAspectRatio) {
+      // Image is wider relative to canvas - fit to width
+      maxWidth = canvasWidth;
+      maxHeight = canvasWidth / imageAspectRatio;
+    } else {
+      // Image is taller relative to canvas - fit to height
+      maxHeight = canvasHeight;
+      maxWidth = canvasHeight * imageAspectRatio;
+    }
+    
+    // Apply the scale factor to the maximum dimensions
+    const targetWidth = maxWidth * scaleFactor;
+    const targetHeight = maxHeight * scaleFactor;
+    
+    setScaleValue(value[0]);
     updateElement(element.id, {
       size: {
         width: Math.round(targetWidth),
@@ -238,13 +257,20 @@ const ImageProperties = ({
       
       <div className="mt-4">
         <div className="flex items-center justify-between mb-2">
-          <Label>Resize Image</Label>
+          <Label>Image Size</Label>
           <span className="text-sm font-medium">{scaleValue}%</span>
         </div>
-        <Slider value={[scaleValue]} min={10} max={200} step={1} onValueChange={handleImageResize} className="mb-2" />
+        <Slider 
+          value={[scaleValue]} 
+          min={1} 
+          max={100} 
+          step={1} 
+          onValueChange={handleImageResize} 
+          className="mb-2" 
+        />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>10%</span>
-          <span>200%</span>
+          <span>Smaller</span>
+          <span>Fill Canvas</span>
         </div>
         <div className="text-sm mt-2">
           {element.size?.width} × {element.size?.height} px
