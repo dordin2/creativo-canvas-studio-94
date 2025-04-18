@@ -9,6 +9,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { getRotation } from "@/utils/elementStyles";
+import { prepareElementForDuplication } from "@/utils/elementUtils";
 
 interface ElementControlsProps {
   isActive: boolean;
