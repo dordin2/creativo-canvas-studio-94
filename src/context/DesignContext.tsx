@@ -63,7 +63,8 @@ export const DesignProvider = ({
   const toggleGameMode = () => {
     if (isGameMode) {
       if (gameModeState) {
-        setCanvases(gameModeState.canvases);
+        const restoredCanvases = JSON.parse(JSON.stringify(gameModeState.canvases));
+        setCanvases(restoredCanvases);
         setInventoryItems([]);
       }
     } else {

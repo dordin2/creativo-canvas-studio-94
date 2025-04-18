@@ -4,9 +4,13 @@ import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation }
 export const getDefaultPosition = (canvasRef: HTMLDivElement | null) => {
   if (!canvasRef) return { x: 100, y: 100 };
   
+  // Use fixed canvas dimensions for consistent centering
+  const CANVAS_WIDTH = 1600;
+  const CANVAS_HEIGHT = 900;
+  
   return {
-    x: canvasRef.clientWidth / 2 - 50,
-    y: canvasRef.clientHeight / 2 - 50
+    x: (CANVAS_WIDTH / 2) - 100, // Offset by half the default element width
+    y: (CANVAS_HEIGHT / 2) - 75  // Offset by half the default element height
   };
 };
 
@@ -103,13 +107,26 @@ export const createNewElement = (
       };
       
     case 'image':
-      // If props includes size, use that; otherwise, use default
       const initialSize = props?.size || { width: 200, height: 150 };
+      
+      // Calculate centered position
+      let centerX = position.x;
+      let centerY = position.y;
+      
+      if (props?.originalSize) {
+        // If we have original size, use it to center the image
+        centerX = position.x - (props.originalSize.width * 0.5);
+        centerY = position.y - (props.originalSize.height * 0.5);
+      } else {
+        // Use initial size for centering
+        centerX = position.x - (initialSize.width * 0.5);
+        centerY = position.y - (initialSize.height * 0.5);
+      }
       
       return {
         id: generateId(),
         type,
-        position,
+        position: { x: centerX, y: centerY },
         size: initialSize,
         originalSize: props?.originalSize || initialSize,
         src: props?.src,
