@@ -1,4 +1,3 @@
-
 import { DesignElement } from "@/context/DesignContext";
 import TextProperties from "./TextProperties";
 import ShapeProperties from "./ShapeProperties";
@@ -15,9 +14,10 @@ import { useEffect } from "react";
 
 interface ElementPropertiesProps {
   element: DesignElement;
+  isInteractiveMode?: boolean;  // Add optional isInteractiveMode prop
 }
 
-const ElementProperties = ({ element }: ElementPropertiesProps) => {
+const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProps) => {
   const textElements = ['heading', 'subheading', 'paragraph'];
   const shapeElements = ['rectangle', 'circle', 'triangle', 'line'];
   const puzzleElements = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'];
