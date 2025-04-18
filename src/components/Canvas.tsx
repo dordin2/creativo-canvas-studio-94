@@ -49,15 +49,13 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         const canvasWidth = FIXED_CANVAS_WIDTH;
         const canvasHeight = FIXED_CANVAS_HEIGHT;
         
+        setCanvasDimensions({ width: canvasWidth, height: canvasHeight });
+        
         if (isMobileView && isGameMode) {
           const scaleX = parentWidth / canvasWidth;
           const scaleY = parentHeight / canvasHeight;
           const scale = Math.min(scaleX, scaleY);
           setZoomLevel(scale);
-          setCanvasDimensions({ 
-            width: canvasWidth,
-            height: canvasHeight 
-          });
         } else {
           const scaleX = (parentWidth - 40) / canvasWidth;
           const scaleY = (parentHeight - 40) / canvasHeight;
@@ -66,11 +64,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           if (!isGameMode) {
             setZoomLevel(scale);
           }
-          
-          setCanvasDimensions({ 
-            width: canvasWidth,
-            height: canvasHeight 
-          });
         }
       }
     };
