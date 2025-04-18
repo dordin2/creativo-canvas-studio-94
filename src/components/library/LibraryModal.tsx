@@ -68,9 +68,11 @@ export const LibraryModal = () => {
     }
   };
 
-  const handleImageClick = async (element: LibraryElement) => {
+  const handleImageClick = (element: LibraryElement) => {
     try {
-      // Add the image element to the scene
+      console.log("Adding image from gallery:", element.image_path);
+      
+      // Add the image element to the scene with the src property set directly
       addElement('image', {
         src: element.image_path,
         name: element.name,
@@ -86,8 +88,10 @@ export const LibraryModal = () => {
   };
 
   useEffect(() => {
-    fetchLibraryElements();
-  }, []);
+    if (isOpen) {
+      fetchLibraryElements();
+    }
+  }, [isOpen]);
 
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
