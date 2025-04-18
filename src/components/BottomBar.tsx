@@ -59,7 +59,7 @@ const BottomBar = () => {
                 <Triangle className="h-6 w-6" />
                 <span className="text-xs">{t('sidebar.triangle')}</span>
               </Button>
-              <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => addElement('text')}>
+              <Button variant="outline" className="h-20 flex flex-col gap-2" onClick={() => addElement('textElement')}>
                 <Text className="h-6 w-6" />
                 <span className="text-xs">{t('sidebar.text')}</span>
               </Button>

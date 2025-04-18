@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import Canvas from "@/components/Canvas";
 import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
@@ -16,10 +15,10 @@ import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { PaymentButton } from "@/components/PaymentButton";
 import { useIsMobile } from "@/hooks/use-mobile";
-import MobileSidebar from "@/components/MobileSidebar";
 import MobileProperties from "@/components/MobileProperties";
 import { LibraryModal } from "@/components/library/LibraryModal";
 import { AdminGallery } from "@/components/admin/AdminGallery";
+import BottomBar from "@/components/BottomBar";
 import { 
   Drawer,
   DrawerContent,
@@ -40,7 +39,6 @@ const Editor = () => {
   } = useDesignState();
   const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
   const isMobile = useIsMobile();
-  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
   const isAdmin = true; // Assuming isAdmin is true for demonstration purposes
 
