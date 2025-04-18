@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { useDesignState } from '@/context/DesignContext';
@@ -7,7 +6,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { Library, Trash2 } from 'lucide-react';
-import { Database } from '@/types/database';
+import { processImageUpload } from '@/utils/imageUploader';
 
 interface LibraryElement {
   id: string;
@@ -21,7 +20,7 @@ export const LibraryModal = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const { user, profile } = useAuth();
-  const { addElement } = useDesignState();
+  const { addElement, canvasRef } = useDesignState();
   const isAdmin = profile?.roles?.includes('admin');
 
   const fetchLibraryElements = async () => {
@@ -68,22 +67,76 @@ export const LibraryModal = () => {
     }
   };
 
-  const handleImageClick = (element: LibraryElement) => {
+  const handleImageClick = async (element: LibraryElement) => {
     try {
-      console.log("Adding image from gallery:", element.image_path);
+      console.log("Processing gallery image:", element.image_path);
       
-      // Add the image element to the scene with both src and name
-      addElement('image', {
-        src: element.image_path,
-        name: element.name || 'Gallery Image',
-        dataUrl: element.image_path, // Also pass as dataUrl for compatibility
-      });
+      // Create a temporary element to load the image
+      const img = new Image();
+      img.crossOrigin = "anonymous"; // Enable CORS
       
-      // Close the modal after adding
-      setIsOpen(false);
-      toast.success('Image added to scene');
+      img.onload = async () => {
+        // Create a canvas to get the image data
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        
+        if (!ctx) {
+          toast.error("Failed to process image");
+          return;
+        }
+        
+        // Draw image to canvas
+        ctx.drawImage(img, 0, 0);
+        
+        // Convert to blob
+        const blob = await new Promise<Blob>((resolve) => {
+          canvas.toBlob((blob) => {
+            resolve(blob as Blob);
+          }, 'image/png');
+        });
+        
+        // Create a File object from the blob
+        const file = new File([blob], element.name || 'gallery-image.png', { 
+          type: 'image/png',
+          lastModified: new Date().getTime()
+        });
+        
+        // Create a new element first
+        const newElement = addElement('image', {
+          name: element.name
+        });
+        
+        // Process the image using the same function as manual uploads
+        processImageUpload(
+          file,
+          (updatedData) => {
+            // Update the element with the processed image data
+            addElement('image', {
+              ...updatedData,
+              name: element.name
+            });
+          },
+          canvasRef?.clientWidth,
+          canvasRef?.clientHeight
+        );
+        
+        // Close the modal after adding
+        setIsOpen(false);
+        toast.success('Image added to scene');
+      };
+      
+      img.onerror = () => {
+        console.error("Failed to load image from gallery:", element.image_path);
+        toast.error("Failed to load image");
+      };
+      
+      // Start loading the image
+      img.src = element.image_path;
+      
     } catch (error) {
-      console.error('Error adding image to scene:', error);
+      console.error('Error adding image from gallery:', error);
       toast.error('Failed to add image to scene');
     }
   };
