@@ -1,4 +1,3 @@
-
 import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
 // Get canvas center point and account for element size
@@ -15,9 +14,14 @@ export const getDefaultPosition = (canvasRef: HTMLDivElement | null, elementSize
 export const getDefaultImageSize = (canvasRef: HTMLDivElement | null) => {
   if (!canvasRef) return { width: 200, height: 150 };
   
-  // Calculate a reasonable default size based on canvas size
-  const width = Math.min(200, canvasRef.clientWidth * 0.3);
-  const height = Math.min(150, canvasRef.clientHeight * 0.3);
+  // Use the actual canvas dimensions, not the scaled dimensions
+  const canvasWidth = 1600; // Fixed canvas width
+  const canvasHeight = 900; // Fixed canvas height
+  
+  const MAX_CANVAS_IMAGE_SIZE_PERCENT = 0.5;
+  // Calculate a size that's 50% of the original canvas dimensions
+  const width = Math.min(canvasWidth * MAX_CANVAS_IMAGE_SIZE_PERCENT, canvasWidth * 0.3);
+  const height = Math.min(canvasHeight * MAX_CANVAS_IMAGE_SIZE_PERCENT, canvasHeight * 0.3);
   
   return { width, height };
 };
@@ -268,4 +272,3 @@ export const createNewElement = (
       };
   }
 };
-
