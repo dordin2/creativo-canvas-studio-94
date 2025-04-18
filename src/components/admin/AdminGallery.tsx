@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Gallery, Image } from 'lucide-react';
+import { Images } from 'lucide-react';
 import { toast } from "sonner";
 
 interface LibraryImage {
@@ -43,7 +43,7 @@ export function AdminGallery() {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
-          <Gallery className="h-4 w-4" />
+          <Images className="h-4 w-4" />
           Admin Gallery
         </Button>
       </DialogTrigger>
