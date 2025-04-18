@@ -46,7 +46,8 @@ const DraggableElement = ({ element, isActive, children }: {
     inventoryItems,
     draggedInventoryItem,
     setDraggedInventoryItem,
-    handleItemCombination
+    handleItemCombination,
+    elements
   } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
   
