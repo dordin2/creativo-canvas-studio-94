@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 
 export const createLibraryElementsBucket = async () => {
@@ -15,3 +14,25 @@ export const createLibraryElementsBucket = async () => {
 
   return true;
 };
+
+// Initialize the library_elements bucket if it doesn't exist
+export const initializeLibraryElementsStorage = async () => {
+  try {
+    const { data: buckets } = await supabase.storage.listBuckets();
+    const bucketExists = buckets?.some(bucket => bucket.name === 'library_elements');
+    
+    if (!bucketExists) {
+      const { error } = await supabase.storage.createBucket('library_elements', {
+        public: true
+      });
+      
+      if (error) throw error;
+      console.log('Created library_elements bucket');
+    }
+  } catch (error) {
+    console.error('Error initializing storage:', error);
+  }
+};
+
+// Call initialization when the app starts
+initializeLibraryElementsStorage();
