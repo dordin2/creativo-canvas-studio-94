@@ -1,3 +1,4 @@
+
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Trash2, Copy, Eye, EyeOff, Maximize2, Frame } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
@@ -49,6 +50,7 @@ const ElementControls = ({
   const handleSetAsBackground = (e: React.MouseEvent) => {
     e.stopPropagation();
     
+    const currentCanvas = canvases[activeCanvasIndex];
     if (currentCanvas) {
       const backgroundElement = currentCanvas.elements.find(el => el.layer === 0);
       if (backgroundElement) {
