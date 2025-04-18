@@ -9,7 +9,7 @@ import { ImagesTab } from "./tabs/ImagesTab";
 import { UploadTab } from "./tabs/UploadTab";
 import { ShapesTab } from "./tabs/ShapesTab";
 import { PuzzlesTab } from "./tabs/PuzzlesTab";
-import { useDesignState } from "@/context/DesignState";
+import { useDesignState } from "@/context/DesignContext";
 
 export const ElementsModal = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -45,7 +45,7 @@ export const ElementsModal = () => {
         
         <div className="mt-6">
           <Tabs defaultValue="elements" className="w-full">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="elements">
                 <Library className="h-4 w-4 mr-2" />
                 <span>{t('sidebar.elements')}</span>
