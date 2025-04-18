@@ -26,7 +26,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import FloatingElementsButton from "@/components/FloatingElementsButton";
-import { InteractiveModeToggle } from "@/components/InteractiveModeToggle";
+import InteractiveModeToggle from "@/components/InteractiveModeToggle";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
