@@ -85,7 +85,7 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    // Always set active element, even in interaction mode
+    // Always set active element in both edit and interaction modes
     setActiveElement(element);
     
     if (isGameMode) {
@@ -97,7 +97,7 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     
     if (isEditing) return;
     
-    // Only allow dragging in edit mode
+    // Only allow dragging in edit mode (not in interaction mode)
     if (!isInteractionMode && !isSequencePuzzleElement) {
       startDrag(e, element.position);
       setIsDragging(true);

@@ -5,16 +5,13 @@ import NoElementSelected from "./properties/NoElementSelected";
 import InteractionProperties from "./properties/InteractionProperties";
 
 const Properties = () => {
-  const { activeElement, isInteractionMode } = useDesignState();
+  const { activeElement } = useDesignState();
   
   if (!activeElement) {
     return <NoElementSelected />;
   }
   
-  // Show either interaction properties or regular properties based on mode
-  return isInteractionMode ? 
-    <InteractionProperties element={activeElement} /> : 
-    <ElementProperties element={activeElement} />;
+  return <ElementProperties element={activeElement} />;
 };
 
 export default Properties;
