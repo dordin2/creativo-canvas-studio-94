@@ -1,4 +1,3 @@
-
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Trash2, Copy, Eye, EyeOff, Maximize2, Frame } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
@@ -59,7 +58,7 @@ const ElementControls = ({
       const backgroundElement = currentCanvas.elements.find(el => el.layer === 0);
       if (backgroundElement) {
         updateElement(backgroundElement.id, {
-          layer: 1
+          layer: Math.max(...currentCanvas.elements.map(el => el.layer)) + 1
         });
       }
     }
