@@ -11,7 +11,7 @@ import { useDesignState } from "@/context/DesignContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil } from "lucide-react";
+import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil, ZoomIn, ZoomOut } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { PaymentButton } from "@/components/PaymentButton";
@@ -245,6 +245,16 @@ const Editor = () => {
           <div className="z-10 relative">
             <CanvasTabs />
           </div>
+          
+          <div className="flex justify-center gap-2 py-2 bg-white border-b border-gray-200">
+            <Button variant="outline" size="sm" onClick={() => {/* Add zoom in handler */}}>
+              <ZoomIn className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => {/* Add zoom out handler */}}>
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+          </div>
+          
           <div className="flex-1 relative z-1">
             <Canvas />
           </div>

@@ -1,9 +1,9 @@
 
 import { useState, useEffect } from 'react';
-import { Slider } from "@/components/ui/slider";
 import { DesignElement } from "@/types/designTypes";
 import { useDesignState } from "@/context/DesignContext";
 import { getRotation } from "@/utils/elementStyles";
+import ImageControlTabs from './ImageControlTabs';
 
 interface MobileImageControlsProps {
   element: DesignElement;
@@ -76,37 +76,14 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 space-y-4">
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium">Size</span>
-          <span className="text-sm text-muted-foreground">{scaleValue}%</span>
-        </div>
-        <Slider
-          value={[scaleValue]}
-          min={1}
-          max={100}
-          step={1}
-          onValueChange={handleImageResize}
-          className="w-full"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-medium">Rotation</span>
-          <span className="text-sm text-muted-foreground">{rotation}°</span>
-        </div>
-        <Slider
-          value={[rotation]}
-          min={-180}
-          max={180}
-          step={1}
-          onValueChange={handleRotationChange}
-          disabled={isGameMode}
-          className="w-full"
-        />
-      </div>
+    <div className="fixed bottom-0 left-0 right-0">
+      <ImageControlTabs
+        scaleValue={scaleValue}
+        rotation={rotation}
+        onScaleChange={handleImageResize}
+        onRotationChange={handleRotationChange}
+        disabled={isGameMode}
+      />
     </div>
   );
 };
