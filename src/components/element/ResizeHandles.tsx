@@ -1,3 +1,4 @@
+
 import { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useDesignState } from "@/context/DesignContext";
 
@@ -75,7 +76,7 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
           e.preventDefault();
           const touch = e.touches[0];
           
-          const syntheticEvent: ReactMouseEvent<HTMLDivElement, MouseEvent> = {
+          const syntheticEvent = {
             clientX: touch.clientX,
             clientY: touch.clientY,
             preventDefault: () => e.preventDefault(),
@@ -101,7 +102,15 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
             detail: 0,
             pointerId: 0,
             pointerType: 'touch',
-          } as ReactMouseEvent<HTMLDivElement, MouseEvent>;
+            bubbles: true,
+            cancelable: true,
+            getModifierState: () => false,
+            relatedTarget: null,
+            which: 1,
+            isPrimary: true,
+            layerX: 0,
+            layerY: 0,
+          } as unknown as ReactMouseEvent<HTMLDivElement, MouseEvent>;
           
           onResizeStart(syntheticEvent, direction);
         }}
@@ -124,3 +133,4 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
 };
 
 export default ResizeHandles;
+
