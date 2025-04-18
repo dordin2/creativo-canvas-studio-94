@@ -1,3 +1,5 @@
+
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
@@ -83,7 +85,7 @@ const Header = () => {
         <div className="flex items-center gap-2">
           <GameModeToggle />
           <InteractiveModeToggle />
-          <LibraryModal />
+          <LibraryModal /> {/* Added library modal */}
           <Drawer>
             <DrawerTrigger asChild>
               <Button variant="outline" size="icon" className="hover:bg-gray-50">
@@ -154,7 +156,7 @@ const Header = () => {
       <div className="flex items-center gap-4">
         <GameModeToggle />
         <InteractiveModeToggle />
-        <LibraryModal />
+        <LibraryModal /> {/* Added library modal */}
         <div className="h-6 w-px bg-gray-200"></div>
         <div className="flex items-center gap-2">
           <Button 
