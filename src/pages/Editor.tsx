@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,6 +25,7 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import FloatingElementsButton from "@/components/FloatingElementsButton";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -287,6 +287,7 @@ const Editor = () => {
             </Drawer>
           )}
         </div>
+        <FloatingElementsButton />
       </div>
     );
   }
@@ -411,6 +412,7 @@ const Editor = () => {
           </div>
         </>
       )}
+      {!isGameMode && <FloatingElementsButton />}
     </div>
   );
 };
