@@ -44,7 +44,8 @@ const DraggableElement = ({ element, isActive, children }: {
     inventoryItems,
     draggedInventoryItem,
     setDraggedInventoryItem,
-    handleItemCombination
+    handleItemCombination,
+    isInteractionMode,
   } = useDesignState();
   
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
@@ -81,6 +82,12 @@ const DraggableElement = ({ element, isActive, children }: {
   const handleMouseDown = (e: React.MouseEvent) => {
     if (e.button !== 0) return;
     e.stopPropagation();
+    
+    // In interaction mode, only allow interaction configuration
+    if (isInteractionMode) {
+      setActiveElement(element);
+      return;
+    }
     
     if (isImageElement && isGameMode) {
       e.preventDefault();
@@ -531,13 +538,19 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }
 
+  // Don't show controls in interaction mode unless element is active
+  const shouldShowControls = !isGameMode && !isInteractionMode ? showControls : (isActive && isInteractionMode);
+  
+  // Disable dragging and resizing in interaction mode
+  const isDraggingDisabled = isGameMode || isInteractionMode;
+  const isResizingDisabled = isGameMode || isInteractionMode;
+
   const combinedStyle = {
     ...elementStyle,
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
-    cursor: isGameMode 
-      ? (hasInteraction ? 'pointer' : 'default') 
-      : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
+    cursor: isInteractionMode ? 'pointer' : 'move',
+    pointerEvents: element.isHidden ? 'none' : 'auto',
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute' as 'absolute',
@@ -553,7 +566,7 @@ const DraggableElement = ({ element, isActive, children }: {
       ref={ref}
       className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
       style={combinedStyle}
-      onMouseDown={handleMouseDown}
+      onMouseDown={!isDraggingDisabled ? handleMouseDown : undefined}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
       draggable={isGameMode && isImageElement ? false : undefined}
@@ -668,7 +681,7 @@ const DraggableElement = ({ element, isActive, children }: {
           frameTransform={frameTransform}
           onResizeStart={handleResizeStart}
           onRotateStart={handleRotateStart}
-          showControls={showControls && isActive && !element.isHidden}
+          showControls={shouldShowControls && !element.isHidden}
         />
       )}
       

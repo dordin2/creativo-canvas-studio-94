@@ -27,6 +27,7 @@ interface DesignProviderProps {
     canvases?: Canvas[];
     activeCanvasIndex?: number;
     isGameMode?: boolean;
+    isInteractionMode?: boolean;
   };
 }
 
@@ -54,6 +55,7 @@ export const DesignProvider = ({
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
   } | null>(null);
+  const [isInteractionMode, setIsInteractionMode] = useState<boolean>(initialState.isInteractionMode || false);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
@@ -76,6 +78,13 @@ export const DesignProvider = ({
     setIsGameMode(prev => !prev);
     if (isGameMode) {
       setActiveElement(null);
+    }
+  };
+  
+  const toggleInteractionMode = () => {
+    setIsInteractionMode(prev => !prev);
+    if (isGameMode) {
+      toggleGameMode();
     }
   };
   
@@ -702,7 +711,9 @@ export const DesignProvider = ({
     removeFromInventory,
     setDraggedInventoryItem,
     handleItemCombination,
-    setCanvases
+    setCanvases,
+    isInteractionMode,
+    toggleInteractionMode,
   };
   
   return (
