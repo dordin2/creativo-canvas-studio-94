@@ -4,10 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { Library, Trash2, Upload } from 'lucide-react';
+import { Library, Trash2 } from 'lucide-react';
 import { Database } from '@/types/database';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 
 interface LibraryElement {
   id: string;
@@ -19,8 +17,6 @@ interface LibraryElement {
 export const LibraryModal = () => {
   const [elements, setElements] = useState<LibraryElement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imageName, setImageName] = useState('');
   const { user, profile } = useAuth();
   const isAdmin = profile?.roles?.includes('admin');
 
@@ -76,48 +72,6 @@ export const LibraryModal = () => {
     }
   };
 
-  const handleFileUpload = async () => {
-    if (!imageFile || !imageName) {
-      toast.error('Please select an image and provide a name');
-      return;
-    }
-
-    try {
-      // Upload image to storage
-      const fileExt = imageFile.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('library_elements')
-        .upload(fileName, imageFile);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: urlData } = supabase.storage
-        .from('library_elements')
-        .getPublicUrl(fileName);
-
-      // Insert metadata into library_elements
-      const { error: insertError } = await supabase
-        .from('library_elements')
-        .insert({
-          name: imageName,
-          image_path: urlData.publicUrl,
-          created_by: user?.id
-        });
-
-      if (insertError) throw insertError;
-
-      toast.success('Element uploaded successfully');
-      fetchLibraryElements();
-      setImageFile(null);
-      setImageName('');
-    } catch (error) {
-      console.error('Error uploading element:', error);
-      toast.error('Failed to upload element');
-    }
-  };
-
   useEffect(() => {
     fetchLibraryElements();
   }, []);
@@ -136,8 +90,6 @@ export const LibraryModal = () => {
             View and manage your uploaded elements
           </SheetDescription>
         </SheetHeader>
-        
-        
         
         <div className="mt-4">
           {isLoading ? (
