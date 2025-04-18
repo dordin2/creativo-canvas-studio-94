@@ -1,4 +1,3 @@
-
 import { CSSProperties } from "react";
 import { DesignElement } from "@/context/DesignContext";
 
@@ -40,10 +39,9 @@ export const getTextStyle = (element: DesignElement): CSSProperties => {
     fontFamily: 'inherit',
     lineHeight: 'inherit',
     overflow: 'hidden',
-    willChange: 'auto',
+    willChange: 'transform',
     transform: 'translateZ(0)',
-    backfaceVisibility: 'hidden',
-    backgroundColor: '#FFFFFF'
+    backfaceVisibility: 'hidden'
   };
 };
 
@@ -72,7 +70,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     transform: `translateZ(0) rotate(${rotation}deg)`,
     backfaceVisibility: 'hidden',
     willChange: isDragging ? 'transform' : 'auto',
-    transition: isDragging ? 'none' : 'transform 0.1s cubic-bezier(0.4, 0, 0.2, 1)',
+    transition: isDragging ? 'none' : 'all 0.1s cubic-bezier(0.4, 0, 0.2, 1)',
     boxSizing: 'border-box',
     backgroundColor: (element.style?.backgroundColor as string) || 'transparent'
   };
