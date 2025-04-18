@@ -9,8 +9,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { getRotation } from "@/utils/elementStyles";
-import { prepareElementForDuplication } from "@/utils/elementUtils";
 
 interface ElementControlsProps {
   isActive: boolean;
@@ -29,14 +27,14 @@ const ElementControls = ({
   onRotateStart,
   showControls
 }: ElementControlsProps) => {
-  const { updateElement, removeElement, addElement, canvases } = useDesignState();
+  const { updateElement, removeElement, addElement, canvases, isInteractionMode } = useDesignState();
   
   if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
     return null;
   }
 
-  const showResizeHandles = isActive;
-  const showRotationHandle = isActive;
+  const showResizeHandles = isActive && !isInteractionMode;
+  const showRotationHandle = isActive && !isInteractionMode;
   
   const elementDimensions = {
     width: element.size?.width ? Math.round(element.size.width) : 0,
@@ -156,17 +154,21 @@ const ElementControls = ({
           boxSizing: 'border-box',
         }}
       >
-        <ResizeHandles
-          show={showResizeHandles}
-          onResizeStart={onResizeStart}
-        />
+        {!isInteractionMode && (
+          <>
+            <ResizeHandles
+              show={showResizeHandles}
+              onResizeStart={onResizeStart}
+            />
+            
+            <RotationHandle
+              show={showRotationHandle}
+              onRotateStart={onRotateStart}
+            />
+          </>
+        )}
         
-        <RotationHandle
-          show={showRotationHandle}
-          onRotateStart={onRotateStart}
-        />
-        
-        {isActive && (
+        {isActive && !isInteractionMode && (
           <div 
             className="element-controls"
             style={{

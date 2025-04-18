@@ -85,6 +85,7 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     if (e.button !== 0) return;
     e.stopPropagation();
     
+    // Always allow selection in interaction mode, but no dragging
     if (isInteractionMode) {
       setActiveElement(element);
       return;
@@ -645,7 +646,7 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
 
   return (
     <>
-      {isGameMode ? (
+      {isGameMode || isInteractionMode ? (
         createElementContent(elementRef)
       ) : (
         <ContextMenu>
