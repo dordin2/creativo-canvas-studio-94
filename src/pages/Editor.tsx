@@ -23,6 +23,8 @@ import { AdminGallery } from "@/components/admin/AdminGallery";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import FloatingElementsButton from "@/components/FloatingElementsButton";
 import MobileImageControls from "@/components/mobile/MobileImageControls";
+import MobileInteractionControls from "@/components/mobile/MobileInteractionControls";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import ImageControlTabs from "@/components/mobile/ImageControlTabs";
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -153,6 +155,7 @@ const Editor = () => {
         </div>
       </div>;
   }
+  const { isInteractiveMode } = useInteractiveMode();
   if (isMobile && !isGameMode) {
     return <div className="flex flex-col h-screen overflow-hidden">
         <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
@@ -182,7 +185,7 @@ const Editor = () => {
           </div>
           
           {activeElement?.type === 'image' && <div className="bg-white border-b border-gray-200">
-              <MobileImageControls element={activeElement} canvasSize={canvasSize} />
+              {!isInteractiveMode ? <MobileImageControls element={activeElement} canvasSize={canvasSize} /> : <MobileInteractionControls element={activeElement} />}
             </div>}
           
           <div className="flex-1 relative z-1">
