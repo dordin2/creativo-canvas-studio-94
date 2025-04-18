@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -45,49 +44,23 @@ export const ImagesTab = ({ onClose }: ImagesTabProps) => {
 
   const handleElementClick = async (element: LibraryElement) => {
     try {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      
-      img.onload = async () => {
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext('2d');
-        
-        if (!ctx) {
-          toast.error("Failed to process image");
-          return;
-        }
-        
-        ctx.drawImage(img, 0, 0);
-        
-        const blob = await new Promise<Blob>((resolve) => {
-          canvas.toBlob((blob) => {
-            resolve(blob as Blob);
-          }, 'image/png');
-        });
-        
-        const file = new File([blob], element.name || 'gallery-image.png', { 
-          type: 'image/png',
-          lastModified: new Date().getTime()
-        });
-        
-        addElement('image', {
-          name: element.name,
-          file: file
-        });
-        
-        onClose();
-        toast.success('Element added to scene');
-      };
-      
-      img.onerror = () => {
-        console.error("Failed to load image:", element.image_path);
-        toast.error("Failed to load image");
-      };
-      
-      img.src = element.image_path;
-      
+      const newElement = addElement('image', {
+        name: element.name
+      });
+
+      const response = await fetch(element.image_path);
+      const blob = await response.blob();
+      const file = new File([blob], element.name || 'gallery-image.png', { 
+        type: blob.type,
+        lastModified: new Date().getTime()
+      });
+
+      onClose();
+
+      addElement('image', {
+        name: element.name,
+        file: file
+      });
     } catch (error) {
       console.error('Error adding element:', error);
       toast.error('Failed to add element');
