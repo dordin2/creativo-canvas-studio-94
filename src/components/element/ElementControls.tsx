@@ -53,18 +53,19 @@ const ElementControls = ({
   const handleSetAsBackground = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // First, remove any existing background
+    // First, update any existing background elements to not be at layer 0
     const currentCanvas = canvases[activeCanvasIndex];
     if (currentCanvas) {
-      const backgroundElement = currentCanvas.elements.find(el => el.type === 'background');
+      const backgroundElement = currentCanvas.elements.find(el => el.layer === 0);
       if (backgroundElement) {
-        removeElement(backgroundElement.id);
+        updateElement(backgroundElement.id, {
+          layer: 1
+        });
       }
     }
     
-    // Update current element to be background
+    // Update current element to be background-like
     updateElement(element.id, {
-      type: 'background',
       position: { x: 0, y: 0 },
       size: { width: 1600, height: 900 }, // Fixed canvas size
       layer: 0
@@ -75,11 +76,10 @@ const ElementControls = ({
   const handleDetachFromBackground = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    if (element.type !== 'background') return;
+    if (element.layer !== 0) return;
     
-    // Convert back to regular image
+    // Convert back to regular image position and size
     updateElement(element.id, {
-      type: 'image',
       position: { x: 100, y: 100 }, // Place in a visible position
       size: { 
         width: element.originalSize?.width || 400,
