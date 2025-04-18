@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -13,7 +13,8 @@ import {
   PuzzleType,
   ElementType,
   CombinationResultType,
-  SliderOrientation
+  SliderOrientation,
+  InteractionConfig
 } from "@/types/designTypes";
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/context/LanguageContext";
@@ -32,7 +33,8 @@ import {
   Upload, 
   Trash2,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Plus
 } from "lucide-react";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -188,38 +190,43 @@ const InteractionProperties = ({ element }: InteractionPropertiesProps) => {
   const handleInteractionChange = (value: InteractionType) => {
     setInteractionType(value);
     
-    // Reset values when changing interaction type
-    const newInteraction = {
-      ...element.interaction,
-      type: value,
+    const newInteraction: InteractionConfig = {
+      type: value as InteractionType
     };
 
-    // Remove properties not relevant to the new interaction type
-    if (value !== 'message') {
-      delete newInteraction.message;
-      delete newInteraction.messagePosition;
+    if (value === 'message' && element.interaction?.message) {
+      newInteraction.message = element.interaction.message;
+      newInteraction.messagePosition = messagePosition;
     }
     
-    if (value !== 'sound') {
-      delete newInteraction.sound;
-      delete newInteraction.soundUrl;
+    if (value === 'sound' && element.interaction?.soundUrl) {
+      newInteraction.sound = element.interaction.sound;
+      newInteraction.soundUrl = element.interaction.soundUrl;
     }
     
-    if (value !== 'canvasNavigation') {
-      delete newInteraction.targetCanvasId;
+    if (value === 'canvasNavigation' && targetCanvasId) {
+      newInteraction.targetCanvasId = targetCanvasId;
     }
     
-    if (value !== 'puzzle') {
-      delete newInteraction.puzzleType;
-      delete newInteraction.puzzleConfig;
-      delete newInteraction.sequencePuzzleConfig;
-      delete newInteraction.clickSequencePuzzleConfig;
-      delete newInteraction.sliderPuzzleConfig;
+    if (value === 'puzzle') {
+      newInteraction.puzzleType = puzzleType;
+      
+      if (puzzleType === 'puzzle') {
+        newInteraction.puzzleConfig = puzzleConfig;
+      } else if (puzzleType === 'sequencePuzzle') {
+        newInteraction.sequencePuzzleConfig = sequencePuzzleConfig;
+      } else if (puzzleType === 'clickSequencePuzzle') {
+        newInteraction.clickSequencePuzzleConfig = clickSequencePuzzleConfig;
+      } else if (puzzleType === 'sliderPuzzle') {
+        newInteraction.sliderPuzzleConfig = sliderPuzzleConfig;
+      }
     }
     
-    if (value !== 'combinable') {
-      delete newInteraction.canCombineWith;
-      delete newInteraction.combinationResult;
+    if (value === 'combinable') {
+      newInteraction.canCombineWith = canCombineWith;
+      if (element.interaction?.combinationResult) {
+        newInteraction.combinationResult = element.interaction.combinationResult;
+      }
     }
     
     updateElement(element.id, {
