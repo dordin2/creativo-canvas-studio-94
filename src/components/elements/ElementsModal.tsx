@@ -1,9 +1,8 @@
-
 import { useState } from 'react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Library, ALargeSmall, Palette, Text } from "lucide-react";
+import { Plus, ALargeSmall, Palette, Text } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { ImagesTab } from "./tabs/ImagesTab";
 import { UploadTab } from "./tabs/UploadTab";
@@ -34,7 +33,7 @@ export const ElementsModal = () => {
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center">
-          <Library className="h-5 w-5" />
+          <Plus className="h-5 w-5" />
           <span className="text-xs">{t('sidebar.elements')}</span>
         </Button>
       </SheetTrigger>
@@ -47,7 +46,7 @@ export const ElementsModal = () => {
           <Tabs defaultValue="elements" className="w-full">
             <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="elements">
-                <Library className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2" />
                 <span>{t('sidebar.elements')}</span>
               </TabsTrigger>
               <TabsTrigger value="text">
