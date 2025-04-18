@@ -21,6 +21,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { LibraryModal } from "@/components/library/LibraryModal";
+import { ALargeSmall } from 'lucide-react';
 
 const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) => {
   const { addElement } = useDesignState();
@@ -50,7 +51,10 @@ const MobileSidebar = ({ isOpen, onClose }: { isOpen: boolean; onClose: () => vo
       <Tabs defaultValue="elements" className="w-full">
         <TabsList className="grid grid-cols-3 w-full mb-4">
           <TabsTrigger value="elements">{t('sidebar.elements')}</TabsTrigger>
-          <TabsTrigger value="text">{t('sidebar.text')}</TabsTrigger>
+          <TabsTrigger value="text">
+            <ALargeSmall className="h-4 w-4 mr-2" />
+            {t('sidebar.text')}
+          </TabsTrigger>
           <TabsTrigger value="background">{t('sidebar.background')}</TabsTrigger>
         </TabsList>
 

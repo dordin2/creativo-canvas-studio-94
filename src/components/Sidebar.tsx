@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Text } from "lucide-react";
+import { Text, ALargeSmall } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
 import { useDesignState } from "@/context/DesignContext";
 import { ElementsModal } from "./elements/ElementsModal";
@@ -28,7 +28,10 @@ const Sidebar = () => {
       <Tabs defaultValue="elements" className="flex-1 flex flex-col">
         <TabsList className="grid grid-cols-3 mx-2 mt-2">
           <TabsTrigger value="elements">{t('sidebar.elements')}</TabsTrigger>
-          <TabsTrigger value="text">{t('sidebar.text')}</TabsTrigger>
+          <TabsTrigger value="text">
+            <ALargeSmall className="h-4 w-4 mr-2" />
+            {t('sidebar.text')}
+          </TabsTrigger>
           <TabsTrigger value="background">{t('sidebar.background')}</TabsTrigger>
         </TabsList>
 
