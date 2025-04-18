@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -19,6 +20,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import MobileSidebar from "@/components/MobileSidebar";
 import MobileProperties from "@/components/MobileProperties";
 import { LibraryModal } from "@/components/library/LibraryModal";
+import { AdminGallery } from "@/components/admin/AdminGallery";
 import { 
   Drawer,
   DrawerContent,
