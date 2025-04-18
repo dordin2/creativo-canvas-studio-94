@@ -22,7 +22,7 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff, Layers2 } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { getImageFromCache } from "@/utils/imageUploader";
@@ -251,6 +251,31 @@ const DraggableElement = ({ element, isActive, children }: {
     
     // Trigger the actual item combination in the DesignContext
     handleItemCombination(draggedItemId, element.id);
+  };
+
+  const handleSetAsBackground = () => {
+    if (element.type !== 'image' || !element.dataUrl) {
+      toast.error('Cannot set background - only images can be set as background');
+      return;
+    }
+    
+    const currentCanvas = canvases[activeCanvasIndex];
+    const backgroundElements = currentCanvas.elements.filter(el => el.type === 'background');
+    backgroundElements.forEach(bg => removeElement(bg.id));
+    
+    addElement('background', {
+      style: {
+        backgroundImage: `url(${element.dataUrl})`,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        width: '100%',
+        height: '100%'
+      }
+    });
+    
+    removeElement(element.id);
+    
+    toast.success('Image set as canvas background');
   };
 
   useEffect(() => {
@@ -645,6 +670,12 @@ const DraggableElement = ({ element, isActive, children }: {
               <Copy className="h-4 w-4" />
               <span>Duplicate</span>
             </ContextMenuItem>
+            {element.type === 'image' && (
+              <ContextMenuItem onClick={handleSetAsBackground} className="flex items-center gap-2">
+                <Layers2 className="h-4 w-4" />
+                <span>Set as background</span>
+              </ContextMenuItem>
+            )}
             <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
               {element.isHidden ? (
                 <>
