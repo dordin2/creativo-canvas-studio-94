@@ -26,6 +26,12 @@ import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { getImageFromCache } from "@/utils/imageUploader";
 
+interface DraggableElementProps {
+  element: DesignElement;
+  children?: React.ReactNode;
+  isActive?: boolean;
+}
+
 const DraggableElement = ({ element, children, isActive = false }: DraggableElementProps) => {
   const { 
     updateElement, 
