@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/context-menu";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { InteractionType } from "@/types/designTypes";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 interface InteractionContextMenuProps {
   element: DesignElement;
@@ -16,6 +17,7 @@ interface InteractionContextMenuProps {
 
 const InteractionContextMenu = ({ element, children }: InteractionContextMenuProps) => {
   const { updateElement } = useDesignState();
+  const { isInteractiveMode } = useInteractiveMode();
 
   const handleInteractionSelect = (type: InteractionType) => {
     updateElement(element.id, {
@@ -37,6 +39,11 @@ const InteractionContextMenu = ({ element, children }: InteractionContextMenuPro
       }
     });
   };
+
+  // If not in interactive mode, just render children without context menu
+  if (!isInteractiveMode) {
+    return <>{children}</>;
+  }
 
   return (
     <ContextMenu>
@@ -85,3 +92,4 @@ const InteractionContextMenu = ({ element, children }: InteractionContextMenuPro
 };
 
 export default InteractionContextMenu;
+

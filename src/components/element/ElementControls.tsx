@@ -68,40 +68,13 @@ const ElementControls = ({
     });
   };
 
-  const handleToggleInteractive = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    const currentInteraction = element.interaction || { type: 'none' };
-    
-    // Toggle between 'none' and the last selected interaction type or default to 'puzzle'
-    const newType = currentInteraction.type === 'none' ? 
-      (currentInteraction.type === 'none' ? 'puzzle' : currentInteraction.type) : 
-      'none';
-      
-    updateElement(element.id, {
-      interaction: {
-        ...currentInteraction,
-        type: newType
-      }
-    });
-  };
-
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     removeElement(element.id);
   };
 
   const isVisible = !element.isHidden;
-  const isInteractive = element.interaction?.type !== 'none' && element.interaction?.type !== undefined;
   
-  // Check if the element is a puzzle type - don't show interactive button for puzzles
-  const isPuzzleElement = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'].includes(element.type);
-
-  // Check if this element has canvas navigation interaction
-  const hasCanvasNavigation = element.interaction?.type === 'canvasNavigation';
-  const targetCanvasName = hasCanvasNavigation && element.interaction?.targetCanvasId 
-    ? canvases.find(c => c.id === element.interaction?.targetCanvasId)?.name || 'Unknown Canvas'
-    : '';
-
   // Get the current rotation directly from the element style for consistent transforms
   const rotation = getRotation(element);
   
@@ -159,32 +132,6 @@ const ElementControls = ({
               pointerEvents: 'auto',
             }}
           >
-            {!isPuzzleElement && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      className={`h-8 w-8 bg-white ${isInteractive ? 'text-blue-600 border-blue-600' : ''}`}
-                      onClick={handleToggleInteractive}
-                    >
-                      {hasCanvasNavigation ? (
-                        <Navigation className="h-4 w-4" />
-                      ) : (
-                        <Zap className="h-4 w-4" />
-                      )}
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {hasCanvasNavigation 
-                      ? `Canvas Navigation to: ${targetCanvasName}`
-                      : (isInteractive ? 'Interactive (On)' : 'Interactive (Off)')}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
