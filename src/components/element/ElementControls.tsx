@@ -134,6 +134,7 @@ const ElementControls = ({
     opacity: 1,
     boxSizing: 'border-box' as const,
     borderRadius: '2px',
+    backgroundColor: 'transparent'
   };
 
   return (

@@ -1,4 +1,3 @@
-
 import { CSSProperties } from "react";
 import { DesignElement } from "@/context/DesignContext";
 
@@ -81,7 +80,6 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
 
   if (isImageElement) {
     style.userDrag = 'none' as any;
-    style.transform = `translateZ(0) rotate(${rotation}deg)`;
   }
 
   return style;

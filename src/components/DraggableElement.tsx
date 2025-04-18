@@ -552,10 +552,10 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute',
+    backgroundColor: element.style?.backgroundColor || 'transparent',
     border: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
     outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
     boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
-    backgroundColor: elementStyle.backgroundColor || 'transparent',
   };
 
   const handleElementClick = (e: React.MouseEvent) => {
@@ -614,29 +614,33 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
         
         loadMainImage();
         
-        const thumbnailImg = (
-          <img 
-            src={element.thumbnailDataUrl}
-            alt="Element thumbnail"
-            className="w-full h-full object-contain blur-[1px]"
-            style={{ position: 'absolute', top: 0, left: 0, transition: 'opacity 0.2s' }}
-          />
-        );
-        
-        const mainImg = (
-          <img 
-            src={element.dataUrl || element.src}
-            alt="Element"
-            className={`w-full h-full object-contain ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onLoad={handleImageLoad}
-            style={{ transition: 'opacity 0.3s' }}
-          />
-        );
-        
         children = (
           <div className="relative w-full h-full">
-            {!imageLoaded && thumbnailImg}
-            {mainImg}
+            {!imageLoaded && element.thumbnailDataUrl && (
+              <img 
+                src={element.thumbnailDataUrl}
+                alt="Element thumbnail"
+                className="w-full h-full object-contain blur-[1px]"
+                style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  transition: 'opacity 0.2s',
+                  zIndex: 1
+                }}
+              />
+            )}
+            <img 
+              src={element.dataUrl || element.src}
+              alt="Element"
+              className={`w-full h-full object-contain ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={handleImageLoad}
+              style={{ 
+                transition: 'opacity 0.3s',
+                position: 'relative',
+                zIndex: 2
+              }}
+            />
           </div>
         );
       }
