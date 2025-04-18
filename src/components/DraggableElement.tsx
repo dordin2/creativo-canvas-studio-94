@@ -121,6 +121,12 @@ const DraggableElement = ({ element, isActive, children }: {
       return;
     }
     
+    if (element.layer === 0 && element.type === 'image') {
+      e.stopPropagation();
+      handleDetachFromBackground(e);
+      return;
+    }
+    
     if (textElementTypes.includes(element.type)) {
       e.stopPropagation();
       setIsEditing(true);
@@ -136,6 +142,23 @@ const DraggableElement = ({ element, isActive, children }: {
       e.stopPropagation();
       handleInteraction();
     }
+  };
+
+  const handleDetachFromBackground = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (element.layer !== 0) return;
+    
+    updateElement(element.id, {
+      position: { x: 100, y: 100 },
+      size: { 
+        width: element.originalSize?.width || 400,
+        height: element.originalSize?.height || 225
+      },
+      layer: Math.max(...elements.map(el => el.layer)) + 1
+    });
+    
+    toast.success('Background image detached');
   };
 
   const handleInteraction = () => {
