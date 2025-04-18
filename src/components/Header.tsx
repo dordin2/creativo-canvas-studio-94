@@ -169,14 +169,8 @@ const Header = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <Button variant="outline" className="gap-2 hover:bg-gray-50" onClick={handleShare}>
-            <Share className="h-4 w-4" />
-            <span>{t('app.share')}</span>
-          </Button>
-          <Button className="gap-2 bg-gradient-to-r from-canvas-purple to-canvas-indigo hover:from-canvas-purple-dark hover:to-canvas-indigo hover:shadow-md transition-shadow button-glow" onClick={handleDownload}>
-            <Download className="h-4 w-4" />
-            <span>{t('app.download')}</span>
-          </Button>
+          
+          
         </div>
       </div>
     </header>;
