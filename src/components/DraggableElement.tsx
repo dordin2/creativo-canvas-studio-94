@@ -571,11 +571,10 @@ const DraggableElement = ({ element, children, isActive = false }: DraggableElem
         element.isHidden ? 'opacity-0 pointer-events-none' : ''
       }`}
       style={combinedStyle}
-      onClick={handleElementClick}
-      data-interactive={element.interaction?.type ? "true" : "false"}
       onMouseDown={!isDraggingDisabled ? handleMouseDown : undefined}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
-      onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+      onClick={handleElementClick}
+      data-interactive={element.interaction?.type ? "true" : "false"}
       draggable={isGameMode && isImageElement ? false : undefined}
     >
       {childContent}
