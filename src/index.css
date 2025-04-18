@@ -285,7 +285,7 @@
 
 .canvas-workspace {
   background-size: 20px 20px;
-  @apply bg-gray-50 px-4;
+  @apply bg-gray-50;
   background-image: 
     linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
@@ -399,14 +399,6 @@
 }
 
 @media screen and (max-width: 768px) {
-  .canvas-workspace {
-    padding: 1rem;
-  }
-  
-  .canvas-container {
-    margin-bottom: 4rem;
-  }
-  
   .inventory-panel {
     width: 90vw !important;
     max-width: 320px;
@@ -472,4 +464,3 @@ header {
   z-index: 1;
   isolation: isolate; /* Create stacking context */
 }
-
