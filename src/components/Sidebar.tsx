@@ -1,25 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Square,
-  Circle,
-  Triangle,
-  Image,
-  Text,
-  Lock,
-  Puzzle,
-  SlidersHorizontal,
-  MousePointerClick
-} from "lucide-react";
-import { useDesignState } from "@/context/DesignContext";
+import { Text } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import { LibraryModal } from "@/components/library/LibraryModal";
+import { useDesignState } from "@/context/DesignContext";
+import { ElementsModal } from "./elements/ElementsModal";
 
 const Sidebar = () => {
   const { addElement } = useDesignState();
@@ -49,141 +33,9 @@ const Sidebar = () => {
         </TabsList>
 
         <TabsContent value="elements" className="flex-1 overflow-auto p-4">
-          <Accordion type="single" collapsible className="space-y-4">
-            {/* Basic Shapes */}
-            <AccordionItem value="shapes" className="border rounded-lg">
-              <AccordionTrigger className="px-4">
-                <div className="flex items-center gap-2">
-                  <Square className="h-4 w-4" />
-                  <span>{t('sidebar.shapes')}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="p-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="h-12" onClick={() => addElement('rectangle')}>
-                    <Square className="h-4 w-4 mr-2" />
-                    <span>{t('sidebar.rectangle')}</span>
-                  </Button>
-                  <Button variant="outline" className="h-12" onClick={() => addElement('circle')}>
-                    <Circle className="h-4 w-4 mr-2" />
-                    <span>{t('sidebar.circle')}</span>
-                  </Button>
-                  <Button variant="outline" className="h-12" onClick={() => addElement('triangle')}>
-                    <Triangle className="h-4 w-4 mr-2" />
-                    <span>{t('sidebar.triangle')}</span>
-                  </Button>
-                  <Button variant="outline" className="h-12" onClick={() => addElement('line')}>
-                    <div className="w-4 h-0.5 bg-current mr-2" />
-                    <span>{t('sidebar.line')}</span>
-                  </Button>
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Media */}
-            <AccordionItem value="media" className="border rounded-lg">
-              <AccordionTrigger className="px-4">
-                <div className="flex items-center gap-2">
-                  <Image className="h-4 w-4" />
-                  <span>{t('sidebar.media')}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="p-2">
-                <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" className="h-12" onClick={() => addElement('image')}>
-                    <Image className="h-4 w-4 mr-2" />
-                    <span>{t('sidebar.image')}</span>
-                  </Button>
-                  <LibraryModal />
-                </div>
-              </AccordionContent>
-            </AccordionItem>
-
-            {/* Interactive Elements */}
-            <AccordionItem value="interactive" className="border rounded-lg">
-              <AccordionTrigger className="px-4">
-                <div className="flex items-center gap-2">
-                  <Puzzle className="h-4 w-4" />
-                  <span>{t('sidebar.interactive')}</span>
-                </div>
-              </AccordionTrigger>
-              <AccordionContent className="p-2 space-y-2">
-                {/* Image and Number Puzzles */}
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start h-12"
-                  onClick={() => addElement('puzzle', {
-                    puzzleConfig: {
-                      name: language === 'en' ? 'Puzzle' : 'פאזל',
-                      type: 'image',
-                      placeholders: 3,
-                      images: [],
-                      solution: [0, 0, 0]
-                    }
-                  })}
-                >
-                  <Lock className="h-4 w-4 mr-2" />
-                  <span>{language === 'en' ? 'Image/Number Puzzle' : 'פאזל תמונה/מספרים'}</span>
-                </Button>
-
-                {/* Sequence Puzzles */}
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start h-12"
-                  onClick={() => addElement('sequencePuzzle', {
-                    name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
-                    sequencePuzzleConfig: {
-                      name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
-                      images: [],
-                      solution: [],
-                      currentOrder: []
-                    }
-                  })}
-                >
-                  <MousePointerClick className="h-4 w-4 mr-2" />
-                  <span>{language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף'}</span>
-                </Button>
-
-                {/* Click Sequence Puzzle */}
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start h-12"
-                  onClick={() => addElement('clickSequencePuzzle', {
-                    name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
-                    clickSequencePuzzleConfig: {
-                      name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
-                      images: [],
-                      solution: [],
-                      clickedIndices: []
-                    }
-                  })}
-                >
-                  <MousePointerClick className="h-4 w-4 mr-2" />
-                  <span>{language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים'}</span>
-                </Button>
-
-                {/* Slider Puzzle */}
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start h-12"
-                  onClick={() => addElement('sliderPuzzle', {
-                    name: language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים',
-                    sliderPuzzleConfig: {
-                      name: language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים',
-                      orientation: 'horizontal',
-                      sliderCount: 3,
-                      solution: [5, 7, 3],
-                      currentValues: [0, 0, 0],
-                      maxValue: 10
-                    }
-                  })}
-                >
-                  <SlidersHorizontal className="h-4 w-4 mr-2" />
-                  <span>{language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים'}</span>
-                </Button>
-              </AccordionContent>
-            </AccordionItem>
-          </Accordion>
+          <div className="grid grid-cols-2 gap-2">
+            <ElementsModal />
+          </div>
         </TabsContent>
 
         <TabsContent value="text" className="flex-1 overflow-auto p-4">
