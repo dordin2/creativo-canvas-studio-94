@@ -1,4 +1,5 @@
-import { MessageSquare, Music, Navigation, ShoppingBasket, Puzzle, Maximize2 } from "lucide-react";
+
+import { MessageSquare, Music, Navigation, ShoppingBasket, Puzzle, Maximize2, Frame } from "lucide-react";
 import {
   ContextMenu,
   ContextMenuContent,
@@ -47,8 +48,43 @@ const InteractionContextMenu = ({ element, children }: InteractionContextMenuPro
     });
   };
 
+  const handleDetachFromBackground = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (element.layer !== 0) return;
+    
+    updateElement(element.id, {
+      position: { x: 100, y: 100 }, 
+      size: { 
+        width: element.originalSize?.width || 400,
+        height: element.originalSize?.height || 225
+      },
+      layer: 1
+    });
+  };
+
   if (isInteractiveMode) {
     return <>{children}</>;
+  }
+
+  // If element is a background (layer 0), only show detach option
+  if (element.layer === 0) {
+    return (
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          {children}
+        </ContextMenuTrigger>
+        <ContextMenuContent>
+          <ContextMenuItem 
+            onClick={handleDetachFromBackground}
+            className="flex items-center gap-2"
+          >
+            <Frame className="h-4 w-4" />
+            <span>Detach from Background</span>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
+    );
   }
 
   return (

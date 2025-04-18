@@ -35,25 +35,20 @@ const ElementControls = ({
   const { isInteractiveMode } = useInteractiveMode();
   const { t, language } = useLanguage();
   
-  // Check if the image has a 16:9 aspect ratio (with some tolerance)
   const hasValidAspectRatio = () => {
     if (element.type !== 'image' || !element.originalSize) return false;
     const { width, height } = element.originalSize;
     const aspectRatio = width / height;
     const targetRatio = 16 / 9;
-    const tolerance = 0.1; // 10% tolerance
+    const tolerance = 0.1;
     return Math.abs(aspectRatio - targetRatio) < tolerance;
   };
 
-  // Check if current element can be converted to background
   const canBeBackground = element.type === 'image' && hasValidAspectRatio();
   
-  // Convert image to background
   const handleSetAsBackground = (e: React.MouseEvent) => {
     e.stopPropagation();
     
-    // First, update any existing background elements to not be at layer 0
-    const currentCanvas = canvases[activeCanvasIndex];
     if (currentCanvas) {
       const backgroundElement = currentCanvas.elements.find(el => el.layer === 0);
       if (backgroundElement) {
@@ -63,23 +58,20 @@ const ElementControls = ({
       }
     }
     
-    // Update current element to be background-like
     updateElement(element.id, {
       position: { x: 0, y: 0 },
-      size: { width: 1600, height: 900 }, // Fixed canvas size
+      size: { width: 1600, height: 900 },
       layer: 0
     });
   };
   
-  // Detach image from background
   const handleDetachFromBackground = (e: React.MouseEvent) => {
     e.stopPropagation();
     
     if (element.layer !== 0) return;
     
-    // Convert back to regular image position and size
     updateElement(element.id, {
-      position: { x: 100, y: 100 }, // Place in a visible position
+      position: { x: 100, y: 100 },
       size: { 
         width: element.originalSize?.width || 400,
         height: element.originalSize?.height || 225
@@ -88,15 +80,13 @@ const ElementControls = ({
     });
   };
 
-  // Don't render controls at all if the element is hidden or we're in game mode
-  if ((!showControls && !isActive) || element.isHidden) {
+  if ((!showControls && !isActive) || element.isHidden || element.layer === 0) {
     return null;
   }
 
   const showResizeHandles = isActive && !isInteractiveMode;
   const showRotationHandle = isActive && !isInteractiveMode;
   
-  // Round dimensions to ensure consistency with the element
   const elementDimensions = {
     width: element.size?.width ? Math.round(element.size.width) : 0,
     height: element.size?.height ? Math.round(element.size.height) : 0
@@ -107,12 +97,10 @@ const ElementControls = ({
     
     console.log("ElementControls - Original element to duplicate:", element);
     
-    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("ElementControls - Duplicate props before adding:", duplicateProps);
     
-    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
@@ -130,14 +118,11 @@ const ElementControls = ({
 
   const isVisible = !element.isHidden;
   
-  // Get the current rotation directly from the element style for consistent transforms
   const rotation = getRotation(element);
   
-  // Use exact positioning with Math.round to ensure consistency
   const posX = Math.round(element.position.x);
   const posY = Math.round(element.position.y);
   
-  // Apply the same transformation to the frame as the element has
   const frameStyle = {
     position: 'absolute' as const,
     left: posX,

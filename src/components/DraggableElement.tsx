@@ -85,6 +85,9 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
+    // Prevent dragging if element is a background
+    if (element.layer === 0) return;
+    
     if (isImageElement && isGameMode) {
       e.preventDefault();
       
@@ -540,9 +543,11 @@ const DraggableElement = ({ element, isActive, children }: {
     ...elementStyle,
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
-    cursor: isGameMode 
-      ? (hasInteraction ? 'pointer' : 'default') 
-      : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
+    cursor: element.layer === 0 
+      ? 'default'
+      : (isGameMode 
+          ? (hasInteraction ? 'pointer' : 'default') 
+          : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab'))),
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute' as 'absolute',
