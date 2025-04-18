@@ -16,13 +16,13 @@ const InteractiveModeToggle = () => {
               id="interactive-mode"
               checked={isInteractiveMode}
               onCheckedChange={toggleInteractiveMode}
-              className="w-[56px]"
+              className="w-[72px] h-7"
             >
-              <div className="absolute inset-y-0 left-1 flex items-center pointer-events-none">
-                <Brush className={`h-4 w-4 transition-colors ${!isInteractiveMode ? 'text-canvas-purple' : 'text-gray-400'}`} />
+              <div className="absolute inset-y-0 left-2 flex items-center pointer-events-none">
+                <Brush className={`h-5 w-5 transition-colors ${!isInteractiveMode ? 'text-canvas-purple' : 'text-gray-400'}`} />
               </div>
-              <div className="absolute inset-y-0 right-1 flex items-center pointer-events-none">
-                <Eye className={`h-4 w-4 transition-colors ${isInteractiveMode ? 'text-canvas-purple' : 'text-gray-400'}`} />
+              <div className="absolute inset-y-0 right-2 flex items-center pointer-events-none">
+                <Eye className={`h-5 w-5 transition-colors ${isInteractiveMode ? 'text-canvas-purple' : 'text-gray-400'}`} />
               </div>
             </Switch>
           </div>

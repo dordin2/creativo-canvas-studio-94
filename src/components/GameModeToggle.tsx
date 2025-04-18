@@ -13,7 +13,7 @@ const GameModeToggle = () => {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-4 mr-4">
             <Gamepad2 className={`h-5 w-5 ${isGameMode ? 'text-canvas-purple' : 'text-gray-500'}`} />
             <Switch
               id="game-mode"
