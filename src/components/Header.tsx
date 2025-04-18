@@ -29,15 +29,17 @@ const Header = () => {
     language
   } = useLanguage();
   const {
-    projectId
+    projectId,
+    isPublic,
+    toggleProjectVisibility,
+    saveProject
   } = useProject();
   const isMobile = useIsMobile();
   const {
     profile
   } = useAuth();
   const isAdmin = profile?.roles?.includes('admin');
-  const isPublic = profile?.isPublic;
-
+  
   const handleDownload = () => {
     if (!canvasRef) return;
     try {
@@ -78,11 +80,7 @@ const Header = () => {
   };
 
   const handleSaveProject = () => {
-    // Implement save project logic here
-  };
-
-  const toggleProjectVisibility = () => {
-    // Implement toggle project visibility logic here
+    saveProject();
   };
 
   if (isMobile) {
