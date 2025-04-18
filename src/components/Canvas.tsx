@@ -429,21 +429,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           </div>
         </div>
         
-        {!isGameMode && (
-          <div className="zoom-controls">
-            <button onClick={handleZoomOut} title="Zoom Out">
-              <Minus size={16} />
-            </button>
-            <span>{Math.round(zoomLevel * 100)}%</span>
-            <button onClick={handleZoomIn} title="Zoom In">
-              <Plus size={16} />
-            </button>
-            <button onClick={handleResetZoom} title="Reset Zoom">
-              <RotateCcw size={16} />
-            </button>
-          </div>
-        )}
-        
         {isGameMode && !isMobileView && (
           <div className="fullscreen-controls">
             <button 
