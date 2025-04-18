@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -43,12 +44,27 @@ export const LibraryModal = () => {
 
   const handleDeleteElement = async (elementId: string) => {
     try {
-      const { error } = await supabase
+      const element = elements.find(e => e.id === elementId);
+      if (!element) return;
+
+      // Get the file path from the URL
+      const filePath = element.image_path.split('/').pop();
+      if (!filePath) throw new Error('Invalid file path');
+
+      // First delete the file from storage
+      const { error: storageError } = await supabase.storage
+        .from('library_elements')
+        .remove([filePath]);
+
+      if (storageError) throw storageError;
+
+      // Then delete the database record
+      const { error: dbError } = await supabase
         .from('library_elements')
         .delete()
         .eq('id', elementId);
 
-      if (error) throw error;
+      if (dbError) throw dbError;
       
       toast.success('Element deleted successfully');
       fetchLibraryElements();
