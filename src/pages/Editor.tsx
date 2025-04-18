@@ -28,6 +28,9 @@ import {
 import FloatingElementsButton from "@/components/FloatingElementsButton";
 import MobileImageControls from "@/components/mobile/MobileImageControls";
 import ImageControlTabs from "@/components/mobile/ImageControlTabs";
+import { getRotation } from "@/utils/elementStyles";
+import { useDesignState } from "@/context/DesignContext";
+import { DesignElement } from "@/types/designTypes";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -47,6 +50,7 @@ const Editor = () => {
   const [showMobileProperties, setShowMobileProperties] = useState(false);
   const isAdmin = true; // Assuming isAdmin is true for demonstration purposes
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const { updateElement } = useDesignState();
 
   useEffect(() => {
     if (!projectId) {
@@ -163,6 +167,39 @@ const Editor = () => {
     navigate('/');
   };
 
+  const handleImageResize = (value: number[], elementId: string) => {
+    const element = canvases[activeCanvasIndex].elements.find(el => el.id === elementId);
+    if (!element?.originalSize || !canvasSize.width || !canvasSize.height) return;
+    
+    const scalePercentage = value[0];
+    
+    const maxWidth = canvasSize.width;
+    const maxHeight = canvasSize.height;
+    
+    const imageAspectRatio = element.originalSize.width / element.originalSize.height;
+    const canvasAspectRatio = maxWidth / maxHeight;
+    
+    let targetWidth, targetHeight;
+    if (imageAspectRatio > canvasAspectRatio) {
+      targetWidth = maxWidth;
+      targetHeight = maxWidth / imageAspectRatio;
+    } else {
+      targetHeight = maxHeight;
+      targetWidth = maxHeight * imageAspectRatio;
+    }
+    
+    const scaleFactor = scalePercentage / 100;
+    const newWidth = Math.round(targetWidth * scaleFactor);
+    const newHeight = Math.round(targetHeight * scaleFactor);
+    
+    updateElement(elementId, {
+      size: {
+        width: newWidth,
+        height: newHeight
+      }
+    });
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -251,22 +288,12 @@ const Editor = () => {
             {activeElement?.type === 'image' ? (
               <ImageControlTabs
                 scaleValue={activeElement ? 100 : 0}
-                rotation={activeElement ? getRotation(activeElement) : 0}
-                onScaleChange={(value) => {
-                  if (activeElement) {
-                    const element = document.querySelector(`[data-element-id="${activeElement.id}"]`);
-                    if (element) {
-                      const rect = element.getBoundingClientRect();
-                      handleImageResize(value, rect.width, rect.height);
-                    }
-                  }
-                }}
+                rotation={getRotation(activeElement)}
+                onScaleChange={(value) => handleImageResize(value, activeElement.id)}
                 onRotationChange={(value) => {
-                  if (activeElement) {
-                    updateElement(activeElement.id, {
-                      style: { ...activeElement.style, transform: `rotate(${value[0]}deg)` }
-                    });
-                  }
+                  updateElement(activeElement.id, {
+                    style: { ...activeElement.style, transform: `rotate(${value[0]}deg)` }
+                  });
                 }}
                 disabled={isGameMode}
               />
