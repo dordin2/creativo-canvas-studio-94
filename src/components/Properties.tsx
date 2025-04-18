@@ -11,6 +11,7 @@ const Properties = () => {
     return <NoElementSelected />;
   }
   
+  // In interaction mode, show interaction properties for the active element
   if (isInteractionMode) {
     return <InteractionProperties element={activeElement} />;
   }
