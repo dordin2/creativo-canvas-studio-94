@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useDesignState } from '@/context/DesignContext';
 import { useLanguage } from '@/context/LanguageContext';
 import { Lock, Puzzle, SlidersHorizontal, MousePointerClick } from 'lucide-react';
+import { ElementType } from '@/types/designTypes';
 
 interface PuzzlesTabProps {
   onClose: () => void;
@@ -13,7 +14,7 @@ export const PuzzlesTab = ({ onClose }: PuzzlesTabProps) => {
   const { addElement } = useDesignState();
   const { language } = useLanguage();
   
-  const handleAddPuzzle = useCallback((type: string, config: any) => {
+  const handleAddPuzzle = useCallback((type: ElementType, config: any) => {
     addElement(type, config);
     onClose();
   }, [addElement, onClose]);
