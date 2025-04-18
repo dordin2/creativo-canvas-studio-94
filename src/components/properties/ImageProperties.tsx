@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -27,6 +26,7 @@ const ImageProperties = ({
   const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
+  const [canvasRef, setCanvasRef] = useState<HTMLCanvasElement | null>(null);
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
@@ -116,16 +116,27 @@ const ImageProperties = ({
   };
   
   const handleImageResize = (value: number[]) => {
-    if (!element.originalSize) return;
+    if (!element.originalSize || !canvasRef) return;
+    
     const scalePercentage = value[0];
     setScaleValue(scalePercentage);
-    const scaleFactor = scalePercentage / 100;
-    const newWidth = Math.round(element.originalSize.width * scaleFactor);
-    const newHeight = Math.round(element.originalSize.height * scaleFactor);
+    
+    // Get canvas dimensions
+    const canvasWidth = canvasRef.clientWidth;
+    const canvasHeight = canvasRef.clientHeight;
+    
+    // Calculate the target width based on canvas size
+    const targetWidth = (canvasWidth * scalePercentage) / 100;
+    
+    // Maintain aspect ratio
+    const aspectRatio = element.originalSize.width / element.originalSize.height;
+    const targetHeight = targetWidth / aspectRatio;
+    
+    // Update element size
     updateElement(element.id, {
       size: {
-        width: newWidth,
-        height: newHeight
+        width: Math.round(targetWidth),
+        height: Math.round(targetHeight)
       }
     });
   };
