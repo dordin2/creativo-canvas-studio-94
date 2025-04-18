@@ -184,7 +184,9 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  const handleDuplicate = () => {
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     console.log("DraggableElement - Original element to duplicate:", element);
     
     // Use the utility function to prepare the element for duplication
