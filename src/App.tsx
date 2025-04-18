@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -8,6 +7,7 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { DesignProvider } from "@/context/DesignContext";
 import { ProjectProvider } from "@/context/ProjectContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { InteractiveModeProvider } from "@/context/InteractiveModeContext";
 import Projects from "./pages/Projects";
 import Editor from "./pages/Editor";
 import Play from "./pages/Play";
@@ -47,11 +47,13 @@ const App = () => (
               element={
                 <AuthProvider>
                   <ProtectedRoute>
-                    <DesignProvider>
-                      <ProjectProvider>
-                        <Editor />
-                      </ProjectProvider>
-                    </DesignProvider>
+                    <InteractiveModeProvider>
+                      <DesignProvider>
+                        <ProjectProvider>
+                          <Editor />
+                        </ProjectProvider>
+                      </DesignProvider>
+                    </InteractiveModeProvider>
                   </ProtectedRoute>
                 </AuthProvider>
               } 
@@ -74,7 +76,6 @@ const App = () => (
                 </AuthProvider>
               } 
             />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>

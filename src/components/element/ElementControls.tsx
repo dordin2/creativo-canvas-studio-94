@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { getRotation } from "@/utils/elementStyles";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 interface ElementControlsProps {
   isActive: boolean;
@@ -30,14 +31,15 @@ const ElementControls = ({
   showControls
 }: ElementControlsProps) => {
   const { updateElement, removeElement, addElement, canvases } = useDesignState();
+  const { isInteractiveMode } = useInteractiveMode();
   
   // Don't render controls at all if the element is hidden or it's the background
   if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
     return null;
   }
 
-  const showResizeHandles = isActive;
-  const showRotationHandle = isActive;
+  const showResizeHandles = isActive && !isInteractiveMode;
+  const showRotationHandle = isActive && !isInteractiveMode;
   
   // Round dimensions to ensure consistency with the element
   const elementDimensions = {
@@ -130,30 +132,22 @@ const ElementControls = ({
         style={frameStyle}
       />
       
-      <div 
-        style={{
-          position: 'absolute',
-          left: posX,
-          top: posY,
-          width: elementDimensions.width,
-          height: elementDimensions.height,
-          transform: `rotate(${rotation}deg)`,
-          zIndex: 1000 + element.layer,
-          pointerEvents: 'none',
-          boxSizing: 'border-box',
-        }}
-      >
-        <ResizeHandles
-          show={showResizeHandles}
-          onResizeStart={onResizeStart}
-        />
+      <div style={{...frameStyle, pointerEvents: 'none'}}>
+        {!isInteractiveMode && (
+          <>
+            <ResizeHandles
+              show={showResizeHandles}
+              onResizeStart={onResizeStart}
+            />
+            
+            <RotationHandle
+              show={showRotationHandle}
+              onRotateStart={onRotateStart}
+            />
+          </>
+        )}
         
-        <RotationHandle
-          show={showRotationHandle}
-          onRotateStart={onRotateStart}
-        />
-        
-        {isActive && (
+        {isActive && !isInteractiveMode && (
           <div 
             className="element-controls"
             style={{

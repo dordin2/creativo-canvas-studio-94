@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
@@ -6,6 +5,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
 import LanguageSwitcher from "./LanguageSwitcher";
 import GameModeToggle from "./GameModeToggle";
+import InteractiveModeToggle from "./InteractiveModeToggle";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LayersList from "./LayersList";
 import { useProject } from "@/context/ProjectContext";
@@ -26,21 +26,17 @@ const Header = () => {
     if (!canvasRef) return;
     
     try {
-      // Create a temporary canvas to draw everything
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       const canvasElement = canvasRef;
       
-      // Set the canvas dimensions
       canvas.width = canvasElement.clientWidth;
       canvas.height = canvasElement.clientHeight;
       
       if (ctx) {
-        // Draw white background
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         
-        // Draw the HTML content
         const data = new XMLSerializer().serializeToString(canvasElement);
         const img = new Image();
         const svgBlob = new Blob([data], { type: "image/svg+xml;charset=utf-8" });
@@ -54,7 +50,6 @@ const Header = () => {
             .toDataURL("image/png")
             .replace("image/png", "image/octet-stream");
           
-          // Trigger download
           const link = document.createElement("a");
           link.download = "canvas-design.png";
           link.href = imgURI;
@@ -86,7 +81,7 @@ const Header = () => {
         
         <div className="flex items-center gap-2">
           <GameModeToggle />
-          
+          <InteractiveModeToggle />
           <Drawer>
             <DrawerTrigger asChild>
               <Button variant="outline" size="icon" className="hover:bg-gray-50">
@@ -156,6 +151,7 @@ const Header = () => {
       
       <div className="flex items-center gap-4">
         <GameModeToggle />
+        <InteractiveModeToggle />
         <div className="h-6 w-px bg-gray-200"></div>
         <div className="flex items-center gap-2">
           <Button 
