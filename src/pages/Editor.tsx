@@ -26,7 +26,6 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import FloatingElementsButton from "@/components/FloatingElementsButton";
-import InteractiveModeToggle from "@/components/InteractiveModeToggle";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -274,8 +273,6 @@ const Editor = () => {
             <span className="sr-only">Save Project</span>
           </Button>
           
-          <InteractiveModeToggle />
-
           {activeElement && (
             <Drawer>
               <DrawerTrigger asChild>
