@@ -1,9 +1,9 @@
+
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session, User } from "@supabase/supabase-js";
 import { toast } from "sonner";
-import { Database } from "@/types/database";
 
 type ProfileType = {
   id: string;
@@ -35,6 +35,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const loadUserProfile = async () => {
     try {
       if (!user) return;
+      console.log("Loading user profile for:", user.id);
       
       // Fetch both profile and roles
       const { data: profileData, error: profileError } = await supabase
@@ -57,6 +58,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         console.error('Error loading user roles:', rolesError);
         return;
       }
+
+      console.log("Profile data:", profileData);
+      console.log("Roles data:", rolesData);
 
       setProfile({
         ...profileData,

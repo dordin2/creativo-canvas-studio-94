@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -24,6 +23,9 @@ export const LibraryModal = () => {
   const [imageName, setImageName] = useState('');
   const { user, profile } = useAuth();
   const isAdmin = profile?.roles?.includes('admin');
+
+  console.log("Current profile:", profile);
+  console.log("Is admin:", isAdmin);
 
   const fetchLibraryElements = async () => {
     try {
