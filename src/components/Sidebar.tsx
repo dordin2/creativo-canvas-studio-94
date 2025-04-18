@@ -1,30 +1,30 @@
+
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  Text, 
-  Image, 
-  Square, 
-  Circle, 
-  Triangle, 
-  Lock, 
-  Hash,
-  Languages,
-  MoveHorizontal,
-  MousePointerClick,
+import {
+  Square,
+  Circle,
+  Triangle,
+  Image,
+  Text,
+  Lock,
+  Puzzle,
   SlidersHorizontal,
-  SlidersVertical
+  MousePointerClick
 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { LibraryModal } from "@/components/library/LibraryModal";
-import { useAuth } from "@/context/AuthContext";
 
 const Sidebar = () => {
   const { addElement } = useDesignState();
   const { t, language } = useLanguage();
-  const { profile } = useAuth();
-  const isAdmin = profile?.roles?.includes('admin');
 
   const colorSwatches = [
     "#FFFFFF", "#F3F4F6", "#E5E7EB", "#D1D5DB",
@@ -40,96 +40,6 @@ const Sidebar = () => {
     "linear-gradient(to right, #7f7fd5, #86a8e7, #91eae4)"
   ];
 
-  const handleImagePuzzleClick = () => {
-    addElement('puzzle', {
-      puzzleConfig: {
-        name: language === 'en' ? 'Image Puzzle' : 'פאזל תמונה',
-        type: 'image',
-        placeholders: 3,
-        images: [],
-        solution: [0, 0, 0]
-      }
-    });
-  };
-
-  const handleNumberPuzzleClick = () => {
-    addElement('puzzle', {
-      puzzleConfig: {
-        name: language === 'en' ? 'Number Lock' : 'מנעול מספרים',
-        type: 'number',
-        placeholders: 3,
-        images: [],
-        solution: [0, 0, 0],
-        maxNumber: 9
-      }
-    });
-  };
-
-  const handleAlphabetPuzzleClick = () => {
-    addElement('puzzle', {
-      puzzleConfig: {
-        name: language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות',
-        type: 'alphabet',
-        placeholders: 3,
-        images: [],
-        solution: [0, 0, 0],
-        maxLetter: 'Z'
-      }
-    });
-  };
-
-  const handleSequencePuzzleClick = () => {
-    addElement('sequencePuzzle', {
-      name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
-      sequencePuzzleConfig: {
-        name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
-        images: [],
-        solution: [],
-        currentOrder: []
-      }
-    });
-  };
-  
-  const handleClickSequencePuzzleClick = () => {
-    addElement('clickSequencePuzzle', {
-      name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
-      clickSequencePuzzleConfig: {
-        name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
-        images: [],
-        solution: [],
-        clickedIndices: []
-      }
-    });
-  };
-
-  const handleHorizontalSliderPuzzleClick = () => {
-    addElement('sliderPuzzle', {
-      name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
-      sliderPuzzleConfig: {
-        name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
-        orientation: 'horizontal',
-        sliderCount: 3,
-        solution: [5, 7, 3],
-        currentValues: [0, 0, 0],
-        maxValue: 10
-      }
-    });
-  };
-
-  const handleVerticalSliderPuzzleClick = () => {
-    addElement('sliderPuzzle', {
-      name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
-      sliderPuzzleConfig: {
-        name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
-        orientation: 'vertical',
-        sliderCount: 3,
-        solution: [8, 4, 6],
-        currentValues: [0, 0, 0],
-        maxValue: 10
-      }
-    });
-  };
-
   return (
     <div className={`sidebar-panel border-r flex flex-col ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <Tabs defaultValue="elements" className="flex-1 flex flex-col">
@@ -138,130 +48,128 @@ const Sidebar = () => {
           <TabsTrigger value="text">{t('sidebar.text')}</TabsTrigger>
           <TabsTrigger value="background">{t('sidebar.background')}</TabsTrigger>
         </TabsList>
-        
+
         <TabsContent value="elements" className="flex-1 overflow-auto p-4">
-          <h3 className="text-sm font-medium mb-3">{t('sidebar.shapes')}</h3>
-          <div className="grid grid-cols-2 gap-2 mb-6">
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center" 
-                    onClick={() => addElement('rectangle')}>
-              <Square className="h-5 w-5" />
-              <span className="text-xs">{t('sidebar.rectangle')}</span>
-            </Button>
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={() => addElement('circle')}>
-              <Circle className="h-5 w-5" />
-              <span className="text-xs">{t('sidebar.circle')}</span>
-            </Button>
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={() => addElement('triangle')}>
-              <Triangle className="h-5 w-5" />
-              <span className="text-xs">{t('sidebar.triangle')}</span>
-            </Button>
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={() => addElement('line')}>
-              <div className="w-5 h-0.5 bg-current"></div>
-              <span className="text-xs">{t('sidebar.line')}</span>
-            </Button>
-          </div>
-          
-          <h3 className="text-sm font-medium mb-3">{t('sidebar.media')}</h3>
-          <div className="grid grid-cols-2 gap-2">
-            <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center"
-                    onClick={() => addElement('image')}>
-              <Image className="h-5 w-5" />
-              <span className="text-xs">{t('sidebar.image')}</span>
-            </Button>
-            
-            <LibraryModal />
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center">
-                  <Lock className="h-5 w-5" />
-                  <span className="text-xs">{t('sidebar.puzzle')}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-60 p-2">
-                <div className="grid gap-2">
-                  <Button
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={handleImagePuzzleClick}
-                  >
-                    <Lock className="h-4 w-4 mr-2" />
-                    {t('sidebar.image.puzzle')}
+          <Accordion type="single" collapsible className="space-y-4">
+            {/* Basic Shapes */}
+            <AccordionItem value="shapes" className="border rounded-lg">
+              <AccordionTrigger className="px-4">
+                <div className="flex items-center gap-2">
+                  <Square className="h-4 w-4" />
+                  <span>{t('sidebar.shapes')}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="p-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="h-12" onClick={() => addElement('rectangle')}>
+                    <Square className="h-4 w-4 mr-2" />
+                    <span>{t('sidebar.rectangle')}</span>
                   </Button>
-                  <Button
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={handleNumberPuzzleClick}
-                  >
-                    <Hash className="h-4 w-4 mr-2" />
-                    {t('sidebar.number.lock')}
+                  <Button variant="outline" className="h-12" onClick={() => addElement('circle')}>
+                    <Circle className="h-4 w-4 mr-2" />
+                    <span>{t('sidebar.circle')}</span>
                   </Button>
-                  <Button
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={handleAlphabetPuzzleClick}
-                  >
-                    <Languages className="h-4 w-4 mr-2" />
-                    {t('sidebar.alphabet.lock')}
+                  <Button variant="outline" className="h-12" onClick={() => addElement('triangle')}>
+                    <Triangle className="h-4 w-4 mr-2" />
+                    <span>{t('sidebar.triangle')}</span>
+                  </Button>
+                  <Button variant="outline" className="h-12" onClick={() => addElement('line')}>
+                    <div className="w-4 h-0.5 bg-current mr-2" />
+                    <span>{t('sidebar.line')}</span>
                   </Button>
                 </div>
-              </PopoverContent>
-            </Popover>
-            
-            <Button 
-              variant="outline" 
-              className="h-14 flex flex-col gap-1 items-center justify-center"
-              onClick={handleSequencePuzzleClick}
-            >
-              <MoveHorizontal className="h-5 w-5 text-blue-600" />
-              <span className="text-xs">{language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף'}</span>
-            </Button>
-            
-            <Button 
-              variant="outline" 
-              className="h-14 flex flex-col gap-1 items-center justify-center"
-              onClick={handleClickSequencePuzzleClick}
-            >
-              <MousePointerClick className="h-5 w-5 text-green-600" />
-              <span className="text-xs">{language === 'en' ? 'Click Sequence' : 'רצף קליקים'}</span>
-            </Button>
-            
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center">
-                  <SlidersHorizontal className="h-5 w-5 text-purple-600" />
-                  <span className="text-xs">{language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים'}</span>
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-60 p-2">
-                <div className="grid gap-2">
-                  <Button
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={handleHorizontalSliderPuzzleClick}
-                  >
-                    <SlidersHorizontal className="h-4 w-4 mr-2 text-purple-600" />
-                    {language === 'en' ? 'Horizontal Sliders' : 'מחוונים אופקיים'}
-                  </Button>
-                  <Button
-                    variant="outline" 
-                    className="justify-start"
-                    onClick={handleVerticalSliderPuzzleClick}
-                  >
-                    <SlidersVertical className="h-4 w-4 mr-2 text-purple-600" />
-                    {language === 'en' ? 'Vertical Sliders' : 'מחוונים אנכיים'}
-                  </Button>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Media */}
+            <AccordionItem value="media" className="border rounded-lg">
+              <AccordionTrigger className="px-4">
+                <div className="flex items-center gap-2">
+                  <Image className="h-4 w-4" />
+                  <span>{t('sidebar.media')}</span>
                 </div>
-              </PopoverContent>
-            </Popover>
-          </div>
+              </AccordionTrigger>
+              <AccordionContent className="p-2">
+                <div className="grid grid-cols-2 gap-2">
+                  <Button variant="outline" className="h-12" onClick={() => addElement('image')}>
+                    <Image className="h-4 w-4 mr-2" />
+                    <span>{t('sidebar.image')}</span>
+                  </Button>
+                  <LibraryModal />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
+
+            {/* Interactive Elements */}
+            <AccordionItem value="interactive" className="border rounded-lg">
+              <AccordionTrigger className="px-4">
+                <div className="flex items-center gap-2">
+                  <Puzzle className="h-4 w-4" />
+                  <span>{t('sidebar.interactive')}</span>
+                </div>
+              </AccordionTrigger>
+              <AccordionContent className="p-2 space-y-2">
+                {/* Image and Number Puzzles */}
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-12"
+                  onClick={() => addElement('puzzle', {
+                    puzzleConfig: {
+                      name: language === 'en' ? 'Puzzle' : 'פאזל',
+                      type: 'image',
+                      placeholders: 3,
+                      images: [],
+                      solution: [0, 0, 0]
+                    }
+                  })}
+                >
+                  <Lock className="h-4 w-4 mr-2" />
+                  <span>{language === 'en' ? 'Image/Number Puzzle' : 'פאזל תמונה/מספרים'}</span>
+                </Button>
+
+                {/* Sequence Puzzles */}
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-12"
+                  onClick={() => addElement('sequencePuzzle', {
+                    name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
+                    sequencePuzzleConfig: {
+                      name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
+                      images: [],
+                      solution: [],
+                      currentOrder: []
+                    }
+                  })}
+                >
+                  <MousePointerClick className="h-4 w-4 mr-2" />
+                  <span>{language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף'}</span>
+                </Button>
+
+                {/* Slider Puzzle */}
+                <Button 
+                  variant="outline" 
+                  className="w-full justify-start h-12"
+                  onClick={() => addElement('sliderPuzzle', {
+                    name: language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים',
+                    sliderPuzzleConfig: {
+                      name: language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים',
+                      orientation: 'horizontal',
+                      sliderCount: 3,
+                      solution: [5, 7, 3],
+                      currentValues: [0, 0, 0],
+                      maxValue: 10
+                    }
+                  })}
+                >
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  <span>{language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים'}</span>
+                </Button>
+              </AccordionContent>
+            </AccordionItem>
+          </Accordion>
         </TabsContent>
-        
+
         <TabsContent value="text" className="flex-1 overflow-auto p-4">
-          <h3 className="text-sm font-medium mb-3">{t('sidebar.text.styles')}</h3>
           <div className="flex flex-col gap-2">
             <Button variant="outline" className="justify-start h-12" onClick={() => addElement('heading')}>
               <Text className="h-4 w-4 mr-2" />
@@ -277,7 +185,7 @@ const Sidebar = () => {
             </Button>
           </div>
         </TabsContent>
-        
+
         <TabsContent value="background" className="flex-1 overflow-auto p-4">
           <h3 className="text-sm font-medium mb-3">{t('sidebar.solid.colors')}</h3>
           <div className="grid grid-cols-4 gap-2 mb-6">
