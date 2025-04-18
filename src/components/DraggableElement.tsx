@@ -15,6 +15,7 @@ import PuzzleModal from "./element/PuzzleModal";
 import SequencePuzzleModal from "./element/SequencePuzzleModal";
 import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
 import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
+import InteractionContextMenu from './element/InteractionContextMenu';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -24,7 +25,7 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
+import { getImageFromCache } from "@/utils/imageUploader";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 const DraggableElement = ({ element, isActive, children }: {
@@ -630,8 +631,10 @@ const DraggableElement = ({ element, isActive, children }: {
 
   return (
     <>
-      {isGameMode ? (
-        createElementContent(elementRef)
+      {isInteractiveMode ? (
+        <InteractionContextMenu element={element}>
+          {createElementContent(elementRef)}
+        </InteractionContextMenu>
       ) : (
         <ContextMenu>
           <ContextMenuTrigger asChild>
