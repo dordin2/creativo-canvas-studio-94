@@ -1,6 +1,7 @@
 
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import NoElementSelected from "./NoElementSelected";
 import ElementProperties from "./properties/ElementProperties";
 import { Separator } from "@/components/ui/separator";
@@ -8,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 const MobileProperties = () => {
   const { activeElement, elements } = useDesignState();
   const { language } = useLanguage();
+  const { isInteractiveMode } = useInteractiveMode();
   
   if (!activeElement) {
     return <NoElementSelected />;
@@ -17,7 +19,10 @@ const MobileProperties = () => {
     <div className={`p-4 space-y-4 ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="pb-2">
         <h2 className="text-lg font-medium">
-          {language === 'he' ? 'מאפיינים' : 'Properties'}
+          {isInteractiveMode ? 
+            (language === 'he' ? 'אינטראקציות' : 'Interactions') :
+            (language === 'he' ? 'מאפיינים' : 'Properties')
+          }
         </h2>
         <p className="text-sm text-muted-foreground">
           {language === 'he' 
@@ -29,7 +34,10 @@ const MobileProperties = () => {
       <Separator />
       
       <div className="pb-16">
-        <ElementProperties element={activeElement} />
+        <ElementProperties 
+          element={activeElement} 
+          isInteractiveMode={isInteractiveMode}
+        />
       </div>
     </div>
   );
