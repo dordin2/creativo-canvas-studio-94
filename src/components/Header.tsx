@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
@@ -88,8 +89,8 @@ const Header = () => {
         <div className="flex items-center gap-2">
           <GameModeToggle />
           <InteractiveModeToggle />
-          {isAdmin && <AdminGallery />}
           <LibraryModal />
+          {isAdmin && <AdminGallery />}
           <Drawer>
             <DrawerTrigger asChild>
               <Button variant="outline" size="icon" className="hover:bg-gray-50">
@@ -158,10 +159,10 @@ const Header = () => {
       </div>
       
       <div className="flex items-center gap-4">
+        <LibraryModal />
         <GameModeToggle />
         <InteractiveModeToggle />
         {isAdmin && <AdminGallery />}
-        <LibraryModal />
         <div className="h-6 w-px bg-gray-200"></div>
         <div className="flex items-center gap-2">
           <Button 
