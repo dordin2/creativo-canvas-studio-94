@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -223,7 +222,7 @@ const Editor = () => {
         
         <Header />
         
-        <div className="flex-1 overflow-hidden flex flex-col">
+        <div className="flex-1 overflow-hidden flex flex-col pb-16">
           <div className="z-10 relative">
             <CanvasTabs />
           </div>
@@ -232,61 +231,7 @@ const Editor = () => {
           </div>
         </div>
         
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30">
-          <Drawer>
-            <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="aspect-square">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Add Elements" 
-                  className="h-6 w-6"
-                />
-                <span className="sr-only">Add Elements</span>
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="px-4 pb-6">
-              <div className="mt-2">
-                <MobileSidebar 
-                  isOpen={showMobileSidebar} 
-                  onClose={() => setShowMobileSidebar(false)} 
-                />
-              </div>
-            </DrawerContent>
-          </Drawer>
-          
-          <Button variant="ghost" size="icon" className="aspect-square" onClick={toggleGameMode}>
-            <img 
-              src="/placeholder.svg" 
-              alt="Preview Game" 
-              className="h-6 w-6"
-            />
-            <span className="sr-only">Preview Game</span>
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="aspect-square" 
-            onClick={handleSaveProject}
-          >
-            <Save className="h-6 w-6 text-canvas-purple" />
-            <span className="sr-only">Save Project</span>
-          </Button>
-          
-          {activeElement && (
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="aspect-square">
-                  <Pencil className="h-6 w-6" />
-                  <span className="sr-only">Edit Properties</span>
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="px-0 pb-4">
-                <MobileProperties />
-              </DrawerContent>
-            </Drawer>
-          )}
-        </div>
+        <BottomBar />
       </div>
     );
   }
@@ -368,11 +313,6 @@ const Editor = () => {
       )}
       {!isGameMode && <div className="z-30 relative"><Header /></div>}
       <div className={`flex flex-1 overflow-hidden relative ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
-        {!isGameMode && (
-          <div className="flex-shrink-0 w-64 z-20 relative">
-            <Sidebar />
-          </div>
-        )}
         <div className="flex-1 overflow-hidden flex flex-col relative z-1">
           {!isGameMode ? (
             <>
@@ -395,6 +335,7 @@ const Editor = () => {
           </div>
         )}
       </div>
+      {!isGameMode && <BottomBar />}
       {isGameMode && (
         <>
           <InventoryPanel />
