@@ -11,6 +11,8 @@ interface Position {
 interface DragState {
   offsetX: number;
   offsetY: number;
+  currentX: number;
+  currentY: number;
 }
 
 export const useDraggable = (elementId: string) => {
@@ -40,9 +42,16 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
 
-    // Calculate new position by subtracting the initial offset
+    // Calculate new position relative to the initial offset
     const newX = clientX - dragState.offsetX;
     const newY = clientY - dragState.offsetY;
+
+    // Store the current position for handleEnd
+    setDragState(prev => ({
+      ...prev!,
+      currentX: newX,
+      currentY: newY
+    }));
 
     // Update DOM position immediately for smooth dragging
     element.style.left = `${newX}px`;
@@ -83,34 +92,35 @@ export const useDraggable = (elementId: string) => {
     }
     
     const rect = element.getBoundingClientRect();
+    const currentX = rect.left;
+    const currentY = rect.top;
     
-    // Save the offset from the mouse/touch position to the element's top-left corner
+    // Save the offset from mouse/touch to element's corner and current position
     setDragState({
-      offsetX: clientX - rect.left,
-      offsetY: clientY - rect.top
+      offsetX: clientX - currentX,
+      offsetY: clientY - currentY,
+      currentX: currentX,
+      currentY: currentY
     });
     
     setIsDragging(true);
   }, [elementId, isGameMode, isImageElement, currentElement?.interaction?.type]);
 
   const handleEnd = useCallback(() => {
-    if (!isDragging) return;
+    if (!isDragging || !dragState) return;
 
-    const element = document.getElementById(`element-${elementId}`);
-    if (element) {
-      const rect = element.getBoundingClientRect();
-      const finalX = rect.left;
-      const finalY = rect.top;
-
-      updateElementWithoutHistory(elementId, {
-        position: { x: finalX, y: finalY }
-      });
-      commitToHistory();
-    }
+    // Use the last known position from dragState instead of getting from DOM
+    updateElementWithoutHistory(elementId, {
+      position: { 
+        x: dragState.currentX, 
+        y: dragState.currentY 
+      }
+    });
+    commitToHistory();
 
     setIsDragging(false);
     setDragState(null);
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory]);
+  }, [isDragging, dragState, elementId, updateElementWithoutHistory, commitToHistory]);
 
   return { startDrag, isDragging, currentElement, handleMove, handleEnd };
 };
