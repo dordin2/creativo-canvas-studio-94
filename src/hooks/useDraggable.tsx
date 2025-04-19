@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useRef, useCallback } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
 
@@ -13,23 +13,32 @@ export const useDraggable = (elementId: string) => {
   const [isDragging, setIsDragging] = useState(false);
   const dragStartPosition = useRef<Position | null>(null);
   const elementStartPosition = useRef<Position | null>(null);
-  const { isMobileDevice, isMobileView } = useMobile();
+  const { isMobileDevice } = useMobile();
   const currentElement = elements.find(el => el.id === elementId);
   
   const isPuzzleElement = currentElement?.type === 'puzzle';
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
   const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
   const isImageElement = currentElement?.type === 'image';
+  
+  const updateElementPosition = useCallback((clientX: number, clientY: number) => {
+    if (!dragStartPosition.current || !elementStartPosition.current) return;
+    if (isGameMode && isImageElement && !currentElement?.interaction?.type) return;
 
-  useEffect(() => {
-    if (!isDragging) return;
+    // Calculate the offset from where the drag started
+    const deltaX = clientX - dragStartPosition.current.x;
+    const deltaY = clientY - dragStartPosition.current.y;
 
-    const handleMove = (clientX: number, clientY: number) => {
-      if (!dragStartPosition.current || !elementStartPosition.current) return;
-      if (isGameMode && isImageElement && !currentElement?.interaction?.type) return;
+    // Update the element position directly in the DOM first for immediate response
+    const element = document.getElementById(`element-${elementId}`);
+    if (element) {
+      element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+    }
 
-      const newLeft = elementStartPosition.current.x + (clientX - dragStartPosition.current.x);
-      const newTop = elementStartPosition.current.y + (clientY - dragStartPosition.current.y);
+    // Then update the React state with a debounced effect
+    requestAnimationFrame(() => {
+      const newLeft = elementStartPosition.current!.x + deltaX;
+      const newTop = elementStartPosition.current!.y + deltaY;
 
       updateElementWithoutHistory(elementId, {
         position: {
@@ -37,53 +46,10 @@ export const useDraggable = (elementId: string) => {
           y: newTop
         }
       });
-    };
+    });
+  }, [elementId, updateElementWithoutHistory, isGameMode, isImageElement, currentElement?.interaction?.type]);
 
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isMobileDevice) return; // Skip mouse events on mobile devices
-      handleMove(e.clientX, e.clientY);
-    };
-    
-    const handleTouchMove = (e: TouchEvent) => {
-      if (!isMobileDevice) return; // Skip touch events on non-mobile devices
-      e.preventDefault();
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        handleMove(touch.clientX, touch.clientY);
-      }
-    };
-
-    const handleEnd = () => {
-      setIsDragging(false);
-      dragStartPosition.current = null;
-      elementStartPosition.current = null;
-      commitToHistory();
-    };
-
-    // Add event listeners based on device type
-    if (isMobileDevice) {
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
-      document.addEventListener('touchend', handleEnd);
-      document.addEventListener('touchcancel', handleEnd);
-    } else {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('mouseup', handleEnd);
-    }
-
-    return () => {
-      // Remove event listeners based on device type
-      if (isMobileDevice) {
-        document.removeEventListener('touchmove', handleTouchMove);
-        document.removeEventListener('touchend', handleEnd);
-        document.removeEventListener('touchcancel', handleEnd);
-      } else {
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleEnd);
-      }
-    };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement, isMobileDevice]);
-
-  const startDrag = (e: React.MouseEvent | React.TouchEvent, elementPosition?: Position) => {
+  const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent, elementPosition?: Position) => {
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
@@ -111,82 +77,44 @@ export const useDraggable = (elementId: string) => {
         x: currentElement.position.x, 
         y: currentElement.position.y 
       };
-    }
-  };
 
-  useEffect(() => {
-    const handleDragOver = (e: MouseEvent) => {
-      if (draggedInventoryItem && currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-        const element = document.getElementById(`element-${elementId}`);
-        if (element) {
-          element.classList.add('drop-target');
-        }
-      }
-    };
-    
-    const handleDragLeave = () => {
+      // Reset any existing transform
       const element = document.getElementById(`element-${elementId}`);
       if (element) {
-        element.classList.remove('drop-target');
+        element.style.transform = '';
       }
-    };
-    
-    const handleCustomDragOver = (e: CustomEvent) => {
-      if (!draggedInventoryItem) return;
-      
-      const element = document.getElementById(`element-${elementId}`);
-      if (!element) return;
-      
-      const rect = element.getBoundingClientRect();
-      const x = e.detail.clientX;
-      const y = e.detail.clientY;
-      
-      if (
-        x >= rect.left && 
-        x <= rect.right && 
-        y >= rect.top && 
-        y <= rect.bottom
-      ) {
-        if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-          element.classList.add('drop-target');
-        }
-      } else {
-        element.classList.remove('drop-target');
-      }
-    };
-    
-    const handleCustomDrop = (e: CustomEvent) => {
-      if (!draggedInventoryItem) return;
-      
-      const element = document.getElementById(`element-${elementId}`);
-      if (!element) return;
-      
-      const rect = element.getBoundingClientRect();
-      const x = e.detail.clientX;
-      const y = e.detail.clientY;
-      
-      if (
-        x >= rect.left && 
-        x <= rect.right && 
-        y >= rect.top && 
-        y <= rect.bottom
-      ) {
-        if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-          handleItemCombination(draggedInventoryItem.id, elementId);
-        }
-      }
-      
-      element.classList.remove('drop-target');
-    };
-    
-    document.addEventListener('custom-drag-over', handleCustomDragOver as EventListener);
-    document.addEventListener('custom-drop', handleCustomDrop as EventListener);
-    
-    return () => {
-      document.removeEventListener('custom-drag-over', handleCustomDragOver as EventListener);
-      document.removeEventListener('custom-drop', handleCustomDrop as EventListener);
-    };
-  }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
+    }
+  }, [elementId, isGameMode, isImageElement, currentElement, isMobileDevice]);
+
+  // Effect for handling mouse/touch move and end events
+  const handleMove = useCallback((clientX: number, clientY: number) => {
+    if (isDragging) {
+      updateElementPosition(clientX, clientY);
+    }
+  }, [isDragging, updateElementPosition]);
+
+  const handleEnd = useCallback(() => {
+    if (!isDragging) return;
+
+    const element = document.getElementById(`element-${elementId}`);
+    if (element) {
+      element.style.transform = '';
+    }
+
+    if (dragStartPosition.current && elementStartPosition.current) {
+      const finalX = elementStartPosition.current.x + (element?.offsetLeft || 0);
+      const finalY = elementStartPosition.current.y + (element?.offsetTop || 0);
+
+      updateElementWithoutHistory(elementId, {
+        position: { x: finalX, y: finalY }
+      });
+      commitToHistory();
+    }
+
+    setIsDragging(false);
+    dragStartPosition.current = null;
+    elementStartPosition.current = null;
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory]);
 
   return { startDrag, isDragging, currentElement };
 };
