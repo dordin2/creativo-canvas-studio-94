@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -13,6 +12,8 @@ export const useDraggable = (elementId: string) => {
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
+  const touchPosition = useRef<Position>({ x: 0, y: 0 });
+  const mousePosition = useRef<Position>({ x: 0, y: 0 });
   const rafId = useRef<number | null>(null);
 
   const currentElement = elements.find(el => el.id === elementId);
@@ -111,22 +112,29 @@ export const useDraggable = (elementId: string) => {
       return;
     }
 
+    mousePosition.current = { x: clientX, y: clientY };
+    touchPosition.current = { x: clientX, y: clientY };
+
+    if (!isDragStarted.current) {
+      isDragStarted.current = true;
+    }
+
     if (rafId.current) {
       cancelAnimationFrame(rafId.current);
     }
 
     rafId.current = requestAnimationFrame(() => {
-      const deltaX = clientX - startPosition.current!.x;
-      const deltaY = clientY - startPosition.current!.y;
-
-      const newX = Math.round(elementInitialPos.current!.x + deltaX);
-      const newY = Math.round(elementInitialPos.current!.y + deltaY);
+      const deltaX = mousePosition.current.x - startPosition.current!.x;
+      const deltaY = mousePosition.current.y - startPosition.current!.y;
 
       updateElementWithoutHistory(elementId, {
-        position: { x: newX, y: newY },
+        position: {
+          x: elementInitialPos.current!.x + deltaX,
+          y: elementInitialPos.current!.y + deltaY
+        },
         style: {
           ...currentElement?.style,
-          transform: `translate3d(${deltaX}px, ${deltaY}px, 0)`,
+          transform: `translate3d(0,0,0)`,
           willChange: 'transform',
           cursor: 'grabbing',
           zIndex: 9999,
@@ -135,14 +143,11 @@ export const useDraggable = (elementId: string) => {
     });
   };
 
-  const handleTouchMove = (e: TouchEvent) => {
-    if (!isDragging) return;
-    e.preventDefault();
-    const touch = e.touches[0];
-    updateElementPosition(touch.clientX, touch.clientY);
+  const handleMove = (clientX: number, clientY: number) => {
+    updateElementPosition(clientX, clientY);
   };
 
-  const handleTouchEnd = () => {
+  const handleEnd = () => {
     if (isDragStarted.current) {
       if (currentElement) {
         updateElementWithoutHistory(elementId, {
@@ -166,9 +171,6 @@ export const useDraggable = (elementId: string) => {
       cancelAnimationFrame(rafId.current);
       rafId.current = null;
     }
-
-    document.removeEventListener('touchmove', handleTouchMove);
-    document.removeEventListener('touchend', handleTouchEnd);
   };
 
   const startDrag = (e: React.MouseEvent | React.TouchEvent, initialPosition: Position) => {
@@ -183,12 +185,10 @@ export const useDraggable = (elementId: string) => {
     if ('touches' in e) {
       const touch = e.touches[0];
       startPosition.current = { x: touch.clientX, y: touch.clientY };
-      
-      // Add touch event listeners
-      document.addEventListener('touchmove', handleTouchMove, { passive: false });
-      document.addEventListener('touchend', handleTouchEnd);
+      touchPosition.current = { x: touch.clientX, y: touch.clientY };
     } else {
       startPosition.current = { x: e.clientX, y: e.clientY };
+      mousePosition.current = { x: e.clientX, y: e.clientY };
     }
 
     elementInitialPos.current = initialPosition;
