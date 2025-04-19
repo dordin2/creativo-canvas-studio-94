@@ -411,7 +411,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             width: 'fit-content',
             height: 'fit-content',
             zIndex: 1,
-            padding: isMobile ? '20px' : '0'
+            padding: isMobileView ? '20px' : '0'
           }}>
           <div
             ref={containerRef}
