@@ -188,18 +188,17 @@ const Editor = () => {
               {!isInteractiveMode ? <MobileImageControls element={activeElement} canvasSize={canvasSize} /> : <MobileInteractionControls element={activeElement} />}
             </div>}
           
-          <div className="flex-1 relative z-1">
+          <div className="flex-1 relative z-1 canvas-workspace">
             <Canvas />
           </div>
         </div>
-        
         
         <FloatingElementsButton />
       </div>;
   }
   if (isMobile && isGameMode) {
     return <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
-        <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
+        <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0 canvas-workspace game-mode">
           <div className="fixed-canvas-container">
             <Canvas isFullscreen={true} isMobileView={true} />
           </div>
