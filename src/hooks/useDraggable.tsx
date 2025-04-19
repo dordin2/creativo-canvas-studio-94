@@ -1,5 +1,5 @@
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
 
@@ -16,11 +16,25 @@ export const useDraggable = (elementId: string) => {
   
   const isImageElement = currentElement?.type === 'image';
   
-  const handleMove = useCallback((clientX: number, clientY: number) => {
+  const handleMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!isDragging) return;
     
     const element = document.getElementById(`element-${elementId}`);
     if (!element) return;
+
+    let clientX: number;
+    let clientY: number;
+
+    if ('touches' in e) {
+      // Touch event
+      const touch = e.touches[0];
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
 
     // Update the element position directly in the DOM for immediate response
     const rect = element.getBoundingClientRect();
@@ -49,18 +63,7 @@ export const useDraggable = (elementId: string) => {
     
     e.stopPropagation();
     setIsDragging(true);
-
-    const element = document.getElementById(`element-${elementId}`);
-    if (!element) return;
-
-    if ('touches' in e && isMobileDevice) {
-      const touch = e.touches[0];
-      handleMove(touch.clientX, touch.clientY);
-    } else if (!isMobileDevice) {
-      const mouseEvent = e as React.MouseEvent;
-      handleMove(mouseEvent.clientX, mouseEvent.clientY);
-    }
-  }, [elementId, isGameMode, isImageElement, currentElement, isMobileDevice, handleMove]);
+  }, [elementId, isGameMode, isImageElement, currentElement?.interaction?.type]);
 
   const handleEnd = useCallback(() => {
     if (!isDragging) return;

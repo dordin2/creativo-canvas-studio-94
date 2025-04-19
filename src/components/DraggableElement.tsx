@@ -161,16 +161,19 @@ const DraggableElement = ({ element, isActive, children }: {
   };
 
   useEffect(() => {
+    const handleMouseMoveEvent = (e: MouseEvent) => handleMove(e);
+    const handleTouchMoveEvent = (e: TouchEvent) => handleMove(e);
+
     if (isDragging) {
-      document.addEventListener('mousemove', handleMove);
-      document.addEventListener('touchmove', handleMove);
+      document.addEventListener('mousemove', handleMouseMoveEvent);
+      document.addEventListener('touchmove', handleTouchMoveEvent, { passive: false });
       document.addEventListener('mouseup', handleEnd);
       document.addEventListener('touchend', handleEnd);
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleMove);
-      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('mousemove', handleMouseMoveEvent);
+      document.removeEventListener('touchmove', handleTouchMoveEvent);
       document.removeEventListener('mouseup', handleEnd);
       document.removeEventListener('touchend', handleEnd);
     };
