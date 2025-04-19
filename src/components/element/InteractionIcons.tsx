@@ -1,14 +1,12 @@
 
-import { MessageSquare, Navigation, ShoppingBasket, Puzzle, Music } from "lucide-react";
+import { MessageSquare, Navigation, ShoppingBasket, Puzzle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DesignElement } from "@/types/designTypes";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import InteractionProperties from "@/components/properties/InteractionProperties";
 import { useIsMobile } from "@/hooks/use-mobile";
-import MessageInteractionProperties from "@/components/properties/MessageInteractionProperties";
-import SoundInteractionProperties from "@/components/properties/SoundInteractionProperties";
-import { useDesignState } from "@/context/DesignContext";
 
 interface InteractionIconsProps {
   element: DesignElement;
@@ -18,53 +16,10 @@ const InteractionIcons = ({ element }: InteractionIconsProps) => {
   const [showInteractionModal, setShowInteractionModal] = useState(false);
   const [selectedInteractionType, setSelectedInteractionType] = useState<string | null>(null);
   const isMobile = useIsMobile();
-  const { updateElement } = useDesignState();
 
   const handleInteractionClick = (type: string) => {
     setSelectedInteractionType(type);
     setShowInteractionModal(true);
-    
-    // Update the interaction type when icon is clicked
-    updateElement(element.id, {
-      interaction: {
-        ...element.interaction,
-        type: type as any
-      }
-    });
-  };
-
-  const getInteractionTitle = () => {
-    switch (selectedInteractionType) {
-      case 'message':
-        return 'Message Settings';
-      case 'sound':
-        return 'Sound Settings';
-      case 'canvasNavigation':
-        return 'Navigation Settings';
-      case 'addToInventory':
-        return 'Inventory Settings';
-      case 'puzzle':
-        return 'Puzzle Settings';
-      default:
-        return 'Interaction Settings';
-    }
-  };
-
-  const getInteractionContent = () => {
-    if (!element) return null;
-
-    const handleUpdate = (updates: Partial<DesignElement>) => {
-      updateElement(element.id, updates);
-    };
-
-    switch (selectedInteractionType) {
-      case 'message':
-        return <MessageInteractionProperties element={element} onUpdate={handleUpdate} />;
-      case 'sound':
-        return <SoundInteractionProperties element={element} onUpdate={handleUpdate} />;
-      default:
-        return null;
-    }
   };
 
   const IconsRow = () => (
@@ -76,15 +31,6 @@ const InteractionIcons = ({ element }: InteractionIconsProps) => {
         className="h-8 w-8"
       >
         <MessageSquare className="h-4 w-4" />
-      </Button>
-      
-      <Button
-        variant="outline"
-        size="icon"
-        onClick={() => handleInteractionClick('sound')}
-        className="h-8 w-8"
-      >
-        <Music className="h-4 w-4" />
       </Button>
       
       <Button
@@ -116,24 +62,19 @@ const InteractionIcons = ({ element }: InteractionIconsProps) => {
     </div>
   );
 
-  const interactionContent = (
-    <div className="space-y-4">
-      <DialogHeader>
-        <DialogTitle>{getInteractionTitle()}</DialogTitle>
-      </DialogHeader>
-      {getInteractionContent()}
-    </div>
-  );
-
   if (isMobile) {
     return (
       <>
-        <div className="w-full">
-          <IconsRow />
-        </div>
         <Sheet open={showInteractionModal} onOpenChange={setShowInteractionModal}>
-          <SheetContent side="bottom" className="h-[90vh] w-full">
-            {interactionContent}
+          <SheetTrigger asChild>
+            <div className="w-full">
+              <IconsRow />
+            </div>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[80vh] w-full">
+            <div className="pt-6">
+              <InteractionProperties element={element} />
+            </div>
           </SheetContent>
         </Sheet>
       </>
@@ -145,7 +86,7 @@ const InteractionIcons = ({ element }: InteractionIconsProps) => {
       <IconsRow />
       <Dialog open={showInteractionModal} onOpenChange={setShowInteractionModal}>
         <DialogContent className="sm:max-w-[600px]">
-          {interactionContent}
+          <InteractionProperties element={element} />
         </DialogContent>
       </Dialog>
     </div>
