@@ -121,7 +121,7 @@ export const useDraggable = (elementId: string) => {
       const y = clientY - dragOffset.current.y;
 
       // Update element with new transform, maintaining any existing rotation
-      const currentTransform = currentElement.style?.transform || '';
+      const currentTransform = String(currentElement.style?.transform || '');
       const rotationMatch = currentTransform.match(/rotate\(([^)]+)\)/);
       const rotation = rotationMatch ? ` rotate(${rotationMatch[1]})` : '';
 
@@ -197,7 +197,7 @@ export const useDraggable = (elementId: string) => {
     if (!element || !currentElement) return;
 
     const rect = element.getBoundingClientRect();
-    initialTransform.current = currentElement.style?.transform || 'translate3d(0px, 0px, 0)';
+    initialTransform.current = String(currentElement.style?.transform || 'translate3d(0px, 0px, 0)');
     
     // Calculate offset based on click/touch position relative to element
     if ('touches' in e) {
