@@ -17,7 +17,8 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
   const { updateElement, isGameMode } = useDesignState();
   const [scaleValue, setScaleValue] = useState<number>(50); // Start at middle of range
   const [rotation, setRotation] = useState(getRotation(element));
-
+  
+  // Calculate scale value when element or canvas size changes
   useEffect(() => {
     if (element.originalSize && element.size && canvasSize.width && canvasSize.height) {
       // Calculate the ratio based on how the image fills the canvas
@@ -37,6 +38,7 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
     }
   }, [element.originalSize, element.size, canvasSize]);
 
+  // Update rotation when element changes
   useEffect(() => {
     setRotation(getRotation(element));
   }, [element]);

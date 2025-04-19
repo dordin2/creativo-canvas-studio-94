@@ -16,13 +16,12 @@ const Slider = React.forwardRef<
   }, []);
 
   React.useEffect(() => {
+    // Add touch event listener immediately when component mounts
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    
     return () => {
       document.removeEventListener('touchmove', handleTouchMove);
     };
-  }, [handleTouchMove]);
-
-  const handleTouchStart = React.useCallback(() => {
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
   }, [handleTouchMove]);
 
   return (
@@ -33,7 +32,7 @@ const Slider = React.forwardRef<
         orientation === "vertical" && "h-full flex-col justify-center py-4",
         className
       )}
-      onTouchStart={handleTouchStart}
+      data-orientation={orientation}
       {...props}
     >
       <SliderPrimitive.Track 

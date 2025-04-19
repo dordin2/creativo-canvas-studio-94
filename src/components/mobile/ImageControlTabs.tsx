@@ -55,16 +55,17 @@ const ImageControlTabs = ({
     };
   }, []);
 
+  // Update local state immediately while debouncing the callbacks
   const handleScaleChange = (value: number[]) => {
     sliderTouchActive.current = true;
-    setLocalScale(value[0]); // Update local state immediately
-    debouncedScaleChange(value); // Debounce the callback
+    setLocalScale(value[0]); 
+    debouncedScaleChange(value);
   };
 
   const handleRotationChange = (value: number[]) => {
     sliderTouchActive.current = true;
-    setLocalRotation(value[0]); // Update local state immediately
-    debouncedRotationChange(value); // Debounce the callback
+    setLocalRotation(value[0]); 
+    debouncedRotationChange(value);
   };
 
   // Reset local state when props change (if not during active touch)
