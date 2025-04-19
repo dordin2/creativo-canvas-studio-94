@@ -272,9 +272,7 @@ export const DesignProvider = ({
       file, 
       (updatedData) => {
         updateElement(id, updatedData);
-      },
-      canvasDimensions?.width,
-      canvasDimensions?.height
+      }
     );
   };
   
