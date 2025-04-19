@@ -694,9 +694,10 @@ const DraggableElement = ({ element, isActive, children }: {
   return (
     <>
       {isInteractiveMode ? (
-        <InteractionContextMenu element={element}>
+        <div className="relative">
           {createElementContent(elementRef)}
-        </InteractionContextMenu>
+          <InteractionIcons element={element} />
+        </div>
       ) : (
         <ContextMenu>
           <ContextMenuTrigger asChild>
