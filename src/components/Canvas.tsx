@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElementWrapper from "./DraggableElementWrapper";
@@ -7,52 +6,6 @@ import useCanvasKeyboardShortcuts from "@/hooks/useCanvasKeyboardShortcuts";
 import useCanvasDrop from "@/hooks/useCanvasDrop";
 import { useMobile } from "@/context/MobileContext";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
-
-// Add global styles for draggable elements
-const addGlobalStyles = () => {
-  const styleId = 'canvas-draggable-styles';
-  if (document.getElementById(styleId)) return;
-  
-  const style = document.createElement('style');
-  style.id = styleId;
-  style.textContent = `
-    body.dragging-inventory-item, 
-    body.inventory-dragging,
-    body.sequence-dragging {
-      cursor: none !important;
-    }
-    
-    .canvas-element {
-      touch-action: none;
-    }
-    
-    .drop-target {
-      border: 2px dashed #8B5CF6 !important;
-      box-shadow: 0 0 15px rgba(139, 92, 246, 0.5) !important;
-    }
-    
-    .game-mode-image {
-      background-color: transparent !important;
-      border: none !important;
-      outline: none !important;
-      box-shadow: none !important;
-    }
-
-    .inventory-item-preview, 
-    #sequence-item-preview,
-    #draggable-preview {
-      position: fixed;
-      pointer-events: none;
-      z-index: 10000;
-      opacity: 0.9;
-      border-radius: 4px;
-      overflow: hidden;
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    }
-  `;
-  
-  document.head.appendChild(style);
-};
 
 interface CanvasProps {
   isFullscreen?: boolean;
@@ -76,7 +29,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasContainer = useRef<HTMLDivElement>(null);
 
-  // Calculate canvas dimensions to maintain 16:9 ratio
   useEffect(() => {
     const updateCanvasSize = () => {
       if (canvasContainer.current) {
@@ -84,12 +36,10 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         const containerWidth = containerRect.width;
         const containerHeight = containerRect.height;
         
-        // Calculate dimensions to fit 16:9 ratio
         const targetRatio = 16 / 9;
-        let width = containerWidth - 48; // Add padding
+        let width = containerWidth - 48;
         let height = width / targetRatio;
         
-        // If height is too tall, calculate based on container height
         if (height > containerHeight - 48) {
           height = containerHeight - 48;
           width = height * targetRatio;
@@ -135,7 +85,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     >
       <div
         className={cn(
-          "canvas-container relative overflow-visible bg-white shadow-lg",
+          "canvas-container bg-white shadow-lg",
           isFullscreen ? "w-full h-full" : "",
           isMobileView && !isFullscreen && "scale-[0.65]",
           isGameMode ? "bg-transparent" : "bg-white"
@@ -143,7 +93,8 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         style={{
           width: canvasSize.width,
           height: canvasSize.height,
-          aspectRatio: "16/9"
+          aspectRatio: "16/9",
+          overflow: "hidden"
         }}
         ref={setCanvasRef}
         onClick={handleCanvasClick}
@@ -157,7 +108,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             element={element}
             isActive={activeElement?.id === element.id}
           >
-            {/* Render element content based on type */}
             {element.type === 'image' && element.dataUrl && (
               <img
                 src={element.dataUrl}

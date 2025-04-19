@@ -62,7 +62,6 @@ body.sequence-dragging {
 /* Canvas specific styles */
 .canvas-container {
   position: relative;
-  overflow: visible !important;
   pointer-events: auto;
   z-index: 1;
   transition: all 0.3s ease;
@@ -72,6 +71,11 @@ body.sequence-dragging {
 }
 
 .canvas-container > div:first-child {
+  pointer-events: auto;
+}
+
+.canvas-element {
+  position: absolute;
   overflow: visible !important;
   pointer-events: auto;
 }
