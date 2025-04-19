@@ -6,19 +6,11 @@ interface Position {
   y: number;
 }
 
-interface DragState {
-  initialMouseX: number;
-  initialMouseY: number;
-  initialTransformX: number;
-  initialTransformY: number;
-}
-
 export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const isDragStarted = useRef<boolean>(false);
-  const dragStateRef = useRef<DragState | null>(null);
-  const rafRef = useRef<number | null>(null);
+  const lastUpdateTimestamp = useRef<number>(0);
 
   const currentElement = elements.find(el => el.id === elementId);
   
@@ -104,47 +96,53 @@ export const useDraggable = (elementId: string) => {
   }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
 
   useEffect(() => {
-    const updateElementPosition = (clientX: number, clientY: number) => {
-      if (!isDragging || !currentElement || !dragStateRef.current) return;
+    const handleMove = (clientX: number, clientY: number) => {
+      if (!isDragging || !currentElement) return;
 
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
         return;
       }
 
-      const deltaX = clientX - dragStateRef.current.initialMouseX;
-      const deltaY = clientY - dragStateRef.current.initialMouseY;
-
-      const element = document.getElementById(`element-${elementId}`);
-      if (element) {
-        element.style.cssText = `
-          transform: translate3d(${deltaX}px, ${deltaY}px, 0);
-          transition: none;
-          will-change: transform;
-          cursor: grabbing;
-        `;
+      const now = Date.now();
+      if (now - lastUpdateTimestamp.current < 16) { // Limit to ~60fps
+        return;
       }
+      lastUpdateTimestamp.current = now;
 
+      // Get element dimensions for center calculation
+      const element = document.getElementById(`element-${elementId}`);
+      if (!element) return;
+
+      const rect = element.getBoundingClientRect();
+      const centerOffsetX = rect.width / 2;
+      const centerOffsetY = rect.height / 2;
+
+      // Calculate new position with cursor at center
+      const newX = clientX - centerOffsetX;
+      const newY = clientY - centerOffsetY;
+
+      // Use transform3d for better performance and direct positioning
       updateElementWithoutHistory(elementId, {
-        position: {
-          x: dragStateRef.current.initialTransformX + deltaX,
-          y: dragStateRef.current.initialTransformY + deltaY
+        position: { x: newX, y: newY },
+        style: {
+          ...currentElement.style,
+          transform: `translate3d(0, 0, 0)`,
+          transition: 'none',
+          cursor: 'grabbing',
+          willChange: 'transform'
         }
       });
     };
 
-    const handleMove = (e: MouseEvent | Touch) => {
-      e instanceof MouseEvent && e.preventDefault();
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
-      
-      rafRef.current = requestAnimationFrame(() => {
-        updateElementPosition(e.clientX, e.clientY);
-      });
+    const handleMouseMove = (e: MouseEvent) => {
+      handleMove(e.clientX, e.clientY);
     };
 
-    const handleMouseMove = (e: MouseEvent) => handleMove(e);
-    const handleTouchMove = (e: TouchEvent) => handleMove(e.touches[0]);
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handleMove(touch.clientX, touch.clientY);
+    };
 
     const handleEnd = () => {
       if (isDragStarted.current) {
@@ -154,26 +152,23 @@ export const useDraggable = (elementId: string) => {
       setIsDragging(false);
       isDragStarted.current = false;
 
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-        rafRef.current = null;
-      }
-
+      // Reset element styles
       const element = document.getElementById(`element-${elementId}`);
       if (element && currentElement) {
-        element.style.cssText = `
-          transform: none;
-          transition: transform 0.1s ease;
-          will-change: auto;
-          cursor: grab;
-        `;
+        updateElementWithoutHistory(elementId, {
+          style: {
+            ...currentElement.style,
+            transform: 'none',
+            transition: 'none',
+            cursor: 'grab',
+            willChange: 'auto'
+          }
+        });
       }
-
-      dragStateRef.current = null;
     };
 
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove, { passive: false });
+      window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleEnd);
       window.addEventListener('touchmove', handleTouchMove, { passive: false });
       window.addEventListener('touchend', handleEnd);
@@ -181,9 +176,6 @@ export const useDraggable = (elementId: string) => {
     }
 
     return () => {
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleEnd);
       window.removeEventListener('touchmove', handleTouchMove);
@@ -202,30 +194,16 @@ export const useDraggable = (elementId: string) => {
     setIsDragging(true);
     isDragStarted.current = true;
 
-    const element = document.getElementById(`element-${elementId}`);
-    if (element && currentElement) {
-      let clientX: number, clientY: number;
-
-      if ('touches' in e) {
-        clientX = e.touches[0].clientX;
-        clientY = e.touches[0].clientY;
-      } else {
-        clientX = e.clientX;
-        clientY = e.clientY;
-      }
-
-      dragStateRef.current = {
-        initialMouseX: clientX,
-        initialMouseY: clientY,
-        initialTransformX: currentElement.position.x,
-        initialTransformY: currentElement.position.y
-      };
-
-      element.style.cssText = `
-        will-change: transform;
-        cursor: grabbing;
-        transition: none;
-      `;
+    // Set initial grab cursor and prepare for movement
+    if (currentElement) {
+      updateElementWithoutHistory(elementId, {
+        style: {
+          ...currentElement.style,
+          cursor: 'grabbing',
+          willChange: 'transform',
+          transition: 'none'
+        }
+      });
     }
   };
 
