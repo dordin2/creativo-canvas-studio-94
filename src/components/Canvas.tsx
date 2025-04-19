@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useMemo } from "react";
+import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElementWrapper from "./DraggableElementWrapper";
 import { cn } from "@/lib/utils";
@@ -11,9 +11,6 @@ interface CanvasProps {
   isFullscreen?: boolean;
   isMobileView?: boolean;
 }
-
-const BASE_WIDTH = 1920;
-const BASE_HEIGHT = 1080;
 
 const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => {
   const { 
@@ -29,44 +26,61 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   const { handleDrop, handleDragOver, handleDragLeave } = useCanvasDrop();
   useCanvasKeyboardShortcuts();
   
-  const [scale, setScale] = useState(1);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0, scale: 1 });
   const canvasContainer = useRef<HTMLDivElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-
-  const updateScale = () => {
-    if (!canvasContainer.current || !contentRef.current) return;
-    
-    const containerRect = canvasContainer.current.getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
-    
-    // Calculate scale while maintaining aspect ratio
-    const scaleX = (containerWidth - (isGameMode ? 0 : 48)) / BASE_WIDTH;
-    const scaleY = (containerHeight - (isGameMode ? 0 : 48)) / BASE_HEIGHT;
-    const newScale = Math.min(scaleX, scaleY);
-    
-    setScale(newScale);
-    
-    if (contentRef.current) {
-      contentRef.current.style.transform = `scale(${newScale})`;
-    }
-  };
 
   useEffect(() => {
-    updateScale();
+    const updateCanvasSize = () => {
+      if (canvasContainer.current) {
+        const containerRect = canvasContainer.current.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        
+        const baseWidth = 1920;
+        const baseHeight = 1080;
+        const targetRatio = baseWidth / baseHeight;
+        
+        let width = containerWidth;
+        let height = width / targetRatio;
+        
+        if (height > containerHeight) {
+          height = containerHeight;
+          width = height * targetRatio;
+        }
+        
+        if (!isGameMode) {
+          const padding = 48;
+          width -= padding;
+          height -= padding;
+        }
+        
+        const scaleFactor = Math.min(
+          width / baseWidth,
+          height / baseHeight
+        );
+        
+        setCanvasSize({
+          width: baseWidth,
+          height: baseHeight,
+          scale: scaleFactor
+        });
+      }
+    };
     
-    const resizeObserver = new ResizeObserver(updateScale);
+    updateCanvasSize();
+    
+    const resizeObserver = new ResizeObserver(updateCanvasSize);
     if (canvasContainer.current) {
       resizeObserver.observe(canvasContainer.current);
     }
     
-    window.addEventListener('resize', updateScale);
+    window.addEventListener('resize', updateCanvasSize);
     
     return () => {
       if (canvasContainer.current) {
         resizeObserver.unobserve(canvasContainer.current);
       }
-      window.removeEventListener('resize', updateScale);
+      window.removeEventListener('resize', updateCanvasSize);
     };
   }, [isGameMode]);
 
@@ -76,10 +90,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     }
   };
   
-  const sortedElements = useMemo(() => 
-    [...elements].sort((a, b) => a.layer - b.layer),
-    [elements]
-  );
+  const sortedElements = [...elements].sort((a, b) => a.layer - b.layer);
   
   return (
     <div 
@@ -92,66 +103,72 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       )}
     >
       <div
-        className="canvas-container"
+        className={cn(
+          "canvas-container",
+          isGameMode ? "bg-transparent" : "bg-white shadow-lg",
+          isMobileView && !isGameMode && !isFullscreen && "scale-100"
+        )}
+        style={{
+          width: `${canvasSize.width}px`,
+          height: `${canvasSize.height}px`,
+          transform: `scale(${canvasSize.scale || 1})`,
+          transformOrigin: 'center',
+          aspectRatio: "16/9",
+        }}
         ref={setCanvasRef}
         onClick={handleCanvasClick}
         onDrop={handleDrop}
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
       >
-        <div
-          ref={contentRef}
-          className="canvas-content"
-        >
-          {sortedElements.map((element) => (
-            <DraggableElementWrapper
-              key={element.id}
-              element={element}
-              isActive={activeElement?.id === element.id}
-            >
-              {element.type === 'image' && element.dataUrl && (
-                <img
-                  src={element.dataUrl}
-                  alt={element.alt || "Image"}
-                  className="w-full h-full object-contain"
-                  draggable={false}
-                />
-              )}
-              {element.type === 'image' && !element.dataUrl && element.src && (
-                <img
-                  src={element.src}
-                  alt={element.alt || "Image"}
-                  className="w-full h-full object-contain"
-                  draggable={false}
-                />
-              )}
-              {element.type === 'image' && !element.dataUrl && !element.src && (
-                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                  <span className="text-gray-500">No image</span>
-                </div>
-              )}
-              {(element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph') && (
-                <div>{element.text || ''}</div>
-              )}
-              {element.type === 'rectangle' && (
-                <div className="w-full h-full" style={{ 
-                  backgroundColor: element.fill || 'rgba(59, 130, 246, 0.5)' 
-                }}></div>
-              )}
-              {element.type === 'circle' && (
-                <div className="w-full h-full rounded-full" style={{ 
-                  backgroundColor: element.fill || 'rgba(59, 130, 246, 0.5)' 
-                }}></div>
-              )}
-              {(element.type === 'puzzle' || 
-                element.type === 'sequencePuzzle' || 
-                element.type === 'clickSequencePuzzle' || 
-                element.type === 'sliderPuzzle') && (
-                <div className="w-full h-full"></div>
-              )}
-            </DraggableElementWrapper>
-          ))}
-        </div>
+        {sortedElements.map((element) => (
+          <DraggableElementWrapper
+            key={element.id}
+            element={element}
+            isActive={activeElement?.id === element.id}
+          >
+            {element.type === 'image' && element.dataUrl && (
+              <img
+                src={element.dataUrl}
+                alt={element.alt || "Image"}
+                className="w-full h-full object-contain"
+                draggable={false}
+              />
+            )}
+            {element.type === 'image' && !element.dataUrl && element.src && (
+              <img
+                src={element.src}
+                alt={element.alt || "Image"}
+                className="w-full h-full object-contain"
+                draggable={false}
+              />
+            )}
+            {element.type === 'image' && !element.dataUrl && !element.src && (
+              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                <span className="text-gray-500">No image</span>
+              </div>
+            )}
+            {(element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph') && (
+              <div>{element.text || ''}</div>
+            )}
+            {element.type === 'rectangle' && (
+              <div className="w-full h-full" style={{ 
+                backgroundColor: element.fill || 'rgba(59, 130, 246, 0.5)' 
+              }}></div>
+            )}
+            {element.type === 'circle' && (
+              <div className="w-full h-full rounded-full" style={{ 
+                backgroundColor: element.fill || 'rgba(59, 130, 246, 0.5)' 
+              }}></div>
+            )}
+            {(element.type === 'puzzle' || 
+              element.type === 'sequencePuzzle' || 
+              element.type === 'clickSequencePuzzle' || 
+              element.type === 'sliderPuzzle') && (
+              <div className="w-full h-full"></div>
+            )}
+          </DraggableElementWrapper>
+        ))}
       </div>
     </div>
   );
