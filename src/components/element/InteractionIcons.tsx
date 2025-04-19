@@ -4,7 +4,9 @@ import { Button } from "@/components/ui/button";
 import { DesignElement } from "@/types/designTypes";
 import { useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import InteractionProperties from "@/components/properties/InteractionProperties";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface InteractionIconsProps {
   element: DesignElement;
@@ -13,14 +15,15 @@ interface InteractionIconsProps {
 const InteractionIcons = ({ element }: InteractionIconsProps) => {
   const [showInteractionModal, setShowInteractionModal] = useState(false);
   const [selectedInteractionType, setSelectedInteractionType] = useState<string | null>(null);
+  const isMobile = useIsMobile();
 
   const handleInteractionClick = (type: string) => {
     setSelectedInteractionType(type);
     setShowInteractionModal(true);
   };
 
-  return (
-    <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 flex gap-2 bg-white rounded-lg shadow-lg p-2 z-50">
+  const IconsRow = () => (
+    <div className={`flex gap-2 ${isMobile ? 'justify-center p-2' : ''} bg-white rounded-lg shadow-lg`}>
       <Button
         variant="outline"
         size="icon"
@@ -56,7 +59,31 @@ const InteractionIcons = ({ element }: InteractionIconsProps) => {
       >
         <Puzzle className="h-4 w-4" />
       </Button>
+    </div>
+  );
 
+  if (isMobile) {
+    return (
+      <>
+        <Sheet open={showInteractionModal} onOpenChange={setShowInteractionModal}>
+          <SheetTrigger asChild>
+            <div className="w-full">
+              <IconsRow />
+            </div>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="h-[80vh] w-full">
+            <div className="pt-6">
+              <InteractionProperties element={element} />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </>
+    );
+  }
+
+  return (
+    <div className="absolute -top-12 left-1/2 transform -translate-x-1/2 z-50">
+      <IconsRow />
       <Dialog open={showInteractionModal} onOpenChange={setShowInteractionModal}>
         <DialogContent className="sm:max-w-[600px]">
           <InteractionProperties element={element} />

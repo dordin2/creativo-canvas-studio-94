@@ -1,7 +1,6 @@
 
 import { DesignElement } from "@/types/designTypes";
-import InteractionProperties from "@/components/properties/InteractionProperties";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import InteractionIcons from "@/components/element/InteractionIcons";
 
 interface MobileInteractionControlsProps {
   element: DesignElement;
@@ -9,12 +8,8 @@ interface MobileInteractionControlsProps {
 
 const MobileInteractionControls = ({ element }: MobileInteractionControlsProps) => {
   return (
-    <div className="relative">
-      <ScrollArea className="h-[40vh] overflow-y-auto pb-safe">
-        <div className="px-4 py-2">
-          <InteractionProperties element={element} />
-        </div>
-      </ScrollArea>
+    <div className="relative px-4 py-2">
+      <InteractionIcons element={element} />
     </div>
   );
 };
