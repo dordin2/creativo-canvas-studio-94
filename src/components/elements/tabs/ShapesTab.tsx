@@ -2,7 +2,7 @@
 import { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useDesignState } from '@/context/DesignContext';
-import { Square, Circle, Triangle, Box } from 'lucide-react';
+import { Square, Circle, Triangle } from 'lucide-react';
 
 interface ShapesTabProps {
   onClose: () => void;
@@ -11,7 +11,7 @@ interface ShapesTabProps {
 export const ShapesTab = ({ onClose }: ShapesTabProps) => {
   const { addElement } = useDesignState();
   
-  const handleShapeAdd = useCallback((type: 'rectangle' | 'circle' | 'triangle' | 'line' | 'customBox') => {
+  const handleShapeAdd = useCallback((type: 'rectangle' | 'circle' | 'triangle' | 'line') => {
     addElement(type);
     onClose();
   }, [addElement, onClose]);
@@ -33,10 +33,6 @@ export const ShapesTab = ({ onClose }: ShapesTabProps) => {
       <Button variant="outline" className="h-12" onClick={() => handleShapeAdd('line')}>
         <div className="w-4 h-0.5 bg-current mr-2" />
         <span>Line</span>
-      </Button>
-      <Button variant="outline" className="h-12 col-span-2" onClick={() => handleShapeAdd('customBox')}>
-        <Box className="h-4 w-4 mr-2" />
-        <span>Custom Box (500x500)</span>
       </Button>
     </div>
   );

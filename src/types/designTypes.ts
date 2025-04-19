@@ -1,3 +1,4 @@
+
 import { CSSProperties } from "react";
 
 export type Json =
@@ -21,8 +22,7 @@ export type ElementType =
   | 'puzzle'
   | 'sequencePuzzle'
   | 'clickSequencePuzzle'
-  | 'sliderPuzzle'
-  | 'customBox';
+  | 'sliderPuzzle';
 
 export type PuzzleType = 'image' | 'number' | 'alphabet';
 export type SliderOrientation = 'horizontal' | 'vertical';
