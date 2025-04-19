@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -6,18 +7,19 @@ interface Position {
   y: number;
 }
 
-interface DragOffset {
-  x: number;
-  y: number;
+interface DragState {
+  startX: number;
+  startY: number;
+  elementStartX: number;
+  elementStartY: number;
 }
 
 export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const isDragStarted = useRef<boolean>(false);
-  const lastUpdateTimestamp = useRef<number>(0);
-  const dragOffsetRef = useRef<DragOffset>({ x: 0, y: 0 });
-  const elementBoundsRef = useRef<DOMRect | null>(null);
+  const dragStateRef = useRef<DragState | null>(null);
+  const rafRef = useRef<number | null>(null);
 
   const currentElement = elements.find(el => el.id === elementId);
   
@@ -103,38 +105,22 @@ export const useDraggable = (elementId: string) => {
   }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
 
   useEffect(() => {
-    const isWithinBounds = (clientX: number, clientY: number, bounds: DOMRect): boolean => {
-      const tolerance = 10; // Allow a small area outside the bounds
-      return (
-        clientX >= bounds.left - tolerance &&
-        clientX <= bounds.right + tolerance &&
-        clientY >= bounds.top - tolerance &&
-        clientY <= bounds.bottom + tolerance
-      );
-    };
-
-    const handleMove = (clientX: number, clientY: number) => {
-      if (!isDragging || !currentElement) return;
+    const updateElementPosition = (clientX: number, clientY: number) => {
+      if (!isDragging || !currentElement || !dragStateRef.current) return;
 
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
         return;
       }
 
-      const now = Date.now();
-      if (now - lastUpdateTimestamp.current < 16) {
-        return;
-      }
-      lastUpdateTimestamp.current = now;
+      // Calculate the delta movement from the start position
+      const deltaX = clientX - dragStateRef.current.startX;
+      const deltaY = clientY - dragStateRef.current.startY;
 
-      // Check if cursor is within element bounds
-      if (elementBoundsRef.current && !isWithinBounds(clientX, clientY, elementBoundsRef.current)) {
-        handleEnd();
-        return;
-      }
+      // Calculate new absolute position
+      const newX = dragStateRef.current.elementStartX + deltaX;
+      const newY = dragStateRef.current.elementStartY + deltaY;
 
-      const newX = clientX - dragOffsetRef.current.x;
-      const newY = clientY - dragOffsetRef.current.y;
-
+      // Update element position using transform for better performance
       updateElementWithoutHistory(elementId, {
         position: { x: newX, y: newY },
         style: {
@@ -147,7 +133,18 @@ export const useDraggable = (elementId: string) => {
       });
     };
 
+    const handleMove = (clientX: number, clientY: number) => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
+      
+      rafRef.current = requestAnimationFrame(() => {
+        updateElementPosition(clientX, clientY);
+      });
+    };
+
     const handleMouseMove = (e: MouseEvent) => {
+      e.preventDefault();
       handleMove(e.clientX, e.clientY);
     };
 
@@ -164,7 +161,12 @@ export const useDraggable = (elementId: string) => {
 
       setIsDragging(false);
       isDragStarted.current = false;
-      elementBoundsRef.current = null;
+      dragStateRef.current = null;
+
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+        rafRef.current = null;
+      }
 
       if (currentElement) {
         updateElementWithoutHistory(elementId, {
@@ -188,6 +190,9 @@ export const useDraggable = (elementId: string) => {
     }
 
     return () => {
+      if (rafRef.current) {
+        cancelAnimationFrame(rafRef.current);
+      }
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleEnd);
       window.removeEventListener('touchmove', handleTouchMove);
@@ -208,9 +213,6 @@ export const useDraggable = (elementId: string) => {
 
     const element = document.getElementById(`element-${elementId}`);
     if (element && currentElement) {
-      const rect = element.getBoundingClientRect();
-      elementBoundsRef.current = rect;
-      
       let clientX: number, clientY: number;
 
       if ('touches' in e) {
@@ -221,9 +223,12 @@ export const useDraggable = (elementId: string) => {
         clientY = e.clientY;
       }
 
-      dragOffsetRef.current = {
-        x: clientX - rect.left,
-        y: clientY - rect.top
+      // Store initial drag state
+      dragStateRef.current = {
+        startX: clientX,
+        startY: clientY,
+        elementStartX: currentElement.position.x,
+        elementStartY: currentElement.position.y
       };
 
       updateElementWithoutHistory(elementId, {
