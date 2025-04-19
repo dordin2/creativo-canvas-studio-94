@@ -12,9 +12,10 @@ export const useDraggable = (elementId: string) => {
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
+  const animationFrame = useRef<number | null>(null);
   const touchPosition = useRef<Position>({ x: 0, y: 0 });
   const mousePosition = useRef<Position>({ x: 0, y: 0 });
-  const rafId = useRef<number | null>(null);
+  const lastUpdateTimestamp = useRef<number>(0);
 
   const currentElement = elements.find(el => el.id === elementId);
   
@@ -24,14 +25,8 @@ export const useDraggable = (elementId: string) => {
   const isImageElement = currentElement?.type === 'image';
 
   useEffect(() => {
-    return () => {
-      if (rafId.current) {
-        cancelAnimationFrame(rafId.current);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
+    if (!currentElement) return;
+    
     const handleDragOver = (e: MouseEvent) => {
       if (draggedInventoryItem && currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
         const element = document.getElementById(`element-${elementId}`);
@@ -105,73 +100,111 @@ export const useDraggable = (elementId: string) => {
     };
   }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
 
-  const updateElementPosition = (clientX: number, clientY: number) => {
-    if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
+  useEffect(() => {
+    const handleMove = (clientX: number, clientY: number) => {
+      if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
 
-    if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
-      return;
-    }
+      if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
+        return;
+      }
 
-    mousePosition.current = { x: clientX, y: clientY };
-    touchPosition.current = { x: clientX, y: clientY };
+      const now = Date.now();
+      if (now - lastUpdateTimestamp.current < 16) {
+        return;
+      }
+      lastUpdateTimestamp.current = now;
 
-    if (!isDragStarted.current) {
-      isDragStarted.current = true;
-    }
+      mousePosition.current = { x: clientX, y: clientY };
+      touchPosition.current = { x: clientX, y: clientY };
 
-    if (rafId.current) {
-      cancelAnimationFrame(rafId.current);
-    }
+      if (!isDragStarted.current) {
+        isDragStarted.current = true;
+      }
 
-    rafId.current = requestAnimationFrame(() => {
-      const deltaX = mousePosition.current.x - startPosition.current!.x;
-      const deltaY = mousePosition.current.y - startPosition.current!.y;
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+      }
 
-      updateElementWithoutHistory(elementId, {
-        position: {
-          x: elementInitialPos.current!.x + deltaX,
-          y: elementInitialPos.current!.y + deltaY
-        },
-        style: {
-          ...currentElement?.style,
-          transform: `translate3d(0,0,0)`,
-          willChange: 'transform',
-          cursor: 'grabbing',
-          zIndex: 9999,
-        }
-      });
-    });
-  };
+      animationFrame.current = requestAnimationFrame(() => {
+        const deltaX = mousePosition.current.x - startPosition.current!.x;
+        const deltaY = mousePosition.current.y - startPosition.current!.y;
 
-  const handleMove = (clientX: number, clientY: number) => {
-    updateElementPosition(clientX, clientY);
-  };
-
-  const handleEnd = () => {
-    if (isDragStarted.current) {
-      if (currentElement) {
         updateElementWithoutHistory(elementId, {
+          position: {
+            x: elementInitialPos.current!.x + deltaX,
+            y: elementInitialPos.current!.y + deltaY
+          },
           style: {
-            ...currentElement.style,
-            transform: 'none',
-            willChange: 'auto',
-            cursor: 'grab',
+            ...currentElement?.style,
+            transform: 'scale(1.02)',
+            transition: 'transform 0.2s ease',
+            willChange: 'transform',
+            cursor: 'grabbing',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
+            zIndex: 9999,
           }
         });
+      });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => {
+      handleMove(e.clientX, e.clientY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      const touch = e.touches[0];
+      handleMove(touch.clientX, touch.clientY);
+    };
+
+    const handleEnd = () => {
+      if (isDragStarted.current) {
+        if (currentElement) {
+          updateElementWithoutHistory(elementId, {
+            style: {
+              ...currentElement.style,
+              transform: 'scale(1)',
+              transition: 'all 0.2s ease',
+              willChange: 'auto',
+              cursor: 'grab',
+              boxShadow: 'none',
+            }
+          });
+        }
+        commitToHistory();
       }
-      commitToHistory();
+
+      setIsDragging(false);
+      isDragStarted.current = false;
+      startPosition.current = null;
+      elementInitialPos.current = null;
+
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+        animationFrame.current = null;
+      }
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleEnd);
+      window.addEventListener('touchmove', handleTouchMove, { passive: false });
+      window.addEventListener('touchend', handleEnd);
+      window.addEventListener('touchcancel', handleEnd);
     }
 
-    setIsDragging(false);
-    isDragStarted.current = false;
-    startPosition.current = null;
-    elementInitialPos.current = null;
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleEnd);
+      window.removeEventListener('touchmove', handleTouchMove);
+      window.removeEventListener('touchend', handleEnd);
+      window.removeEventListener('touchcancel', handleEnd);
 
-    if (rafId.current) {
-      cancelAnimationFrame(rafId.current);
-      rafId.current = null;
-    }
-  };
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+      }
+    };
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
 
   const startDrag = (e: React.MouseEvent | React.TouchEvent, initialPosition: Position) => {
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
