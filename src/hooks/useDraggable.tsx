@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -70,7 +71,7 @@ export const useDraggable = (elementId: string) => {
     };
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
 
-  const startDrag = (e: React.MouseEvent | React.TouchEvent) => {
+  const startDrag = (e: React.MouseEvent | React.TouchEvent, elementPosition?: Position) => {
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
@@ -93,7 +94,7 @@ export const useDraggable = (elementId: string) => {
     }
 
     if (currentElement) {
-      elementStartPosition.current = { 
+      elementStartPosition.current = elementPosition || { 
         x: currentElement.position.x, 
         y: currentElement.position.y 
       };
