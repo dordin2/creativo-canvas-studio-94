@@ -16,7 +16,6 @@ import SequencePuzzleModal from "./element/SequencePuzzleModal";
 import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
 import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
 import InteractionContextMenu from './element/InteractionContextMenu';
-import DragHandle from './element/DragHandle';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -52,11 +51,13 @@ const DraggableElement = ({ element, isActive, children }: {
   } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
   
-  const { startDrag, isDragging, handleMove, handleEnd } = useDraggable(element.id);
+  const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [showControls, setShowControls] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showPuzzleModal, setShowPuzzleModal] = useState(false);
@@ -85,6 +86,7 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
+    // Prevent dragging if element is a background
     if (element.layer === 0) return;
     
     if (isImageElement && isGameMode) {
@@ -107,7 +109,12 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing || isInteractiveMode) return;
     
-    startDrag(e);
+    if (!isSequencePuzzleElement) {
+      startDrag(e, element.position);
+      setIsDragging(true);
+    }
+    
+    setStartPos({ x: e.clientX, y: e.clientY });
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -131,7 +138,13 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing || isInteractiveMode) return;
     
-    startDrag(e);
+    if (!isSequencePuzzleElement) {
+      startDrag(e, element.position);
+      setIsDragging(true);
+    }
+    
+    const touch = e.touches[0];
+    setStartPos({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
@@ -154,31 +167,13 @@ const DraggableElement = ({ element, isActive, children }: {
         }
       }, 10);
     } else if (isSequencePuzzleElement) {
-      startDrag(e);
+      startDrag(e, element.position);
+      setIsDragging(true);
     } else if (hasInteraction && !isEditing && !isDragging) {
       e.stopPropagation();
       handleInteraction();
     }
   };
-
-  useEffect(() => {
-    const handleMouseMoveEvent = (e: MouseEvent) => handleMove(e);
-    const handleTouchMoveEvent = (e: TouchEvent) => handleMove(e);
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMoveEvent);
-      document.addEventListener('touchmove', handleTouchMoveEvent, { passive: false });
-      document.addEventListener('mouseup', handleEnd);
-      document.addEventListener('touchend', handleEnd);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMoveEvent);
-      document.removeEventListener('touchmove', handleTouchMoveEvent);
-      document.removeEventListener('mouseup', handleEnd);
-      document.removeEventListener('touchend', handleEnd);
-    };
-  }, [isDragging, handleMove, handleEnd]);
 
   const handleDetachFromBackground = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -319,7 +314,7 @@ const DraggableElement = ({ element, isActive, children }: {
 
   useEffect(() => {
     const handleMouseUp = () => {
-      // setIsDragging(false); // No longer needed
+      setIsDragging(false);
     };
 
     if (isDragging) {
@@ -620,7 +615,7 @@ const DraggableElement = ({ element, isActive, children }: {
     <div
       id={`element-${element.id}`}
       ref={ref}
-      className={`canvas-element group ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
       style={combinedStyle}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
@@ -629,13 +624,6 @@ const DraggableElement = ({ element, isActive, children }: {
       draggable={isGameMode && isImageElement ? false : undefined}
     >
       {childContent}
-      {isActive && isImageElement && !isGameMode && (
-        <DragHandle 
-          isDragging={isDragging}
-          onMouseDown={handleMouseDown}
-          onTouchStart={handleTouchStart}
-        />
-      )}
       {showInteractionIndicator && (
         <div className={indicatorStyles} title={
           interactionType === 'canvasNavigation' 

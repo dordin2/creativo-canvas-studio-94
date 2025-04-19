@@ -263,11 +263,18 @@ export const DesignProvider = ({
   }, [canvases, addToHistory]);
   
   const handleImageUpload = (id: string, file: File) => {
+    const canvasDimensions = canvasRef ? {
+      width: canvasRef.clientWidth,
+      height: canvasRef.clientHeight
+    } : undefined;
+    
     processImageUpload(
       file, 
       (updatedData) => {
         updateElement(id, updatedData);
-      }
+      },
+      canvasDimensions?.width,
+      canvasDimensions?.height
     );
   };
   

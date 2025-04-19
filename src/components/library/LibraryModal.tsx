@@ -8,14 +8,12 @@ import { toast } from 'sonner';
 import { Library, Trash2 } from 'lucide-react';
 import { processImageUpload } from '@/utils/imageUploader';
 import { getDefaultPosition } from '@/utils/elementFactory';
-
 interface LibraryElement {
   id: string;
   name: string;
   image_path: string;
   created_at: string;
 }
-
 export const LibraryModal = () => {
   const [elements, setElements] = useState<LibraryElement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,7 +27,6 @@ export const LibraryModal = () => {
     canvasRef
   } = useDesignState();
   const isAdmin = profile?.roles?.includes('admin');
-
   const fetchLibraryElements = async () => {
     try {
       const {
@@ -47,7 +44,6 @@ export const LibraryModal = () => {
       setIsLoading(false);
     }
   };
-
   const handleDeleteElement = async (elementId: string) => {
     try {
       const element = elements.find(e => e.id === elementId);
@@ -69,28 +65,24 @@ export const LibraryModal = () => {
       toast.error('Failed to delete element');
     }
   };
-
   const handleImageClick = async (element: LibraryElement) => {
     try {
       const newElement = addElement('image', {
         position: getDefaultPosition(canvasRef),
         name: element.name
       });
-      
       const response = await fetch(element.image_path);
       const blob = await response.blob();
       const file = new File([blob], element.name || 'gallery-image.png', {
         type: blob.type,
         lastModified: new Date().getTime()
       });
-      
       processImageUpload(file, updatedData => {
         addElement('image', {
           ...updatedData,
           name: element.name
         });
-      });
-      
+      }, canvasRef?.clientWidth, canvasRef?.clientHeight);
       setIsOpen(false);
       toast.success('Image added to scene');
     } catch (error) {
@@ -98,13 +90,11 @@ export const LibraryModal = () => {
       toast.error('Failed to add image to scene');
     }
   };
-
   useEffect(() => {
     if (isOpen) {
       fetchLibraryElements();
     }
   }, [isOpen]);
-
   return <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetTrigger asChild>
         
