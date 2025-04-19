@@ -1,17 +1,13 @@
+
 import { useState, useCallback } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
 
-interface Position {
-  x: number;
-  y: number;
-}
-
 interface DragState {
-  offsetX: number;
-  offsetY: number;
-  currentX: number;
-  currentY: number;
+  startX: number;
+  startY: number;
+  initialLeft: number;
+  initialTop: number;
 }
 
 export const useDraggable = (elementId: string) => {
@@ -22,7 +18,7 @@ export const useDraggable = (elementId: string) => {
   const currentElement = elements.find(el => el.id === elementId);
   
   const isImageElement = currentElement?.type === 'image';
-  
+
   const handleMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!isDragging || !dragState) return;
     
@@ -41,27 +37,20 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
 
-    // Calculate new position relative to the initial offset
-    const newX = clientX - dragState.offsetX;
-    const newY = clientY - dragState.offsetY;
-
-    // Store the current position for handleEnd
-    setDragState(prev => ({
-      ...prev!,
-      currentX: newX,
-      currentY: newY
-    }));
+    // Calculate new position by subtracting the initial offset
+    const newLeft = clientX - dragState.startX + dragState.initialLeft;
+    const newTop = clientY - dragState.startY + dragState.initialTop;
 
     // Update DOM position immediately for smooth dragging
-    element.style.left = `${newX}px`;
-    element.style.top = `${newY}px`;
+    element.style.left = `${newLeft}px`;
+    element.style.top = `${newTop}px`;
 
     // Update React state less frequently using requestAnimationFrame
     requestAnimationFrame(() => {
       updateElementWithoutHistory(elementId, {
         position: {
-          x: newX,
-          y: newY
+          x: newLeft,
+          y: newTop
         }
       });
     });
@@ -85,41 +74,42 @@ export const useDraggable = (elementId: string) => {
       const touch = e.touches[0];
       clientX = touch.clientX;
       clientY = touch.clientY;
+      // Prevent scrolling on mobile while dragging
+      e.preventDefault();
     } else {
       clientX = e.clientX;
       clientY = e.clientY;
     }
     
-    // Use offsetLeft and offsetTop instead of getBoundingClientRect()
-    const currentX = element.offsetLeft;
-    const currentY = element.offsetTop;
-    
-    // Calculate offset from mouse/touch position to element's current position
+    // Store initial position and pointer coordinates
     setDragState({
-      offsetX: clientX - currentX,
-      offsetY: clientY - currentY,
-      currentX: currentX,
-      currentY: currentY
+      startX: clientX,
+      startY: clientY,
+      initialLeft: element.offsetLeft,
+      initialTop: element.offsetTop
     });
     
     setIsDragging(true);
   }, [elementId, isGameMode, isImageElement, currentElement?.interaction?.type]);
 
   const handleEnd = useCallback(() => {
-    if (!isDragging || !dragState) return;
+    if (!isDragging) return;
 
-    // Use the last known position from dragState instead of getting from DOM
+    const element = document.getElementById(`element-${elementId}`);
+    if (!element) return;
+
+    // Commit the final position to history
     updateElementWithoutHistory(elementId, {
-      position: { 
-        x: dragState.currentX, 
-        y: dragState.currentY 
+      position: {
+        x: element.offsetLeft,
+        y: element.offsetTop
       }
     });
     commitToHistory();
 
     setIsDragging(false);
     setDragState(null);
-  }, [isDragging, dragState, elementId, updateElementWithoutHistory, commitToHistory]);
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory]);
 
   return { startDrag, isDragging, currentElement, handleMove, handleEnd };
 };
