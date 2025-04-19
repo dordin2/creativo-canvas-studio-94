@@ -22,6 +22,7 @@ interface ElementControlsProps {
   onResizeStart: (e: React.MouseEvent, direction: string) => void;
   onRotateStart: (e: React.MouseEvent) => void;
   showControls: boolean;
+  canvasScale?: number;
 }
 
 const ElementControls = ({ 
@@ -30,7 +31,8 @@ const ElementControls = ({
   frameTransform, 
   onResizeStart, 
   onRotateStart,
-  showControls
+  showControls,
+  canvasScale = 1
 }: ElementControlsProps) => {
   const { updateElement, removeElement, addElement, canvases, activeCanvasIndex } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
@@ -131,7 +133,7 @@ const ElementControls = ({
     top: posY,
     width: elementDimensions.width,
     height: elementDimensions.height,
-    transform: `rotate(${rotation}deg)`,
+    transform: `rotate(${rotation}deg) scale(${canvasScale})`,
     pointerEvents: 'none' as const,
     zIndex: 1000 + element.layer,
     border: isActive ? '1px solid #6366F1' : 'none',
