@@ -182,48 +182,10 @@ const ElementControls = ({
               <TooltipContent>
                 <p>Duplicate</p>
               </TooltipContent>
-            </TooltipProvider>
+            </Tooltip>
+          </TooltipProvider>
             
-            {canBeBackground && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      className="h-8 w-8 bg-white"
-                      onClick={handleSetAsBackground}
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{language === 'he' ? 'הפוך לרקע' : 'Set as Background'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            
-            {element.type === 'background' && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      className="h-8 w-8 bg-white"
-                      onClick={handleDetachFromBackground}
-                    >
-                      <Frame className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{language === 'he' ? 'הפרד מהרקע' : 'Detach from Background'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            
+          {canBeBackground && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -231,40 +193,79 @@ const ElementControls = ({
                     variant="outline" 
                     size="icon" 
                     className="h-8 w-8 bg-white"
-                    onClick={handleToggleVisibility}
+                    onClick={handleSetAsBackground}
                   >
-                    {isVisible ? (
-                      <Eye className="h-4 w-4" />
-                    ) : (
-                      <EyeOff className="h-4 w-4" />
-                    )}
+                    <Maximize2 className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{isVisible ? 'Hide' : 'Show'}</p>
+                  <p>{language === 'he' ? 'הפוך לרקע' : 'Set as Background'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+          )}
             
+          {element.type === 'background' && (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button 
                     variant="outline" 
                     size="icon" 
-                    className="h-8 w-8 bg-white text-red-500"
-                    onClick={handleDelete}
+                    className="h-8 w-8 bg-white"
+                    onClick={handleDetachFromBackground}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Frame className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Delete</p>
+                  <p>{language === 'he' ? 'הפרד מהרקע' : 'Detach from Background'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          </div>
-        )}
+          )}
+            
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-8 w-8 bg-white"
+                  onClick={handleToggleVisibility}
+                >
+                  {isVisible ? (
+                    <Eye className="h-4 w-4" />
+                  ) : (
+                    <EyeOff className="h-4 w-4" />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{isVisible ? 'Hide' : 'Show'}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+            
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-8 w-8 bg-white text-red-500"
+                  onClick={handleDelete}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Delete</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      )}
     </div>
   );
 };
