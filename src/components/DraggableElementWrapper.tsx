@@ -25,7 +25,7 @@ const DraggableElementWrapper = ({
   
   const [showControls, setShowControls] = useState(false);
   
-  // Use our new advanced draggable hook
+  // Use our advanced draggable hook
   const { 
     elementRef,
     isDragging,
