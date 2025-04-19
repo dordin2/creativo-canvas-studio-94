@@ -8,10 +8,10 @@ interface Position {
 }
 
 interface DragState {
-  startX: number;
-  startY: number;
-  elementStartX: number;
-  elementStartY: number;
+  initialMouseX: number;
+  initialMouseY: number;
+  initialTransformX: number;
+  initialTransformY: number;
 }
 
 export const useDraggable = (elementId: string) => {
@@ -112,20 +112,27 @@ export const useDraggable = (elementId: string) => {
         return;
       }
 
-      // Calculate the delta movement from the start position
-      const deltaX = clientX - dragStateRef.current.startX;
-      const deltaY = clientY - dragStateRef.current.startY;
+      // Calculate the delta from initial mouse position
+      const deltaX = clientX - dragStateRef.current.initialMouseX;
+      const deltaY = clientY - dragStateRef.current.initialMouseY;
 
-      // Calculate new absolute position
-      const newX = dragStateRef.current.elementStartX + deltaX;
-      const newY = dragStateRef.current.elementStartY + deltaY;
+      // Apply transform directly for immediate visual feedback
+      const element = document.getElementById(`element-${elementId}`);
+      if (element) {
+        const transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`;
+        element.style.transform = transform;
+        element.style.transition = 'none';
+      }
 
-      // Update element position using transform for better performance
+      // Update the actual position state on the next frame
       updateElementWithoutHistory(elementId, {
-        position: { x: newX, y: newY },
+        position: {
+          x: dragStateRef.current.initialTransformX + deltaX,
+          y: dragStateRef.current.initialTransformY + deltaY
+        },
         style: {
           ...currentElement.style,
-          transform: `translate3d(0, 0, 0)`,
+          transform: 'translate3d(0, 0, 0)',
           transition: 'none',
           cursor: 'grabbing',
           willChange: 'transform'
@@ -133,26 +140,19 @@ export const useDraggable = (elementId: string) => {
       });
     };
 
-    const handleMove = (clientX: number, clientY: number) => {
+    const handleMove = (e: MouseEvent | Touch) => {
+      e instanceof MouseEvent && e.preventDefault();
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
       }
       
       rafRef.current = requestAnimationFrame(() => {
-        updateElementPosition(clientX, clientY);
+        updateElementPosition(e.clientX, e.clientY);
       });
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
-      e.preventDefault();
-      handleMove(e.clientX, e.clientY);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault();
-      const touch = e.touches[0];
-      handleMove(touch.clientX, touch.clientY);
-    };
+    const handleMouseMove = (e: MouseEvent) => handleMove(e);
+    const handleTouchMove = (e: TouchEvent) => handleMove(e.touches[0]);
 
     const handleEnd = () => {
       if (isDragStarted.current) {
@@ -166,6 +166,12 @@ export const useDraggable = (elementId: string) => {
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
+      }
+
+      // Reset transforms after drag
+      const element = document.getElementById(`element-${elementId}`);
+      if (element) {
+        element.style.transform = 'none';
       }
 
       if (currentElement) {
@@ -182,7 +188,7 @@ export const useDraggable = (elementId: string) => {
     };
 
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mousemove', handleMouseMove, { passive: false });
       window.addEventListener('mouseup', handleEnd);
       window.addEventListener('touchmove', handleTouchMove, { passive: false });
       window.addEventListener('touchend', handleEnd);
@@ -223,12 +229,12 @@ export const useDraggable = (elementId: string) => {
         clientY = e.clientY;
       }
 
-      // Store initial drag state
+      // Store initial positions for accurate delta calculations
       dragStateRef.current = {
-        startX: clientX,
-        startY: clientY,
-        elementStartX: currentElement.position.x,
-        elementStartY: currentElement.position.y
+        initialMouseX: clientX,
+        initialMouseY: clientY,
+        initialTransformX: currentElement.position.x,
+        initialTransformY: currentElement.position.y
       };
 
       updateElementWithoutHistory(elementId, {
