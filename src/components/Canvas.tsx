@@ -38,12 +38,18 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         const containerHeight = containerRect.height;
         
         const targetRatio = 16 / 9;
-        let width = containerWidth - 48;
+        let width = containerWidth;
         let height = width / targetRatio;
         
-        if (height > containerHeight - 48) {
-          height = containerHeight - 48;
+        if (height > containerHeight) {
+          height = containerHeight;
           width = height * targetRatio;
+        }
+        
+        // In game mode, don't apply any padding
+        if (!isGameMode) {
+          width -= 48;
+          height -= 48;
         }
         
         setCanvasSize({ width, height });
@@ -65,7 +71,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       }
       window.removeEventListener('resize', updateCanvasSize);
     };
-  }, []);
+  }, [isGameMode]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -79,17 +85,17 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     <div 
       ref={canvasContainer}
       className={cn(
-        "relative w-full h-full bg-gray-100 flex items-center justify-center p-6",
+        "relative w-full h-full bg-gray-100 flex items-center justify-center",
         isFullscreen ? "fixed inset-0 z-50" : "h-[calc(100vh-9rem)]",
-        isMobileView && "h-[calc(100vh-8rem)]"
+        isMobileView && !isGameMode && "h-[calc(100vh-8rem)]",
+        isGameMode && "p-0"
       )}
     >
       <div
         className={cn(
-          "canvas-container bg-white shadow-lg",
-          isFullscreen ? "w-full h-full" : "",
-          isMobileView && !isFullscreen && "scale-[0.65]",
-          isGameMode ? "bg-transparent" : "bg-white"
+          "canvas-container",
+          isGameMode ? "bg-transparent" : "bg-white shadow-lg",
+          isMobileView && !isGameMode && !isFullscreen && "scale-100"
         )}
         style={{
           width: canvasSize.width,
@@ -149,7 +155,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
               <div className="w-full h-full"></div>
             )}
           </DraggableElementWrapper>
-        ))}
+        )}
       </div>
     </div>
   );
