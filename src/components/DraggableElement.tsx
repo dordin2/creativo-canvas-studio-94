@@ -16,6 +16,7 @@ import SequencePuzzleModal from "./element/SequencePuzzleModal";
 import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
 import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
 import InteractionContextMenu from './element/InteractionContextMenu';
+import DragHandle from './element/DragHandle';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -619,7 +620,7 @@ const DraggableElement = ({ element, isActive, children }: {
     <div
       id={`element-${element.id}`}
       ref={ref}
-      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+      className={`canvas-element group ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
       style={combinedStyle}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
@@ -628,6 +629,13 @@ const DraggableElement = ({ element, isActive, children }: {
       draggable={isGameMode && isImageElement ? false : undefined}
     >
       {childContent}
+      {isActive && isImageElement && !isGameMode && (
+        <DragHandle 
+          isDragging={isDragging}
+          onMouseDown={handleMouseDown}
+          onTouchStart={handleTouchStart}
+        />
+      )}
       {showInteractionIndicator && (
         <div className={indicatorStyles} title={
           interactionType === 'canvasNavigation' 

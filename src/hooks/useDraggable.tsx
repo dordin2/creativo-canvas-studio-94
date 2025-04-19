@@ -1,13 +1,12 @@
-
 import { useState, useCallback } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
 
 interface DragState {
-  grabPointX: number;    // Mouse offset from element's top-left corner
-  grabPointY: number;    // Mouse offset from element's top-left corner
-  initialLeft: number;   // Initial element position relative to canvas
-  initialTop: number;
+  elementWidth: number;   // Element's width for center calculation
+  elementHeight: number;  // Element's height for center calculation
+  initialLeft: number;    // Initial element position relative to canvas
+  initialTop: number;     // Initial element position relative to canvas
 }
 
 export const useDraggable = (elementId: string) => {
@@ -29,35 +28,31 @@ export const useDraggable = (elementId: string) => {
       const touch = e.touches[0];
       clientX = touch.clientX;
       clientY = touch.clientY;
-      e.preventDefault(); // Prevent scrolling on mobile
+      e.preventDefault();
     } else {
       clientX = e.clientX;
       clientY = e.clientY;
     }
-
-    // Calculate new position while maintaining the grab point offset
-    const newLeft = clientX - dragState.grabPointX;
-    const newTop = clientY - dragState.grabPointY;
 
     const element = document.getElementById(`element-${elementId}`);
     if (element && element.parentElement) {
       const canvas = element.parentElement;
       const canvasRect = canvas.getBoundingClientRect();
       
-      // Convert page coordinates to canvas-relative coordinates
-      const canvasX = newLeft - canvasRect.left;
-      const canvasY = newTop - canvasRect.top;
+      // Calculate new position with the cursor at the center of the element
+      const newLeft = clientX - canvasRect.left - (dragState.elementWidth / 2);
+      const newTop = clientY - canvasRect.top - (dragState.elementHeight / 2);
 
       // Update DOM position immediately for smooth dragging
-      element.style.left = `${canvasX}px`;
-      element.style.top = `${canvasY}px`;
+      element.style.left = `${newLeft}px`;
+      element.style.top = `${newTop}px`;
 
       // Update React state less frequently
       requestAnimationFrame(() => {
         updateElementWithoutHistory(elementId, {
           position: {
-            x: canvasX,
-            y: canvasY
+            x: newLeft,
+            y: newTop
           }
         });
       });
@@ -78,27 +73,10 @@ export const useDraggable = (elementId: string) => {
     const canvas = element.parentElement;
     const canvasRect = canvas.getBoundingClientRect();
     const elementRect = element.getBoundingClientRect();
-    
-    let clientX: number;
-    let clientY: number;
-    
-    if ('touches' in e) {
-      const touch = e.touches[0];
-      clientX = touch.clientX;
-      clientY = touch.clientY;
-      e.preventDefault();
-    } else {
-      clientX = e.clientX;
-      clientY = e.clientY;
-    }
-
-    // Calculate grab point offset from element's top-left corner
-    const grabPointX = clientX - elementRect.left;
-    const grabPointY = clientY - elementRect.top;
 
     setDragState({
-      grabPointX,
-      grabPointY,
+      elementWidth: elementRect.width,
+      elementHeight: elementRect.height,
       initialLeft: elementRect.left - canvasRect.left,
       initialTop: elementRect.top - canvasRect.top
     });
