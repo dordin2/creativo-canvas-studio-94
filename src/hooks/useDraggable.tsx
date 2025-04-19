@@ -4,8 +4,8 @@ import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
 
 interface DragState {
-  offsetX: number;  // Distance from cursor to element's left edge
-  offsetY: number;  // Distance from cursor to element's top edge
+  startX: number;  // Initial mouse/touch position relative to element edge
+  startY: number;
 }
 
 export const useDraggable = (elementId: string) => {
@@ -35,9 +35,9 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
 
-    // Calculate new position by subtracting the grab point offset
-    const newLeft = clientX - dragState.offsetX;
-    const newTop = clientY - dragState.offsetY;
+    // Calculate new position by maintaining the initial grab offset
+    const newLeft = clientX - dragState.startX;
+    const newTop = clientY - dragState.startY;
 
     // Update DOM position immediately for smooth dragging
     element.style.left = `${newLeft}px`;
@@ -67,7 +67,6 @@ export const useDraggable = (elementId: string) => {
     
     let clientX: number;
     let clientY: number;
-    let rect = element.getBoundingClientRect();
     
     if ('touches' in e) {
       const touch = e.touches[0];
@@ -80,11 +79,11 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
     
-    // Calculate the offset from the cursor to the element's top-left corner
-    const offsetX = clientX - rect.left;
-    const offsetY = clientY - rect.top;
+    // Calculate offset from cursor to element edge (sticky point)
+    const startX = clientX - element.offsetLeft;
+    const startY = clientY - element.offsetTop;
     
-    setDragState({ offsetX, offsetY });
+    setDragState({ startX, startY });
     setIsDragging(true);
   }, [elementId, isGameMode, isImageElement, currentElement?.interaction?.type]);
 
