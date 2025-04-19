@@ -44,20 +44,15 @@ export const getTextStyle = (element: DesignElement): CSSProperties => {
 };
 
 export const getElementStyle = (element: DesignElement, isDragging: boolean): CSSProperties => {
-  // Special styles for puzzle elements
   const isPuzzleElement = element.type === 'sequencePuzzle' || element.type === 'puzzle';
   const isImageElement = element.type === 'image';
   
-  // Extract rotation from transform to apply it directly at the top level
   const rotation = getRotation(element);
-  
-  // Use Math.round to ensure consistent positioning
   const left = Math.round(element.position.x);
   const top = Math.round(element.position.y);
   const width = element.size?.width ? Math.round(element.size.width) : undefined;
   const height = element.size?.height ? Math.round(element.size.height) : undefined;
   
-  // Create a clean object for the style to avoid reference issues
   const style: CSSProperties & { userDrag?: string } = {
     ...element.style,
     position: 'absolute',
@@ -70,15 +65,14 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     zIndex: element.layer,
     touchAction: 'none',
     userSelect: 'none',
-    // Use clean transform with direct rotation to avoid compounding transforms
-    transform: `rotate(${rotation}deg)`,
-    // Apply hardware acceleration for smoother rendering
+    transform: isDragging 
+      ? 'translate3d(0,0,0)' 
+      : `rotate(${rotation}deg)`,
     willChange: isDragging ? 'transform' : 'auto',
-    transition: isDragging ? 'none' : 'transform 0.05s ease-out',
+    transition: isDragging ? 'none' : undefined,
     boxSizing: 'border-box',
   };
 
-  // Prevent browser's default drag behavior for image elements
   if (isImageElement) {
     style.userDrag = 'none' as any;
   }
