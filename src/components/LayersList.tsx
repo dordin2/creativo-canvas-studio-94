@@ -312,6 +312,7 @@ const LayersList = () => {
   };
 
   const handleTouchStart = (e: React.TouchEvent, element: DesignElement, index: number) => {
+    e.preventDefault();
     setTouchStart(e.touches[0].clientY);
     setTouchedElementId(element.id);
     setDraggedElement(element);
@@ -323,6 +324,7 @@ const LayersList = () => {
   };
 
   const handleTouchMove = (e: React.TouchEvent, index: number) => {
+    e.preventDefault();
     if (!touchStart) return;
 
     const currentTouch = e.touches[0].clientY;
@@ -392,7 +394,7 @@ const LayersList = () => {
         aria-hidden="true"
       ></div>
 
-      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+      <div className="space-y-2 max-h-[300px] overflow-y-auto touch-none">
         {layerElements.length === 0 ? (
           <div className="text-sm text-gray-500 italic">No elements added yet</div>
         ) : (
@@ -403,7 +405,7 @@ const LayersList = () => {
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
               } ${dragOverIndex === index ? "border-blue-500 bg-blue-50" : ""} 
               ${draggedElement?.id === element.id ? "opacity-50" : "opacity-100"}
-              cursor-pointer touch-manipulation ${element.isHidden ? "opacity-50" : ""}`}
+              cursor-grab touch-none`}
               onClick={() => setActiveElement(element)}
               onDragStart={(e) => handleDragStart(e, element, index)}
               onDragOver={(e) => handleDragOver(e, index)}
@@ -418,6 +420,12 @@ const LayersList = () => {
                 transition: 'transform 0.2s ease, border-color 0.2s ease',
                 willChange: 'transform',
                 touchAction: 'none',
+                WebkitTouchCallout: 'none',
+                WebkitUserSelect: 'none',
+                KhtmlUserSelect: 'none',
+                MozUserSelect: 'none',
+                msUserSelect: 'none',
+                userSelect: 'none',
               }}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
