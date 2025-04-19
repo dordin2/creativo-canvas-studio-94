@@ -7,29 +7,27 @@ const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
 >(({ className, orientation, ...props }, ref) => {
-  const handleTouchMove = React.useCallback((e: TouchEvent) => {
-    // Only prevent default if this is a slider interaction
-    if ((e.target as HTMLElement)?.closest('[role="slider"]')) {
-      e.preventDefault();
-    }
-  }, []);
-
+  // Add cleanup on unmount
   React.useEffect(() => {
     return () => {
       document.removeEventListener('touchmove', handleTouchMove);
       document.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [handleTouchMove]);
+  }, []);
 
-  const handleTouchStart = React.useCallback(() => {
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleTouchEnd);
-  }, [handleTouchMove]);
+  const handleTouchMove = React.useCallback((e: TouchEvent) => {
+    e.preventDefault();
+  }, []);
 
   const handleTouchEnd = React.useCallback(() => {
     document.removeEventListener('touchmove', handleTouchMove);
     document.removeEventListener('touchend', handleTouchEnd);
-  }, [handleTouchMove]);
+  }, []);
+
+  const handleTouchStart = React.useCallback(() => {
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleTouchEnd);
+  }, [handleTouchMove, handleTouchEnd]);
 
   return (
     <SliderPrimitive.Root

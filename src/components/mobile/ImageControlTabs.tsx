@@ -1,5 +1,5 @@
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import { RotateCw, Maximize2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -24,48 +24,30 @@ const ImageControlTabs = ({
   const [activeTab, setActiveTab] = useState<"size" | "rotation">("size");
   const [localScale, setLocalScale] = useState(scaleValue);
   const [localRotation, setLocalRotation] = useState(rotation);
-  const frameRef = useRef<number>();
 
-  // Debounced update functions with shorter delay
+  // Debounced update functions
   const debouncedScaleChange = useCallback(
     debounce((value: number[]) => {
       onScaleChange(value);
-    }, 50),
+    }, 100),
     [onScaleChange]
   );
 
   const debouncedRotationChange = useCallback(
     debounce((value: number[]) => {
       onRotationChange(value);
-    }, 50),
+    }, 100),
     [onRotationChange]
   );
 
   const handleScaleChange = (value: number[]) => {
-    // Cancel any pending animation frame
-    if (frameRef.current) {
-      cancelAnimationFrame(frameRef.current);
-    }
-    
-    // Update local state immediately for smooth UI
     setLocalScale(value[0]);
-    
-    // Schedule the update on the next animation frame
-    frameRef.current = requestAnimationFrame(() => {
-      debouncedScaleChange(value);
-    });
+    debouncedScaleChange(value);
   };
 
   const handleRotationChange = (value: number[]) => {
-    if (frameRef.current) {
-      cancelAnimationFrame(frameRef.current);
-    }
-    
     setLocalRotation(value[0]);
-    
-    frameRef.current = requestAnimationFrame(() => {
-      debouncedRotationChange(value);
-    });
+    debouncedRotationChange(value);
   };
 
   // Reset local state when props change
