@@ -4,10 +4,10 @@ import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
 
 interface DragState {
-  startX: number;
-  startY: number;
-  elementStartLeft: number;
-  elementStartTop: number;
+  grabPointX: number;    // Mouse offset from element's top-left corner
+  grabPointY: number;    // Mouse offset from element's top-left corner
+  initialLeft: number;   // Initial element position relative to canvas
+  initialTop: number;
 }
 
 export const useDraggable = (elementId: string) => {
@@ -21,7 +21,7 @@ export const useDraggable = (elementId: string) => {
 
   const handleMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!isDragging || !dragState) return;
-    
+
     let clientX: number;
     let clientY: number;
 
@@ -35,25 +35,29 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
 
-    // Calculate new position based on the initial click/touch point
-    const deltaX = clientX - dragState.startX;
-    const deltaY = clientY - dragState.startY;
-    
-    const newLeft = dragState.elementStartLeft + deltaX;
-    const newTop = dragState.elementStartTop + deltaY;
+    // Calculate new position while maintaining the grab point offset
+    const newLeft = clientX - dragState.grabPointX;
+    const newTop = clientY - dragState.grabPointY;
 
-    // Update DOM position immediately for smooth dragging
     const element = document.getElementById(`element-${elementId}`);
-    if (element) {
-      element.style.left = `${newLeft}px`;
-      element.style.top = `${newTop}px`;
+    if (element && element.parentElement) {
+      const canvas = element.parentElement;
+      const canvasRect = canvas.getBoundingClientRect();
+      
+      // Convert page coordinates to canvas-relative coordinates
+      const canvasX = newLeft - canvasRect.left;
+      const canvasY = newTop - canvasRect.top;
 
-      // Update React state less frequently using requestAnimationFrame
+      // Update DOM position immediately for smooth dragging
+      element.style.left = `${canvasX}px`;
+      element.style.top = `${canvasY}px`;
+
+      // Update React state less frequently
       requestAnimationFrame(() => {
         updateElementWithoutHistory(elementId, {
           position: {
-            x: newLeft,
-            y: newTop
+            x: canvasX,
+            y: canvasY
           }
         });
       });
@@ -69,7 +73,11 @@ export const useDraggable = (elementId: string) => {
     e.stopPropagation();
     
     const element = document.getElementById(`element-${elementId}`);
-    if (!element) return;
+    if (!element || !element.parentElement) return;
+    
+    const canvas = element.parentElement;
+    const canvasRect = canvas.getBoundingClientRect();
+    const elementRect = element.getBoundingClientRect();
     
     let clientX: number;
     let clientY: number;
@@ -84,12 +92,15 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
 
-    // Store the initial mouse/touch position and element position
+    // Calculate grab point offset from element's top-left corner
+    const grabPointX = clientX - elementRect.left;
+    const grabPointY = clientY - elementRect.top;
+
     setDragState({
-      startX: clientX,
-      startY: clientY,
-      elementStartLeft: element.offsetLeft,
-      elementStartTop: element.offsetTop
+      grabPointX,
+      grabPointY,
+      initialLeft: elementRect.left - canvasRect.left,
+      initialTop: elementRect.top - canvasRect.top
     });
     
     setIsDragging(true);
@@ -99,22 +110,22 @@ export const useDraggable = (elementId: string) => {
     if (!isDragging) return;
 
     const element = document.getElementById(`element-${elementId}`);
-    if (element) {
-      const rect = element.getBoundingClientRect();
+    if (element && element.parentElement) {
       const canvas = element.parentElement;
-      if (canvas) {
-        const canvasRect = canvas.getBoundingClientRect();
-        const finalLeft = rect.left - canvasRect.left;
-        const finalTop = rect.top - canvasRect.top;
+      const canvasRect = canvas.getBoundingClientRect();
+      const elementRect = element.getBoundingClientRect();
 
-        updateElementWithoutHistory(elementId, {
-          position: {
-            x: finalLeft,
-            y: finalTop
-          }
-        });
-        commitToHistory();
-      }
+      // Calculate final position relative to canvas
+      const finalLeft = elementRect.left - canvasRect.left;
+      const finalTop = elementRect.top - canvasRect.top;
+
+      updateElementWithoutHistory(elementId, {
+        position: {
+          x: finalLeft,
+          y: finalTop
+        }
+      });
+      commitToHistory();
     }
 
     setIsDragging(false);
