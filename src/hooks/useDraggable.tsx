@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
 
@@ -8,44 +7,60 @@ interface Position {
   y: number;
 }
 
-export const useDraggable = (elementId: string) => {
+export const useDraggable = (elementId: string, canvasScale: number = 1) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const dragStartPosition = useRef<Position | null>(null);
   const elementStartPosition = useRef<Position | null>(null);
-  const { isMobileDevice, isMobileView } = useMobile();
+  const { isMobileDevice } = useMobile();
   const currentElement = elements.find(el => el.id === elementId);
-  
-  const isPuzzleElement = currentElement?.type === 'puzzle';
-  const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
-  const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
-  const isImageElement = currentElement?.type === 'image';
+
+  const toCanvasCoords = useCallback((clientX: number, clientY: number): Position => {
+    if (!currentElement) return { x: 0, y: 0 };
+    
+    const canvas = document.querySelector('.canvas-container');
+    if (!canvas) return { x: 0, y: 0 };
+    
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: (clientX - rect.left) / canvasScale,
+      y: (clientY - rect.top) / canvasScale
+    };
+  }, [canvasScale, currentElement]);
 
   useEffect(() => {
     if (!isDragging) return;
 
     const handleMove = (clientX: number, clientY: number) => {
       if (!dragStartPosition.current || !elementStartPosition.current) return;
-      if (isGameMode && isImageElement && !currentElement?.interaction?.type) return;
+      if (isGameMode && currentElement?.type === 'image' && !currentElement?.interaction?.type) return;
 
-      const newLeft = elementStartPosition.current.x + (clientX - dragStartPosition.current.x);
-      const newTop = elementStartPosition.current.y + (clientY - dragStartPosition.current.y);
+      const canvasCoords = toCanvasCoords(clientX, clientY);
+      const dragStartCoords = toCanvasCoords(
+        dragStartPosition.current.x,
+        dragStartPosition.current.y
+      );
 
-      updateElementWithoutHistory(elementId, {
-        position: {
-          x: newLeft,
-          y: newTop
-        }
+      const newLeft = elementStartPosition.current.x + (canvasCoords.x - dragStartCoords.x);
+      const newTop = elementStartPosition.current.y + (canvasCoords.y - dragStartCoords.y);
+
+      requestAnimationFrame(() => {
+        updateElementWithoutHistory(elementId, {
+          position: {
+            x: newLeft,
+            y: newTop
+          }
+        });
       });
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (isMobileDevice) return; // Skip mouse events on mobile devices
+      if (isMobileDevice) return;
       handleMove(e.clientX, e.clientY);
     };
     
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isMobileDevice) return; // Skip touch events on non-mobile devices
+      if (!isMobileDevice) return;
       e.preventDefault();
       if (e.touches.length === 1) {
         const touch = e.touches[0];
@@ -60,7 +75,6 @@ export const useDraggable = (elementId: string) => {
       commitToHistory();
     };
 
-    // Add event listeners based on device type
     if (isMobileDevice) {
       document.addEventListener('touchmove', handleTouchMove, { passive: false });
       document.addEventListener('touchend', handleEnd);
@@ -71,7 +85,6 @@ export const useDraggable = (elementId: string) => {
     }
 
     return () => {
-      // Remove event listeners based on device type
       if (isMobileDevice) {
         document.removeEventListener('touchmove', handleTouchMove);
         document.removeEventListener('touchend', handleEnd);
@@ -81,10 +94,10 @@ export const useDraggable = (elementId: string) => {
         document.removeEventListener('mouseup', handleEnd);
       }
     };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement, isMobileDevice]);
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, toCanvasCoords]);
 
   const startDrag = (e: React.MouseEvent | React.TouchEvent, elementPosition?: Position) => {
-    if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
+    if (isGameMode && currentElement?.type === 'image' && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
     }
