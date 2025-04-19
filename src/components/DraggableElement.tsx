@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
 import { useElementRotation } from "@/hooks/useElementRotation";
 import { getElementStyle, getRotation } from "@/utils/elementStyles";
@@ -26,7 +27,6 @@ import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { getImageFromCache } from "@/utils/imageUploader";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
-import { usePointerDrag } from '@/hooks/usePointerDrag';
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -51,6 +51,7 @@ const DraggableElement = ({ element, isActive, children }: {
   } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
   
+  const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -109,6 +110,7 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isEditing || isInteractiveMode) return;
     
     if (!isSequencePuzzleElement) {
+      startDrag(e, element.position);
       setIsDragging(true);
     }
     
@@ -137,6 +139,7 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isEditing || isInteractiveMode) return;
     
     if (!isSequencePuzzleElement) {
+      startDrag(e, element.position);
       setIsDragging(true);
     }
     
@@ -164,6 +167,7 @@ const DraggableElement = ({ element, isActive, children }: {
         }
       }, 10);
     } else if (isSequencePuzzleElement) {
+      startDrag(e, element.position);
       setIsDragging(true);
     } else if (hasInteraction && !isEditing && !isDragging) {
       e.stopPropagation();
@@ -687,17 +691,6 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }
 
-  const { isDragging: isDraggingFromHook } = usePointerDrag(
-    element.id,
-    (position) => {
-      setStartPos(position);
-      setIsDragging(true);
-    },
-    () => {
-      setIsDragging(false);
-    }
-  );
-
   return (
     <>
       {isInteractiveMode ? (
@@ -734,7 +727,7 @@ const DraggableElement = ({ element, isActive, children }: {
           </ContextMenuContent>
         </ContextMenu>
       )}
-      
+
       {!isGameMode && (
         <ElementControls
           isActive={isActive}
