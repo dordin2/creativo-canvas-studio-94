@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { getElementStyle } from "@/utils/elementStyles";
@@ -32,6 +31,7 @@ interface DraggableElementProps {
   startDrag: (e: React.MouseEvent | React.TouchEvent, elementPosition?: { x: number, y: number }) => void;
   isDragging: boolean;
   children: React.ReactNode;
+  canvasScale?: number;
 }
 
 const DraggableElement = ({ 
@@ -40,7 +40,8 @@ const DraggableElement = ({
   elementRef,
   startDrag,
   isDragging,
-  children 
+  children,
+  canvasScale = 1
 }: DraggableElementProps) => {
   const { 
     updateElement, 
@@ -391,6 +392,7 @@ const DraggableElement = ({
     outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
     boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
     backgroundColor: isGameMode && isImageElement ? 'transparent' : elementStyle.backgroundColor,
+    transform: `scale(${canvasScale}) ${elementStyle.transform || ''}`,
   };
 
   let childContent = children;

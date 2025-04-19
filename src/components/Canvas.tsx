@@ -1,5 +1,5 @@
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, Fragment } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElementWrapper from "./DraggableElementWrapper";
 import { cn } from "@/lib/utils";
@@ -28,6 +28,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   useCanvasKeyboardShortcuts();
   
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [canvasScale, setCanvasScale] = useState(1);
   const canvasContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -52,7 +53,12 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           height -= 48;
         }
         
+        // Calculate the scale factor
+        const baseWidth = 1920; // Base design width
+        const scale = width / baseWidth;
+        
         setCanvasSize({ width, height });
+        setCanvasScale(scale);
       }
     };
     
@@ -82,82 +88,85 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   const sortedElements = [...elements].sort((a, b) => a.layer - b.layer);
   
   return (
-    <div 
-      ref={canvasContainer}
-      className={cn(
-        "relative w-full h-full bg-gray-100 flex items-center justify-center",
-        isFullscreen ? "fixed inset-0 z-50" : "h-[calc(100vh-9rem)]",
-        isMobileView && !isGameMode && "h-[calc(100vh-8rem)]",
-        isGameMode && "p-0"
-      )}
-    >
-      <div
+    <Fragment>
+      <div 
+        ref={canvasContainer}
         className={cn(
-          "canvas-container",
-          isGameMode ? "bg-transparent" : "bg-white shadow-lg",
-          isMobileView && !isGameMode && !isFullscreen && "scale-100"
+          "relative w-full h-full bg-gray-100 flex items-center justify-center",
+          isFullscreen ? "fixed inset-0 z-50" : "h-[calc(100vh-9rem)]",
+          isMobileView && !isGameMode && "h-[calc(100vh-8rem)]",
+          isGameMode && "p-0"
         )}
-        style={{
-          width: canvasSize.width,
-          height: canvasSize.height,
-          aspectRatio: "16/9",
-        }}
-        ref={setCanvasRef}
-        onClick={handleCanvasClick}
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
       >
-        {sortedElements.map((element) => (
-          <DraggableElementWrapper
-            key={element.id}
-            element={element}
-            isActive={activeElement?.id === element.id}
-          >
-            {element.type === 'image' && element.dataUrl && (
-              <img
-                src={element.dataUrl}
-                alt={element.alt || "Image"}
-                className="w-full h-full object-contain"
-                draggable={false}
-              />
-            )}
-            {element.type === 'image' && !element.dataUrl && element.src && (
-              <img
-                src={element.src}
-                alt={element.alt || "Image"}
-                className="w-full h-full object-contain"
-                draggable={false}
-              />
-            )}
-            {element.type === 'image' && !element.dataUrl && !element.src && (
-              <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                <span className="text-gray-500">No image</span>
-              </div>
-            )}
-            {(element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph') && (
-              <div>{element.text || ''}</div>
-            )}
-            {element.type === 'rectangle' && (
-              <div className="w-full h-full" style={{ 
-                backgroundColor: element.fill || 'rgba(59, 130, 246, 0.5)' 
-              }}></div>
-            )}
-            {element.type === 'circle' && (
-              <div className="w-full h-full rounded-full" style={{ 
-                backgroundColor: element.fill || 'rgba(59, 130, 246, 0.5)' 
-              }}></div>
-            )}
-            {(element.type === 'puzzle' || 
-              element.type === 'sequencePuzzle' || 
-              element.type === 'clickSequencePuzzle' || 
-              element.type === 'sliderPuzzle') && (
-              <div className="w-full h-full"></div>
-            )}
-          </DraggableElementWrapper>
-        )}
+        <div
+          className={cn(
+            "canvas-container",
+            isGameMode ? "bg-transparent" : "bg-white shadow-lg",
+            isMobileView && !isGameMode && !isFullscreen && "scale-100"
+          )}
+          style={{
+            width: canvasSize.width,
+            height: canvasSize.height,
+            aspectRatio: "16/9",
+          }}
+          ref={setCanvasRef}
+          onClick={handleCanvasClick}
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+        >
+          {sortedElements.map((element) => (
+            <DraggableElementWrapper
+              key={element.id}
+              element={element}
+              isActive={activeElement?.id === element.id}
+              canvasScale={canvasScale}
+            >
+              {element.type === 'image' && element.dataUrl && (
+                <img
+                  src={element.dataUrl}
+                  alt={element.alt || "Image"}
+                  className="w-full h-full object-contain"
+                  draggable={false}
+                />
+              )}
+              {element.type === 'image' && !element.dataUrl && element.src && (
+                <img
+                  src={element.src}
+                  alt={element.alt || "Image"}
+                  className="w-full h-full object-contain"
+                  draggable={false}
+                />
+              )}
+              {element.type === 'image' && !element.dataUrl && !element.src && (
+                <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                  <span className="text-gray-500">No image</span>
+                </div>
+              )}
+              {(element.type === 'heading' || element.type === 'subheading' || element.type === 'paragraph') && (
+                <div>{element.text || ''}</div>
+              )}
+              {element.type === 'rectangle' && (
+                <div className="w-full h-full" style={{ 
+                  backgroundColor: element.fill || 'rgba(59, 130, 246, 0.5)' 
+                }}></div>
+              )}
+              {element.type === 'circle' && (
+                <div className="w-full h-full rounded-full" style={{ 
+                  backgroundColor: element.fill || 'rgba(59, 130, 246, 0.5)' 
+                }}></div>
+              )}
+              {(element.type === 'puzzle' || 
+                element.type === 'sequencePuzzle' || 
+                element.type === 'clickSequencePuzzle' || 
+                element.type === 'sliderPuzzle') && (
+                <div className="w-full h-full"></div>
+              )}
+            </DraggableElementWrapper>
+          ))}
+        </div>
       </div>
-    </div>
+    </Fragment>
   );
 };
 

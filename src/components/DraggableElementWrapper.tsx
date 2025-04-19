@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useAdvancedDraggable } from "@/hooks/useAdvancedDraggable";
@@ -10,12 +11,14 @@ interface DraggableElementWrapperProps {
   element: DesignElement;
   isActive: boolean;
   children: React.ReactNode;
+  canvasScale?: number;
 }
 
 const DraggableElementWrapper = ({ 
   element, 
   isActive,
-  children 
+  children,
+  canvasScale = 1
 }: DraggableElementWrapperProps) => {
   const { 
     updateElement,
@@ -32,10 +35,10 @@ const DraggableElementWrapper = ({
     handleRotateStart,
     startDrag
   } = useAdvancedDraggable(element.id, {
-    onDragStart: (el, x, y, scale, rotation) => {
+    onDragStart: (el, x, y) => {
       // Additional drag start logic if needed
     },
-    onDragMove: (el, x, y, scale, rotation) => {
+    onDragMove: (el, x, y) => {
       // Additional drag move logic if needed
     },
     // Removed onDragEnd toast notification
@@ -85,6 +88,7 @@ const DraggableElementWrapper = ({
         elementRef={elementRef}
         startDrag={startDrag}
         isDragging={isDragging}
+        canvasScale={canvasScale}
       >
         {children}
       </DraggableElement>
@@ -97,6 +101,7 @@ const DraggableElementWrapper = ({
           onResizeStart={handleResizeStart}
           onRotateStart={handleRotateStart}
           showControls={showControls && isActive && !element.isHidden}
+          canvasScale={canvasScale}
         />
       )}
     </>
