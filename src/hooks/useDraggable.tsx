@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -115,14 +116,20 @@ export const useDraggable = (elementId: string) => {
       }
       lastUpdateTimestamp.current = now;
 
+      // Calculate new position based on mouse position and initial offset
       const x = clientX - dragOffset.current.x;
       const y = clientY - dragOffset.current.y;
+
+      // Update element with new transform, maintaining any existing rotation
+      const currentTransform = currentElement.style?.transform || '';
+      const rotationMatch = currentTransform.match(/rotate\(([^)]+)\)/);
+      const rotation = rotationMatch ? ` rotate(${rotationMatch[1]})` : '';
 
       updateElementWithoutHistory(elementId, {
         position: { x, y },
         style: {
           ...currentElement.style,
-          transform: `translate3d(${x}px, ${y}px, 0)`,
+          transform: `translate3d(${x}px, ${y}px, 0)${rotation}`,
           willChange: 'transform',
           cursor: 'grabbing',
           boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
@@ -151,7 +158,7 @@ export const useDraggable = (elementId: string) => {
       updateElementWithoutHistory(elementId, {
         style: {
           ...currentElement.style,
-          transform: initialTransform.current || 'none',
+          transform: initialTransform.current,
           willChange: 'auto',
           cursor: 'grab',
           boxShadow: 'none',
@@ -190,8 +197,9 @@ export const useDraggable = (elementId: string) => {
     if (!element || !currentElement) return;
 
     const rect = element.getBoundingClientRect();
-    initialTransform.current = currentElement.style?.transform || 'none';
+    initialTransform.current = currentElement.style?.transform || 'translate3d(0px, 0px, 0)';
     
+    // Calculate offset based on click/touch position relative to element
     if ('touches' in e) {
       const touch = e.touches[0];
       dragOffset.current = {
@@ -207,6 +215,7 @@ export const useDraggable = (elementId: string) => {
 
     setIsDragging(true);
 
+    // Update element style when starting drag
     if (currentElement) {
       updateElementWithoutHistory(elementId, {
         style: {
