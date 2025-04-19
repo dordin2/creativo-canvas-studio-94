@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
@@ -11,8 +10,7 @@ interface Position {
 export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartPosition = useRef<Position | null>(null);
-  const elementStartPosition = useRef<Position | null>(null);
+  const dragOffset = useRef<Position>({ x: 0, y: 0 });
   const { isMobileDevice, isMobileView } = useMobile();
   const currentElement = elements.find(el => el.id === elementId);
   
@@ -25,11 +23,11 @@ export const useDraggable = (elementId: string) => {
     if (!isDragging) return;
 
     const handleMove = (clientX: number, clientY: number) => {
-      if (!dragStartPosition.current || !elementStartPosition.current) return;
+      if (!currentElement) return;
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) return;
 
-      const newLeft = elementStartPosition.current.x + (clientX - dragStartPosition.current.x);
-      const newTop = elementStartPosition.current.y + (clientY - dragStartPosition.current.y);
+      const newLeft = clientX - dragOffset.current.x;
+      const newTop = clientY - dragOffset.current.y;
 
       updateElementWithoutHistory(elementId, {
         position: {
@@ -40,12 +38,12 @@ export const useDraggable = (elementId: string) => {
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (isMobileDevice) return; // Skip mouse events on mobile devices
+      if (isMobileDevice) return;
       handleMove(e.clientX, e.clientY);
     };
     
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isMobileDevice) return; // Skip touch events on non-mobile devices
+      if (!isMobileDevice) return;
       e.preventDefault();
       if (e.touches.length === 1) {
         const touch = e.touches[0];
@@ -55,12 +53,9 @@ export const useDraggable = (elementId: string) => {
 
     const handleEnd = () => {
       setIsDragging(false);
-      dragStartPosition.current = null;
-      elementStartPosition.current = null;
       commitToHistory();
     };
 
-    // Add event listeners based on device type
     if (isMobileDevice) {
       document.addEventListener('touchmove', handleTouchMove, { passive: false });
       document.addEventListener('touchend', handleEnd);
@@ -71,7 +66,6 @@ export const useDraggable = (elementId: string) => {
     }
 
     return () => {
-      // Remove event listeners based on device type
       if (isMobileDevice) {
         document.removeEventListener('touchmove', handleTouchMove);
         document.removeEventListener('touchend', handleEnd);
@@ -83,7 +77,7 @@ export const useDraggable = (elementId: string) => {
     };
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement, isMobileDevice]);
 
-  const startDrag = (e: React.MouseEvent | React.TouchEvent, elementPosition?: Position) => {
+  const startDrag = (e: React.MouseEvent | React.TouchEvent, elementPosition: Position) => {
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
@@ -92,24 +86,22 @@ export const useDraggable = (elementId: string) => {
     e.stopPropagation();
     setIsDragging(true);
 
+    const element = document.getElementById(`element-${elementId}`);
+    if (!element) return;
+
+    const rect = element.getBoundingClientRect();
+    
     if ('touches' in e && isMobileDevice) {
       const touch = e.touches[0];
-      dragStartPosition.current = { 
-        x: touch.clientX, 
-        y: touch.clientY 
+      dragOffset.current = {
+        x: touch.clientX - rect.left,
+        y: touch.clientY - rect.top
       };
     } else if (!isMobileDevice) {
       const mouseEvent = e as React.MouseEvent;
-      dragStartPosition.current = { 
-        x: mouseEvent.clientX, 
-        y: mouseEvent.clientY 
-      };
-    }
-
-    if (currentElement) {
-      elementStartPosition.current = elementPosition || { 
-        x: currentElement.position.x, 
-        y: currentElement.position.y 
+      dragOffset.current = {
+        x: mouseEvent.clientX - rect.left,
+        y: mouseEvent.clientY - rect.top
       };
     }
   };
