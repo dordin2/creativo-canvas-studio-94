@@ -10,7 +10,8 @@ interface Position {
 export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
-  const startPosition = useRef<Position | null>(null);
+  const dragStartPosition = useRef<Position | null>(null);
+  const elementStartPosition = useRef<Position | null>(null);
   const isMobile = useIsMobile();
   const currentElement = elements.find(el => el.id === elementId);
   
@@ -18,6 +19,86 @@ export const useDraggable = (elementId: string) => {
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
   const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
   const isImageElement = currentElement?.type === 'image';
+
+  useEffect(() => {
+    if (!isDragging) return;
+
+    const handleMove = (clientX: number, clientY: number) => {
+      if (!dragStartPosition.current || !elementStartPosition.current) return;
+      if (isGameMode && isImageElement && !currentElement?.interaction?.type) return;
+
+      const newLeft = elementStartPosition.current.x + (clientX - dragStartPosition.current.x);
+      const newTop = elementStartPosition.current.y + (clientY - dragStartPosition.current.y);
+
+      updateElementWithoutHistory(elementId, {
+        position: {
+          x: newLeft,
+          y: newTop
+        }
+      });
+    };
+
+    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    
+    const handleTouchMove = (e: TouchEvent) => {
+      e.preventDefault();
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
+      }
+    };
+
+    const handleEnd = () => {
+      setIsDragging(false);
+      dragStartPosition.current = null;
+      elementStartPosition.current = null;
+      commitToHistory();
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleEnd);
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
+    document.addEventListener('touchcancel', handleEnd);
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('touchend', handleEnd);
+      document.removeEventListener('touchcancel', handleEnd);
+    };
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
+
+  const startDrag = (e: React.MouseEvent | React.TouchEvent) => {
+    if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
+      e.preventDefault();
+      return;
+    }
+    
+    e.stopPropagation();
+    setIsDragging(true);
+
+    if ('touches' in e) {
+      const touch = e.touches[0];
+      dragStartPosition.current = { 
+        x: touch.clientX, 
+        y: touch.clientY 
+      };
+    } else {
+      dragStartPosition.current = { 
+        x: e.clientX, 
+        y: e.clientY 
+      };
+    }
+
+    if (currentElement) {
+      elementStartPosition.current = { 
+        x: currentElement.position.x, 
+        y: currentElement.position.y 
+      };
+    }
+  };
 
   useEffect(() => {
     const handleDragOver = (e: MouseEvent) => {
@@ -92,86 +173,6 @@ export const useDraggable = (elementId: string) => {
       document.removeEventListener('custom-drop', handleCustomDrop as EventListener);
     };
   }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
-
-  useEffect(() => {
-    if (!isDragging) return;
-
-    const handleMove = (clientX: number, clientY: number) => {
-      if (!startPosition.current) return;
-
-      if (isGameMode && isImageElement && !currentElement?.interaction?.type) return;
-
-      // Simple and direct position calculation
-      const deltaX = clientX - startPosition.current.x;
-      const deltaY = clientY - startPosition.current.y;
-
-      if (currentElement) {
-        updateElementWithoutHistory(elementId, {
-          position: {
-            x: currentElement.position.x + deltaX,
-            y: currentElement.position.y + deltaY
-          }
-        });
-      }
-
-      // Update start position for next move
-      startPosition.current = { x: clientX, y: clientY };
-    };
-
-    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
-    
-    const handleTouchMove = (e: TouchEvent) => {
-      e.preventDefault(); // Prevent scrolling on mobile while dragging
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        handleMove(touch.clientX, touch.clientY);
-      }
-    };
-
-    const handleEnd = () => {
-      setIsDragging(false);
-      startPosition.current = null;
-      commitToHistory();
-    };
-
-    // Add both mouse and touch event listeners
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleEnd);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleEnd);
-    document.addEventListener('touchcancel', handleEnd);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleEnd);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleEnd);
-      document.removeEventListener('touchcancel', handleEnd);
-    };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
-
-  const startDrag = (e: React.MouseEvent | React.TouchEvent, initialPosition: Position) => {
-    if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
-      e.preventDefault();
-      return;
-    }
-    
-    e.stopPropagation();
-    setIsDragging(true);
-
-    if ('touches' in e) {
-      const touch = e.touches[0];
-      startPosition.current = { 
-        x: touch.clientX, 
-        y: touch.clientY 
-      };
-    } else {
-      startPosition.current = { 
-        x: e.clientX, 
-        y: e.clientY 
-      };
-    }
-  };
 
   return { startDrag, isDragging, currentElement };
 };
