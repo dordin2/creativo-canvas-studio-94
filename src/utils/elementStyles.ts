@@ -65,17 +65,15 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     top,
     width,
     height,
-    cursor: isDragging ? 'move' : 'grab',
+    cursor: isDragging ? 'grabbing' : 'grab',
     border: 'none',
     zIndex: element.layer,
     touchAction: 'none',
     userSelect: 'none',
-    // Use clean transform with direct rotation to avoid compounding transforms
     transform: `rotate(${rotation}deg)`,
-    // Apply hardware acceleration for smoother rendering
     willChange: isDragging ? 'transform' : 'auto',
-    transition: isDragging ? 'none' : 'transform 0.05s ease-out',
-    boxSizing: 'border-box',
+    transition: isDragging ? 'none' : undefined,
+    boxSizing: 'border-box'
   };
 
   // Prevent browser's default drag behavior for image elements

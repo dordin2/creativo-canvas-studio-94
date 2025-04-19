@@ -1,6 +1,6 @@
 
 import { useEffect, useRef } from 'react';
-import { DesignElement, useDesignState } from '@/context/DesignContext';
+import { useDesignState } from '@/context/DesignContext';
 
 interface Position {
   x: number;
@@ -17,7 +17,6 @@ export const usePointerDrag = (
   const isDraggingRef = useRef(false);
   const offsetRef = useRef({ x: 0, y: 0 });
   const elementInitialPosRef = useRef<Position | null>(null);
-  const lastUpdateTimestamp = useRef<number>(0);
   
   const currentElement = elements.find(el => el.id === elementId);
   const isPuzzleElement = currentElement?.type === 'puzzle';
@@ -53,37 +52,24 @@ export const usePointerDrag = (
       if (onDragStart) {
         onDragStart(currentElement.position);
       }
+
+      // Add grabbing cursor
+      target.style.cursor = 'grabbing';
     };
 
     const handlePointerMove = (e: PointerEvent) => {
       if (!isDraggingRef.current || e.pointerId !== dragIdRef.current) return;
       
       e.preventDefault();
-      
-      // Throttle updates to prevent excessive rendering
-      const now = Date.now();
-      if (now - lastUpdateTimestamp.current < 16) {
-        return;
-      }
-      lastUpdateTimestamp.current = now;
 
       if (!elementInitialPosRef.current) return;
 
       // Calculate new position based on pointer movement and initial offset
-      const x = e.clientX - offsetRef.current.x;
-      const y = e.clientY - offsetRef.current.y;
+      const x = Math.round(e.clientX - offsetRef.current.x);
+      const y = Math.round(e.clientY - offsetRef.current.y);
 
       updateElementWithoutHistory(elementId, {
-        position: { x, y },
-        style: {
-          ...currentElement.style,
-          transform: 'scale(1.02)',
-          transition: 'transform 0.2s ease',
-          willChange: 'transform',
-          cursor: 'grabbing',
-          boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
-          zIndex: 9999,
-        }
+        position: { x, y }
       });
     };
 
@@ -92,21 +78,12 @@ export const usePointerDrag = (
       
       const target = e.currentTarget as HTMLElement;
       target.releasePointerCapture(dragIdRef.current!);
+      target.style.cursor = 'grab';
       
       isDraggingRef.current = false;
       dragIdRef.current = null;
       
       if (currentElement) {
-        updateElementWithoutHistory(elementId, {
-          style: {
-            ...currentElement.style,
-            transform: 'scale(1)',
-            transition: 'all 0.2s ease',
-            willChange: 'auto',
-            cursor: 'grab',
-            boxShadow: 'none',
-          }
-        });
         commitToHistory();
       }
       
@@ -121,6 +98,7 @@ export const usePointerDrag = (
       // Prevent default touch behaviors
       element.style.touchAction = 'none';
       element.style.userSelect = 'none';
+      element.style.cursor = 'grab';
       
       element.addEventListener('pointerdown', handlePointerDown);
       element.addEventListener('pointermove', handlePointerMove);
