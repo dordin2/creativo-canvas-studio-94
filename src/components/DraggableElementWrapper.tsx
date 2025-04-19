@@ -26,7 +26,6 @@ const DraggableElementWrapper = ({
   
   const [showControls, setShowControls] = useState(false);
   
-  // Use our advanced draggable hook
   const { 
     elementRef,
     isDragging,
@@ -40,7 +39,6 @@ const DraggableElementWrapper = ({
     onDragMove: (el, x, y) => {
       // Additional drag move logic if needed
     },
-    // Removed onDragEnd toast notification
   });
   
   useEffect(() => {
@@ -70,7 +68,6 @@ const DraggableElementWrapper = ({
     };
   }, [isDragging, isGameMode, elementRef]);
   
-  // If element is hidden or in inventory and not active, don't render
   if ((element.isHidden || element.inInventory) && !isActive) {
     return null;
   }

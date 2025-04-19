@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { DesignElement } from "@/types/designTypes";
 import { useDesignState } from "@/context/DesignContext";
@@ -20,9 +19,9 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
   
   useEffect(() => {
     if (element.originalSize && element.size && canvasSize.width && canvasSize.height) {
-      const widthRatio = element.size.width / canvasSize.width;
-      const heightRatio = element.size.height / canvasSize.height;
-      const currentRatio = Math.max(widthRatio, heightRatio);
+      const widthRatio = element.size.width / element.originalSize.width;
+      const heightRatio = element.size.height / element.originalSize.height;
+      const currentRatio = (widthRatio + heightRatio) / 2;
       let scale = Math.round(currentRatio * 50);
       scale = Math.min(Math.max(scale, 1), 100);
       setScaleValue(scale);
@@ -39,25 +38,12 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
     const scalePercentage = value[0];
     setScaleValue(scalePercentage);
     
-    const maxWidth = canvasSize.width;
-    const maxHeight = canvasSize.height;
-    
-    const imageAspectRatio = element.originalSize.width / element.originalSize.height;
-    const canvasAspectRatio = maxWidth / maxHeight;
-    
-    let targetWidth, targetHeight;
-    if (imageAspectRatio > canvasAspectRatio) {
-      targetWidth = maxWidth;
-      targetHeight = maxWidth / imageAspectRatio;
-    } else {
-      targetHeight = maxHeight;
-      targetWidth = maxHeight * imageAspectRatio;
-    }
-    
     const scaleFactor = (scalePercentage / 50);
     
-    const newWidth = Math.round(targetWidth * scaleFactor);
-    const newHeight = Math.round(targetHeight * scaleFactor);
+    const originalAspectRatio = element.originalSize.width / element.originalSize.height;
+    
+    const newWidth = Math.round(element.originalSize.width * scaleFactor);
+    const newHeight = Math.round(element.originalSize.height * scaleFactor);
     
     updateElement(element.id, {
       size: {

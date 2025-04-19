@@ -1,4 +1,3 @@
-
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Trash2, Copy, Eye, EyeOff, Maximize2, Frame } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
@@ -131,9 +130,10 @@ const ElementControls = ({
     position: 'absolute' as const,
     left: posX,
     top: posY,
-    width: elementDimensions.width,
-    height: elementDimensions.height,
+    width: element.size?.width || 0,
+    height: element.size?.height || 0,
     transform: `rotate(${rotation}deg) scale(${canvasScale})`,
+    transformOrigin: '0 0',
     pointerEvents: 'none' as const,
     zIndex: 1000 + element.layer,
     border: isActive ? '1px solid #6366F1' : 'none',
