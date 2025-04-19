@@ -1,4 +1,3 @@
-
 import { useState, useRef } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
@@ -334,6 +333,82 @@ const LayersList = () => {
     setDragOverIndex(null);
   };
 
+  // Add touch handling state
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchedElementId, setTouchedElementId] = useState<string | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent, element: DesignElement, index: number) => {
+    setTouchStart(e.touches[0].clientY);
+    setTouchedElementId(element.id);
+    setDraggedElement(element);
+    setDraggingIndex(index);
+
+    // Add visual feedback for touch
+    const target = e.currentTarget as HTMLDivElement;
+    target.style.transform = 'scale(1.02)';
+    target.style.transition = 'transform 0.2s ease';
+  };
+
+  const handleTouchMove = (e: React.TouchEvent, index: number) => {
+    if (!touchStart) return;
+
+    const currentTouch = e.touches[0].clientY;
+    const target = e.currentTarget as HTMLDivElement;
+    const elementRect = target.getBoundingClientRect();
+    const containerRect = target.closest('.space-y-2')?.getBoundingClientRect();
+
+    if (!containerRect) return;
+
+    // Calculate if we're hovering over another element
+    const elementsUnder = document.elementsFromPoint(
+      elementRect.left + elementRect.width / 2,
+      currentTouch
+    );
+
+    const targetElement = elementsUnder.find(el => 
+      el.classList.contains('layer-item') && 
+      el !== target
+    );
+
+    if (targetElement) {
+      const targetIndex = parseInt(targetElement.getAttribute('data-index') || '-1');
+      if (targetIndex !== -1) {
+        setDragOverIndex(targetIndex);
+      }
+    }
+
+    // Update visual position
+    const deltaY = currentTouch - touchStart;
+    target.style.transform = `translateY(${deltaY}px) scale(1.02)`;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent, targetIndex: number) => {
+    if (!touchStart || !touchedElementId) return;
+
+    const target = e.currentTarget as HTMLDivElement;
+    target.style.transform = '';
+    target.style.transition = '';
+
+    const sourceIndex = layerElements.findIndex(el => el.id === touchedElementId);
+    
+    if (sourceIndex !== -1 && dragOverIndex !== null && sourceIndex !== dragOverIndex) {
+      // Perform the reorder
+      const newElements = updateElementsOrder(elements, sourceIndex, dragOverIndex, elements);
+      const updatedCanvases = [...canvases];
+      if (activeCanvasIndex >= 0 && activeCanvasIndex < updatedCanvases.length) {
+        updatedCanvases[activeCanvasIndex].elements = newElements;
+        setCanvases(updatedCanvases);
+      }
+    }
+
+    // Reset states
+    setTouchStart(null);
+    setTouchedElementId(null);
+    setDraggedElement(null);
+    setDraggingIndex(null);
+    setDragOverIndex(null);
+  };
+
   return (
     <div className="border rounded-md p-4 mt-4">
       <div className="flex items-center gap-2 mb-4">
@@ -356,18 +431,26 @@ const LayersList = () => {
           layerElements.map((element, index) => (
             <div 
               key={element.id}
-              className={`p-2 border rounded-md flex items-center justify-between ${
+              className={`layer-item p-2 border rounded-md flex items-center justify-between ${
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
               } ${dragOverIndex === index ? "border-blue-500 bg-blue-50" : ""} 
               ${draggedElement?.id === element.id ? "opacity-50" : "opacity-100"}
-              cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
+              cursor-pointer touch-manipulation ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
-              draggable={true}
               onDragStart={(e) => handleDragStart(e, element, index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
+              onTouchStart={(e) => handleTouchStart(e, element, index)}
+              onTouchMove={(e) => handleTouchMove(e, index)}
+              onTouchEnd={(e) => handleTouchEnd(e, index)}
+              data-index={index}
+              style={{
+                transition: 'transform 0.2s ease, border-color 0.2s ease',
+                willChange: 'transform',
+                touchAction: 'none',
+              }}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <div className="cursor-grab flex items-center justify-center">
