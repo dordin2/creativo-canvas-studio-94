@@ -4,10 +4,8 @@ import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
 
 interface DragState {
-  grabX: number;  // Cursor position relative to element's top-left corner
-  grabY: number;
-  elementX: number; // Element's initial position
-  elementY: number;
+  offsetX: number;  // Distance from cursor to element's left edge
+  offsetY: number;  // Distance from cursor to element's top edge
 }
 
 export const useDraggable = (elementId: string) => {
@@ -32,15 +30,16 @@ export const useDraggable = (elementId: string) => {
       const touch = e.touches[0];
       clientX = touch.clientX;
       clientY = touch.clientY;
-      e.preventDefault(); // Prevent scrolling on mobile
+      // Prevent scrolling on mobile while dragging
+      e.preventDefault();
     } else {
       clientX = e.clientX;
       clientY = e.clientY;
     }
 
-    // Calculate new position by maintaining the exact grab point
-    const newLeft = clientX - dragState.grabX;
-    const newTop = clientY - dragState.grabY;
+    // Calculate new position by subtracting the grab point offset
+    const newLeft = clientX - dragState.offsetX;
+    const newTop = clientY - dragState.offsetY;
 
     // Update DOM position immediately for smooth dragging
     element.style.left = `${newLeft}px`;
@@ -70,31 +69,26 @@ export const useDraggable = (elementId: string) => {
     
     let clientX: number;
     let clientY: number;
-    
+    // Using getBoundingClientRect for more accurate position calculation
     const rect = element.getBoundingClientRect();
     
     if ('touches' in e) {
       const touch = e.touches[0];
       clientX = touch.clientX;
       clientY = touch.clientY;
+      // Prevent scrolling on mobile while dragging
       e.preventDefault();
     } else {
       clientX = e.clientX;
       clientY = e.clientY;
     }
-
-    // Calculate the exact grab point relative to the element's top-left corner
-    const grabX = clientX - rect.left;
-    const grabY = clientY - rect.top;
-
-    // Store both grab point and initial element position
-    setDragState({
-      grabX,
-      grabY,
-      elementX: rect.left,
-      elementY: rect.top
-    });
     
+    // Calculate the offset from the cursor to the element's top-left corner
+    // This ensures the element stays "sticky" to the exact point where it was grabbed
+    const offsetX = clientX - rect.left;
+    const offsetY = clientY - rect.top;
+    
+    setDragState({ offsetX, offsetY });
     setIsDragging(true);
   }, [elementId, isGameMode, isImageElement, currentElement?.interaction?.type]);
 
@@ -104,13 +98,11 @@ export const useDraggable = (elementId: string) => {
     const element = document.getElementById(`element-${elementId}`);
     if (!element) return;
 
-    const rect = element.getBoundingClientRect();
-
-    // Commit the final position to history using getBoundingClientRect
+    // Commit the final position to history
     updateElementWithoutHistory(elementId, {
       position: {
-        x: rect.left,
-        y: rect.top
+        x: element.offsetLeft,
+        y: element.offsetTop
       }
     });
     commitToHistory();
