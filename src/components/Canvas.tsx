@@ -1,4 +1,5 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+
+import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElementWrapper from "./DraggableElementWrapper";
 import { cn } from "@/lib/utils";
@@ -11,10 +12,6 @@ interface CanvasProps {
   isFullscreen?: boolean;
   isMobileView?: boolean;
 }
-
-// Base canvas dimensions (16:9 aspect ratio)
-const BASE_WIDTH = 1600;
-const BASE_HEIGHT = 900;
 
 const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => {
   const { 
@@ -30,41 +27,51 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   const { handleDrop, handleDragOver, handleDragLeave } = useCanvasDrop();
   useCanvasKeyboardShortcuts();
   
-  const [scale, setScale] = useState(1);
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasContainer = useRef<HTMLDivElement>(null);
 
-  const updateCanvasScale = useCallback(() => {
-    if (!canvasContainer.current) return;
-    
-    const containerRect = canvasContainer.current.getBoundingClientRect();
-    const containerWidth = containerRect.width;
-    const containerHeight = containerRect.height;
-    
-    // Calculate scale to fit container while maintaining aspect ratio
-    const scaleX = (containerWidth - (isGameMode ? 0 : 48)) / BASE_WIDTH;
-    const scaleY = (containerHeight - (isGameMode ? 0 : 48)) / BASE_HEIGHT;
-    const newScale = Math.min(scaleX, scaleY);
-    
-    setScale(newScale);
-  }, [isGameMode]);
-  
   useEffect(() => {
-    updateCanvasScale();
+    const updateCanvasSize = () => {
+      if (canvasContainer.current) {
+        const containerRect = canvasContainer.current.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        
+        const targetRatio = 16 / 9;
+        let width = containerWidth;
+        let height = width / targetRatio;
+        
+        if (height > containerHeight) {
+          height = containerHeight;
+          width = height * targetRatio;
+        }
+        
+        // In game mode, don't apply any padding
+        if (!isGameMode) {
+          width -= 48;
+          height -= 48;
+        }
+        
+        setCanvasSize({ width, height });
+      }
+    };
     
-    const resizeObserver = new ResizeObserver(updateCanvasScale);
+    updateCanvasSize();
+    
+    const resizeObserver = new ResizeObserver(updateCanvasSize);
     if (canvasContainer.current) {
       resizeObserver.observe(canvasContainer.current);
     }
     
-    window.addEventListener('resize', updateCanvasScale);
+    window.addEventListener('resize', updateCanvasSize);
     
     return () => {
       if (canvasContainer.current) {
         resizeObserver.unobserve(canvasContainer.current);
       }
-      window.removeEventListener('resize', updateCanvasScale);
+      window.removeEventListener('resize', updateCanvasSize);
     };
-  }, [updateCanvasScale]);
+  }, [isGameMode]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
@@ -86,15 +93,14 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     >
       <div
         className={cn(
-          "canvas-container overflow-hidden",
+          "canvas-container",
           isGameMode ? "bg-transparent" : "bg-white shadow-lg",
           isMobileView && !isGameMode && !isFullscreen && "scale-100"
         )}
         style={{
-          width: BASE_WIDTH,
-          height: BASE_HEIGHT,
-          transform: `scale(${scale})`,
-          transformOrigin: 'center'
+          width: canvasSize.width,
+          height: canvasSize.height,
+          aspectRatio: "16/9",
         }}
         ref={setCanvasRef}
         onClick={handleCanvasClick}
@@ -107,7 +113,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             key={element.id}
             element={element}
             isActive={activeElement?.id === element.id}
-            canvasScale={scale}
           >
             {element.type === 'image' && element.dataUrl && (
               <img
@@ -150,7 +155,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
               <div className="w-full h-full"></div>
             )}
           </DraggableElementWrapper>
-        ))}
+        )}
       </div>
     </div>
   );

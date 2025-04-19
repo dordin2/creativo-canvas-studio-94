@@ -1,22 +1,21 @@
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { useAdvancedDraggable } from "@/hooks/useAdvancedDraggable";
 import { getElementStyle, getRotation } from "@/utils/elementStyles";
 import ElementControls from "./element/ElementControls";
 import DraggableElement from "./DraggableElement";
-import { useAdvancedDraggable } from "@/hooks/useAdvancedDraggable";
+import { toast } from "sonner";
 
 interface DraggableElementWrapperProps {
   element: DesignElement;
   isActive: boolean;
   children: React.ReactNode;
-  canvasScale: number;
 }
 
 const DraggableElementWrapper = ({ 
   element, 
   isActive,
-  children,
-  canvasScale 
+  children 
 }: DraggableElementWrapperProps) => {
   const { 
     updateElement,
@@ -25,15 +24,23 @@ const DraggableElementWrapper = ({
   
   const [showControls, setShowControls] = useState(false);
   
-  // Use our advanced draggable hook with the canvas scale
+  // Use our advanced draggable hook
   const { 
     elementRef,
     isDragging,
     handleResizeStart,
     handleRotateStart,
     startDrag
-  } = useAdvancedDraggable(element.id, canvasScale);
-
+  } = useAdvancedDraggable(element.id, {
+    onDragStart: (el, x, y, scale, rotation) => {
+      // Additional drag start logic if needed
+    },
+    onDragMove: (el, x, y, scale, rotation) => {
+      // Additional drag move logic if needed
+    },
+    // Removed onDragEnd toast notification
+  });
+  
   useEffect(() => {
     const handleMouseEnter = () => {
       if (!isGameMode) {
@@ -78,7 +85,6 @@ const DraggableElementWrapper = ({
         elementRef={elementRef}
         startDrag={startDrag}
         isDragging={isDragging}
-        canvasScale={canvasScale}
       >
         {children}
       </DraggableElement>
