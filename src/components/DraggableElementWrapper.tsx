@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useAdvancedDraggable } from "@/hooks/useAdvancedDraggable";
@@ -24,7 +25,7 @@ const DraggableElementWrapper = ({
   
   const [showControls, setShowControls] = useState(false);
   
-  // Use our advanced draggable hook
+  // Use our new advanced draggable hook
   const { 
     elementRef,
     isDragging,
@@ -38,7 +39,9 @@ const DraggableElementWrapper = ({
     onDragMove: (el, x, y, scale, rotation) => {
       // Additional drag move logic if needed
     },
-    // Removed onDragEnd toast notification
+    onDragEnd: (el, x, y, scale, rotation) => {
+      toast.success("Position updated");
+    }
   });
   
   useEffect(() => {

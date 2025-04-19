@@ -242,20 +242,12 @@ export const useAdvancedDraggable = (
         transform: `scale(${scale})${rotation !== undefined ? ` rotate(${rotation}deg)` : ''}`
       };
     } else if (rotation !== undefined) {
-      const currentTransform = currentElement.style?.transform;
-      
-      // Fix TypeScript error by ensuring transform is a string before using includes/replace
-      if (typeof currentTransform === 'string' && currentTransform.includes('scale')) {
-        updates.style = {
-          ...currentElement.style,
-          transform: currentTransform.replace(/rotate\([^)]+\)/, `rotate(${rotation}deg)`)
-        };
-      } else {
-        updates.style = {
-          ...currentElement.style,
-          transform: `rotate(${rotation}deg)`
-        };
-      }
+      updates.style = {
+        ...currentElement.style,
+        transform: `${currentElement.style?.transform?.includes('scale') 
+          ? currentElement.style.transform.replace(/rotate\([^)]+\)/, `rotate(${rotation}deg)`)
+          : `rotate(${rotation}deg)`}`
+      };
     }
     
     updateElementWithoutHistory(id, updates);
