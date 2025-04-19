@@ -1,9 +1,10 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { RotateCw, Maximize2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Slider } from "@/components/ui/slider";
+import debounce from 'lodash/debounce';
 
 interface ImageControlTabsProps {
   scaleValue: number;
@@ -21,6 +22,41 @@ const ImageControlTabs = ({
   disabled = false
 }: ImageControlTabsProps) => {
   const [activeTab, setActiveTab] = useState<"size" | "rotation">("size");
+  const [localScale, setLocalScale] = useState(scaleValue);
+  const [localRotation, setLocalRotation] = useState(rotation);
+
+  // Debounced update functions
+  const debouncedScaleChange = useCallback(
+    debounce((value: number[]) => {
+      onScaleChange(value);
+    }, 100),
+    [onScaleChange]
+  );
+
+  const debouncedRotationChange = useCallback(
+    debounce((value: number[]) => {
+      onRotationChange(value);
+    }, 100),
+    [onRotationChange]
+  );
+
+  const handleScaleChange = (value: number[]) => {
+    setLocalScale(value[0]);
+    debouncedScaleChange(value);
+  };
+
+  const handleRotationChange = (value: number[]) => {
+    setLocalRotation(value[0]);
+    debouncedRotationChange(value);
+  };
+
+  // Reset local state when props change
+  if (scaleValue !== localScale) {
+    setLocalScale(scaleValue);
+  }
+  if (rotation !== localRotation) {
+    setLocalRotation(rotation);
+  }
 
   return (
     <div className="flex items-center gap-4 px-4">
@@ -43,11 +79,11 @@ const ImageControlTabs = ({
 
       <div className="flex-1">
         <Slider
-          value={activeTab === "size" ? [scaleValue] : [rotation]}
+          value={activeTab === "size" ? [localScale] : [localRotation]}
           min={activeTab === "size" ? 1 : -180}
           max={activeTab === "size" ? 100 : 180}
           step={1}
-          onValueChange={activeTab === "size" ? onScaleChange : onRotationChange}
+          onValueChange={activeTab === "size" ? handleScaleChange : handleRotationChange}
           disabled={disabled}
           className="w-full"
         />
