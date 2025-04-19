@@ -15,40 +15,64 @@ interface MobileImageControlsProps {
 
 const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) => {
   const { updateElement, isGameMode } = useDesignState();
-  const [scaleValue, setScaleValue] = useState<number>(50); // Start at middle of range
+  const [scaleValue, setScaleValue] = useState<number>(50);
   const [rotation, setRotation] = useState(getRotation(element));
+  const [localCanvasSize, setLocalCanvasSize] = useState(canvasSize);
+  const [observer, setObserver] = useState<ResizeObserver | null>(null);
 
   useEffect(() => {
-    if (element.originalSize && element.size && canvasSize.width && canvasSize.height) {
-      // Calculate the ratio based on how the image fills the canvas
-      const widthRatio = element.size.width / canvasSize.width;
-      const heightRatio = element.size.height / canvasSize.height;
+    const container = document.querySelector('.canvas-container');
+    if (!container) return;
+
+    // Initialize with current dimensions
+    setLocalCanvasSize({
+      width: container.clientWidth || 1600,
+      height: container.clientHeight || 900
+    });
+
+    // Set up ResizeObserver
+    const resizeObserver = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        setLocalCanvasSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        });
+      }
+    });
+
+    resizeObserver.observe(container);
+    setObserver(resizeObserver);
+
+    return () => {
+      resizeObserver.disconnect();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (element.originalSize && element.size && localCanvasSize.width && localCanvasSize.height) {
+      const widthRatio = element.size.width / localCanvasSize.width;
+      const heightRatio = element.size.height / localCanvasSize.height;
       const currentRatio = Math.max(widthRatio, heightRatio);
       
-      // Map the ratio to our slider range (1-100)
-      // If ratio is 1.0, the image fills the canvas perfectly, so set to 50%
-      // This gives room to both increase and decrease size
       let scale = Math.round(currentRatio * 50);
-      
-      // Ensure scale is within bounds and not at extremes
       scale = Math.min(Math.max(scale, 10), 90);
       
       setScaleValue(scale);
     }
-  }, [element.originalSize, element.size, canvasSize]);
+  }, [element.originalSize, element.size, localCanvasSize]);
 
   useEffect(() => {
     setRotation(getRotation(element));
   }, [element]);
 
   const handleImageResize = useCallback((value: number[]) => {
-    if (!element.originalSize || !canvasSize.width || !canvasSize.height) return;
+    if (!element.originalSize || !localCanvasSize.width || !localCanvasSize.height) return;
     
     const scalePercentage = value[0];
     setScaleValue(scalePercentage);
     
-    const maxWidth = canvasSize.width;
-    const maxHeight = canvasSize.height;
+    const maxWidth = localCanvasSize.width;
+    const maxHeight = localCanvasSize.height;
     
     const imageAspectRatio = element.originalSize.width / element.originalSize.height;
     const canvasAspectRatio = maxWidth / maxHeight;
@@ -62,10 +86,6 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
       targetWidth = maxHeight * imageAspectRatio;
     }
     
-    // Adjust scaling factor to give more range
-    // At 50%, the image is at a reasonable default size (about half of canvas)
-    // At 100%, the image is 2x that size
-    // At 1%, the image is very small
     const scaleFactor = (scalePercentage / 50) * 1.0;
     
     const newWidth = Math.round(targetWidth * scaleFactor);
@@ -77,7 +97,7 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
         height: newHeight
       }
     });
-  }, [element, canvasSize, updateElement]);
+  }, [element, localCanvasSize, updateElement]);
 
   const handleRotationChange = useCallback((value: number[]) => {
     if (isGameMode) return;

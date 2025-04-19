@@ -26,6 +26,7 @@ import MobileImageControls from "@/components/mobile/MobileImageControls";
 import MobileInteractionControls from "@/components/mobile/MobileInteractionControls";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import ImageControlTabs from "@/components/mobile/ImageControlTabs";
+
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
   const {
@@ -56,6 +57,7 @@ const Editor = () => {
     width: 0,
     height: 0
   });
+
   useEffect(() => {
     if (!projectId) {
       navigate('/');
@@ -63,11 +65,13 @@ const Editor = () => {
     }
     loadProjectData();
   }, [projectId]);
+
   useEffect(() => {
     if (isMobile && activeElement) {
       setShowMobileProperties(true);
     }
   }, [activeElement, isMobile]);
+
   useEffect(() => {
     const updateCanvasSize = () => {
       const canvas = document.querySelector('.canvas-container');
@@ -78,10 +82,27 @@ const Editor = () => {
         });
       }
     };
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
+
+    // Initial size calculation with a small delay to ensure canvas is rendered
+    setTimeout(updateCanvasSize, 100);
+
+    // Set up ResizeObserver for live updates
+    const canvas = document.querySelector('.canvas-container');
+    if (canvas) {
+      const resizeObserver = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          setCanvasSize({
+            width: entry.contentRect.width,
+            height: entry.contentRect.height
+          });
+        }
+      });
+
+      resizeObserver.observe(canvas);
+      return () => resizeObserver.disconnect();
+    }
   }, []);
+
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
@@ -113,6 +134,7 @@ const Editor = () => {
       setIsLoading(false);
     }
   };
+
   const handleSaveProject = async () => {
     try {
       await saveProject(canvases, activeCanvasIndex);
@@ -121,6 +143,7 @@ const Editor = () => {
       toast.error('Failed to save project');
     }
   };
+
   const handleShareGame = () => {
     const shareUrl = `${window.location.origin}/play/${projectId}`;
     if (navigator.clipboard) {
@@ -134,6 +157,7 @@ const Editor = () => {
       promptManualCopy(shareUrl);
     }
   };
+
   const promptManualCopy = (url: string) => {
     toast.info(<div>
         <p>Copy this link to share your game:</p>
@@ -142,9 +166,11 @@ const Editor = () => {
         </div>
       </div>);
   };
+
   const goBackToProjects = () => {
     navigate('/');
   };
+
   if (isLoading) {
     return <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
@@ -155,7 +181,9 @@ const Editor = () => {
         </div>
       </div>;
   }
+
   const { isInteractiveMode } = useInteractiveMode();
+
   if (isMobile && !isGameMode) {
     return <div className="flex flex-col h-screen overflow-hidden">
         <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
@@ -166,8 +194,6 @@ const Editor = () => {
             <h1 className="text-lg font-semibold text-canvas-purple truncate max-w-[160px]">{projectName}</h1>
           </div>
           <div className="flex items-center gap-2">
-            
-            
             <Button variant="ghost" size="icon" onClick={handleShareGame} className="aspect-square">
               <Share2 className="h-5 w-5" />
             </Button>
@@ -196,6 +222,7 @@ const Editor = () => {
         <FloatingElementsButton />
       </div>;
   }
+
   if (isMobile && isGameMode) {
     return <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0 canvas-workspace game-mode">
@@ -215,6 +242,7 @@ const Editor = () => {
         </div>
       </div>;
   }
+
   return <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
       {!isGameMode && <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
           <div className="flex items-center">
@@ -276,4 +304,5 @@ const Editor = () => {
       {!isGameMode && <FloatingElementsButton />}
     </div>;
 };
+
 export default Editor;
