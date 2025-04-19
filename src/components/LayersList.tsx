@@ -312,47 +312,55 @@ const LayersList = () => {
   };
 
   const handleTouchStart = (e: React.TouchEvent, element: DesignElement, index: number) => {
-    e.preventDefault();
-    setTouchStart(e.touches[0].clientY);
-    setTouchedElementId(element.id);
-    setDraggedElement(element);
-    setDraggingIndex(index);
+    if (e.currentTarget.classList.contains('layer-item')) {
+      e.preventDefault();
+      setTouchStart(e.touches[0].clientY);
+      setTouchedElementId(element.id);
+      setDraggedElement(element);
+      setDraggingIndex(index);
 
-    const target = e.currentTarget as HTMLDivElement;
-    target.style.transform = 'scale(1.02)';
-    target.style.transition = 'transform 0.2s ease';
+      const target = e.currentTarget as HTMLDivElement;
+      target.style.transform = 'scale(1.02)';
+      target.style.transition = 'transform 0.2s ease';
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent, index: number) => {
-    e.preventDefault();
-    if (!touchStart) return;
+    if (touchedElementId) {
+      e.preventDefault();
+    }
+    
+    if (!touchStart || !touchedElementId) return;
 
     const currentTouch = e.touches[0].clientY;
     const target = e.currentTarget as HTMLDivElement;
-    const elementRect = target.getBoundingClientRect();
-    const containerRect = target.closest('.space-y-2')?.getBoundingClientRect();
-
-    if (!containerRect) return;
-
-    const elementsUnder = document.elementsFromPoint(
-      elementRect.left + elementRect.width / 2,
-      currentTouch
-    );
-
-    const targetElement = elementsUnder.find(el => 
-      el.classList.contains('layer-item') && 
-      el !== target
-    );
-
-    if (targetElement) {
-      const targetIndex = parseInt(targetElement.getAttribute('data-index') || '-1');
-      if (targetIndex !== -1) {
-        setDragOverIndex(targetIndex);
-      }
-    }
-
     const deltaY = currentTouch - touchStart;
-    target.style.transform = `translateY(${deltaY}px) scale(1.02)`;
+
+    if (Math.abs(deltaY) > 5) {
+      const elementRect = target.getBoundingClientRect();
+      const containerRect = target.closest('.layers-container')?.getBoundingClientRect();
+
+      if (!containerRect) return;
+
+      const elementsUnder = document.elementsFromPoint(
+        elementRect.left + elementRect.width / 2,
+        currentTouch
+      );
+
+      const targetElement = elementsUnder.find(el => 
+        el.classList.contains('layer-item') && 
+        el !== target
+      );
+
+      if (targetElement) {
+        const targetIndex = parseInt(targetElement.getAttribute('data-index') || '-1');
+        if (targetIndex !== -1) {
+          setDragOverIndex(targetIndex);
+        }
+      }
+
+      target.style.transform = `translateY(${deltaY}px) scale(1.02)`;
+    }
   };
 
   const handleTouchEnd = (e: React.TouchEvent, targetIndex: number) => {
@@ -394,7 +402,7 @@ const LayersList = () => {
         aria-hidden="true"
       ></div>
 
-      <div className="space-y-2 max-h-[300px] overflow-y-auto touch-none">
+      <div className="space-y-2 max-h-[300px] overflow-y-auto layers-container">
         {layerElements.length === 0 ? (
           <div className="text-sm text-gray-500 italic">No elements added yet</div>
         ) : (
@@ -405,7 +413,7 @@ const LayersList = () => {
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
               } ${dragOverIndex === index ? "border-blue-500 bg-blue-50" : ""} 
               ${draggedElement?.id === element.id ? "opacity-50" : "opacity-100"}
-              cursor-grab touch-none`}
+              cursor-grab`}
               onClick={() => setActiveElement(element)}
               onDragStart={(e) => handleDragStart(e, element, index)}
               onDragOver={(e) => handleDragOver(e, index)}
@@ -419,7 +427,7 @@ const LayersList = () => {
               style={{
                 transition: 'transform 0.2s ease, border-color 0.2s ease',
                 willChange: 'transform',
-                touchAction: 'none',
+                touchAction: 'pan-y',
                 WebkitTouchCallout: 'none',
                 WebkitUserSelect: 'none',
                 KhtmlUserSelect: 'none',
