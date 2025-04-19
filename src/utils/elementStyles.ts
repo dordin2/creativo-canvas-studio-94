@@ -65,7 +65,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     top,
     width,
     height,
-    cursor: isDragging ? 'move' : 'grab',
+    cursor: isDragging ? 'grabbing' : 'grab',
     border: 'none',
     zIndex: element.layer,
     touchAction: 'none',
@@ -74,7 +74,7 @@ export const getElementStyle = (element: DesignElement, isDragging: boolean): CS
     transform: `rotate(${rotation}deg)`,
     // Apply hardware acceleration for smoother rendering
     willChange: isDragging ? 'transform' : 'auto',
-    transition: isDragging ? 'none' : 'transform 0.05s ease-out',
+    transition: isDragging ? 'none' : 'transform 0.1s ease-out',
     boxSizing: 'border-box',
   };
 
