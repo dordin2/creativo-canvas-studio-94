@@ -7,29 +7,37 @@ const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
 >(({ className, orientation, ...props }, ref) => {
-  // Re-implement improved touch handling to prevent scrolling issues
+  const handleTouchStart = React.useCallback((e: TouchEvent) => {
+    if ((e.target as HTMLElement)?.closest('[role="slider"]')) {
+      e.preventDefault();
+    }
+  }, []);
+
   const handleTouchMove = React.useCallback((e: TouchEvent) => {
-    // Only prevent default if this is a slider interaction
     if ((e.target as HTMLElement)?.closest('[role="slider"]')) {
       e.preventDefault();
     }
   }, []);
 
   React.useEffect(() => {
-    // Add touch event listener immediately when component mounts
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    
-    return () => {
-      document.removeEventListener('touchmove', handleTouchMove);
-    };
-  }, [handleTouchMove]);
+    const element = document.querySelector('[role="slider"]')?.parentElement;
+    if (element) {
+      element.addEventListener('touchstart', handleTouchStart, { passive: false });
+      element.addEventListener('touchmove', handleTouchMove, { passive: false });
+      
+      return () => {
+        element.removeEventListener('touchstart', handleTouchStart);
+        element.removeEventListener('touchmove', handleTouchMove);
+      };
+    }
+  }, [handleTouchStart, handleTouchMove]);
 
   return (
     <SliderPrimitive.Root
       ref={ref}
       className={cn(
         "relative flex w-full touch-none select-none items-center",
-        orientation === "vertical" && "h-full flex-col justify-center py-4",
+        orientation === "vertical" && "h-full flex-col justify-center",
         className
       )}
       data-orientation={orientation}
@@ -48,7 +56,14 @@ const Slider = React.forwardRef<
           )} 
         />
       </SliderPrimitive.Track>
-      <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 transition-transform" />
+      <SliderPrimitive.Thumb 
+        className={cn(
+          "block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+          "disabled:pointer-events-none disabled:opacity-50",
+          "hover:scale-110 transition-transform touch-none"
+        )} 
+      />
     </SliderPrimitive.Root>
   );
 });

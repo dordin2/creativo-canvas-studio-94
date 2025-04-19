@@ -15,30 +15,20 @@ interface MobileImageControlsProps {
 
 const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) => {
   const { updateElement, isGameMode } = useDesignState();
-  const [scaleValue, setScaleValue] = useState<number>(50); // Start at middle of range
+  const [scaleValue, setScaleValue] = useState<number>(50);
   const [rotation, setRotation] = useState(getRotation(element));
   
-  // Calculate scale value when element or canvas size changes
   useEffect(() => {
     if (element.originalSize && element.size && canvasSize.width && canvasSize.height) {
-      // Calculate the ratio based on how the image fills the canvas
       const widthRatio = element.size.width / canvasSize.width;
       const heightRatio = element.size.height / canvasSize.height;
       const currentRatio = Math.max(widthRatio, heightRatio);
-      
-      // Map the ratio to our slider range (1-100)
-      // If ratio is 1.0, the image fills the canvas perfectly, so set to 50%
-      // This gives room to both increase and decrease size
       let scale = Math.round(currentRatio * 50);
-      
-      // Ensure scale is within bounds and not at extremes
-      scale = Math.min(Math.max(scale, 10), 90);
-      
+      scale = Math.min(Math.max(scale, 1), 100);
       setScaleValue(scale);
     }
-  }, [element.originalSize, element.size, canvasSize]);
+  }, [element.originalSize, element.size, canvasSize, element.id]);
 
-  // Update rotation when element changes
   useEffect(() => {
     setRotation(getRotation(element));
   }, [element]);
@@ -64,11 +54,7 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
       targetWidth = maxHeight * imageAspectRatio;
     }
     
-    // Adjust scaling factor to give more range
-    // At 50%, the image is at a reasonable default size (about half of canvas)
-    // At 100%, the image is 2x that size
-    // At 1%, the image is very small
-    const scaleFactor = (scalePercentage / 50) * 1.0;
+    const scaleFactor = (scalePercentage / 50);
     
     const newWidth = Math.round(targetWidth * scaleFactor);
     const newHeight = Math.round(targetHeight * scaleFactor);

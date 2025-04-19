@@ -79,36 +79,33 @@ const Editor = () => {
         if (canvas) {
           const rect = canvas.getBoundingClientRect();
           setCanvasSize({
-            width: rect.width,
-            height: rect.height
+            width: Math.round(rect.width),
+            height: Math.round(rect.height)
           });
         }
       });
     };
 
     updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    window.addEventListener('orientationchange', () => {
-      setTimeout(updateCanvasSize, 200);
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateCanvasSize();
     });
 
-    if (window.ResizeObserver) {
-      const resizeObserver = new ResizeObserver(updateCanvasSize);
-      const canvasContainer = document.querySelector('.canvas-workspace');
-      if (canvasContainer) {
-        resizeObserver.observe(canvasContainer);
-      }
-
-      return () => {
-        window.removeEventListener('resize', updateCanvasSize);
-        window.removeEventListener('orientationchange', updateCanvasSize);
-        if (canvasContainer) {
-          resizeObserver.unobserve(canvasContainer);
-        }
-      };
+    const canvasContainer = document.querySelector('.canvas-workspace');
+    if (canvasContainer) {
+      resizeObserver.observe(canvasContainer);
     }
 
+    window.addEventListener('resize', updateCanvasSize);
+    window.addEventListener('orientationchange', () => {
+      setTimeout(updateCanvasSize, 100);
+    });
+
     return () => {
+      if (canvasContainer) {
+        resizeObserver.unobserve(canvasContainer);
+      }
       window.removeEventListener('resize', updateCanvasSize);
       window.removeEventListener('orientationchange', updateCanvasSize);
     };
