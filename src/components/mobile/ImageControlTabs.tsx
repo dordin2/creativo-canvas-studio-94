@@ -89,13 +89,19 @@ const ImageControlTabs = ({
             value="size"
             className={`px-2 py-1 ${activeTab === "size" ? "bg-gray-100" : ""}`}
           >
-            <Maximize2 className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <Maximize2 className="h-4 w-4" />
+              <span className="text-xs">{Math.round(localScale)}%</span>
+            </div>
           </TabsTrigger>
           <TabsTrigger
             value="rotation"
             className={`px-2 py-1 ${activeTab === "rotation" ? "bg-gray-100" : ""}`}
           >
-            <RotateCw className="h-4 w-4" />
+            <div className="flex items-center gap-2">
+              <RotateCw className="h-4 w-4" />
+              <span className="text-xs">{Math.round(localRotation)}°</span>
+            </div>
           </TabsTrigger>
         </TabsList>
       </Tabs>
