@@ -1,4 +1,5 @@
-import { useRef, useState, useEffect } from "react";
+
+import React, { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
@@ -16,6 +17,7 @@ import SequencePuzzleModal from "./element/SequencePuzzleModal";
 import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
 import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
 import InteractionContextMenu from './element/InteractionContextMenu';
+import InteractionIcons from './element/InteractionIcons'; // Added missing import
 import {
   ContextMenu,
   ContextMenuContent,
