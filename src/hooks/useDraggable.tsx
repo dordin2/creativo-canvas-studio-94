@@ -8,16 +8,24 @@ interface Position {
   y: number;
 }
 
+interface DragState {
+  startX: number;
+  startY: number;
+  offsetX: number;
+  offsetY: number;
+}
+
 export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
+  const [dragState, setDragState] = useState<DragState | null>(null);
   const { isMobileDevice } = useMobile();
   const currentElement = elements.find(el => el.id === elementId);
   
   const isImageElement = currentElement?.type === 'image';
   
   const handleMove = useCallback((e: MouseEvent | TouchEvent) => {
-    if (!isDragging) return;
+    if (!isDragging || !dragState) return;
     
     const element = document.getElementById(`element-${elementId}`);
     if (!element) return;
@@ -26,34 +34,32 @@ export const useDraggable = (elementId: string) => {
     let clientY: number;
 
     if ('touches' in e) {
-      // Touch event
       const touch = e.touches[0];
       clientX = touch.clientX;
       clientY = touch.clientY;
     } else {
-      // Mouse event
       clientX = e.clientX;
       clientY = e.clientY;
     }
 
-    // Update the element position directly in the DOM for immediate response
-    const rect = element.getBoundingClientRect();
-    const deltaX = clientX - rect.left;
-    const deltaY = clientY - rect.top;
+    // Calculate new position based on the initial drag state
+    const newX = clientX - dragState.offsetX;
+    const newY = clientY - dragState.offsetY;
 
-    element.style.left = `${clientX - deltaX}px`;
-    element.style.top = `${clientY - deltaY}px`;
+    // Update the element position directly in the DOM for immediate response
+    element.style.left = `${newX}px`;
+    element.style.top = `${newY}px`;
 
     // Update React state less frequently using requestAnimationFrame
     requestAnimationFrame(() => {
       updateElementWithoutHistory(elementId, {
         position: {
-          x: clientX - deltaX,
-          y: clientY - deltaY
+          x: newX,
+          y: newY
         }
       });
     });
-  }, [elementId, isDragging, updateElementWithoutHistory]);
+  }, [elementId, isDragging, dragState, updateElementWithoutHistory]);
 
   const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
@@ -62,6 +68,32 @@ export const useDraggable = (elementId: string) => {
     }
     
     e.stopPropagation();
+    
+    const element = document.getElementById(`element-${elementId}`);
+    if (!element) return;
+    
+    const rect = element.getBoundingClientRect();
+    
+    let clientX: number;
+    let clientY: number;
+    
+    if ('touches' in e) {
+      const touch = e.touches[0];
+      clientX = touch.clientX;
+      clientY = touch.clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    // Calculate and store the initial offset from the mouse/touch position to the element's top-left corner
+    setDragState({
+      startX: rect.left,
+      startY: rect.top,
+      offsetX: clientX - rect.left,
+      offsetY: clientY - rect.top
+    });
+    
     setIsDragging(true);
   }, [elementId, isGameMode, isImageElement, currentElement?.interaction?.type]);
 
@@ -81,6 +113,7 @@ export const useDraggable = (elementId: string) => {
     }
 
     setIsDragging(false);
+    setDragState(null);
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory]);
 
   return { startDrag, isDragging, currentElement, handleMove, handleEnd };
