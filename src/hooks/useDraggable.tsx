@@ -4,10 +4,10 @@ import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
 
 interface DragState {
-  grabX: number;  // Cursor position relative to element's top-left corner
-  grabY: number;
-  elementX: number; // Element's initial position
-  elementY: number;
+  startX: number;
+  startY: number;
+  elementStartLeft: number;
+  elementStartTop: number;
 }
 
 export const useDraggable = (elementId: string) => {
@@ -22,9 +22,6 @@ export const useDraggable = (elementId: string) => {
   const handleMove = useCallback((e: MouseEvent | TouchEvent) => {
     if (!isDragging || !dragState) return;
     
-    const element = document.getElementById(`element-${elementId}`);
-    if (!element) return;
-
     let clientX: number;
     let clientY: number;
 
@@ -38,23 +35,29 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
 
-    // Calculate new position by maintaining the exact grab point
-    const newLeft = clientX - dragState.grabX;
-    const newTop = clientY - dragState.grabY;
+    // Calculate new position based on the initial click/touch point
+    const deltaX = clientX - dragState.startX;
+    const deltaY = clientY - dragState.startY;
+    
+    const newLeft = dragState.elementStartLeft + deltaX;
+    const newTop = dragState.elementStartTop + deltaY;
 
     // Update DOM position immediately for smooth dragging
-    element.style.left = `${newLeft}px`;
-    element.style.top = `${newTop}px`;
+    const element = document.getElementById(`element-${elementId}`);
+    if (element) {
+      element.style.left = `${newLeft}px`;
+      element.style.top = `${newTop}px`;
 
-    // Update React state less frequently using requestAnimationFrame
-    requestAnimationFrame(() => {
-      updateElementWithoutHistory(elementId, {
-        position: {
-          x: newLeft,
-          y: newTop
-        }
+      // Update React state less frequently using requestAnimationFrame
+      requestAnimationFrame(() => {
+        updateElementWithoutHistory(elementId, {
+          position: {
+            x: newLeft,
+            y: newTop
+          }
+        });
       });
-    });
+    }
   }, [elementId, isDragging, dragState, updateElementWithoutHistory]);
 
   const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent) => {
@@ -71,8 +74,6 @@ export const useDraggable = (elementId: string) => {
     let clientX: number;
     let clientY: number;
     
-    const rect = element.getBoundingClientRect();
-    
     if ('touches' in e) {
       const touch = e.touches[0];
       clientX = touch.clientX;
@@ -83,16 +84,12 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
 
-    // Calculate the exact grab point relative to the element's top-left corner
-    const grabX = clientX - rect.left;
-    const grabY = clientY - rect.top;
-
-    // Store both grab point and initial element position
+    // Store the initial mouse/touch position and element position
     setDragState({
-      grabX,
-      grabY,
-      elementX: rect.left,
-      elementY: rect.top
+      startX: clientX,
+      startY: clientY,
+      elementStartLeft: element.offsetLeft,
+      elementStartTop: element.offsetTop
     });
     
     setIsDragging(true);
@@ -102,18 +99,23 @@ export const useDraggable = (elementId: string) => {
     if (!isDragging) return;
 
     const element = document.getElementById(`element-${elementId}`);
-    if (!element) return;
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      const canvas = element.parentElement;
+      if (canvas) {
+        const canvasRect = canvas.getBoundingClientRect();
+        const finalLeft = rect.left - canvasRect.left;
+        const finalTop = rect.top - canvasRect.top;
 
-    const rect = element.getBoundingClientRect();
-
-    // Commit the final position to history using getBoundingClientRect
-    updateElementWithoutHistory(elementId, {
-      position: {
-        x: rect.left,
-        y: rect.top
+        updateElementWithoutHistory(elementId, {
+          position: {
+            x: finalLeft,
+            y: finalTop
+          }
+        });
+        commitToHistory();
       }
-    });
-    commitToHistory();
+    }
 
     setIsDragging(false);
     setDragState(null);
