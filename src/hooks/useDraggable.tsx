@@ -9,9 +9,7 @@ interface Position {
 export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
-  const elementRef = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
-  const animationFrame = useRef<number | null>(null);
   const lastUpdateTimestamp = useRef<number>(0);
 
   const currentElement = elements.find(el => el.id === elementId);
@@ -119,18 +117,20 @@ export const useDraggable = (elementId: string) => {
       const centerOffsetX = rect.width / 2;
       const centerOffsetY = rect.height / 2;
 
-      if (animationFrame.current !== null) {
-        cancelAnimationFrame(animationFrame.current);
-      }
+      // Calculate new position with cursor at center
+      const newX = clientX - centerOffsetX;
+      const newY = clientY - centerOffsetY;
 
-      animationFrame.current = requestAnimationFrame(() => {
-        // Calculate new position with cursor at center
-        const newX = clientX - centerOffsetX;
-        const newY = clientY - centerOffsetY;
-
-        updateElementWithoutHistory(elementId, {
-          position: { x: newX, y: newY }
-        });
+      // Use transform3d for better performance and direct positioning
+      updateElementWithoutHistory(elementId, {
+        position: { x: newX, y: newY },
+        style: {
+          ...currentElement.style,
+          transform: `translate3d(0, 0, 0)`,
+          transition: 'none',
+          cursor: 'grabbing',
+          willChange: 'transform'
+        }
       });
     };
 
@@ -151,12 +151,6 @@ export const useDraggable = (elementId: string) => {
 
       setIsDragging(false);
       isDragStarted.current = false;
-      elementRef.current = null;
-
-      if (animationFrame.current !== null) {
-        cancelAnimationFrame(animationFrame.current);
-        animationFrame.current = null;
-      }
 
       // Reset element styles
       const element = document.getElementById(`element-${elementId}`);
@@ -164,8 +158,8 @@ export const useDraggable = (elementId: string) => {
         updateElementWithoutHistory(elementId, {
           style: {
             ...currentElement.style,
-            transform: currentElement.style?.transform || 'none',
-            transition: 'transform 0.2s ease',
+            transform: 'none',
+            transition: 'none',
             cursor: 'grab',
             willChange: 'auto'
           }
@@ -187,10 +181,6 @@ export const useDraggable = (elementId: string) => {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleEnd);
       window.removeEventListener('touchcancel', handleEnd);
-
-      if (animationFrame.current !== null) {
-        cancelAnimationFrame(animationFrame.current);
-      }
     };
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
 
@@ -210,7 +200,8 @@ export const useDraggable = (elementId: string) => {
         style: {
           ...currentElement.style,
           cursor: 'grabbing',
-          willChange: 'transform'
+          willChange: 'transform',
+          transition: 'none'
         }
       });
     }

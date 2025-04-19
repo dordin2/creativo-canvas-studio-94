@@ -110,7 +110,7 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isEditing || isInteractiveMode) return;
     
     if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
+      startDrag(e);
       setIsDragging(true);
     }
     
@@ -139,7 +139,7 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isEditing || isInteractiveMode) return;
     
     if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
+      startDrag(e);
       setIsDragging(true);
     }
     
