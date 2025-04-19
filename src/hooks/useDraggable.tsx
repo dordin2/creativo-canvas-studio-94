@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
@@ -91,11 +90,11 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
     
-    const rect = element.getBoundingClientRect();
-    const currentX = rect.left;
-    const currentY = rect.top;
+    // Use offsetLeft and offsetTop instead of getBoundingClientRect()
+    const currentX = element.offsetLeft;
+    const currentY = element.offsetTop;
     
-    // Save the offset from mouse/touch to element's corner and current position
+    // Calculate offset from mouse/touch position to element's current position
     setDragState({
       offsetX: clientX - currentX,
       offsetY: clientY - currentY,
