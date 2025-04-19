@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { getElementStyle } from "@/utils/elementStyles";
@@ -32,6 +31,7 @@ interface DraggableElementProps {
   startDrag: (e: React.MouseEvent | React.TouchEvent, elementPosition?: { x: number, y: number }) => void;
   isDragging: boolean;
   children: React.ReactNode;
+  canvasScale: number;
 }
 
 const DraggableElement = ({ 
@@ -40,7 +40,8 @@ const DraggableElement = ({
   elementRef,
   startDrag,
   isDragging,
-  children 
+  children,
+  canvasScale
 }: DraggableElementProps) => {
   const { 
     updateElement, 

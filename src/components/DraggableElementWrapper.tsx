@@ -3,6 +3,7 @@ import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { getElementStyle, getRotation } from "@/utils/elementStyles";
 import ElementControls from "./element/ElementControls";
 import DraggableElement from "./DraggableElement";
+import { useAdvancedDraggable } from "@/hooks/useAdvancedDraggable";
 
 interface DraggableElementWrapperProps {
   element: DesignElement;
@@ -31,14 +32,7 @@ const DraggableElementWrapper = ({
     handleResizeStart,
     handleRotateStart,
     startDrag
-  } = useAdvancedDraggable(element.id, canvasScale, {
-    onDragStart: (el, x, y, scale, rotation) => {
-      // Additional drag start logic if needed
-    },
-    onDragMove: (el, x, y, scale, rotation) => {
-      // Additional drag move logic if needed
-    },
-  });
+  } = useAdvancedDraggable(element.id, canvasScale);
 
   useEffect(() => {
     const handleMouseEnter = () => {
