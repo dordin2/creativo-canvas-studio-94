@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElementWrapper from "./DraggableElementWrapper";
@@ -155,7 +154,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
               <div className="w-full h-full"></div>
             )}
           </DraggableElementWrapper>
-        )}
+        ))}
       </div>
     </div>
   );
