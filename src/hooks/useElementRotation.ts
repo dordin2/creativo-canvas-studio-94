@@ -19,6 +19,7 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
     
     if (elementRef.current) {
       const rect = elementRef.current.getBoundingClientRect();
+      // Use the element's center as the rotation pivot point
       const centerX = rect.left + rect.width / 2;
       const centerY = rect.top + rect.height / 2;
       
@@ -61,6 +62,17 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
       // Update the rotation by adding the incremental change
       let newRotation = lastRotation.current + angleDiff;
       
+      // Snap to common angles (0, 90, 180, 270) when close
+      const snapAngle = 5; // Degrees within which to snap
+      const snapAngles = [0, 90, 180, 270, 360];
+      
+      for (const angle of snapAngles) {
+        if (Math.abs(newRotation % 360 - angle) < snapAngle) {
+          newRotation = angle === 360 ? 0 : angle;
+          break;
+        }
+      }
+      
       // Round to nearest degree
       newRotation = Math.round(newRotation);
       
@@ -95,6 +107,18 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
       if (Math.abs(angleDiff) < 1) return;
       
       let newRotation = lastRotation.current + angleDiff;
+      
+      // Snap to common angles when close
+      const snapAngle = 5;
+      const snapAngles = [0, 90, 180, 270, 360];
+      
+      for (const angle of snapAngles) {
+        if (Math.abs(newRotation % 360 - angle) < snapAngle) {
+          newRotation = angle === 360 ? 0 : angle;
+          break;
+        }
+      }
+      
       newRotation = Math.round(newRotation);
       
       updateElement(element.id, { 

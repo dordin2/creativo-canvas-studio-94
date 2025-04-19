@@ -1,3 +1,4 @@
+
 /* Draggable elements styles */
 .canvas-element {
   touch-action: none;
@@ -68,6 +69,7 @@ body.sequence-dragging {
   transform-origin: center;
   border-radius: 0.5rem;
   background: white;
+  overflow: hidden; /* This ensures content stays within the canvas boundaries */
 }
 
 .canvas-container > div:first-child {
@@ -76,6 +78,6 @@ body.sequence-dragging {
 
 .canvas-element {
   position: absolute;
-  overflow: visible !important;
+  overflow: visible !important; /* This ensures resize/rotation handles are visible */
   pointer-events: auto;
 }

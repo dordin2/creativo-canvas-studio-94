@@ -14,13 +14,14 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
 
   const handleStyle: CSSProperties = {
     position: 'absolute',
-    width: '10px',
-    height: '10px',
+    width: '12px',
+    height: '12px',
     background: 'white',
     border: '2px solid #4F46E5',
     borderRadius: '50%',
     zIndex: 1001,
     pointerEvents: 'auto',
+    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
   };
 
   const createResizeHandle = (position: string, cursorType: string, direction: string) => {
@@ -133,4 +134,3 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
 };
 
 export default ResizeHandles;
-

@@ -4,9 +4,11 @@ import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation }
 export const getDefaultPosition = (canvasRef: HTMLDivElement | null, elementSize = { width: 0, height: 0 }) => {
   if (!canvasRef) return { x: 100, y: 100 };
   
+  // Use fixed canvas dimensions to ensure consistent placement
   const FIXED_CANVAS_WIDTH = 1600;
   const FIXED_CANVAS_HEIGHT = 900;
   
+  // Calculate the center position, accounting for element size
   return {
     x: Math.max(0, (FIXED_CANVAS_WIDTH / 2) - (elementSize.width / 2)),
     y: Math.max(0, (FIXED_CANVAS_HEIGHT / 2) - (elementSize.height / 2))
@@ -17,10 +19,7 @@ export const getDefaultPosition = (canvasRef: HTMLDivElement | null, elementSize
 export const getDefaultImageSize = (canvasRef: HTMLDivElement | null) => {
   if (!canvasRef) return { width: 200, height: 150 };
   
-  // Use the actual canvas dimensions, not the scaled dimensions
-  const canvasWidth = 1600; // Fixed canvas width
-  const canvasHeight = 900; // Fixed canvas height
-  
+  // Use fixed canvas dimensions for consistent sizing
   const FIXED_CANVAS_WIDTH = 1600;
   const FIXED_CANVAS_HEIGHT = 900;
   const MAX_CANVAS_IMAGE_SIZE_PERCENT = 0.5;

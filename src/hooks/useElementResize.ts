@@ -52,7 +52,8 @@ export const useElementResize = (element: DesignElement) => {
     });
   };
 
-  // Improved vector-based resize calculation for more consistent and smooth corner resizing
+  // Improved vector-based resize calculation with proper anchor points
+  // This matches Canva's resize behavior more closely
   const calculateResizeVector = (
     deltaX: number,
     deltaY: number,
@@ -65,98 +66,85 @@ export const useElementResize = (element: DesignElement) => {
     let newX = startPosition.x;
     let newY = startPosition.y;
     
-    // For aspect ratio preservation, always calculate both dimensions together
+    // For aspect ratio preservation, calculate based on anchor point
     if (maintainAspectRatio && originalAspectRatio) {
-      // Determine proper scaling vector based on both deltas
-      // Using vector magnitude to ensure consistent scaling
-      let scaleVector = { x: 0, y: 0 };
+      // Define anchor point based on resize direction
+      let anchorX = startPosition.x;
+      let anchorY = startPosition.y;
       
-      // Calculate the scaling factors for each dimension
       if (direction.includes('e')) {
-        // Right side scaling
-        scaleVector.x = (startSize.width + deltaX) / startSize.width;
+        // East anchor is the west edge
+        // Keep left edge fixed
       } else if (direction.includes('w')) {
-        // Left side scaling
-        scaleVector.x = (startSize.width - deltaX) / startSize.width;
+        // West anchor is the east edge
+        anchorX = startPosition.x + startSize.width;
       }
       
       if (direction.includes('s')) {
-        // Bottom side scaling
-        scaleVector.y = (startSize.height + deltaY) / startSize.height;
+        // South anchor is the north edge
+        // Keep top edge fixed
       } else if (direction.includes('n')) {
-        // Top side scaling
-        scaleVector.y = (startSize.height - deltaY) / startSize.height;
+        // North anchor is the south edge
+        anchorY = startPosition.y + startSize.height;
       }
       
-      // For corners, use the larger scaling factor to determine final scaling
+      // Determine scaling based on direction and deltas
       let scaleFactor = 1;
-      if (direction.length === 2) { // Corner resize
-        // Use weighted average for more consistent corner scaling
+      
+      if (direction === 'e' || direction === 'w') {
+        // Horizontal resize only
+        scaleFactor = Math.max(0.1, (startSize.width + (direction === 'e' ? deltaX : -deltaX)) / startSize.width);
+        newWidth = startSize.width * scaleFactor;
+        newHeight = newWidth / originalAspectRatio;
+      } else if (direction === 'n' || direction === 's') {
+        // Vertical resize only
+        scaleFactor = Math.max(0.1, (startSize.height + (direction === 's' ? deltaY : -deltaY)) / startSize.height);
+        newHeight = startSize.height * scaleFactor;
+        newWidth = newHeight * originalAspectRatio;
+      } else {
+        // Corner resize - use the larger delta for more consistent scaling
+        const horizontalScale = Math.max(0.1, (startSize.width + (direction.includes('e') ? deltaX : -deltaX)) / startSize.width);
+        const verticalScale = Math.max(0.1, (startSize.height + (direction.includes('s') ? deltaY : -deltaY)) / startSize.height);
+        
+        // Use the larger delta for smoother scaling, weighted by mouse movement direction
         const weightX = Math.abs(deltaX) / (Math.abs(deltaX) + Math.abs(deltaY) + 0.001);
         const weightY = Math.abs(deltaY) / (Math.abs(deltaX) + Math.abs(deltaY) + 0.001);
         
-        // Apply weighted average for smoother transitions
-        scaleFactor = (scaleVector.x * weightX + scaleVector.y * weightY);
-      } else {
-        // Single edge - use the appropriate scale factor
-        scaleFactor = direction.includes('e') || direction.includes('w') 
-          ? scaleVector.x 
-          : scaleVector.y;
-      }
-      
-      // Ensure minimum size
-      scaleFactor = Math.max(0.2, scaleFactor);
-      
-      // Calculate new dimensions
-      newWidth = startSize.width * scaleFactor;
-      newHeight = newWidth / originalAspectRatio;
-      
-      // Update position for handles that need it (w, n)
-      if (direction.includes('w')) {
-        newX = startPosition.x + (startSize.width - newWidth);
-      }
-      if (direction.includes('n')) {
-        newY = startPosition.y + (startSize.height - newHeight);
-      }
-    } else {
-      // Non-aspect ratio resize - apply deltas directly but with improved corner handling
-      if (direction.length === 2) { // Corner resize
-        // Process each dimension
-        if (direction.includes('e')) {
-          newWidth = Math.max(20, startSize.width + deltaX);
-        } else if (direction.includes('w')) {
-          newWidth = Math.max(20, startSize.width - deltaX);
-          newX = startPosition.x + (startSize.width - newWidth);
+        if (weightX > weightY) {
+          scaleFactor = horizontalScale;
+        } else {
+          scaleFactor = verticalScale;
         }
         
-        if (direction.includes('s')) {
-          newHeight = Math.max(20, startSize.height + deltaY);
-        } else if (direction.includes('n')) {
-          newHeight = Math.max(20, startSize.height - deltaY);
-          newY = startPosition.y + (startSize.height - newHeight);
-        }
-      } else {
-        // Edge resize handling (unchanged logic)
-        switch (direction) {
-          case 'e':
-            newWidth = Math.max(20, startSize.width + deltaX);
-            break;
-          case 'w':
-            newWidth = Math.max(20, startSize.width - deltaX);
-            newX = startPosition.x + (startSize.width - newWidth);
-            break;
-          case 's':
-            newHeight = Math.max(20, startSize.height + deltaY);
-            break;
-          case 'n':
-            newHeight = Math.max(20, startSize.height - deltaY);
-            newY = startPosition.y + (startSize.height - newHeight);
-            break;
-        }
+        newWidth = startSize.width * scaleFactor;
+        newHeight = newWidth / originalAspectRatio;
+      }
+      
+      // Calculate new position based on anchor point
+      if (direction.includes('w')) {
+        newX = anchorX - newWidth;
+      }
+      if (direction.includes('n')) {
+        newY = anchorY - newHeight;
+      }
+    } else {
+      // Non-aspect ratio resize - direct manipulation
+      if (direction.includes('e')) {
+        newWidth = Math.max(20, startSize.width + deltaX);
+      } else if (direction.includes('w')) {
+        newWidth = Math.max(20, startSize.width - deltaX);
+        newX = startPosition.x + (startSize.width - newWidth);
+      }
+      
+      if (direction.includes('s')) {
+        newHeight = Math.max(20, startSize.height + deltaY);
+      } else if (direction.includes('n')) {
+        newHeight = Math.max(20, startSize.height - deltaY);
+        newY = startPosition.y + (startSize.height - newHeight);
       }
     }
     
-    // Ensure size is positive
+    // Ensure minimum size
     newWidth = Math.max(20, newWidth);
     newHeight = Math.max(20, newHeight);
     
@@ -172,7 +160,7 @@ export const useElementResize = (element: DesignElement) => {
         const isImage = element.type === 'image';
         const maintainAspectRatio = isImage || originalAspectRatio !== null;
         
-        // Use the improved vector-based resize calculation
+        // Use the improved anchor-based resize calculation
         const { newWidth, newHeight, newX, newY } = calculateResizeVector(
           deltaX, 
           deltaY, 

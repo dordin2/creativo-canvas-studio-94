@@ -1,3 +1,4 @@
+
 import { useRef, useEffect, useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElementWrapper from "./DraggableElementWrapper";
@@ -94,7 +95,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           width: canvasSize.width,
           height: canvasSize.height,
           aspectRatio: "16/9",
-          overflow: "hidden"
         }}
         ref={setCanvasRef}
         onClick={handleCanvasClick}
