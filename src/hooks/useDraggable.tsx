@@ -151,7 +151,7 @@ export const useDraggable = (elementId: string) => {
       updateElementWithoutHistory(elementId, {
         style: {
           ...currentElement.style,
-          transform: initialTransform.current,
+          transform: initialTransform.current || 'none',
           willChange: 'auto',
           cursor: 'grab',
           boxShadow: 'none',
@@ -190,7 +190,7 @@ export const useDraggable = (elementId: string) => {
     if (!element || !currentElement) return;
 
     const rect = element.getBoundingClientRect();
-    initialTransform.current = currentElement.style?.transform || '';
+    initialTransform.current = currentElement.style?.transform || 'none';
     
     if ('touches' in e) {
       const touch = e.touches[0];
