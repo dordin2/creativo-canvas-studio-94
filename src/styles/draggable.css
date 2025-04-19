@@ -1,0 +1,61 @@
+
+/* Draggable elements styles */
+.canvas-element {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Styles for dragging state */
+body.dragging-element {
+  cursor: grabbing !important;
+}
+
+body.dragging-inventory-item,
+body.inventory-dragging,
+body.sequence-dragging {
+  cursor: none !important;
+}
+
+/* Target styles */
+.drop-target {
+  border: 2px dashed #8B5CF6 !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.5) !important;
+}
+
+/* Game mode image specifics */
+.game-mode-image {
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Prevent image dragging */
+.canvas-element img {
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* Rotation handle */
+.rotation-handle {
+  cursor: grab;
+}
+
+.rotation-handle:active {
+  cursor: grabbing;
+}
+
+/* Preview elements */
+.inventory-item-preview,
+#sequence-item-preview,
+#draggable-preview {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0.9;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
