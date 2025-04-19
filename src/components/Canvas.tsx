@@ -26,7 +26,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   const { handleDrop, handleDragOver, handleDragLeave } = useCanvasDrop();
   useCanvasKeyboardShortcuts();
   
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
+  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0, scale: 1 });
   const canvasContainer = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -36,7 +36,10 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         const containerWidth = containerRect.width;
         const containerHeight = containerRect.height;
         
-        const targetRatio = 16 / 9;
+        const baseWidth = 1920;
+        const baseHeight = 1080;
+        const targetRatio = baseWidth / baseHeight;
+        
         let width = containerWidth;
         let height = width / targetRatio;
         
@@ -45,13 +48,22 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           width = height * targetRatio;
         }
         
-        // In game mode, don't apply any padding
         if (!isGameMode) {
-          width -= 48;
-          height -= 48;
+          const padding = 48;
+          width -= padding;
+          height -= padding;
         }
         
-        setCanvasSize({ width, height });
+        const scaleFactor = Math.min(
+          width / baseWidth,
+          height / baseHeight
+        );
+        
+        setCanvasSize({
+          width: baseWidth,
+          height: baseHeight,
+          scale: scaleFactor
+        });
       }
     };
     
@@ -97,8 +109,10 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           isMobileView && !isGameMode && !isFullscreen && "scale-100"
         )}
         style={{
-          width: canvasSize.width,
-          height: canvasSize.height,
+          width: `${canvasSize.width}px`,
+          height: `${canvasSize.height}px`,
+          transform: `scale(${canvasSize.scale || 1})`,
+          transformOrigin: 'center',
           aspectRatio: "16/9",
         }}
         ref={setCanvasRef}
