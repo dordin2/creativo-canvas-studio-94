@@ -23,8 +23,9 @@ export const useDraggable = (elementId: string) => {
     if (!element) return;
 
     // Update the element position directly in the DOM for immediate response
-    const deltaX = clientX - element.offsetLeft;
-    const deltaY = clientY - element.offsetTop;
+    const rect = element.getBoundingClientRect();
+    const deltaX = clientX - rect.left;
+    const deltaY = clientY - rect.top;
 
     element.style.left = `${clientX - deltaX}px`;
     element.style.top = `${clientY - deltaY}px`;
@@ -54,20 +55,21 @@ export const useDraggable = (elementId: string) => {
 
     if ('touches' in e && isMobileDevice) {
       const touch = e.touches[0];
-      element.style.transform = '';
+      handleMove(touch.clientX, touch.clientY);
     } else if (!isMobileDevice) {
       const mouseEvent = e as React.MouseEvent;
-      element.style.transform = '';
+      handleMove(mouseEvent.clientX, mouseEvent.clientY);
     }
-  }, [elementId, isGameMode, isImageElement, currentElement, isMobileDevice]);
+  }, [elementId, isGameMode, isImageElement, currentElement, isMobileDevice, handleMove]);
 
   const handleEnd = useCallback(() => {
     if (!isDragging) return;
 
     const element = document.getElementById(`element-${elementId}`);
     if (element) {
-      const finalX = element.offsetLeft;
-      const finalY = element.offsetTop;
+      const rect = element.getBoundingClientRect();
+      const finalX = rect.left;
+      const finalY = rect.top;
 
       updateElementWithoutHistory(elementId, {
         position: { x: finalX, y: finalY }

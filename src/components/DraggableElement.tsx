@@ -55,9 +55,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [showControls, setShowControls] = useState(false);
   const [showMessageModal, setShowMessageModal] = useState(false);
   const [showPuzzleModal, setShowPuzzleModal] = useState(false);
@@ -135,33 +133,6 @@ const DraggableElement = ({ element, isActive, children }: {
     startDrag(e);
   };
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      handleMove(e.clientX, e.clientY);
-    };
-
-    const handleTouchMove = (e: TouchEvent) => {
-      if (e.touches.length === 1) {
-        const touch = e.touches[0];
-        handleMove(touch.clientX, touch.clientY);
-      }
-    };
-
-    if (isDragging) {
-      document.addEventListener('mousemove', handleMouseMove);
-      document.addEventListener('touchmove', handleTouchMove);
-      document.addEventListener('mouseup', handleEnd);
-      document.addEventListener('touchend', handleEnd);
-    }
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('mouseup', handleEnd);
-      document.removeEventListener('touchend', handleEnd);
-    };
-  }, [isDragging, handleMove, handleEnd]);
-
   const handleTextDoubleClick = (e: React.MouseEvent) => {
     if (isGameMode) {
       return;
@@ -182,13 +153,28 @@ const DraggableElement = ({ element, isActive, children }: {
         }
       }, 10);
     } else if (isSequencePuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
+      startDrag(e);
     } else if (hasInteraction && !isEditing && !isDragging) {
       e.stopPropagation();
       handleInteraction();
     }
   };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMove);
+      document.addEventListener('touchmove', handleMove);
+      document.addEventListener('mouseup', handleEnd);
+      document.addEventListener('touchend', handleEnd);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging, handleMove, handleEnd]);
 
   const handleDetachFromBackground = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -329,7 +315,7 @@ const DraggableElement = ({ element, isActive, children }: {
 
   useEffect(() => {
     const handleMouseUp = () => {
-      setIsDragging(false);
+      // setIsDragging(false); // No longer needed
     };
 
     if (isDragging) {
