@@ -111,28 +111,23 @@ export const useDraggable = (elementId: string) => {
         return;
       }
 
-      // Calculate the delta from initial mouse position
       const deltaX = clientX - dragStateRef.current.initialMouseX;
       const deltaY = clientY - dragStateRef.current.initialMouseY;
 
-      // Apply transform for immediate visual feedback
       const element = document.getElementById(`element-${elementId}`);
       if (element) {
-        // Keep the transform on the element during drag
-        element.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`;
-        element.style.transition = 'none';
+        element.style.cssText = `
+          transform: translate3d(${deltaX}px, ${deltaY}px, 0);
+          transition: none;
+          will-change: transform;
+          cursor: grabbing;
+        `;
       }
 
-      // Update position in state without changing transform
       updateElementWithoutHistory(elementId, {
         position: {
           x: dragStateRef.current.initialTransformX + deltaX,
           y: dragStateRef.current.initialTransformY + deltaY
-        },
-        style: {
-          ...currentElement.style,
-          willChange: 'transform',
-          cursor: 'grabbing'
         }
       });
     };
@@ -164,23 +159,14 @@ export const useDraggable = (elementId: string) => {
         rafRef.current = null;
       }
 
-      const finalDeltaX = dragStateRef.current ? 
-        dragStateRef.current.initialTransformX - currentElement?.position.x || 0 : 
-        0;
-      const finalDeltaY = dragStateRef.current ? 
-        dragStateRef.current.initialTransformY - currentElement?.position.y || 0 : 
-        0;
-
-      // Apply the final position without transform
-      if (currentElement) {
-        updateElementWithoutHistory(elementId, {
-          style: {
-            ...currentElement.style,
-            transform: 'none',
-            cursor: 'grab',
-            willChange: 'auto'
-          }
-        });
+      const element = document.getElementById(`element-${elementId}`);
+      if (element && currentElement) {
+        element.style.cssText = `
+          transform: none;
+          transition: transform 0.1s ease;
+          will-change: auto;
+          cursor: grab;
+        `;
       }
 
       dragStateRef.current = null;
@@ -235,13 +221,11 @@ export const useDraggable = (elementId: string) => {
         initialTransformY: currentElement.position.y
       };
 
-      updateElementWithoutHistory(elementId, {
-        style: {
-          ...currentElement.style,
-          cursor: 'grabbing',
-          willChange: 'transform'
-        }
-      });
+      element.style.cssText = `
+        will-change: transform;
+        cursor: grabbing;
+        transition: none;
+      `;
     }
   };
 
