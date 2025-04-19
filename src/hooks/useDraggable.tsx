@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useMobile } from '@/context/MobileContext';
 
 interface Position {
   x: number;
@@ -13,7 +13,7 @@ export const useDraggable = (elementId: string) => {
   const [isDragging, setIsDragging] = useState(false);
   const dragStartPosition = useRef<Position | null>(null);
   const elementStartPosition = useRef<Position | null>(null);
-  const isMobile = useIsMobile();
+  const { isMobileDevice, isMobileView } = useMobile();
   const currentElement = elements.find(el => el.id === elementId);
   
   const isPuzzleElement = currentElement?.type === 'puzzle';
@@ -39,9 +39,13 @@ export const useDraggable = (elementId: string) => {
       });
     };
 
-    const handleMouseMove = (e: MouseEvent) => handleMove(e.clientX, e.clientY);
+    const handleMouseMove = (e: MouseEvent) => {
+      if (isMobileDevice) return; // Skip mouse events on mobile devices
+      handleMove(e.clientX, e.clientY);
+    };
     
     const handleTouchMove = (e: TouchEvent) => {
+      if (!isMobileDevice) return; // Skip touch events on non-mobile devices
       e.preventDefault();
       if (e.touches.length === 1) {
         const touch = e.touches[0];
@@ -56,20 +60,28 @@ export const useDraggable = (elementId: string) => {
       commitToHistory();
     };
 
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleEnd);
-    document.addEventListener('touchmove', handleTouchMove, { passive: false });
-    document.addEventListener('touchend', handleEnd);
-    document.addEventListener('touchcancel', handleEnd);
+    // Add event listeners based on device type
+    if (isMobileDevice) {
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleEnd);
+      document.addEventListener('touchcancel', handleEnd);
+    } else {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleEnd);
+    }
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleEnd);
-      document.removeEventListener('touchmove', handleTouchMove);
-      document.removeEventListener('touchend', handleEnd);
-      document.removeEventListener('touchcancel', handleEnd);
+      // Remove event listeners based on device type
+      if (isMobileDevice) {
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleEnd);
+        document.removeEventListener('touchcancel', handleEnd);
+      } else {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleEnd);
+      }
     };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement, isMobileDevice]);
 
   const startDrag = (e: React.MouseEvent | React.TouchEvent, elementPosition?: Position) => {
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
@@ -80,16 +92,17 @@ export const useDraggable = (elementId: string) => {
     e.stopPropagation();
     setIsDragging(true);
 
-    if ('touches' in e) {
+    if ('touches' in e && isMobileDevice) {
       const touch = e.touches[0];
       dragStartPosition.current = { 
         x: touch.clientX, 
         y: touch.clientY 
       };
-    } else {
+    } else if (!isMobileDevice) {
+      const mouseEvent = e as React.MouseEvent;
       dragStartPosition.current = { 
-        x: e.clientX, 
-        y: e.clientY 
+        x: mouseEvent.clientX, 
+        y: mouseEvent.clientY 
       };
     }
 
