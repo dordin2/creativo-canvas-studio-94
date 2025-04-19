@@ -17,7 +17,7 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
     width: '12px',
     height: '12px',
     background: 'white',
-    border: '2px solid #4F46E5',
+    border: '2px solid #8B5CF6',
     borderRadius: '50%',
     zIndex: 1001,
     pointerEvents: 'auto',
@@ -26,24 +26,19 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
 
   const createResizeHandle = (position: string, cursorType: string, direction: string) => {
     let positionStyle: CSSProperties = {};
-    let transform = 'translate(-50%, -50%)';
     
     switch (position) {
       case 'nw':
-        positionStyle = { top: '0px', left: '0px' };
-        transform = 'translate(-50%, -50%)';
+        positionStyle = { top: '-6px', left: '-6px' };
         break;
       case 'ne':
-        positionStyle = { top: '0px', right: '0px', left: 'auto' };
-        transform = 'translate(50%, -50%)';
+        positionStyle = { top: '-6px', right: '-6px' };
         break;
       case 'se':
-        positionStyle = { bottom: '0px', right: '0px', top: 'auto', left: 'auto' };
-        transform = 'translate(50%, 50%)';
+        positionStyle = { bottom: '-6px', right: '-6px' };
         break;
       case 'sw':
-        positionStyle = { bottom: '0px', left: '0px', top: 'auto' };
-        transform = 'translate(-50%, 50%)';
+        positionStyle = { bottom: '-6px', left: '-6px' };
         break;
     }
     
@@ -53,7 +48,6 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
         style={{ 
           ...handleStyle, 
           ...positionStyle, 
-          transform,
           cursor: cursorType,
           touchAction: 'none',
         }}

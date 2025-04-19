@@ -65,6 +65,25 @@ const DraggableElementWrapper = ({
     return null;
   }
   
+  // Add frame directly to the element container
+  const renderElementFrame = () => {
+    if (isGameMode || !isActive || element.isHidden) return null;
+    
+    return (
+      <div 
+        className="element-frame" 
+        style={{
+          transform: `rotate(0deg)`,
+        }}
+      >
+        <ResizeHandles
+          show={isActive}
+          onResizeStart={handleResizeStart}
+        />
+      </div>
+    );
+  };
+  
   return (
     <>
       <DraggableElement
@@ -76,6 +95,7 @@ const DraggableElementWrapper = ({
         canvasScale={canvasScale}
       >
         {children}
+        {renderElementFrame()}
       </DraggableElement>
       
       {!isGameMode && (
@@ -92,5 +112,7 @@ const DraggableElementWrapper = ({
     </>
   );
 };
+
+import ResizeHandles from "./element/ResizeHandles";
 
 export default DraggableElementWrapper;
