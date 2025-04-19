@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { getImageFromCache } from "@/utils/imageUploader";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
+import { useCustomDraggable } from "@/hooks/useCustomDraggable";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -50,6 +51,10 @@ const DraggableElement = ({ element, isActive, children }: {
     elements
   } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
+  
+  const isCustomBox = element.type === 'customBox';
+  const { startDrag: defaultStartDrag, isDragging: defaultIsDragging } = useDraggable(element.id);
+  const customDraggable = useCustomDraggable(element.id);
   
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -83,68 +88,76 @@ const DraggableElement = ({ element, isActive, children }: {
   const isInInventory = element.inInventory || inventoryItems.some(item => item.elementId === element.id);
   
   const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
-    e.stopPropagation();
-    
-    // Prevent dragging if element is a background
-    if (element.layer === 0) return;
-    
-    if (isImageElement && isGameMode) {
-      e.preventDefault();
+    if (isCustomBox) {
+      customDraggable.onMouseDown(e);
+    } else {
+      if (e.button !== 0) return;
+      e.stopPropagation();
       
-      if (hasInteraction) {
-        handleInteraction();
+      // Prevent dragging if element is a background
+      if (element.layer === 0) return;
+      
+      if (isImageElement && isGameMode) {
+        e.preventDefault();
+        
+        if (hasInteraction) {
+          handleInteraction();
+        }
+        return;
       }
-      return;
-    }
-    
-    if (isGameMode) {
-      if (hasInteraction) {
-        handleInteraction();
+      
+      if (isGameMode) {
+        if (hasInteraction) {
+          handleInteraction();
+        }
+        return;
       }
-      return;
+      
+      setActiveElement(element);
+      
+      if (isEditing || isInteractiveMode) return;
+      
+      if (!isSequencePuzzleElement) {
+        startDrag(e, element.position);
+        setIsDragging(true);
+      }
+      
+      setStartPos({ x: e.clientX, y: e.clientY });
     }
-    
-    setActiveElement(element);
-    
-    if (isEditing || isInteractiveMode) return;
-    
-    if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
-    }
-    
-    setStartPos({ x: e.clientX, y: e.clientY });
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
-    if (element.layer === 0) return;
-    
-    if (isImageElement && isGameMode) {
-      if (hasInteraction) {
-        handleInteraction();
+    if (isCustomBox) {
+      customDraggable.onTouchStart(e);
+    } else {
+      if (element.layer === 0) return;
+      
+      if (isImageElement && isGameMode) {
+        if (hasInteraction) {
+          handleInteraction();
+        }
+        return;
       }
-      return;
-    }
-    
-    if (isGameMode) {
-      if (hasInteraction) {
-        handleInteraction();
+      
+      if (isGameMode) {
+        if (hasInteraction) {
+          handleInteraction();
+        }
+        return;
       }
-      return;
+      
+      setActiveElement(element);
+      
+      if (isEditing || isInteractiveMode) return;
+      
+      if (!isSequencePuzzleElement) {
+        startDrag(e, element.position);
+        setIsDragging(true);
+      }
+      
+      const touch = e.touches[0];
+      setStartPos({ x: touch.clientX, y: touch.clientY });
     }
-    
-    setActiveElement(element);
-    
-    if (isEditing || isInteractiveMode) return;
-    
-    if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
-    }
-    
-    const touch = e.touches[0];
-    setStartPos({ x: touch.clientX, y: touch.clientY });
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
@@ -469,6 +482,8 @@ const DraggableElement = ({ element, isActive, children }: {
       />
     );
   }
+
+  const isDraggingNow = isCustomBox ? customDraggable.isDragging : defaultIsDragging;
 
   if ((isInInventory || element.isHidden) && !isActive) {
     return null;
