@@ -15,8 +15,7 @@ export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const dragOffset = useRef<DragOffset | null>(null);
-  const elementInitialPos = useRef<Position | null>(null);
-  const isDragStarted = useRef<boolean>(false);
+  const initialTransform = useRef<string>('');
   const lastUpdateTimestamp = useRef<number>(0);
 
   const currentElement = elements.find(el => el.id === elementId);
@@ -104,8 +103,8 @@ export const useDraggable = (elementId: string) => {
 
   useEffect(() => {
     const handleMove = (clientX: number, clientY: number) => {
-      if (!isDragging || !dragOffset.current || !elementInitialPos.current) return;
-
+      if (!isDragging || !dragOffset.current || !currentElement) return;
+      
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
         return;
       }
@@ -116,19 +115,14 @@ export const useDraggable = (elementId: string) => {
       }
       lastUpdateTimestamp.current = now;
 
-      if (!isDragStarted.current) {
-        isDragStarted.current = true;
-      }
-
       const x = clientX - dragOffset.current.x;
       const y = clientY - dragOffset.current.y;
 
       updateElementWithoutHistory(elementId, {
         position: { x, y },
         style: {
-          ...currentElement?.style,
-          transform: 'translate3d(0,0,0) scale(1.02)',
-          transition: 'transform 0.2s ease',
+          ...currentElement.style,
+          transform: `translate3d(${x}px, ${y}px, 0)`,
           willChange: 'transform',
           cursor: 'grabbing',
           boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
@@ -149,26 +143,22 @@ export const useDraggable = (elementId: string) => {
     };
 
     const handleEnd = () => {
-      if (isDragStarted.current) {
-        if (currentElement) {
-          updateElementWithoutHistory(elementId, {
-            style: {
-              ...currentElement.style,
-              transform: 'translate3d(0,0,0) scale(1)',
-              transition: 'all 0.2s ease',
-              willChange: 'auto',
-              cursor: 'grab',
-              boxShadow: 'none',
-            }
-          });
-        }
-        commitToHistory();
-      }
-
+      if (!currentElement) return;
+      
       setIsDragging(false);
-      isDragStarted.current = false;
       dragOffset.current = null;
-      elementInitialPos.current = null;
+
+      updateElementWithoutHistory(elementId, {
+        style: {
+          ...currentElement.style,
+          transform: initialTransform.current,
+          willChange: 'auto',
+          cursor: 'grab',
+          boxShadow: 'none',
+        }
+      });
+      
+      commitToHistory();
     };
 
     if (isDragging) {
@@ -195,12 +185,12 @@ export const useDraggable = (elementId: string) => {
     }
     
     e.stopPropagation();
-    setIsDragging(true);
-
+    
     const element = document.getElementById(`element-${elementId}`);
-    if (!element) return;
+    if (!element || !currentElement) return;
 
     const rect = element.getBoundingClientRect();
+    initialTransform.current = currentElement.style?.transform || '';
     
     if ('touches' in e) {
       const touch = e.touches[0];
@@ -215,8 +205,7 @@ export const useDraggable = (elementId: string) => {
       };
     }
 
-    elementInitialPos.current = initialPosition;
-    isDragStarted.current = false;
+    setIsDragging(true);
 
     if (currentElement) {
       updateElementWithoutHistory(elementId, {
