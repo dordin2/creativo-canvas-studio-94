@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -7,16 +6,15 @@ interface Position {
   y: number;
 }
 
-interface DragOffset {
-  x: number;
-  y: number;
-}
-
 export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
-  const dragOffset = useRef<DragOffset | null>(null);
-  const initialTransform = useRef<string>('');
+  const startPosition = useRef<Position | null>(null);
+  const elementInitialPos = useRef<Position | null>(null);
+  const isDragStarted = useRef<boolean>(false);
+  const animationFrame = useRef<number | null>(null);
+  const touchPosition = useRef<Position>({ x: 0, y: 0 });
+  const mousePosition = useRef<Position>({ x: 0, y: 0 });
   const lastUpdateTimestamp = useRef<number>(0);
 
   const currentElement = elements.find(el => el.id === elementId);
@@ -104,8 +102,8 @@ export const useDraggable = (elementId: string) => {
 
   useEffect(() => {
     const handleMove = (clientX: number, clientY: number) => {
-      if (!isDragging || !dragOffset.current || !currentElement) return;
-      
+      if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
+
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
         return;
       }
@@ -116,30 +114,40 @@ export const useDraggable = (elementId: string) => {
       }
       lastUpdateTimestamp.current = now;
 
-      // Calculate new position based on mouse position and initial offset
-      const x = clientX - dragOffset.current.x;
-      const y = clientY - dragOffset.current.y;
+      mousePosition.current = { x: clientX, y: clientY };
+      touchPosition.current = { x: clientX, y: clientY };
 
-      // Update element with new transform, maintaining any existing rotation
-      const currentTransform = String(currentElement.style?.transform || '');
-      const rotationMatch = currentTransform.match(/rotate\(([^)]+)\)/);
-      const rotation = rotationMatch ? ` rotate(${rotationMatch[1]})` : '';
+      if (!isDragStarted.current) {
+        isDragStarted.current = true;
+      }
 
-      updateElementWithoutHistory(elementId, {
-        position: { x, y },
-        style: {
-          ...currentElement.style,
-          transform: `translate3d(${x}px, ${y}px, 0)${rotation}`,
-          willChange: 'transform',
-          cursor: 'grabbing',
-          boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
-          zIndex: 9999,
-        }
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+      }
+
+      animationFrame.current = requestAnimationFrame(() => {
+        const deltaX = mousePosition.current.x - startPosition.current!.x;
+        const deltaY = mousePosition.current.y - startPosition.current!.y;
+
+        updateElementWithoutHistory(elementId, {
+          position: {
+            x: elementInitialPos.current!.x + deltaX,
+            y: elementInitialPos.current!.y + deltaY
+          },
+          style: {
+            ...currentElement?.style,
+            transform: 'scale(1.02)',
+            transition: 'transform 0.2s ease',
+            willChange: 'transform',
+            cursor: 'grabbing',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
+            zIndex: 9999,
+          }
+        });
       });
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      e.preventDefault();
       handleMove(e.clientX, e.clientY);
     };
 
@@ -150,22 +158,31 @@ export const useDraggable = (elementId: string) => {
     };
 
     const handleEnd = () => {
-      if (!currentElement) return;
-      
-      setIsDragging(false);
-      dragOffset.current = null;
-
-      updateElementWithoutHistory(elementId, {
-        style: {
-          ...currentElement.style,
-          transform: initialTransform.current,
-          willChange: 'auto',
-          cursor: 'grab',
-          boxShadow: 'none',
+      if (isDragStarted.current) {
+        if (currentElement) {
+          updateElementWithoutHistory(elementId, {
+            style: {
+              ...currentElement.style,
+              transform: 'scale(1)',
+              transition: 'all 0.2s ease',
+              willChange: 'auto',
+              cursor: 'grab',
+              boxShadow: 'none',
+            }
+          });
         }
-      });
-      
-      commitToHistory();
+        commitToHistory();
+      }
+
+      setIsDragging(false);
+      isDragStarted.current = false;
+      startPosition.current = null;
+      elementInitialPos.current = null;
+
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+        animationFrame.current = null;
+      }
     };
 
     if (isDragging) {
@@ -182,6 +199,10 @@ export const useDraggable = (elementId: string) => {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleEnd);
       window.removeEventListener('touchcancel', handleEnd);
+
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+      }
     };
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
 
@@ -192,30 +213,20 @@ export const useDraggable = (elementId: string) => {
     }
     
     e.stopPropagation();
-    
-    const element = document.getElementById(`element-${elementId}`);
-    if (!element || !currentElement) return;
-
-    const rect = element.getBoundingClientRect();
-    initialTransform.current = String(currentElement.style?.transform || 'translate3d(0px, 0px, 0)');
-    
-    // Calculate offset based on click/touch position relative to element
-    if ('touches' in e) {
-      const touch = e.touches[0];
-      dragOffset.current = {
-        x: touch.clientX - rect.left,
-        y: touch.clientY - rect.top
-      };
-    } else {
-      dragOffset.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
-
     setIsDragging(true);
 
-    // Update element style when starting drag
+    if ('touches' in e) {
+      const touch = e.touches[0];
+      startPosition.current = { x: touch.clientX, y: touch.clientY };
+      touchPosition.current = { x: touch.clientX, y: touch.clientY };
+    } else {
+      startPosition.current = { x: e.clientX, y: e.clientY };
+      mousePosition.current = { x: e.clientX, y: e.clientY };
+    }
+
+    elementInitialPos.current = initialPosition;
+    isDragStarted.current = false;
+
     if (currentElement) {
       updateElementWithoutHistory(elementId, {
         style: {
