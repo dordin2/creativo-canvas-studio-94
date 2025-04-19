@@ -125,73 +125,63 @@ const ElementControls = ({
   
   const posX = Math.round(element.position.x);
   const posY = Math.round(element.position.y);
-  
-  const frameStyle = {
-    position: 'absolute' as const,
-    left: posX,
-    top: posY,
-    width: element.size?.width || 0,
-    height: element.size?.height || 0,
-    transform: `rotate(${rotation}deg) scale(${canvasScale})`,
-    transformOrigin: '0 0',
-    pointerEvents: 'none' as const,
-    zIndex: 1000 + element.layer,
-    border: isActive ? '1px solid #6366F1' : 'none',
-    opacity: 1,
-    boxSizing: 'border-box' as const,
-    borderRadius: '2px',
-  };
 
   return (
-    <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
-      <div
-        className="element-frame"
-        style={frameStyle}
-      />
+    <div 
+      className="element-controls" 
+      style={{
+        position: 'absolute',
+        left: posX,
+        top: posY,
+        width: element.size?.width || 0,
+        height: element.size?.height || 0,
+        transform: `rotate(${rotation}deg) scale(${canvasScale})`,
+        transformOrigin: '0 0',
+        pointerEvents: 'none',
+        zIndex: 1000 + element.layer,
+      }}
+    >
+      {!isInteractiveMode && (
+        <>
+          <ResizeHandles
+            show={showResizeHandles}
+            onResizeStart={onResizeStart}
+          />
+          
+          <RotationHandle
+            show={showRotationHandle}
+            onRotateStart={onRotateStart}
+          />
+        </>
+      )}
       
-      <div style={{...frameStyle, pointerEvents: 'none'}}>
-        {!isInteractiveMode && (
-          <>
-            <ResizeHandles
-              show={showResizeHandles}
-              onResizeStart={onResizeStart}
-            />
-            
-            <RotationHandle
-              show={showRotationHandle}
-              onRotateStart={onRotateStart}
-            />
-          </>
-        )}
-        
-        {isActive && !isInteractiveMode && (
-          <div 
-            className="element-controls"
-            style={{
-              position: 'absolute',
-              top: '-40px',
-              right: '0',
-              display: 'flex',
-              gap: '8px',
-              pointerEvents: 'auto',
-            }}
-          >
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button 
-                    variant="outline" 
-                    size="icon" 
-                    className="h-8 w-8 bg-white"
-                    onClick={handleDuplicate}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Duplicate</p>
-                </TooltipContent>
-              </Tooltip>
+      {isActive && !isInteractiveMode && (
+        <div 
+          className="element-controls"
+          style={{
+            position: 'absolute',
+            top: '-40px',
+            right: '0',
+            display: 'flex',
+            gap: '8px',
+            pointerEvents: 'auto',
+          }}
+        >
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-8 w-8 bg-white"
+                  onClick={handleDuplicate}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Duplicate</p>
+              </TooltipContent>
             </TooltipProvider>
             
             {canBeBackground && (
@@ -275,7 +265,6 @@ const ElementControls = ({
             </TooltipProvider>
           </div>
         )}
-      </div>
     </div>
   );
 };

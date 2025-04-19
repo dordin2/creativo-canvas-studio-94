@@ -109,3 +109,13 @@ body.sequence-dragging {
   overflow: visible !important;
   pointer-events: auto;
 }
+
+.element-frame {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}

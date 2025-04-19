@@ -4,7 +4,6 @@ import { useAdvancedDraggable } from "@/hooks/useAdvancedDraggable";
 import { getElementStyle, getRotation } from "@/utils/elementStyles";
 import ElementControls from "./element/ElementControls";
 import DraggableElement from "./DraggableElement";
-import { toast } from "sonner";
 
 interface DraggableElementWrapperProps {
   element: DesignElement;
@@ -25,6 +24,7 @@ const DraggableElementWrapper = ({
   } = useDesignState();
   
   const [showControls, setShowControls] = useState(false);
+  const frameRef = useRef<HTMLDivElement>(null);
   
   const { 
     elementRef,
@@ -34,10 +34,16 @@ const DraggableElementWrapper = ({
     startDrag
   } = useAdvancedDraggable(element.id, {
     onDragStart: (el, x, y) => {
-      // Additional drag start logic if needed
+      if (frameRef.current && elementRef.current) {
+        const rect = elementRef.current.getBoundingClientRect();
+        frameRef.current.style.transform = `translate(${rect.left}px, ${rect.top}px) rotate(${getRotation(element)}deg)`;
+      }
     },
     onDragMove: (el, x, y) => {
-      // Additional drag move logic if needed
+      if (frameRef.current && elementRef.current) {
+        const rect = elementRef.current.getBoundingClientRect();
+        frameRef.current.style.transform = `translate(${rect.left}px, ${rect.top}px) rotate(${getRotation(element)}deg)`;
+      }
     },
   });
   
@@ -73,11 +79,24 @@ const DraggableElementWrapper = ({
   }
   
   const rotation = getRotation(element);
-  const frameTransform = `rotate(${rotation}deg)`;
   const elementStyle = getElementStyle(element, isDragging);
   
   return (
     <>
+      <div 
+        ref={frameRef} 
+        className="element-frame absolute"
+        style={{
+          width: element.size?.width || 0,
+          height: element.size?.height || 0,
+          transform: `translate(${element.position.x}px, ${element.position.y}px) rotate(${rotation}deg)`,
+          transformOrigin: '0 0',
+          border: isActive ? '1px solid #6366F1' : 'none',
+          pointerEvents: 'none',
+          zIndex: 1000 + element.layer,
+        }}
+      />
+      
       <DraggableElement
         element={element}
         isActive={isActive}
@@ -93,7 +112,7 @@ const DraggableElementWrapper = ({
         <ElementControls
           isActive={isActive}
           element={element}
-          frameTransform={frameTransform}
+          frameTransform={`rotate(${rotation}deg)`}
           onResizeStart={handleResizeStart}
           onRotateStart={handleRotateStart}
           showControls={showControls && isActive && !element.isHidden}
