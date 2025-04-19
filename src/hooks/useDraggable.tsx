@@ -9,47 +9,38 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
+  const { updateElementWithoutHistory, commitToHistory, elements, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
-  const dragStartPosition = useRef<Position | null>(null);
-  const elementStartPosition = useRef<Position | null>(null);
   const { isMobileDevice } = useMobile();
   const currentElement = elements.find(el => el.id === elementId);
   
-  const isPuzzleElement = currentElement?.type === 'puzzle';
-  const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
-  const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
   const isImageElement = currentElement?.type === 'image';
   
-  const updateElementPosition = useCallback((clientX: number, clientY: number) => {
-    if (!dragStartPosition.current || !elementStartPosition.current) return;
-    if (isGameMode && isImageElement && !currentElement?.interaction?.type) return;
-
-    // Calculate the offset from where the drag started
-    const deltaX = clientX - dragStartPosition.current.x;
-    const deltaY = clientY - dragStartPosition.current.y;
-
-    // Update the element position directly in the DOM first for immediate response
+  const handleMove = useCallback((clientX: number, clientY: number) => {
+    if (!isDragging) return;
+    
     const element = document.getElementById(`element-${elementId}`);
-    if (element) {
-      element.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
-    }
+    if (!element) return;
 
-    // Then update the React state with a debounced effect
+    // Update the element position directly in the DOM for immediate response
+    const deltaX = clientX - element.offsetLeft;
+    const deltaY = clientY - element.offsetTop;
+
+    element.style.left = `${clientX - deltaX}px`;
+    element.style.top = `${clientY - deltaY}px`;
+
+    // Update React state less frequently using requestAnimationFrame
     requestAnimationFrame(() => {
-      const newLeft = elementStartPosition.current!.x + deltaX;
-      const newTop = elementStartPosition.current!.y + deltaY;
-
       updateElementWithoutHistory(elementId, {
         position: {
-          x: newLeft,
-          y: newTop
+          x: clientX - deltaX,
+          y: clientY - deltaY
         }
       });
     });
-  }, [elementId, updateElementWithoutHistory, isGameMode, isImageElement, currentElement?.interaction?.type]);
+  }, [elementId, isDragging, updateElementWithoutHistory]);
 
-  const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent, elementPosition?: Position) => {
+  const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
@@ -58,52 +49,25 @@ export const useDraggable = (elementId: string) => {
     e.stopPropagation();
     setIsDragging(true);
 
+    const element = document.getElementById(`element-${elementId}`);
+    if (!element) return;
+
     if ('touches' in e && isMobileDevice) {
       const touch = e.touches[0];
-      dragStartPosition.current = { 
-        x: touch.clientX, 
-        y: touch.clientY 
-      };
+      element.style.transform = '';
     } else if (!isMobileDevice) {
       const mouseEvent = e as React.MouseEvent;
-      dragStartPosition.current = { 
-        x: mouseEvent.clientX, 
-        y: mouseEvent.clientY 
-      };
-    }
-
-    if (currentElement) {
-      elementStartPosition.current = elementPosition || { 
-        x: currentElement.position.x, 
-        y: currentElement.position.y 
-      };
-
-      // Reset any existing transform
-      const element = document.getElementById(`element-${elementId}`);
-      if (element) {
-        element.style.transform = '';
-      }
+      element.style.transform = '';
     }
   }, [elementId, isGameMode, isImageElement, currentElement, isMobileDevice]);
-
-  // Effect for handling mouse/touch move and end events
-  const handleMove = useCallback((clientX: number, clientY: number) => {
-    if (isDragging) {
-      updateElementPosition(clientX, clientY);
-    }
-  }, [isDragging, updateElementPosition]);
 
   const handleEnd = useCallback(() => {
     if (!isDragging) return;
 
     const element = document.getElementById(`element-${elementId}`);
     if (element) {
-      element.style.transform = '';
-    }
-
-    if (dragStartPosition.current && elementStartPosition.current) {
-      const finalX = elementStartPosition.current.x + (element?.offsetLeft || 0);
-      const finalY = elementStartPosition.current.y + (element?.offsetTop || 0);
+      const finalX = element.offsetLeft;
+      const finalY = element.offsetTop;
 
       updateElementWithoutHistory(elementId, {
         position: { x: finalX, y: finalY }
@@ -112,9 +76,7 @@ export const useDraggable = (elementId: string) => {
     }
 
     setIsDragging(false);
-    dragStartPosition.current = null;
-    elementStartPosition.current = null;
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory]);
 
-  return { startDrag, isDragging, currentElement };
+  return { startDrag, isDragging, currentElement, handleMove, handleEnd };
 };

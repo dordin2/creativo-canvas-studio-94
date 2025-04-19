@@ -51,7 +51,7 @@ const DraggableElement = ({ element, isActive, children }: {
   } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
   
-  const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
+  const { startDrag, isDragging, handleMove, handleEnd } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -86,7 +86,6 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    // Prevent dragging if element is a background
     if (element.layer === 0) return;
     
     if (isImageElement && isGameMode) {
@@ -109,12 +108,7 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing || isInteractiveMode) return;
     
-    if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
-    }
-    
-    setStartPos({ x: e.clientX, y: e.clientY });
+    startDrag(e);
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -138,14 +132,35 @@ const DraggableElement = ({ element, isActive, children }: {
     
     if (isEditing || isInteractiveMode) return;
     
-    if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
-      setIsDragging(true);
-    }
-    
-    const touch = e.touches[0];
-    setStartPos({ x: touch.clientX, y: touch.clientY });
+    startDrag(e);
   };
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      handleMove(e.clientX, e.clientY);
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length === 1) {
+        const touch = e.touches[0];
+        handleMove(touch.clientX, touch.clientY);
+      }
+    };
+
+    if (isDragging) {
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('touchmove', handleTouchMove);
+      document.addEventListener('mouseup', handleEnd);
+      document.addEventListener('touchend', handleEnd);
+    }
+
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('touchmove', handleTouchMove);
+      document.removeEventListener('mouseup', handleEnd);
+      document.removeEventListener('touchend', handleEnd);
+    };
+  }, [isDragging, handleMove, handleEnd]);
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
     if (isGameMode) {
