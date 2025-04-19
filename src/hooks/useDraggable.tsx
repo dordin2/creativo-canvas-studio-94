@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { useMobile } from '@/context/MobileContext';
@@ -15,7 +14,8 @@ export const useDraggable = (elementId: string) => {
   const elementStartPosition = useRef<Position | null>(null);
   const { isMobileDevice, isMobileView } = useMobile();
   const currentElement = elements.find(el => el.id === elementId);
-  
+  const elementRef = useRef<HTMLDivElement | null>(null);
+
   const isPuzzleElement = currentElement?.type === 'puzzle';
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
   const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
@@ -28,8 +28,19 @@ export const useDraggable = (elementId: string) => {
       if (!dragStartPosition.current || !elementStartPosition.current) return;
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) return;
 
-      const newLeft = elementStartPosition.current.x + (clientX - dragStartPosition.current.x);
-      const newTop = elementStartPosition.current.y + (clientY - dragStartPosition.current.y);
+      const canvas = document.querySelector('.canvas-container');
+      if (!canvas) return;
+      
+      const canvasRect = canvas.getBoundingClientRect();
+      const elementRect = elementRef.current?.getBoundingClientRect();
+      
+      if (!elementRect) return;
+
+      let newLeft = elementStartPosition.current.x + (clientX - dragStartPosition.current.x);
+      let newTop = elementStartPosition.current.y + (clientY - dragStartPosition.current.y);
+
+      newLeft = Math.max(0, Math.min(newLeft, canvasRect.width - elementRect.width));
+      newTop = Math.max(0, Math.min(newTop, canvasRect.height - elementRect.height));
 
       updateElementWithoutHistory(elementId, {
         position: {
@@ -40,12 +51,12 @@ export const useDraggable = (elementId: string) => {
     };
 
     const handleMouseMove = (e: MouseEvent) => {
-      if (isMobileDevice) return; // Skip mouse events on mobile devices
+      if (isMobileDevice) return;
       handleMove(e.clientX, e.clientY);
     };
     
     const handleTouchMove = (e: TouchEvent) => {
-      if (!isMobileDevice) return; // Skip touch events on non-mobile devices
+      if (!isMobileDevice) return;
       e.preventDefault();
       if (e.touches.length === 1) {
         const touch = e.touches[0];
@@ -60,7 +71,6 @@ export const useDraggable = (elementId: string) => {
       commitToHistory();
     };
 
-    // Add event listeners based on device type
     if (isMobileDevice) {
       document.addEventListener('touchmove', handleTouchMove, { passive: false });
       document.addEventListener('touchend', handleEnd);
@@ -71,7 +81,6 @@ export const useDraggable = (elementId: string) => {
     }
 
     return () => {
-      // Remove event listeners based on device type
       if (isMobileDevice) {
         document.removeEventListener('touchmove', handleTouchMove);
         document.removeEventListener('touchend', handleEnd);

@@ -1,4 +1,3 @@
-
 import { useRef, useEffect, useState, Fragment } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElementWrapper from "./DraggableElementWrapper";
@@ -87,6 +86,15 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   
   const sortedElements = [...elements].sort((a, b) => a.layer - b.layer);
   
+  const containerStyle = {
+    position: 'relative' as const,
+    overflow: 'hidden', // Prevent elements from going outside canvas
+    width: canvasSize.width,
+    height: canvasSize.height,
+    aspectRatio: "16/9",
+    zIndex: 1, // Lower than sidebars but higher than background
+  };
+
   return (
     <Fragment>
       <div 
@@ -104,11 +112,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             isGameMode ? "bg-transparent" : "bg-white shadow-lg",
             isMobileView && !isGameMode && !isFullscreen && "scale-100"
           )}
-          style={{
-            width: canvasSize.width,
-            height: canvasSize.height,
-            aspectRatio: "16/9",
-          }}
+          style={containerStyle}
           ref={setCanvasRef}
           onClick={handleCanvasClick}
           onDrop={handleDrop}
