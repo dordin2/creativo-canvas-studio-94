@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useDesignState, DesignElement } from '@/context/DesignContext';
 import { X } from 'lucide-react';
@@ -15,9 +14,9 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
   
   // Check if element has transparent background
   const hasTransparentBackground = element.style?.backgroundColor === 'transparent' || 
-                                  element.style?.backgroundColor === 'rgba(0,0,0,0)' || 
-                                  element.style?.backgroundColor === '#0000' || 
-                                  !element.style?.backgroundColor;
+                                element.style?.backgroundColor === 'rgba(0,0,0,0)' || 
+                                element.style?.backgroundColor === '#0000' || 
+                                !element.style?.backgroundColor;
   
   // Handle custom drag and drop
   useEffect(() => {
@@ -149,7 +148,7 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
     }
   }, [isDragging, element, setDraggedInventoryItem, hasTransparentBackground]);
   
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handlePointerDown = (e: React.PointerEvent) => {
     if (!isGameMode) return;
     
     // Prevent default to avoid browser's native drag behavior
@@ -242,7 +241,8 @@ const InventoryItem = ({ element }: InventoryItemProps) => {
   return (
     <div 
       className={`relative ${hasTransparentBackground ? '' : 'bg-gray-50 border'} rounded-md p-2 h-32 flex items-center justify-center ${hasTransparentBackground ? '' : 'shadow-sm'} group ${isGameMode ? 'cursor-grab active:cursor-grabbing' : ''} ${isDragging ? 'opacity-30' : ''}`}
-      onMouseDown={handleMouseDown}
+      onPointerDown={handlePointerDown}
+      style={{ touchAction: 'none', userSelect: 'none' }}
     >
       <div className="absolute -top-2 -right-2 opacity-0 group-hover:opacity-100 transition-opacity">
         <button 
