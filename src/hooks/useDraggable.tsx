@@ -9,8 +9,6 @@ interface Position {
 }
 
 interface DragState {
-  startX: number;
-  startY: number;
   offsetX: number;
   offsetY: number;
 }
@@ -42,11 +40,11 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
 
-    // Calculate new position based on the initial drag state
+    // Calculate new position by subtracting the initial offset
     const newX = clientX - dragState.offsetX;
     const newY = clientY - dragState.offsetY;
 
-    // Update the element position directly in the DOM for immediate response
+    // Update DOM position immediately for smooth dragging
     element.style.left = `${newX}px`;
     element.style.top = `${newY}px`;
 
@@ -72,8 +70,6 @@ export const useDraggable = (elementId: string) => {
     const element = document.getElementById(`element-${elementId}`);
     if (!element) return;
     
-    const rect = element.getBoundingClientRect();
-    
     let clientX: number;
     let clientY: number;
     
@@ -86,10 +82,10 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
     
-    // Calculate and store the initial offset from the mouse/touch position to the element's top-left corner
+    const rect = element.getBoundingClientRect();
+    
+    // Save the offset from the mouse/touch position to the element's top-left corner
     setDragState({
-      startX: rect.left,
-      startY: rect.top,
       offsetX: clientX - rect.left,
       offsetY: clientY - rect.top
     });
