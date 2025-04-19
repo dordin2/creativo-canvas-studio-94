@@ -1,29 +1,121 @@
-
+/* Draggable elements styles */
 .canvas-element {
   touch-action: none;
   user-select: none;
   -webkit-user-select: none;
   -webkit-touch-callout: none;
-  position: absolute;
 }
 
+/* Styles for dragging state */
+body.dragging-element {
+  cursor: grabbing !important;
+}
+
+body.dragging-inventory-item,
+body.inventory-dragging,
+body.sequence-dragging {
+  cursor: none !important;
+}
+
+/* Target styles */
+.drop-target {
+  border: 2px dashed #8B5CF6 !important;
+  box-shadow: 0 0 15px rgba(139, 92, 246, 0.5) !important;
+}
+
+/* Game mode image specifics */
+.game-mode-image {
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Prevent image dragging */
 .canvas-element img {
   pointer-events: none;
   -webkit-user-drag: none;
 }
 
-.resize-handle {
-  position: absolute;
-  width: 12px;
-  height: 12px;
-  background: white;
-  border: 2px solid #4F46E5;
-  border-radius: 50%;
-  z-index: 1001;
-  pointer-events: auto;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+/* Rotation handle */
+.rotation-handle {
+  cursor: grab;
 }
 
-body.dragging-element {
-  cursor: grabbing !important;
+.rotation-handle:active {
+  cursor: grabbing;
+}
+
+/* Preview elements */
+.inventory-item-preview,
+#sequence-item-preview,
+#draggable-preview {
+  position: fixed;
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0.9;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Canvas specific styles */
+.canvas-container {
+  position: relative;
+  pointer-events: auto;
+  z-index: 1;
+  transition: all 0.3s ease;
+  transform-origin: center;
+  border-radius: 0.5rem;
+  background: white;
+  overflow: hidden !important;
+  max-width: 100%;
+  max-height: 100%;
+  touch-action: none;
+  -webkit-overflow-scrolling: touch;
+  clip-path: inset(0);
+}
+
+.canvas-container > div:first-child {
+  pointer-events: auto;
+}
+
+/* Ensure canvas stays within viewport */
+.canvas-workspace {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+}
+
+/* Game mode specific styles */
+.game-mode-workspace {
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden !important;
+  background-color: transparent !important;
+}
+
+.canvas-element {
+  position: absolute;
+  overflow: visible !important;
+  pointer-events: auto;
+}
+
+.element-frame {
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+  will-change: transform;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
 }
