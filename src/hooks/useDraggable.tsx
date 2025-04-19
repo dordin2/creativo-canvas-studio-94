@@ -37,7 +37,7 @@ export const useDraggable = (elementId: string) => {
       clientY = e.clientY;
     }
 
-    // Calculate new position by subtracting the initial offset
+    // Calculate new position directly from the initial position and offset
     const newLeft = clientX - dragState.startX + dragState.initialLeft;
     const newTop = clientY - dragState.startY + dragState.initialTop;
 
