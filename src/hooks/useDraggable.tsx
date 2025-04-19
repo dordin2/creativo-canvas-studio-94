@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
 interface Position {
@@ -206,7 +206,7 @@ export const useDraggable = (elementId: string) => {
     };
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
 
-  const startDrag = useCallback((e: React.MouseEvent | React.TouchEvent, initialPosition: Position) => {
+  const startDrag = (e: React.MouseEvent | React.TouchEvent, initialPosition: Position) => {
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
@@ -233,11 +233,10 @@ export const useDraggable = (elementId: string) => {
           ...currentElement.style,
           willChange: 'transform',
           cursor: 'grabbing',
-          transition: 'transform 0.1s ease',
         }
       });
     }
-  }, [elementId, currentElement, isGameMode, isImageElement, updateElementWithoutHistory]);
+  };
 
   return { startDrag, isDragging, currentElement };
 };

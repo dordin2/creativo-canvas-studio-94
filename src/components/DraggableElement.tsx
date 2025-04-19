@@ -27,15 +27,13 @@ import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { getImageFromCache } from "@/utils/imageUploader";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
-import { useResizeHandles } from '@/hooks/useResizeHandles';
-import ResizeHandle from './element/ResizeHandle';
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const {
+  const { 
     updateElement, 
     updateElementWithoutHistory,
     setActiveElement, 
@@ -68,7 +66,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const [combinationMessage, setCombinationMessage] = useState('');
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  const { isResizing, handleResizeStart, handleResize, handleResizeEnd } = useResizeHandles(element);
+  const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
 
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
@@ -617,15 +615,8 @@ const DraggableElement = ({ element, isActive, children }: {
     <div
       id={`element-${element.id}`}
       ref={ref}
-      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''} 
-          ${isActive ? 'ring-2 ring-primary' : ''}`}
-      style={{
-        ...elementStyle,
-        cursor: isDragging ? 'grabbing' : 'grab',
-        transition: isDragging ? 'none' : 'all 0.1s ease',
-        transform: `${elementStyle.transform || ''} ${isDragging ? 'scale(1.02)' : ''}`,
-        boxShadow: isDragging ? '0 8px 16px rgba(0,0,0,0.12)' : elementStyle.boxShadow,
-      }}
+      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+      style={combinedStyle}
       onMouseDown={handleMouseDown}
       onTouchStart={handleTouchStart}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
@@ -700,58 +691,53 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }
 
-  useEffect(() => {
-    if (isResizing) {
-      window.addEventListener('mousemove', handleResize);
-      window.addEventListener('mouseup', handleResizeEnd);
-      window.addEventListener('touchmove', handleResize);
-      window.addEventListener('touchend', handleResizeEnd);
-    }
-
-    return () => {
-      window.removeEventListener('mousemove', handleResize);
-      window.removeEventListener('mouseup', handleResizeEnd);
-      window.removeEventListener('touchmove', handleResize);
-      window.removeEventListener('touchend', handleResizeEnd);
-    };
-  }, [isResizing, handleResize, handleResizeEnd]);
-
   return (
     <>
-      <div
-        id={`element-${element.id}`}
-        ref={elementRef}
-        className={`canvas-element ${isDropTarget ? 'drop-target' : ''} 
-          ${isGameMode && isImageElement ? 'game-mode-image' : ''} 
-          ${isActive ? 'ring-2 ring-primary' : ''}`}
-        style={{
-          ...elementStyle,
-          cursor: isDragging ? 'grabbing' : 'grab',
-          transition: isDragging ? 'none' : 'all 0.1s ease',
-          transform: `${elementStyle.transform || ''} ${isDragging ? 'scale(1.02)' : ''}`,
-          boxShadow: isDragging ? '0 8px 16px rgba(0,0,0,0.12)' : elementStyle.boxShadow,
-        }}
-        onMouseDown={handleMouseDown}
-        onTouchStart={handleTouchStart}
-        onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
-        onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
-        draggable={isGameMode && isImageElement ? false : undefined}
-      >
-        {children}
-        
-        {isActive && !isGameMode && !isInteractiveMode && (
-          <>
-            <ResizeHandle position="nw" onResizeStart={handleResizeStart} />
-            <ResizeHandle position="n" onResizeStart={handleResizeStart} />
-            <ResizeHandle position="ne" onResizeStart={handleResizeStart} />
-            <ResizeHandle position="e" onResizeStart={handleResizeStart} />
-            <ResizeHandle position="se" onResizeStart={handleResizeStart} />
-            <ResizeHandle position="s" onResizeStart={handleResizeStart} />
-            <ResizeHandle position="sw" onResizeStart={handleResizeStart} />
-            <ResizeHandle position="w" onResizeStart={handleResizeStart} />
-          </>
-        )}
-      </div>
+      {isInteractiveMode ? (
+        <InteractionContextMenu element={element}>
+          {createElementContent(elementRef)}
+        </InteractionContextMenu>
+      ) : (
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            {createElementContent(elementRef)}
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
+              <Copy className="h-4 w-4" />
+              <span>Duplicate</span>
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
+              {element.isHidden ? (
+                <>
+                  <Eye className="h-4 w-4" />
+                  <span>Show</span>
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-4 w-4" />
+                  <span>Hide</span>
+                </>
+              )}
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
+              <Trash2 className="h-4 w-4" />
+              <span>Delete</span>
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      )}
+
+      {!isGameMode && (
+        <ElementControls
+          isActive={isActive}
+          element={element}
+          frameTransform={frameTransform}
+          onResizeStart={handleResizeStart}
+          onRotateStart={handleRotateStart}
+          showControls={showControls && isActive && !element.isHidden}
+        />
+      )}
       
       {interactionType === 'sound' && element.interaction?.soundUrl && (
         <audio 
