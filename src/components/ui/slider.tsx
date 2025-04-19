@@ -7,6 +7,24 @@ const Slider = React.forwardRef<
   React.ElementRef<typeof SliderPrimitive.Root>,
   React.ComponentPropsWithoutRef<typeof SliderPrimitive.Root>
 >(({ className, orientation, ...props }, ref) => {
+  // Re-implement improved touch handling to prevent scrolling issues
+  const handleTouchMove = React.useCallback((e: TouchEvent) => {
+    // Only prevent default if this is a slider interaction
+    if ((e.target as HTMLElement)?.closest('[role="slider"]')) {
+      e.preventDefault();
+    }
+  }, []);
+
+  React.useEffect(() => {
+    return () => {
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, [handleTouchMove]);
+
+  const handleTouchStart = React.useCallback(() => {
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+  }, [handleTouchMove]);
+
   return (
     <SliderPrimitive.Root
       ref={ref}
@@ -15,6 +33,7 @@ const Slider = React.forwardRef<
         orientation === "vertical" && "h-full flex-col justify-center py-4",
         className
       )}
+      onTouchStart={handleTouchStart}
       {...props}
     >
       <SliderPrimitive.Track 
