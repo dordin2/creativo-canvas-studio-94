@@ -197,5 +197,5 @@ export const useDraggable = (elementId: string) => {
     };
   }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
 
-  return { startDrag, isDragging, currentElement };
+  return { startDrag, isDragging, currentElement, elementRef };
 };
