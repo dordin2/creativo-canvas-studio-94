@@ -8,7 +8,7 @@ interface MobileInteractionControlsProps {
 
 const MobileInteractionControls = ({ element }: MobileInteractionControlsProps) => {
   return (
-    <div className="relative px-4 py-2">
+    <div className="sticky top-0 bg-background z-50 px-4 py-2 border-b">
       <InteractionIcons element={element} />
     </div>
   );
