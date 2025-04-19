@@ -9,7 +9,12 @@ interface Position {
 export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
+  const startPosition = useRef<Position | null>(null);
+  const elementInitialPos = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
+  const animationFrame = useRef<number | null>(null);
+  const touchPosition = useRef<Position>({ x: 0, y: 0 });
+  const mousePosition = useRef<Position>({ x: 0, y: 0 });
   const lastUpdateTimestamp = useRef<number>(0);
 
   const currentElement = elements.find(el => el.id === elementId);
@@ -97,40 +102,48 @@ export const useDraggable = (elementId: string) => {
 
   useEffect(() => {
     const handleMove = (clientX: number, clientY: number) => {
-      if (!isDragging || !currentElement) return;
+      if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
 
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
         return;
       }
 
       const now = Date.now();
-      if (now - lastUpdateTimestamp.current < 16) { // Limit to ~60fps
+      if (now - lastUpdateTimestamp.current < 16) {
         return;
       }
       lastUpdateTimestamp.current = now;
 
-      // Get element dimensions for center calculation
-      const element = document.getElementById(`element-${elementId}`);
-      if (!element) return;
+      mousePosition.current = { x: clientX, y: clientY };
+      touchPosition.current = { x: clientX, y: clientY };
 
-      const rect = element.getBoundingClientRect();
-      const centerOffsetX = rect.width / 2;
-      const centerOffsetY = rect.height / 2;
+      if (!isDragStarted.current) {
+        isDragStarted.current = true;
+      }
 
-      // Calculate new position with cursor at center
-      const newX = clientX - centerOffsetX;
-      const newY = clientY - centerOffsetY;
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+      }
 
-      // Use transform3d for better performance and direct positioning
-      updateElementWithoutHistory(elementId, {
-        position: { x: newX, y: newY },
-        style: {
-          ...currentElement.style,
-          transform: `translate3d(0, 0, 0)`,
-          transition: 'none',
-          cursor: 'grabbing',
-          willChange: 'transform'
-        }
+      animationFrame.current = requestAnimationFrame(() => {
+        const deltaX = mousePosition.current.x - startPosition.current!.x;
+        const deltaY = mousePosition.current.y - startPosition.current!.y;
+
+        updateElementWithoutHistory(elementId, {
+          position: {
+            x: elementInitialPos.current!.x + deltaX,
+            y: elementInitialPos.current!.y + deltaY
+          },
+          style: {
+            ...currentElement?.style,
+            transform: 'scale(1.02)',
+            transition: 'transform 0.2s ease',
+            willChange: 'transform',
+            cursor: 'grabbing',
+            boxShadow: '0 8px 16px rgba(0,0,0,0.12)',
+            zIndex: 9999,
+          }
+        });
       });
     };
 
@@ -146,24 +159,29 @@ export const useDraggable = (elementId: string) => {
 
     const handleEnd = () => {
       if (isDragStarted.current) {
+        if (currentElement) {
+          updateElementWithoutHistory(elementId, {
+            style: {
+              ...currentElement.style,
+              transform: 'scale(1)',
+              transition: 'all 0.2s ease',
+              willChange: 'auto',
+              cursor: 'grab',
+              boxShadow: 'none',
+            }
+          });
+        }
         commitToHistory();
       }
 
       setIsDragging(false);
       isDragStarted.current = false;
+      startPosition.current = null;
+      elementInitialPos.current = null;
 
-      // Reset element styles
-      const element = document.getElementById(`element-${elementId}`);
-      if (element && currentElement) {
-        updateElementWithoutHistory(elementId, {
-          style: {
-            ...currentElement.style,
-            transform: 'none',
-            transition: 'none',
-            cursor: 'grab',
-            willChange: 'auto'
-          }
-        });
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+        animationFrame.current = null;
       }
     };
 
@@ -181,10 +199,14 @@ export const useDraggable = (elementId: string) => {
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleEnd);
       window.removeEventListener('touchcancel', handleEnd);
+
+      if (animationFrame.current !== null) {
+        cancelAnimationFrame(animationFrame.current);
+      }
     };
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
 
-  const startDrag = (e: React.MouseEvent | React.TouchEvent) => {
+  const startDrag = (e: React.MouseEvent | React.TouchEvent, initialPosition: Position) => {
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
@@ -192,16 +214,25 @@ export const useDraggable = (elementId: string) => {
     
     e.stopPropagation();
     setIsDragging(true);
-    isDragStarted.current = true;
 
-    // Set initial grab cursor and prepare for movement
+    if ('touches' in e) {
+      const touch = e.touches[0];
+      startPosition.current = { x: touch.clientX, y: touch.clientY };
+      touchPosition.current = { x: touch.clientX, y: touch.clientY };
+    } else {
+      startPosition.current = { x: e.clientX, y: e.clientY };
+      mousePosition.current = { x: e.clientX, y: e.clientY };
+    }
+
+    elementInitialPos.current = initialPosition;
+    isDragStarted.current = false;
+
     if (currentElement) {
       updateElementWithoutHistory(elementId, {
         style: {
           ...currentElement.style,
-          cursor: 'grabbing',
           willChange: 'transform',
-          transition: 'none'
+          cursor: 'grabbing',
         }
       });
     }
