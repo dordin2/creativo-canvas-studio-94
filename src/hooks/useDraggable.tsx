@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -18,6 +17,7 @@ export const useDraggable = (elementId: string) => {
   const isDragStarted = useRef<boolean>(false);
   const lastUpdateTimestamp = useRef<number>(0);
   const dragOffsetRef = useRef<DragOffset>({ x: 0, y: 0 });
+  const elementBoundsRef = useRef<DOMRect | null>(null);
 
   const currentElement = elements.find(el => el.id === elementId);
   
@@ -103,6 +103,16 @@ export const useDraggable = (elementId: string) => {
   }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
 
   useEffect(() => {
+    const isWithinBounds = (clientX: number, clientY: number, bounds: DOMRect): boolean => {
+      const tolerance = 10; // Allow a small area outside the bounds
+      return (
+        clientX >= bounds.left - tolerance &&
+        clientX <= bounds.right + tolerance &&
+        clientY >= bounds.top - tolerance &&
+        clientY <= bounds.bottom + tolerance
+      );
+    };
+
     const handleMove = (clientX: number, clientY: number) => {
       if (!isDragging || !currentElement) return;
 
@@ -111,16 +121,20 @@ export const useDraggable = (elementId: string) => {
       }
 
       const now = Date.now();
-      if (now - lastUpdateTimestamp.current < 16) { // Limit to ~60fps
+      if (now - lastUpdateTimestamp.current < 16) {
         return;
       }
       lastUpdateTimestamp.current = now;
 
-      // Calculate new position using the drag offset
+      // Check if cursor is within element bounds
+      if (elementBoundsRef.current && !isWithinBounds(clientX, clientY, elementBoundsRef.current)) {
+        handleEnd();
+        return;
+      }
+
       const newX = clientX - dragOffsetRef.current.x;
       const newY = clientY - dragOffsetRef.current.y;
 
-      // Use transform3d for better performance and direct positioning
       updateElementWithoutHistory(elementId, {
         position: { x: newX, y: newY },
         style: {
@@ -150,8 +164,8 @@ export const useDraggable = (elementId: string) => {
 
       setIsDragging(false);
       isDragStarted.current = false;
+      elementBoundsRef.current = null;
 
-      // Reset element styles
       if (currentElement) {
         updateElementWithoutHistory(elementId, {
           style: {
@@ -192,10 +206,11 @@ export const useDraggable = (elementId: string) => {
     setIsDragging(true);
     isDragStarted.current = true;
 
-    // Calculate and store the drag offset
     const element = document.getElementById(`element-${elementId}`);
     if (element && currentElement) {
       const rect = element.getBoundingClientRect();
+      elementBoundsRef.current = rect;
+      
       let clientX: number, clientY: number;
 
       if ('touches' in e) {
