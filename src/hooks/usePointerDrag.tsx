@@ -15,8 +15,6 @@ export const usePointerDrag = (
   const { updateElementWithoutHistory, commitToHistory, elements, isGameMode } = useDesignState();
   const dragIdRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
-  const offsetRef = useRef({ x: 0, y: 0 });
-  const elementInitialPosRef = useRef<Position | null>(null);
   
   const currentElement = elements.find(el => el.id === elementId);
   const isPuzzleElement = currentElement?.type === 'puzzle';
@@ -40,20 +38,10 @@ export const usePointerDrag = (
       dragIdRef.current = e.pointerId;
       isDraggingRef.current = true;
       
-      // Calculate offset from click point to element origin
-      const rect = target.getBoundingClientRect();
-      offsetRef.current = {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-      
-      elementInitialPosRef.current = currentElement.position;
-      
       if (onDragStart) {
         onDragStart(currentElement.position);
       }
 
-      // Add grabbing cursor
       target.style.cursor = 'grabbing';
     };
 
@@ -62,11 +50,12 @@ export const usePointerDrag = (
       
       e.preventDefault();
 
-      if (!elementInitialPosRef.current) return;
-
-      // Calculate new position based on pointer movement and initial offset
-      const x = Math.round(e.clientX - offsetRef.current.x);
-      const y = Math.round(e.clientY - offsetRef.current.y);
+      const target = e.currentTarget as HTMLElement;
+      const rect = target.getBoundingClientRect();
+      
+      // Calculate the center position by subtracting half the element's width and height
+      const x = Math.round(e.clientX - rect.width / 2);
+      const y = Math.round(e.clientY - rect.height / 2);
 
       updateElementWithoutHistory(elementId, {
         position: { x, y }
@@ -92,10 +81,8 @@ export const usePointerDrag = (
       }
     };
 
-    // Find the element and attach listeners
     const element = document.getElementById(`element-${elementId}`);
     if (element) {
-      // Prevent default touch behaviors
       element.style.touchAction = 'none';
       element.style.userSelect = 'none';
       element.style.cursor = 'grab';
