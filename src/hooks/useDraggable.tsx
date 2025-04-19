@@ -1,7 +1,13 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
 interface Position {
+  x: number;
+  y: number;
+}
+
+interface DragOffset {
   x: number;
   y: number;
 }
@@ -11,6 +17,7 @@ export const useDraggable = (elementId: string) => {
   const [isDragging, setIsDragging] = useState(false);
   const isDragStarted = useRef<boolean>(false);
   const lastUpdateTimestamp = useRef<number>(0);
+  const dragOffsetRef = useRef<DragOffset>({ x: 0, y: 0 });
 
   const currentElement = elements.find(el => el.id === elementId);
   
@@ -109,17 +116,9 @@ export const useDraggable = (elementId: string) => {
       }
       lastUpdateTimestamp.current = now;
 
-      // Get element dimensions for center calculation
-      const element = document.getElementById(`element-${elementId}`);
-      if (!element) return;
-
-      const rect = element.getBoundingClientRect();
-      const centerOffsetX = rect.width / 2;
-      const centerOffsetY = rect.height / 2;
-
-      // Calculate new position with cursor at center
-      const newX = clientX - centerOffsetX;
-      const newY = clientY - centerOffsetY;
+      // Calculate new position using the drag offset
+      const newX = clientX - dragOffsetRef.current.x;
+      const newY = clientY - dragOffsetRef.current.y;
 
       // Use transform3d for better performance and direct positioning
       updateElementWithoutHistory(elementId, {
@@ -153,8 +152,7 @@ export const useDraggable = (elementId: string) => {
       isDragStarted.current = false;
 
       // Reset element styles
-      const element = document.getElementById(`element-${elementId}`);
-      if (element && currentElement) {
+      if (currentElement) {
         updateElementWithoutHistory(elementId, {
           style: {
             ...currentElement.style,
@@ -194,8 +192,25 @@ export const useDraggable = (elementId: string) => {
     setIsDragging(true);
     isDragStarted.current = true;
 
-    // Set initial grab cursor and prepare for movement
-    if (currentElement) {
+    // Calculate and store the drag offset
+    const element = document.getElementById(`element-${elementId}`);
+    if (element && currentElement) {
+      const rect = element.getBoundingClientRect();
+      let clientX: number, clientY: number;
+
+      if ('touches' in e) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      }
+
+      dragOffsetRef.current = {
+        x: clientX - rect.left,
+        y: clientY - rect.top
+      };
+
       updateElementWithoutHistory(elementId, {
         style: {
           ...currentElement.style,
