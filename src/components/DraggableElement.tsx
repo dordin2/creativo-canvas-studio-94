@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
@@ -167,7 +168,7 @@ const DraggableElement = ({ element, isActive, children }: {
         }
       }, 10);
     } else if (isSequencePuzzleElement) {
-      startDrag(e, element.position);
+      startDrag(e);
       setIsDragging(true);
     } else if (hasInteraction && !isEditing && !isDragging) {
       e.stopPropagation();
