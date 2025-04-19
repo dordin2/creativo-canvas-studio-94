@@ -1,4 +1,3 @@
-
 /* Draggable elements styles */
 .canvas-element {
   touch-action: none;
@@ -58,4 +57,21 @@ body.sequence-dragging {
   border-radius: 4px;
   overflow: hidden;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Canvas specific styles */
+.canvas-container {
+  position: relative;
+  overflow: visible !important;
+  pointer-events: auto;
+  z-index: 1;
+  transition: all 0.3s ease;
+  transform-origin: center;
+  border-radius: 0.5rem;
+  background: white;
+}
+
+.canvas-container > div:first-child {
+  overflow: visible !important;
+  pointer-events: auto;
 }

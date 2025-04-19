@@ -64,7 +64,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     elements, 
     canvasRef, 
     setCanvasRef, 
-    addElement,
     activeElement,
     setActiveElement,
     isGameMode,
@@ -76,28 +75,33 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   
   const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
   const canvasContainer = useRef<HTMLDivElement>(null);
-  
-  // Add global styles when component mounts
-  useEffect(() => {
-    addGlobalStyles();
-  }, []);
-  
-  // Measure canvas size
+
+  // Calculate canvas dimensions to maintain 16:9 ratio
   useEffect(() => {
     const updateCanvasSize = () => {
       if (canvasContainer.current) {
-        const rect = canvasContainer.current.getBoundingClientRect();
-        setCanvasSize({
-          width: rect.width,
-          height: rect.height
-        });
+        const containerRect = canvasContainer.current.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const containerHeight = containerRect.height;
+        
+        // Calculate dimensions to fit 16:9 ratio
+        const targetRatio = 16 / 9;
+        let width = containerWidth - 48; // Add padding
+        let height = width / targetRatio;
+        
+        // If height is too tall, calculate based on container height
+        if (height > containerHeight - 48) {
+          height = containerHeight - 48;
+          width = height * targetRatio;
+        }
+        
+        setCanvasSize({ width, height });
       }
     };
     
     updateCanvasSize();
     
     const resizeObserver = new ResizeObserver(updateCanvasSize);
-    
     if (canvasContainer.current) {
       resizeObserver.observe(canvasContainer.current);
     }
@@ -111,32 +115,36 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       window.removeEventListener('resize', updateCanvasSize);
     };
   }, []);
-  
+
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
       setActiveElement(null);
     }
   };
   
-  // Sort elements by layer for rendering
   const sortedElements = [...elements].sort((a, b) => a.layer - b.layer);
   
   return (
     <div 
       ref={canvasContainer}
       className={cn(
-        "relative w-full h-full overflow-hidden bg-gray-100",
+        "relative w-full h-full bg-gray-100 flex items-center justify-center p-6",
         isFullscreen ? "fixed inset-0 z-50" : "h-[calc(100vh-9rem)]",
         isMobileView && "h-[calc(100vh-8rem)]"
       )}
     >
       <div
         className={cn(
-          "canvas-container absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 overflow-hidden",
-          isFullscreen ? "w-full h-full" : "w-[1600px] h-[900px]",
+          "canvas-container relative overflow-visible bg-white shadow-lg",
+          isFullscreen ? "w-full h-full" : "",
           isMobileView && !isFullscreen && "scale-[0.65]",
-          isGameMode ? "bg-transparent" : "bg-white shadow-lg"
+          isGameMode ? "bg-transparent" : "bg-white"
         )}
+        style={{
+          width: canvasSize.width,
+          height: canvasSize.height,
+          aspectRatio: "16/9"
+        }}
         ref={setCanvasRef}
         onClick={handleCanvasClick}
         onDrop={handleDrop}
