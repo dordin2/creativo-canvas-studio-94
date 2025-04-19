@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -116,15 +115,15 @@ export const useDraggable = (elementId: string) => {
       const deltaX = clientX - dragStateRef.current.initialMouseX;
       const deltaY = clientY - dragStateRef.current.initialMouseY;
 
-      // Apply transform directly for immediate visual feedback
+      // Apply transform for immediate visual feedback
       const element = document.getElementById(`element-${elementId}`);
       if (element) {
-        const transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`;
-        element.style.transform = transform;
+        // Keep the transform on the element during drag
+        element.style.transform = `translate3d(${deltaX}px, ${deltaY}px, 0)`;
         element.style.transition = 'none';
       }
 
-      // Update the actual position state on the next frame
+      // Update position in state without changing transform
       updateElementWithoutHistory(elementId, {
         position: {
           x: dragStateRef.current.initialTransformX + deltaX,
@@ -132,10 +131,8 @@ export const useDraggable = (elementId: string) => {
         },
         style: {
           ...currentElement.style,
-          transform: 'translate3d(0, 0, 0)',
-          transition: 'none',
-          cursor: 'grabbing',
-          willChange: 'transform'
+          willChange: 'transform',
+          cursor: 'grabbing'
         }
       });
     };
@@ -161,30 +158,32 @@ export const useDraggable = (elementId: string) => {
 
       setIsDragging(false);
       isDragStarted.current = false;
-      dragStateRef.current = null;
 
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current);
         rafRef.current = null;
       }
 
-      // Reset transforms after drag
-      const element = document.getElementById(`element-${elementId}`);
-      if (element) {
-        element.style.transform = 'none';
-      }
+      const finalDeltaX = dragStateRef.current ? 
+        dragStateRef.current.initialTransformX - currentElement?.position.x || 0 : 
+        0;
+      const finalDeltaY = dragStateRef.current ? 
+        dragStateRef.current.initialTransformY - currentElement?.position.y || 0 : 
+        0;
 
+      // Apply the final position without transform
       if (currentElement) {
         updateElementWithoutHistory(elementId, {
           style: {
             ...currentElement.style,
             transform: 'none',
-            transition: 'none',
             cursor: 'grab',
             willChange: 'auto'
           }
         });
       }
+
+      dragStateRef.current = null;
     };
 
     if (isDragging) {
@@ -229,7 +228,6 @@ export const useDraggable = (elementId: string) => {
         clientY = e.clientY;
       }
 
-      // Store initial positions for accurate delta calculations
       dragStateRef.current = {
         initialMouseX: clientX,
         initialMouseY: clientY,
@@ -241,8 +239,7 @@ export const useDraggable = (elementId: string) => {
         style: {
           ...currentElement.style,
           cursor: 'grabbing',
-          willChange: 'transform',
-          transition: 'none'
+          willChange: 'transform'
         }
       });
     }
