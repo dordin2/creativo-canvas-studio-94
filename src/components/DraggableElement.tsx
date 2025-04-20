@@ -83,10 +83,9 @@ const DraggableElement = ({ element, isActive, children }: {
   const isInInventory = element.inInventory || inventoryItems.some(item => item.elementId === element.id);
   
   const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-    if (e.button !== 0 && 'button' in e) return;
+    if ('button' in e && e.button !== 0) return;
     e.stopPropagation();
     
-    // Prevent dragging if element is a background
     if (element.layer === 0) return;
     
     if (isImageElement && isGameMode) {
