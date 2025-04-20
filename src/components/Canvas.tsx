@@ -39,6 +39,7 @@ const Canvas = ({
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
   const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState<number>(1);
+  const [isMouseDown, setIsMouseDown] = useState(false);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -369,39 +370,66 @@ const Canvas = ({
     }
   }, [isMobileView]);
 
-  return <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
-      <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
-        <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{
-        transform: `scale(${displayZoomLevel})`,
-        transformOrigin: 'center center',
-        transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        translate: '-50% -50%',
-        width: 'fit-content',
-        height: 'fit-content',
-        zIndex: 1
-      }}>
-          <div ref={containerRef} className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`} style={{
-          width: `${canvasDimensions.width}px`,
-          height: `${canvasDimensions.height}px`,
-          ...backgroundStyle,
-          overflow: 'hidden'
-        }} onClick={handleCanvasClick} onDragOver={!isGameMode ? handleDragOver : undefined} onDragLeave={!isGameMode ? handleDragLeave : undefined} onDrop={!isGameMode ? handleDrop : undefined}>
+  // determine if canvas drag/zoom mode is active (not in menu, not game mode)
+  const showGrabCursor = !isGameMode && !isMobileView;
+
+  return (
+    <div
+      ref={parentRef}
+      className={`flex-1 flex flex-col h-full relative ${showGrabCursor ? "canvas-grab-wrapper" : ""}`}
+      onMouseDown={() => setIsMouseDown(true)}
+      onMouseUp={() => setIsMouseDown(false)}
+      onMouseLeave={() => setIsMouseDown(false)}
+    >
+      <div
+        className={
+          `flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}
+          ${showGrabCursor && isMouseDown ? 'canvas-grabbing' : ''}`
+        }
+      >
+        <div
+          className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`}
+          style={{
+            transform: `scale(${displayZoomLevel})`,
+            transformOrigin: 'center center',
+            transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            translate: '-50% -50%',
+            width: 'fit-content',
+            height: 'fit-content',
+            zIndex: 1
+          }}
+        >
+          <div
+            ref={containerRef}
+            className={
+              `relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''} ${showGrabCursor ? (isMouseDown ? "cursor-grabbing" : "cursor-grab") : ""}`
+            }
+            style={{
+              width: `${canvasDimensions.width}px`,
+              height: `${canvasDimensions.height}px`,
+              ...backgroundStyle,
+              overflow: 'hidden'
+            }}
+            onClick={handleCanvasClick}
+            onDragOver={!isGameMode ? handleDragOver : undefined}
+            onDragLeave={!isGameMode ? handleDragLeave : undefined}
+            onDrop={!isGameMode ? handleDrop : undefined}
+          >
             {renderElements()}
           </div>
         </div>
-        
         {isGameMode && !isMobileView && <div className="fullscreen-controls">
             <button onClick={toggleFullscreen} title={isFullscreenActive ? "Exit Fullscreen" : "Enter Fullscreen"} className="fullscreen-button">
               {isFullscreenActive ? <Minimize size={18} /> : <Maximize size={18} />}
             </button>
           </div>}
-        
         {!isGameMode && !isMobileView}
       </div>
-    </div>;
+    </div>
+  );
 };
 
 export default Canvas;

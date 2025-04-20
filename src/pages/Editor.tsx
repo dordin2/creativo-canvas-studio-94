@@ -275,7 +275,7 @@ const Editor = () => {
       </div>;
   }
 
-  return <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
+  return <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''} ${!isGameMode ? "canvas-grab-global" : ""}`}>
       {!isGameMode && <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
         <div className="flex items-center">
           <Button variant="ghost" onClick={goBackToProjects} className="mr-2">
@@ -307,7 +307,7 @@ const Editor = () => {
         {!isGameMode && <div className="flex-shrink-0 w-64 z-20 relative">
             <Sidebar />
           </div>}
-        <div className="flex-1 overflow-hidden flex flex-col relative z-1">
+        <div className={`flex-1 overflow-hidden flex flex-col relative z-1 canvas-grab-bg`}>
           {!isGameMode ? (
             <>
               <div className="z-10">
