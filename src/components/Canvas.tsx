@@ -7,14 +7,16 @@ import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import { Button } from "./ui/button";
-import { useZoom } from "@/hooks/useZoom";
 
 interface CanvasProps {
   isFullscreen?: boolean;
   isMobileView?: boolean;
 }
 
-const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => {
+const Canvas = ({
+  isFullscreen = false,
+  isMobileView = false
+}: CanvasProps) => {
   const {
     canvasRef,
     setCanvasRef,
@@ -32,14 +34,11 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     height: FIXED_CANVAS_HEIGHT
   });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
   const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState<number>(1);
-
-  const workspaceRef = useRef<HTMLDivElement>(null);
-  const { zoomLevel, setZoomLevel, zoomOrigin, handleZoom } = useZoom();
-  const [isMouseDown, setIsMouseDown] = useState(false);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -345,79 +344,64 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     }
   }, [isMobileView, initialTouchDistance, initialZoom]);
 
+  const handleWheel = (e: WheelEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const delta = e.deltaY;
+      const zoomFactor = 0.1;
+      
+      setZoomLevel(prev => {
+        const newZoom = delta > 0 
+          ? Math.max(prev - zoomFactor, 0.2) // Zoom out
+          : Math.min(prev + zoomFactor, 2);  // Zoom in
+        return newZoom;
+      });
+    }
+  };
+
   useEffect(() => {
-    const workspace = workspaceRef.current;
-    if (workspace && !isMobileView && !isGameMode) {
-      const wheelHandler = (e: WheelEvent) => handleZoom(e, workspaceRef);
-      workspace.addEventListener('wheel', wheelHandler, { passive: false });
+    const container = containerRef.current;
+    if (container && !isMobileView) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
       return () => {
-        workspace.removeEventListener('wheel', wheelHandler);
+        container.removeEventListener('wheel', handleWheel);
       };
     }
-  }, [handleZoom, isMobileView, isGameMode]);
+  }, [isMobileView]);
 
-  const showGrabCursor = !isGameMode && !isMobileView;
-
-  return (
-    <div
-      ref={parentRef}
-      className={`flex-1 flex flex-col h-full relative ${showGrabCursor ? "canvas-grab-wrapper" : ""}`}
-    >
-      <div
-        ref={workspaceRef}
-        className={
-          `flex-1 flex items-center justify-center relative ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}
-          ${showGrabCursor && isMouseDown ? 'canvas-grabbing' : ''}`
-        }
-        style={{
-          transform: `scale(${zoomLevel})`,
-          transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
-          transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
-        }}
-        onMouseDown={() => setIsMouseDown(true)}
-        onMouseUp={() => setIsMouseDown(false)}
-        onMouseLeave={() => setIsMouseDown(false)}
-      >
-        <div
-          className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`}
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            translate: '-50% -50%',
-            width: 'fit-content',
-            height: 'fit-content',
-            zIndex: 1
-          }}
-        >
-          <div
-            ref={containerRef}
-            className={
-              `relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''} ${showGrabCursor ? (isMouseDown ? "cursor-grabbing" : "cursor-grab") : ""}`
-            }
-            style={{
-              width: `${canvasDimensions.width}px`,
-              height: `${canvasDimensions.height}px`,
-              ...backgroundStyle,
-              overflow: 'hidden'
-            }}
-            onClick={handleCanvasClick}
-            onDragOver={!isGameMode ? handleDragOver : undefined}
-            onDragLeave={!isGameMode ? handleDragLeave : undefined}
-            onDrop={!isGameMode ? handleDrop : undefined}
-          >
+  return <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
+      <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
+        <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{
+        transform: `scale(${displayZoomLevel})`,
+        transformOrigin: 'center center',
+        transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        translate: '-50% -50%',
+        width: 'fit-content',
+        height: 'fit-content',
+        zIndex: 1
+      }}>
+          <div ref={containerRef} className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`} style={{
+          width: `${canvasDimensions.width}px`,
+          height: `${canvasDimensions.height}px`,
+          ...backgroundStyle,
+          overflow: 'hidden'
+        }} onClick={handleCanvasClick} onDragOver={!isGameMode ? handleDragOver : undefined} onDragLeave={!isGameMode ? handleDragLeave : undefined} onDrop={!isGameMode ? handleDrop : undefined}>
             {renderElements()}
           </div>
         </div>
+        
         {isGameMode && !isMobileView && <div className="fullscreen-controls">
             <button onClick={toggleFullscreen} title={isFullscreenActive ? "Exit Fullscreen" : "Enter Fullscreen"} className="fullscreen-button">
               {isFullscreenActive ? <Minimize size={18} /> : <Maximize size={18} />}
             </button>
           </div>}
+        
         {!isGameMode && !isMobileView}
       </div>
-    </div>
-  );
+    </div>;
 };
 
 export default Canvas;

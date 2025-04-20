@@ -441,48 +441,7 @@
   }
 }
 
-/** גרירת הקאנבס — רקע מסביב וכל האזור **/ 
-.canvas-grab-wrapper,
-.canvas-grab-bg {
-  cursor: grab;
-}
-.canvas-grab-global {
-  /* לא משפיע ��ל פאנלים וסרגלים */
-}
-.canvas-grab-wrapper:active,
-.canvas-grab-bg:active,
-.canvas-grab-wrapper.canvas-grabbing,
-.canvas-grab-bg.canvas-grabbing {
-  cursor: grabbing;
-}
-
-/* להחריג תפריטים/סרגלים/פאנלים */
-.sidebar-panel,
-.properties-panel,
-header,
-.bg-white.border-b.border-gray-200.py-2.px-4.flex.items-center.justify-between,
-.z-30.relative {
-  cursor: default !important;
-}
-
-/* אלמנטים בתוך הקאנבס כבר מקבלים cursor-grab/grabbing (עבור DraggableElement וכד') */
-
-/* אם יש צורך ב-overwrite, כדאי נוסף: */
-.canvas-container.cursor-grab {
-  cursor: grab !important;
-}
-.canvas-container.cursor-grabbing {
-  cursor: grabbing !important;
-}
-
-/* הוספנו גם התאמות מגע עבור מובייל בהמשך */
-@media (max-width: 768px) {
-  .canvas-grab-wrapper,
-  .canvas-grab-bg {
-    cursor: default !important;
-  }
-}
-
+/* Update the header styles to ensure it stays on top */
 header {
   position: relative;
   z-index: 20 !important; /* Higher z-index for header */

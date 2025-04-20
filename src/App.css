@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -128,10 +129,6 @@
   /* Adjust canvas workspace for mobile */
   .canvas-workspace {
     touch-action: none;
-    overflow: hidden;
-    will-change: transform;
-    transform-style: preserve-3d;
-    backface-visibility: hidden;
   }
   
   /* Ensure popover menus are visible on mobile */
