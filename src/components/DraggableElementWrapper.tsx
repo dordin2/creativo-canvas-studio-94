@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useAdvancedDraggable } from "@/hooks/useAdvancedDraggable";
@@ -65,7 +64,6 @@ const DraggableElementWrapper = ({
     return null;
   }
   
-  // Add frame directly to the element container
   const renderElementFrame = () => {
     if (isGameMode || !isActive || element.isHidden) return null;
     
@@ -73,7 +71,8 @@ const DraggableElementWrapper = ({
       <div 
         className="element-frame" 
         style={{
-          transform: `rotate(0deg)`,
+          transform: `scale(${1 / canvasScale})`,
+          transformOrigin: 'top left'
         }}
       >
         <ResizeHandles

@@ -1,4 +1,3 @@
-
 import { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useDesignState } from "@/context/DesignContext";
 
@@ -22,6 +21,7 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
     zIndex: 1001,
     pointerEvents: 'auto',
     boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+    transform: 'translate(-50%, -50%)',
   };
 
   const createResizeHandle = (position: string, cursorType: string, direction: string) => {
@@ -29,16 +29,16 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
     
     switch (position) {
       case 'nw':
-        positionStyle = { top: '-6px', left: '-6px' };
+        positionStyle = { top: '0', left: '0' };
         break;
       case 'ne':
-        positionStyle = { top: '-6px', right: '-6px' };
+        positionStyle = { top: '0', right: '0' };
         break;
       case 'se':
-        positionStyle = { bottom: '-6px', right: '-6px' };
+        positionStyle = { bottom: '0', right: '0' };
         break;
       case 'sw':
-        positionStyle = { bottom: '-6px', left: '-6px' };
+        positionStyle = { bottom: '0', left: '0' };
         break;
     }
     

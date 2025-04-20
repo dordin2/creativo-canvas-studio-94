@@ -46,18 +46,27 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           width = height * targetRatio;
         }
         
-        // In game mode, don't apply any padding
-        if (!isGameMode) {
+        if (isGameMode || isFullscreen) {
+          const baseWidth = 1600;
+          const baseHeight = 900;
+          const scaleX = width / baseWidth;
+          const scaleY = height / baseHeight;
+          const scale = Math.min(scaleX, scaleY);
+          
+          width = baseWidth * scale;
+          height = baseHeight * scale;
+          
+          setCanvasScale(scale);
+        } else {
           width -= 48;
           height -= 48;
+          
+          const baseWidth = 1600;
+          const scale = width / baseWidth;
+          setCanvasScale(scale);
         }
         
-        // Calculate the scale factor
-        const baseWidth = 1920; // Base design width
-        const scale = width / baseWidth;
-        
         setCanvasSize({ width, height });
-        setCanvasScale(scale);
       }
     };
     
@@ -76,7 +85,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       }
       window.removeEventListener('resize', updateCanvasSize);
     };
-  }, [isGameMode]);
+  }, [isGameMode, isFullscreen]);
 
   const handleCanvasClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.target === e.currentTarget) {
