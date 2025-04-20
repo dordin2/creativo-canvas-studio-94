@@ -29,12 +29,17 @@ export const useDraggable = (elementId: string) => {
   const handleDragMove = (e: MouseEvent | TouchEvent) => {
     if (!isDragging || !startPosition.current || !elementInitialPos.current || !dragStartOffset.current) return;
     
+    // Prevent scrolling during drag on mobile
+    if (e.type === 'touchmove') {
+      e.preventDefault();
+    }
+    
     // Don't drag images in game mode unless they are interactive
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       return;
     }
 
-    // Get the event coordinates
+    // Get the event coordinates using our utility function
     const coords = getEventCoordinates(e);
 
     // Get the canvas container and its properties
@@ -117,7 +122,7 @@ export const useDraggable = (elementId: string) => {
 
   useEffect(() => {
     if (isDragging) {
-      // Add both mouse and touch event listeners
+      // Add both mouse and touch event listeners with passive: false for touch events
       window.addEventListener('mousemove', handleDragMove);
       window.addEventListener('touchmove', handleDragMove, { passive: false });
       window.addEventListener('mouseup', handleDragEnd);
@@ -188,4 +193,3 @@ export const useDraggable = (elementId: string) => {
 
   return { startDrag, isDragging, currentElement };
 };
-

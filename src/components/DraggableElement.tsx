@@ -114,7 +114,11 @@ const DraggableElement = ({ element, isActive, children }: {
       setIsDragging(true);
     }
     
-    setStartPos({ x: e.clientX, y: e.clientY });
+    const coords = 'touches' in e 
+      ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
+      : { x: e.clientX, y: e.clientY };
+    
+    setStartPos(coords);
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
@@ -669,7 +673,30 @@ const DraggableElement = ({ element, isActive, children }: {
       ) : (
         <ContextMenu>
           <ContextMenuTrigger asChild>
-            {createElementContent(elementRef)}
+            <div
+              id={`element-${element.id}`}
+              ref={elementRef}
+              className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+              style={combinedStyle}
+              onMouseDown={handleInteractionStart}
+              onTouchStart={handleInteractionStart}
+              onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
+              onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+              draggable={isGameMode && isImageElement ? false : undefined}
+            >
+              {childContent}
+              {showInteractionIndicator && (
+                <div className={indicatorStyles} title={
+                  interactionType === 'canvasNavigation' 
+                    ? "Click to navigate to another canvas" 
+                    : interactionType === 'addToInventory'
+                      ? "Click to add to inventory"
+                      : interactionType === 'combinable'
+                        ? "Can be combined with inventory items"
+                        : ""
+                }></div>
+              )}
+            </div>
           </ContextMenuTrigger>
           <ContextMenuContent>
             <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
