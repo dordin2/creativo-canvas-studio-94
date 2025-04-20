@@ -348,10 +348,10 @@ const Canvas = ({
     if (e.ctrlKey) {
       e.preventDefault();
       
-      const container = containerRef.current;
-      if (!container) return;
+      const canvasContainer = parentRef.current?.querySelector('.canvas-container');
+      if (!canvasContainer) return;
       
-      const rect = container.getBoundingClientRect();
+      const rect = canvasContainer.getBoundingClientRect();
       
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
@@ -359,7 +359,7 @@ const Canvas = ({
       const percentX = x / rect.width * 100;
       const percentY = y / rect.height * 100;
       
-      container.style.transformOrigin = `${percentX}% ${percentY}%`;
+      (canvasContainer as HTMLElement).style.transformOrigin = `${percentX}% ${percentY}%`;
       
       const delta = e.deltaY;
       const zoomFactor = 0.1;
@@ -389,7 +389,6 @@ const Canvas = ({
           className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} 
           style={{
             transform: `scale(${displayZoomLevel})`,
-            transformOrigin: 'center center',
             transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
             position: 'absolute',
             top: '50%',
@@ -400,12 +399,19 @@ const Canvas = ({
             zIndex: 1
           }}
         >
-          <div ref={containerRef} className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`} style={{
-          width: `${canvasDimensions.width}px`,
-          height: `${canvasDimensions.height}px`,
-          ...backgroundStyle,
-          overflow: 'hidden'
-        }} onClick={handleCanvasClick} onDragOver={!isGameMode ? handleDragOver : undefined} onDragLeave={!isGameMode ? handleDragLeave : undefined} onDrop={!isGameMode ? handleDrop : undefined}>
+          <div ref={containerRef} 
+            className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`} 
+            style={{
+              width: `${canvasDimensions.width}px`,
+              height: `${canvasDimensions.height}px`,
+              ...backgroundStyle,
+              overflow: 'hidden'
+            }} 
+            onClick={handleCanvasClick} 
+            onDragOver={!isGameMode ? handleDragOver : undefined} 
+            onDragLeave={!isGameMode ? handleDragLeave : undefined} 
+            onDrop={!isGameMode ? handleDrop : undefined}
+          >
             {renderElements()}
           </div>
         </div>
