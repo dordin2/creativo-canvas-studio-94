@@ -152,6 +152,41 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     }
   };
   
+  const handleWheel = (e: WheelEvent) => {
+    if (!e.ctrlKey) return;
+    
+    e.preventDefault();
+    
+    const delta = e.deltaY;
+    const zoomFactor = 0.1;
+    const newZoom = delta > 0 
+      ? Math.max(0.1, zoomLevel - zoomFactor)
+      : Math.min(3, zoomLevel + zoomFactor);
+    
+    const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
+    if (!canvasContainer) return;
+    
+    const rect = canvasContainer.getBoundingClientRect();
+    
+    const x = (e.clientX - rect.left) / canvasContainer.offsetWidth;
+    const y = (e.clientY - rect.top) / canvasContainer.offsetHeight;
+    
+    canvasContainer.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+    
+    setZoomLevel(newZoom);
+  };
+  
+  useEffect(() => {
+    const canvasContainer = document.querySelector('.canvas-container');
+    if (!canvasContainer) return;
+    
+    canvasContainer.addEventListener('wheel', handleWheel, { passive: false });
+    
+    return () => {
+      canvasContainer.removeEventListener('wheel', handleWheel);
+    };
+  }, [zoomLevel]);
+
   const renderElements = () => {
     const sortedElements = [...elements]
       .filter(element => element.type !== 'background')
@@ -400,9 +435,8 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
       <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
-          transform: `scale(${displayZoomLevel})`, 
-          transformOrigin: 'center center',
-          transition: 'transform 0.2s ease-out',
+          transform: `scale(${displayZoomLevel})`,
+          transition: 'transform 0.1s ease-out',
           position: 'absolute',
           top: '50%',
           left: '50%',
