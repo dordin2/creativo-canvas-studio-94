@@ -55,33 +55,22 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-      console.log("Loading project data for", projectId);
-
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
         .maybeSingle();
 
-      if (projectError) {
+      if (projectError || !projectData) {
         toast.error('Project not found');
-        console.error('Project fetch error:', projectError);
         navigate('/');
         return;
       }
 
-      if (!projectData) {
-        toast.error("Project not found");
-        navigate("/");
+      if (projectData.is_public !== true && (!user || user?.id !== projectData.user_id)) {
+        toast.error("This project is private. Only the owner can view it.");
+        navigate('/');
         return;
-      }
-
-      if (projectData.is_public !== true) {
-        if (!user || user?.id !== projectData.user_id) {
-          toast.error("This project is private. Only owner can view.");
-          navigate('/');
-          return;
-        }
       }
       setProjectName(projectData.name);
 
@@ -93,7 +82,6 @@ const Play = () => {
 
       if (error) {
         toast.error('Could not load canvas data');
-        console.error("Failed to fetch project_canvases:", error);
         setCanvases([]);
         setActiveCanvasIndex(0);
         setIsLoading(false);
@@ -113,7 +101,6 @@ const Play = () => {
           canvasesArr = jsonData.canvases as unknown as CanvasType[];
           index = typeof jsonData.activeCanvasIndex === "number" ? jsonData.activeCanvasIndex : 0;
         } else {
-          console.warn("Data returned but wrong structure, using fallback canvas:", jsonData);
           toast.error('Invalid canvas structure, loading default canvas');
           canvasesArr = [createDefaultCanvas()];
         }
@@ -124,11 +111,10 @@ const Play = () => {
       setActiveCanvasIndex(index < canvasesArr.length ? index : 0);
 
       if (canvasesArr.length === 0) {
-        toast.error('No canvas found for this project, blank canvas loaded');
+        toast.error('No canvas found for this project; blank canvas loaded.');
       }
     } catch (error) {
       toast.error('Error loading project or canvas');
-      console.error('Unexpected error loading project data:', error);
       setCanvases([createDefaultCanvas()]);
       setActiveCanvasIndex(0);
       setProjectName('Unknown Project');
