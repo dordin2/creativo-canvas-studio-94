@@ -21,6 +21,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     setActiveElement,
     isGameMode,
   } = useDesignState();
+  
   const { isMobileDevice } = useMobile();
   const { isInteractiveMode } = useInteractiveMode();
   const { handleDrop, handleDragOver, handleDragLeave } = useCanvasDrop();
@@ -37,7 +38,10 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         const containerWidth = containerRect.width;
         const containerHeight = containerRect.height;
         
-        const targetRatio = 16 / 9;
+        const baseWidth = 1600;
+        const baseHeight = 900;
+        const targetRatio = baseWidth / baseHeight;
+        
         let width = containerWidth;
         let height = width / targetRatio;
         
@@ -46,27 +50,20 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           width = height * targetRatio;
         }
         
-        if (isGameMode || isFullscreen) {
-          const baseWidth = 1600;
-          const baseHeight = 900;
-          const scaleX = width / baseWidth;
-          const scaleY = height / baseHeight;
-          const scale = Math.min(scaleX, scaleY);
-          
+        const scaleX = width / baseWidth;
+        const scaleY = height / baseHeight;
+        const scale = Math.min(scaleX, scaleY);
+        
+        if (!isGameMode && !isFullscreen) {
           width = baseWidth * scale;
           height = baseHeight * scale;
-          
-          setCanvasScale(scale);
         } else {
-          width -= 48;
-          height -= 48;
-          
-          const baseWidth = 1600;
-          const scale = width / baseWidth;
-          setCanvasScale(scale);
+          width = baseWidth * scale;
+          height = baseHeight * scale;
         }
         
         setCanvasSize({ width, height });
+        setCanvasScale(scale);
       }
     };
     
@@ -97,11 +94,11 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   
   const containerStyle = {
     position: 'relative' as const,
-    overflow: 'hidden', // Prevent elements from going outside canvas
+    overflow: 'hidden',
     width: canvasSize.width,
     height: canvasSize.height,
     aspectRatio: "16/9",
-    zIndex: 1, // Lower than sidebars but higher than background
+    zIndex: 1,
   };
 
   return (
@@ -109,8 +106,8 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       <div 
         ref={canvasContainer}
         className={cn(
-          "relative w-full h-full bg-gray-100 flex items-center justify-center",
-          isFullscreen ? "fixed inset-0 z-50" : "h-[calc(100vh-9rem)]",
+          "relative w-full h-full bg-gray-100 flex items-center justify-center p-6",
+          isFullscreen ? "fixed inset-0 z-50 p-0" : "h-[calc(100vh-9rem)]",
           isMobileView && !isGameMode && "h-[calc(100vh-8rem)]",
           isGameMode && "p-0"
         )}
