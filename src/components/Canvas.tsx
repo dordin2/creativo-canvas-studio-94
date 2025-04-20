@@ -370,7 +370,6 @@ const Canvas = ({
     }
   }, [isMobileView]);
 
-  // determine if canvas drag/zoom mode is active (not in menu, not game mode)
   const showGrabCursor = !isGameMode && !isMobileView;
 
   return (
@@ -380,6 +379,11 @@ const Canvas = ({
       onMouseDown={() => setIsMouseDown(true)}
       onMouseUp={() => setIsMouseDown(false)}
       onMouseLeave={() => setIsMouseDown(false)}
+      style={{
+        transform: `scale(${displayZoomLevel})`,
+        transformOrigin: 'center center',
+        transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
+      }}
     >
       <div
         className={
@@ -390,9 +394,6 @@ const Canvas = ({
         <div
           className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`}
           style={{
-            transform: `scale(${displayZoomLevel})`,
-            transformOrigin: 'center center',
-            transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
             position: 'absolute',
             top: '50%',
             left: '50%',
