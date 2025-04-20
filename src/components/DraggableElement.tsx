@@ -82,8 +82,8 @@ const DraggableElement = ({ element, isActive, children }: {
   
   const isInInventory = element.inInventory || inventoryItems.some(item => item.elementId === element.id);
   
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if (e.button !== 0 && 'button' in e) return;
     e.stopPropagation();
     
     // Prevent dragging if element is a background
@@ -678,8 +678,8 @@ const DraggableElement = ({ element, isActive, children }: {
               ref={elementRef}
               className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
               style={combinedStyle}
-              onMouseDown={handleInteractionStart}
-              onTouchStart={handleInteractionStart}
+              onMouseDown={handleMouseDown}
+              onTouchStart={handleMouseDown}
               onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
               onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
               draggable={isGameMode && isImageElement ? false : undefined}
