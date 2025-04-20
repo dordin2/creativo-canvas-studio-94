@@ -156,6 +156,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     if (!e.ctrlKey) return;
     
     e.preventDefault();
+    e.stopPropagation();
     
     const delta = e.deltaY;
     const zoomFactor = 0.1;
@@ -163,27 +164,35 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       ? Math.max(0.1, zoomLevel - zoomFactor)
       : Math.min(3, zoomLevel + zoomFactor);
     
+    const canvasWorkspace = document.querySelector('.canvas-workspace') as HTMLElement;
+    if (!canvasWorkspace) return;
+    
+    const rect = canvasWorkspace.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / canvasWorkspace.offsetWidth;
+    const y = (e.clientY - rect.top) / canvasWorkspace.offsetHeight;
+    
     const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
-    if (!canvasContainer) return;
-    
-    const rect = canvasContainer.getBoundingClientRect();
-    
-    const x = (e.clientX - rect.left) / canvasContainer.offsetWidth;
-    const y = (e.clientY - rect.top) / canvasContainer.offsetHeight;
-    
-    canvasContainer.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+    if (canvasContainer) {
+      canvasContainer.style.transformOrigin = `${x * 100}% ${y * 100}%`;
+    }
     
     setZoomLevel(newZoom);
   };
   
   useEffect(() => {
-    const canvasContainer = document.querySelector('.canvas-container');
-    if (!canvasContainer) return;
+    const canvasWorkspace = document.querySelector('.canvas-workspace');
+    if (!canvasWorkspace) return;
     
-    canvasContainer.addEventListener('wheel', handleWheel, { passive: false });
+    const wheelHandler = (e: WheelEvent) => {
+      if (e.ctrlKey) {
+        handleWheel(e);
+      }
+    };
+    
+    canvasWorkspace.addEventListener('wheel', wheelHandler, { passive: false });
     
     return () => {
-      canvasContainer.removeEventListener('wheel', handleWheel);
+      canvasWorkspace.removeEventListener('wheel', wheelHandler);
     };
   }, [zoomLevel]);
 
