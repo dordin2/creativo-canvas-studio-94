@@ -6,6 +6,7 @@ import PuzzleElement from "./element/PuzzleElement";
 import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
+import { Button } from "./ui/button";
 
 interface CanvasProps {
   isFullscreen?: boolean;
@@ -396,6 +397,14 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   
   const displayZoomLevel = (isFullscreen || isMobileView) && isGameMode ? calculateFullscreenScale() : zoomLevel;
   
+  const handleZoomIn = () => {
+    setZoomLevel(prev => Math.min(prev + 0.1, 2));
+  };
+
+  const handleZoomOut = () => {
+    setZoomLevel(prev => Math.max(prev - 0.1, 0.2));
+  };
+
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
       <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
@@ -438,6 +447,28 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             >
               {isFullscreenActive ? <Minimize size={18} /> : <Maximize size={18} />}
             </button>
+          </div>
+        )}
+        
+        {!isGameMode && (
+          <div className="zoom-controls">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleZoomOut}
+              disabled={zoomLevel <= 0.2}
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <span>{Math.round(zoomLevel * 100)}%</span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleZoomIn}
+              disabled={zoomLevel >= 2}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
           </div>
         )}
       </div>
