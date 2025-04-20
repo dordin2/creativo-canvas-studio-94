@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,22 +25,23 @@ const Play = () => {
   const isMobile = useIsMobile();
   const { user } = useAuth();
 
+  // New: track error for better feedback.
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     if (!projectId) {
       navigate('/');
       return;
     }
-    
     loadProjectData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
@@ -48,62 +50,79 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-      
+      setError(null);
+
       // Fetch project details
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
         .single();
-      
-      if (projectError) {
-        throw projectError;
+
+      if (projectError || !projectData) {
+        setError('Project not found');
+        toast.error('Project not found');
+        setTimeout(() => navigate('/'), 1200);
+        return;
       }
-      
-      if (projectData) {
-        // Check if this is a private project and the user has access
-        if (projectData.user_id && projectData.is_public === false && user?.id !== projectData.user_id) {
+
+      // Access control:
+      // If NOT public AND there is a user AND user != project owner: deny.
+      // If NOT public AND NO user: deny.
+      // Public: allow all (even if !user).
+      if (projectData.is_public === false) {
+        // Project is private
+        if (!user?.id || user.id !== projectData.user_id) {
+          setError("This project is private");
           toast.error("This project is private");
-          navigate('/');
+          setTimeout(() => navigate('/'), 1200);
           return;
         }
-        
-        setProjectName(projectData.name);
-      } else {
-        throw new Error('Project not found');
       }
-      
+
+      setProjectName(projectData.name);
+
       // Fetch canvas data
       const { data, error } = await supabase
         .from('project_canvases')
         .select('canvas_data')
         .eq('project_id', projectId)
         .maybeSingle();
-      
+
       if (error) {
-        throw error;
+        setError("Failed to load project data");
+        toast.error("Failed to load project data");
+        setTimeout(() => navigate('/'), 1200);
+        return;
       }
-      
+
       if (data && data.canvas_data) {
-        // Properly assert the type with a type guard
         const jsonData = data.canvas_data as Json;
-        
-        // Check if the structure matches what we expect
-        if (typeof jsonData === 'object' && jsonData !== null && 
-            'canvases' in jsonData && 'activeCanvasIndex' in jsonData &&
-            Array.isArray(jsonData.canvases)) {
-          
-          // Now we can safely cast to the expected type
+        if (
+          typeof jsonData === 'object' && 
+          jsonData !== null &&
+          'canvases' in jsonData && 
+          'activeCanvasIndex' in jsonData &&
+          Array.isArray(jsonData.canvases)
+        ) {
           setCanvases(jsonData.canvases as unknown as CanvasType[]);
           setActiveCanvasIndex(jsonData.activeCanvasIndex as number);
         } else {
-          console.error("Invalid canvas data structure:", jsonData);
-          throw new Error('Invalid project data format');
+          setError("Invalid project data format");
+          toast.error("Invalid project data format");
+          setTimeout(() => navigate('/'), 1200);
+          return;
         }
+      } else {
+        setError("No canvas data found for this project");
+        toast.error("No canvas data found for this project");
+        setTimeout(() => navigate('/'), 1200);
+        return;
       }
     } catch (error) {
-      console.error('Error loading project data:', error);
-      navigate('/');
+      setError('Unknown error loading project data');
+      toast.error('Unknown error loading project data');
+      setTimeout(() => navigate('/'), 1200);
     } finally {
       setIsLoading(false);
     }
@@ -134,6 +153,18 @@ const Play = () => {
     );
   }
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
+        <h2 className="text-2xl font-semibold mb-4 text-red-500">Error</h2>
+        <p className="text-md text-gray-700 mb-8">{error}</p>
+        <Button variant="secondary" onClick={() => navigate("/")}>
+          Go Home
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
@@ -142,10 +173,8 @@ const Play = () => {
             <Canvas isFullscreen={true} isMobileView={isMobile} />
           </div>
         </div>
-        
         <InventoryPanel />
         <InventoryIcon />
-        
         <div className={`absolute ${isMobile ? 'bottom-2 right-2' : 'bottom-4 right-4'} z-[100]`}>
           <Button 
             variant="secondary" 
