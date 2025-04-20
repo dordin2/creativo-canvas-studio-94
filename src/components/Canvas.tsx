@@ -7,10 +7,12 @@ import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import { Button } from "./ui/button";
+
 interface CanvasProps {
   isFullscreen?: boolean;
   isMobileView?: boolean;
 }
+
 const Canvas = ({
   isFullscreen = false,
   isMobileView = false
@@ -37,11 +39,13 @@ const Canvas = ({
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
   const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState<number>(1);
+
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
       setCanvasRef(containerRef.current);
     }
   }, [canvasRef, setCanvasRef]);
+
   useEffect(() => {
     const handleResize = () => {
       if (containerRef.current && parentRef.current) {
@@ -83,6 +87,7 @@ const Canvas = ({
       window.removeEventListener("resize", handleResize);
     };
   }, [isGameMode, isMobileView]);
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreenActive(!!document.fullscreenElement);
@@ -92,6 +97,7 @@ const Canvas = ({
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
   }, []);
+
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {
@@ -103,21 +109,25 @@ const Canvas = ({
       }
     }
   };
+
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === containerRef.current && !isGameMode) {
       setActiveElement(null);
     }
   };
+
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     if (isGameMode) return;
     e.preventDefault();
     e.stopPropagation();
     setIsDraggingOver(true);
   };
+
   const handleDragLeave = () => {
     if (isGameMode) return;
     setIsDraggingOver(false);
   };
+
   const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
     if (isGameMode) return;
     e.preventDefault();
@@ -135,6 +145,7 @@ const Canvas = ({
       }
     }
   };
+
   const renderElements = () => {
     const sortedElements = [...elements].filter(element => element.type !== 'background').sort((a, b) => a.layer - b.layer);
     return sortedElements.map(element => {
@@ -259,6 +270,7 @@ const Canvas = ({
       }
     });
   };
+
   const backgroundElement = elements.find(elem => elem.type === 'background');
   const backgroundStyle = backgroundElement ? {
     backgroundColor: backgroundElement.style?.backgroundColor as string || 'white',
@@ -266,6 +278,7 @@ const Canvas = ({
   } : {
     backgroundColor: 'white'
   };
+
   const calculateFullscreenScale = () => {
     if (!isFullscreen && !isGameMode) return zoomLevel;
     const viewportWidth = window.innerWidth;
@@ -279,18 +292,23 @@ const Canvas = ({
     const scaleY = viewportHeight / FIXED_CANVAS_HEIGHT;
     return Math.min(scaleX, scaleY);
   };
+
   const displayZoomLevel = (isFullscreen || isMobileView) && isGameMode ? calculateFullscreenScale() : zoomLevel;
+
   const handleZoomIn = () => {
     setZoomLevel(prev => Math.min(prev + 0.1, 2));
   };
+
   const handleZoomOut = () => {
     setZoomLevel(prev => Math.max(prev - 0.1, 0.2));
   };
+
   const calculateTouchDistance = (touch1: Touch, touch2: Touch) => {
     const dx = touch1.clientX - touch2.clientX;
     const dy = touch1.clientY - touch2.clientY;
     return Math.sqrt(dx * dx + dy * dy);
   };
+
   const handleTouchStart = (e: TouchEvent) => {
     if (e.touches.length === 2) {
       const distance = calculateTouchDistance(e.touches[0], e.touches[1]);
@@ -298,6 +316,7 @@ const Canvas = ({
       setInitialZoom(zoomLevel);
     }
   };
+
   const handleTouchMove = (e: TouchEvent) => {
     if (e.touches.length === 2 && initialTouchDistance !== null) {
       const currentDistance = calculateTouchDistance(e.touches[0], e.touches[1]);
@@ -306,9 +325,11 @@ const Canvas = ({
       setZoomLevel(newZoom);
     }
   };
+
   const handleTouchEnd = () => {
     setInitialTouchDistance(null);
   };
+
   useEffect(() => {
     if (isMobileView && containerRef.current) {
       const element = containerRef.current;
@@ -322,6 +343,32 @@ const Canvas = ({
       };
     }
   }, [isMobileView, initialTouchDistance, initialZoom]);
+
+  const handleWheel = (e: WheelEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+      const delta = e.deltaY;
+      const zoomFactor = 0.1;
+      
+      setZoomLevel(prev => {
+        const newZoom = delta > 0 
+          ? Math.max(prev - zoomFactor, 0.2) // Zoom out
+          : Math.min(prev + zoomFactor, 2);  // Zoom in
+        return newZoom;
+      });
+    }
+  };
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (container && !isMobileView) {
+      container.addEventListener('wheel', handleWheel, { passive: false });
+      return () => {
+        container.removeEventListener('wheel', handleWheel);
+      };
+    }
+  }, [isMobileView]);
+
   return <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
       <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{
@@ -356,4 +403,5 @@ const Canvas = ({
       </div>
     </div>;
 };
+
 export default Canvas;
