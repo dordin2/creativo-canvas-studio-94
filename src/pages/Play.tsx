@@ -29,7 +29,6 @@ const Play = () => {
       navigate('/');
       return;
     }
-    
     loadProjectData();
   }, [projectId]);
 
@@ -39,7 +38,6 @@ const Play = () => {
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
-    
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
@@ -48,58 +46,56 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-      
-      // Fetch project details
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
-        .single();
-      
-      if (projectError) {
-        throw projectError;
+        .maybeSingle();
+
+      if (projectError || !projectData) {
+        toast.error('Project not found');
+        navigate('/');
+        return;
       }
-      
-      if (projectData) {
-        // Check if this is a private project and the user has access
-        if (projectData.user_id && projectData.is_public === false && user?.id !== projectData.user_id) {
+
+      if (projectData.is_public !== true) {
+        if (!user || user?.id !== projectData.user_id) {
           toast.error("This project is private");
           navigate('/');
           return;
         }
-        
-        setProjectName(projectData.name);
-      } else {
-        throw new Error('Project not found');
       }
-      
-      // Fetch canvas data
+      setProjectName(projectData.name);
+
       const { data, error } = await supabase
         .from('project_canvases')
         .select('canvas_data')
         .eq('project_id', projectId)
         .maybeSingle();
-      
+
       if (error) {
         throw error;
       }
-      
+
       if (data && data.canvas_data) {
-        // Properly assert the type with a type guard
         const jsonData = data.canvas_data as Json;
-        
-        // Check if the structure matches what we expect
-        if (typeof jsonData === 'object' && jsonData !== null && 
-            'canvases' in jsonData && 'activeCanvasIndex' in jsonData &&
-            Array.isArray(jsonData.canvases)) {
-          
-          // Now we can safely cast to the expected type
+        if (
+          typeof jsonData === 'object' &&
+          jsonData !== null &&
+          'canvases' in jsonData &&
+          'activeCanvasIndex' in jsonData &&
+          Array.isArray(jsonData.canvases)
+        ) {
           setCanvases(jsonData.canvases as unknown as CanvasType[]);
           setActiveCanvasIndex(jsonData.activeCanvasIndex as number);
         } else {
           console.error("Invalid canvas data structure:", jsonData);
           throw new Error('Invalid project data format');
         }
+      } else {
+        setCanvases([]);
+        setActiveCanvasIndex(0);
+        toast.error('No canvas data found for this project');
       }
     } catch (error) {
       console.error('Error loading project data:', error);
@@ -134,6 +130,18 @@ const Play = () => {
     );
   }
 
+  if (!canvases.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-2 text-canvas-purple">{projectName || 'No Project'}</h2>
+          <p className="text-gray-500 mb-8">No canvas found for this project.</p>
+          <Button variant="default" onClick={() => navigate("/")}>Back to Projects</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
@@ -142,10 +150,8 @@ const Play = () => {
             <Canvas isFullscreen={true} isMobileView={isMobile} />
           </div>
         </div>
-        
         <InventoryPanel />
         <InventoryIcon />
-        
         <div className={`absolute ${isMobile ? 'bottom-2 right-2' : 'bottom-4 right-4'} z-[100]`}>
           <Button 
             variant="secondary" 
