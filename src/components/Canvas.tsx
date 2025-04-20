@@ -42,27 +42,18 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         const baseHeight = 900;
         const targetRatio = baseWidth / baseHeight;
         
-        let width = containerWidth;
-        let height = width / targetRatio;
+        const padding = (!isGameMode && !isFullscreen) ? 48 : 0;
+        const availableWidth = containerWidth - (padding * 2);
+        const availableHeight = containerHeight - (padding * 2);
         
-        if (height > containerHeight) {
-          height = containerHeight;
-          width = height * targetRatio;
-        }
-        
-        const scaleX = width / baseWidth;
-        const scaleY = height / baseHeight;
+        const scaleX = availableWidth / baseWidth;
+        const scaleY = availableHeight / baseHeight;
         const scale = Math.min(scaleX, scaleY);
         
-        if (!isGameMode && !isFullscreen) {
-          width = baseWidth * scale;
-          height = baseHeight * scale;
-        } else {
-          width = baseWidth * scale;
-          height = baseHeight * scale;
-        }
+        const finalWidth = baseWidth * scale;
+        const finalHeight = baseHeight * scale;
         
-        setCanvasSize({ width, height });
+        setCanvasSize({ width: finalWidth, height: finalHeight });
         setCanvasScale(scale);
       }
     };
@@ -106,16 +97,15 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       <div 
         ref={canvasContainer}
         className={cn(
-          "relative w-full h-full bg-gray-100 flex items-center justify-center p-6",
-          isFullscreen ? "fixed inset-0 z-50 p-0" : "h-[calc(100vh-9rem)]",
+          "relative w-full h-full bg-gray-100 flex items-center justify-center",
+          isFullscreen ? "fixed inset-0 z-50" : "h-[calc(100vh-9rem)]",
           isMobileView && !isGameMode && "h-[calc(100vh-8rem)]",
-          isGameMode && "p-0"
         )}
       >
         <div
           className={cn(
             "canvas-container",
-            isGameMode ? "bg-transparent" : "bg-white shadow-lg",
+            isGameMode || isFullscreen ? "bg-transparent" : "bg-white shadow-lg",
             isMobileView && !isGameMode && !isFullscreen && "scale-100"
           )}
           style={containerStyle}
