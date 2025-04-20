@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
+import { viewportToCanvasCoordinates, getCanvasScale, getEventCoordinates } from '@/utils/coordinateUtils';
 
 interface Position {
   x: number;
@@ -14,183 +15,126 @@ export const useDraggable = (elementId: string) => {
   const elementInitialPos = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
   const animationFrame = useRef<number | null>(null);
-  const mousePosition = useRef<Position>({ x: 0, y: 0 });
-
+  const dragStartOffset = useRef<Position | null>(null);
+  
   // Find the current element to access its properties
   const currentElement = elements.find(el => el.id === elementId);
   
-  // Check if this is a puzzle element, slider puzzle, or image
+  // Check if this is a puzzle element or image
   const isPuzzleElement = currentElement?.type === 'puzzle';
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
   const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
   const isImageElement = currentElement?.type === 'image';
 
-  // Handle drops from inventory items
-  useEffect(() => {
-    if (!currentElement) return;
+  const handleDragMove = (e: MouseEvent | TouchEvent) => {
+    if (!isDragging || !startPosition.current || !elementInitialPos.current || !dragStartOffset.current) return;
     
-    const handleDragOver = (e: MouseEvent) => {
-      if (draggedInventoryItem && currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-        // Make the element a drop target
-        const element = document.getElementById(`element-${elementId}`);
-        if (element) {
-          element.classList.add('drop-target');
+    // Prevent scrolling during drag on mobile
+    if (e.type === 'touchmove') {
+      e.preventDefault();
+    }
+    
+    // Don't drag images in game mode unless they are interactive
+    if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
+      return;
+    }
+
+    // Get the event coordinates using our utility function
+    const coords = getEventCoordinates(e);
+
+    // Get the canvas container and its properties
+    const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
+    if (!canvasContainer) return;
+
+    const canvasRect = canvasContainer.getBoundingClientRect();
+    const canvasScale = getCanvasScale(canvasContainer);
+    
+    // Calculate new position based on event movement and canvas scale
+    const currentPos = viewportToCanvasCoordinates(coords.clientX, coords.clientY, {
+      canvasScale,
+      canvasRect
+    });
+    
+    const startPos = viewportToCanvasCoordinates(startPosition.current.x, startPosition.current.y, {
+      canvasScale,
+      canvasRect
+    });
+    
+    // Calculate the delta movement accounting for scale
+    const deltaX = currentPos.x - startPos.x;
+    const deltaY = currentPos.y - startPos.y;
+
+    // Mark that we've started dragging (for history tracking)
+    if (!isDragStarted.current) {
+      isDragStarted.current = true;
+    }
+
+    // Cancel any existing animation frame
+    if (animationFrame.current !== null) {
+      cancelAnimationFrame(animationFrame.current);
+    }
+
+    // Use requestAnimationFrame for smooth updates
+    animationFrame.current = requestAnimationFrame(() => {
+      // Calculate new position relative to initial element position
+      const newX = elementInitialPos.current!.x + deltaX;
+      const newY = elementInitialPos.current!.y + deltaY;
+      
+      // Update element position
+      updateElementWithoutHistory(elementId, {
+        position: { x: newX, y: newY },
+        style: {
+          ...currentElement?.style,
+          willChange: 'transform',
         }
-      }
-    };
-    
-    const handleDragLeave = () => {
-      const element = document.getElementById(`element-${elementId}`);
-      if (element) {
-        element.classList.remove('drop-target');
-      }
-    };
-    
-    // This will be called when another element is being custom-dragged over this element
-    const handleCustomDragOver = (e: CustomEvent) => {
-      if (!draggedInventoryItem) return;
-      
-      // Check if the mouse is over this element
-      const element = document.getElementById(`element-${elementId}`);
-      if (!element) return;
-      
-      const rect = element.getBoundingClientRect();
-      const x = e.detail.clientX;
-      const y = e.detail.clientY;
-      
-      // Check if the mouse is over this element
-      if (
-        x >= rect.left && 
-        x <= rect.right && 
-        y >= rect.top && 
-        y <= rect.bottom
-      ) {
-        // Check if this element can interact with the dragged item
-        if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-          element.classList.add('drop-target');
-        }
-      } else {
-        element.classList.remove('drop-target');
-      }
-    };
-    
-    // This will be called when a custom drag operation ends over this element
-    const handleCustomDrop = (e: CustomEvent) => {
-      if (!draggedInventoryItem) return;
-      
-      const element = document.getElementById(`element-${elementId}`);
-      if (!element) return;
-      
-      const rect = element.getBoundingClientRect();
-      const x = e.detail.clientX;
-      const y = e.detail.clientY;
-      
-      // Check if the drop happened over this element
-      if (
-        x >= rect.left && 
-        x <= rect.right && 
-        y >= rect.top && 
-        y <= rect.bottom
-      ) {
-        // Check if this element can interact with the dragged item
-        if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-          handleItemCombination(draggedInventoryItem.id, elementId);
-        }
-      }
-      
-      // Remove the drop-target class
-      element.classList.remove('drop-target');
-    };
-    
-    // Listen for custom events for drag-and-drop
-    document.addEventListener('custom-drag-over', handleCustomDragOver as EventListener);
-    document.addEventListener('custom-drop', handleCustomDrop as EventListener);
-    
-    return () => {
-      document.removeEventListener('custom-drag-over', handleCustomDragOver as EventListener);
-      document.removeEventListener('custom-drop', handleCustomDrop as EventListener);
-    };
-  }, [currentElement, draggedInventoryItem, elementId, handleItemCombination]);
+      });
+    });
+  };
 
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
-      
-      // Don't drag images in game mode unless they are interactive
-      if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
-        return;
-      }
-      
-      // Update current mouse position immediately for responsive feel
-      mousePosition.current = { x: e.clientX, y: e.clientY };
-
-      // Mark that we've started dragging (for history tracking)
-      if (!isDragStarted.current) {
-        isDragStarted.current = true;
-      }
-
-      // Cancel any existing animation frame to prevent queuing updates
-      if (animationFrame.current !== null) {
-        cancelAnimationFrame(animationFrame.current);
-      }
-
-      // Use requestAnimationFrame for smooth updates
-      animationFrame.current = requestAnimationFrame(() => {
-        // Calculate the new position
-        const deltaX = mousePosition.current.x - startPosition.current!.x;
-        const deltaY = mousePosition.current.y - startPosition.current!.y;
-
-        const newX = elementInitialPos.current!.x + deltaX;
-        const newY = elementInitialPos.current!.y + deltaY;
-        
-        // Immediately update the element's position for responsive dragging
-        updateElementWithoutHistory(elementId, { 
-          position: { x: newX, y: newY },
+  const handleDragEnd = () => {
+    setIsDragging(false);
+    
+    // If we actually dragged (not just clicked), commit the final position to history
+    if (isDragStarted.current) {
+      // Reset willChange property when dragging ends
+      if (currentElement) {
+        updateElementWithoutHistory(elementId, {
           style: {
-            ...currentElement?.style,
-            willChange: 'transform',
+            ...currentElement.style,
+            willChange: 'auto',
           }
         });
-      });
-    };
-
-    const handleMouseUp = () => {
-      setIsDragging(false);
-      
-      // If we actually dragged (not just clicked), commit the final position to history
-      if (isDragStarted.current) {
-        // Reset willChange property when dragging ends
-        if (currentElement) {
-          updateElementWithoutHistory(elementId, {
-            style: {
-              ...currentElement.style,
-              willChange: 'auto',
-            }
-          });
-        }
-        
-        commitToHistory();
-        isDragStarted.current = false;
       }
       
-      startPosition.current = null;
-      elementInitialPos.current = null;
-      
-      // Cancel any pending animation frame
-      if (animationFrame.current !== null) {
-        cancelAnimationFrame(animationFrame.current);
-        animationFrame.current = null;
-      }
-    };
+      commitToHistory();
+      isDragStarted.current = false;
+    }
+    
+    startPosition.current = null;
+    elementInitialPos.current = null;
+    
+    // Cancel any pending animation frame
+    if (animationFrame.current !== null) {
+      cancelAnimationFrame(animationFrame.current);
+      animationFrame.current = null;
+    }
+  };
 
+  useEffect(() => {
     if (isDragging) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      // Add both mouse and touch event listeners with passive: false for touch events
+      window.addEventListener('mousemove', handleDragMove);
+      window.addEventListener('touchmove', handleDragMove, { passive: false });
+      window.addEventListener('mouseup', handleDragEnd);
+      window.addEventListener('touchend', handleDragEnd);
     }
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      // Clean up both mouse and touch event listeners
+      window.removeEventListener('mousemove', handleDragMove);
+      window.removeEventListener('touchmove', handleDragMove);
+      window.removeEventListener('mouseup', handleDragEnd);
+      window.removeEventListener('touchend', handleDragEnd);
       
       // Clean up any pending animation frame
       if (animationFrame.current !== null) {
@@ -198,25 +142,43 @@ export const useDraggable = (elementId: string) => {
         animationFrame.current = null;
       }
     };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
+  }, [isDragging, elementId]);
 
-  const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
+  const startDrag = (e: React.MouseEvent | React.TouchEvent, initialPosition: Position) => {
     // Don't start drag for static images in game mode
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
     }
     
-    // Prevent browser's native drag behavior for images and puzzle elements
-    if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
-      e.preventDefault();
-    }
-    
+    // Prevent browser's native drag behavior and scrolling
+    e.preventDefault();
     e.stopPropagation();
+    
+    const coords = getEventCoordinates(e.nativeEvent);
     setIsDragging(true);
-    startPosition.current = { x: e.clientX, y: e.clientY };
+    
+    // Store the initial event position
+    startPosition.current = { x: coords.clientX, y: coords.clientY };
     elementInitialPos.current = initialPosition;
-    isDragStarted.current = false; // Reset the drag started flag
+    isDragStarted.current = false;
+    
+    // Store the offset between event position and element position
+    const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
+    if (canvasContainer) {
+      const canvasRect = canvasContainer.getBoundingClientRect();
+      const canvasScale = getCanvasScale(canvasContainer);
+      
+      const elementPos = viewportToCanvasCoordinates(coords.clientX, coords.clientY, {
+        canvasScale,
+        canvasRect
+      });
+      
+      dragStartOffset.current = {
+        x: elementPos.x - initialPosition.x,
+        y: elementPos.y - initialPosition.y
+      };
+    }
     
     // Set willChange to transform for better performance during drag
     if (currentElement) {
