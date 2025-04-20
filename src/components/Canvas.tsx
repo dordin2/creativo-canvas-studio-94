@@ -7,16 +7,14 @@ import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import { Button } from "./ui/button";
+import { useZoom } from "@/hooks/useZoom";
 
 interface CanvasProps {
   isFullscreen?: boolean;
   isMobileView?: boolean;
 }
 
-const Canvas = ({
-  isFullscreen = false,
-  isMobileView = false
-}: CanvasProps) => {
+const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => {
   const {
     canvasRef,
     setCanvasRef,
@@ -34,11 +32,13 @@ const Canvas = ({
     height: FIXED_CANVAS_HEIGHT
   });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
-  const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
   const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState<number>(1);
+
+  const workspaceRef = useRef<HTMLDivElement>(null);
+  const { zoomLevel, setZoomLevel, zoomOrigin, handleZoom } = useZoom();
   const [isMouseDown, setIsMouseDown] = useState(false);
 
   useEffect(() => {
@@ -345,30 +345,16 @@ const Canvas = ({
     }
   }, [isMobileView, initialTouchDistance, initialZoom]);
 
-  const handleWheel = (e: WheelEvent) => {
-    if (e.ctrlKey) {
-      e.preventDefault();
-      const delta = e.deltaY;
-      const zoomFactor = 0.1;
-      
-      setZoomLevel(prev => {
-        const newZoom = delta > 0 
-          ? Math.max(prev - zoomFactor, 0.2) // Zoom out
-          : Math.min(prev + zoomFactor, 2);  // Zoom in
-        return newZoom;
-      });
-    }
-  };
-
   useEffect(() => {
-    const container = containerRef.current;
-    if (container && !isMobileView) {
-      container.addEventListener('wheel', handleWheel, { passive: false });
+    const workspace = workspaceRef.current;
+    if (workspace && !isMobileView && !isGameMode) {
+      const wheelHandler = (e: WheelEvent) => handleZoom(e, workspaceRef);
+      workspace.addEventListener('wheel', wheelHandler, { passive: false });
       return () => {
-        container.removeEventListener('wheel', handleWheel);
+        workspace.removeEventListener('wheel', wheelHandler);
       };
     }
-  }, [isMobileView]);
+  }, [handleZoom, isMobileView, isGameMode]);
 
   const showGrabCursor = !isGameMode && !isMobileView;
 
@@ -376,20 +362,21 @@ const Canvas = ({
     <div
       ref={parentRef}
       className={`flex-1 flex flex-col h-full relative ${showGrabCursor ? "canvas-grab-wrapper" : ""}`}
-      onMouseDown={() => setIsMouseDown(true)}
-      onMouseUp={() => setIsMouseDown(false)}
-      onMouseLeave={() => setIsMouseDown(false)}
-      style={{
-        transform: `scale(${displayZoomLevel})`,
-        transformOrigin: 'center center',
-        transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
-      }}
     >
       <div
+        ref={workspaceRef}
         className={
-          `flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}
+          `flex-1 flex items-center justify-center relative ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}
           ${showGrabCursor && isMouseDown ? 'canvas-grabbing' : ''}`
         }
+        style={{
+          transform: `scale(${zoomLevel})`,
+          transformOrigin: `${zoomOrigin.x}% ${zoomOrigin.y}%`,
+          transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
+        }}
+        onMouseDown={() => setIsMouseDown(true)}
+        onMouseUp={() => setIsMouseDown(false)}
+        onMouseLeave={() => setIsMouseDown(false)}
       >
         <div
           className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`}
