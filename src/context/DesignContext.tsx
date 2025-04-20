@@ -282,9 +282,10 @@ export const DesignProvider = ({
     if (!canvases || activeCanvasIndex < 0 || activeCanvasIndex >= canvases.length) {
       console.error("Invalid canvas state when trying to add element");
       toast.error("Could not add element: invalid canvas state");
-      return createNewElement(type, null, 0, props);
+      return createNewElement(type, { x: 0, y: 0 }, 0, props);
     }
     
+    const position = getDefaultPosition(canvasRef);
     const newLayer = getHighestLayer(elements);
     
     if (type === 'background') {
@@ -304,7 +305,7 @@ export const DesignProvider = ({
         }
       }
       
-      const backgroundElement = createNewElement(type, canvasRef, 0, props);
+      const backgroundElement = createNewElement(type, position, 0, props);
       const updatedCanvases = [...canvases];
       
       if (activeCanvasIndex >= 0 && activeCanvasIndex < updatedCanvases.length) {
@@ -320,7 +321,7 @@ export const DesignProvider = ({
       return backgroundElement;
     }
     
-    const newElement = createNewElement(type, canvasRef, newLayer, props);
+    const newElement = createNewElement(type, position, newLayer, props);
     
     if (type === 'image' && props?.dataUrl) {
       console.log("DesignContext - Creating new image element with dataUrl length:", 

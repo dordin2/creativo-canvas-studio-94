@@ -1,4 +1,3 @@
-
 import { DesignElement } from "@/context/DesignContext";
 import TextProperties from "./TextProperties";
 import ShapeProperties from "./ShapeProperties";
@@ -12,7 +11,6 @@ import SliderPuzzleProperties from "./SliderPuzzleProperties";
 import InteractionProperties from "./InteractionProperties";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect } from "react";
-import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 interface ElementPropertiesProps {
   element: DesignElement;
@@ -20,9 +18,6 @@ interface ElementPropertiesProps {
 }
 
 const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProps) => {
-  const { isInteractiveMode: contextInteractiveMode } = useInteractiveMode();
-  const isCurrentlyInteractiveMode = isInteractiveMode ?? contextInteractiveMode;
-
   const textElements = ['heading', 'subheading', 'paragraph'];
   const shapeElements = ['rectangle', 'circle', 'triangle', 'line'];
   const puzzleElements = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'];
@@ -62,7 +57,7 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
   }, []);
 
   // Only show interaction properties in interactive mode
-  if (isCurrentlyInteractiveMode) {
+  if (isInteractiveMode) {
     return (
       <div className="properties-panel p-4 space-y-6">
         <h2 className="text-lg font-semibold mb-4">Properties</h2>
@@ -102,20 +97,16 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
         <Tabs defaultValue="properties">
           <TabsList className="w-full">
             <TabsTrigger value="properties" className="flex-1">Properties</TabsTrigger>
-            {isCurrentlyInteractiveMode && (
-              <TabsTrigger value="interaction" className="flex-1">Interaction</TabsTrigger>
-            )}
+            <TabsTrigger value="interaction" className="flex-1">Interaction</TabsTrigger>
           </TabsList>
           
           <TabsContent value="properties" className="space-y-6 pt-4">
             {renderCommonProperties()}
           </TabsContent>
           
-          {isCurrentlyInteractiveMode && (
-            <TabsContent value="interaction" className="space-y-6 pt-4">
-              <InteractionProperties element={element} />
-            </TabsContent>
-          )}
+          <TabsContent value="interaction" className="space-y-6 pt-4">
+            <InteractionProperties element={element} />
+          </TabsContent>
         </Tabs>
       ) : (
         renderCommonProperties()

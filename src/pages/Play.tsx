@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,35 +10,27 @@ import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
-import { useProject } from "@/context/ProjectContext";
 import { toast } from "sonner";
-
-function createDefaultCanvas(): CanvasType {
-  return {
-    id: crypto.randomUUID(),
-    name: "Canvas 1",
-    elements: [],
-  };
-}
+import { Database } from "@/types/database";
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [canvases, setCanvases] = useState<CanvasType[]>([]);
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
+  const [projectName, setProjectName] = useState("");
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
-  const { projectName, isPublic } = useProject();
 
   useEffect(() => {
     if (!projectId) {
       navigate('/');
       return;
     }
+    
     loadProjectData();
-    // eslint-disable-next-line
   }, [projectId]);
 
   useEffect(() => {
@@ -48,6 +39,7 @@ const Play = () => {
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
+    
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
     };
@@ -56,64 +48,62 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-
+      
+      // Fetch project details
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .single();
+      
+      if (projectError) {
+        throw projectError;
+      }
+      
+      if (projectData) {
+        // Check if this is a private project and the user has access
+        if (projectData.user_id && projectData.is_public === false && user?.id !== projectData.user_id) {
+          toast.error("This project is private");
+          navigate('/');
+          return;
+        }
+        
+        setProjectName(projectData.name);
+      } else {
+        throw new Error('Project not found');
+      }
+      
+      // Fetch canvas data
       const { data, error } = await supabase
         .from('project_canvases')
         .select('canvas_data')
         .eq('project_id', projectId)
         .maybeSingle();
-
+      
       if (error) {
-        console.error('Supabase error loading project_canvases:', error);
-        toast.error('Could not load canvas data');
-        setCanvases([createDefaultCanvas()]);
-        setActiveCanvasIndex(0);
-        setIsLoading(false);
-        return;
+        throw error;
       }
-
-      let canvasesArr: CanvasType[] = [];
-      let index = 0;
-      if (data?.canvas_data) {
-        try {
-          const jsonData = data.canvas_data as Json;
-          if (
-            typeof jsonData === 'object' &&
-            jsonData !== null &&
-            'canvases' in jsonData &&
-            Array.isArray(jsonData.canvases)
-          ) {
-            canvasesArr = jsonData.canvases as unknown as CanvasType[];
-            index = typeof jsonData.activeCanvasIndex === "number" ? jsonData.activeCanvasIndex : 0;
-          } else {
-            toast.error('Invalid canvas structure, loading default canvas');
-            canvasesArr = [createDefaultCanvas()];
-            index = 0;
-          }
-        } catch (err) {
-          console.error('Error parsing canvas_data:', err);
-          toast.error('Corrupted canvas data, loading default canvas');
-          canvasesArr = [createDefaultCanvas()];
-          index = 0;
+      
+      if (data && data.canvas_data) {
+        // Properly assert the type with a type guard
+        const jsonData = data.canvas_data as Json;
+        
+        // Check if the structure matches what we expect
+        if (typeof jsonData === 'object' && jsonData !== null && 
+            'canvases' in jsonData && 'activeCanvasIndex' in jsonData &&
+            Array.isArray(jsonData.canvases)) {
+          
+          // Now we can safely cast to the expected type
+          setCanvases(jsonData.canvases as unknown as CanvasType[]);
+          setActiveCanvasIndex(jsonData.activeCanvasIndex as number);
+        } else {
+          console.error("Invalid canvas data structure:", jsonData);
+          throw new Error('Invalid project data format');
         }
-      } else {
-        toast.info('No canvas found, loading blank canvas.');
-        canvasesArr = [createDefaultCanvas()];
-        index = 0;
-      }
-      setCanvases(canvasesArr);
-      setActiveCanvasIndex(index < canvasesArr.length ? index : 0);
-
-      if (canvasesArr.length === 0) {
-        toast.error('No canvas found for this project; blank canvas loaded.');
-        setCanvases([createDefaultCanvas()]);
-        setActiveCanvasIndex(0);
       }
     } catch (error) {
-      console.error('Error loading project or canvas:', error);
-      toast.error('Error loading project or canvas. Loading blank canvas.');
-      setCanvases([createDefaultCanvas()]);
-      setActiveCanvasIndex(0);
+      console.error('Error loading project data:', error);
+      navigate('/');
     } finally {
       setIsLoading(false);
     }
@@ -144,20 +134,6 @@ const Play = () => {
     );
   }
 
-  if (!canvases.length) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <h2 className="text-xl font-bold mb-2 text-canvas-purple">{projectName || 'No Project'}</h2>
-          <p className="text-gray-500 mb-8">
-            No canvas found or error loading. Try reloading or returning to your projects.
-          </p>
-          <Button variant="default" onClick={() => navigate("/")}>Back to Projects</Button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
@@ -166,8 +142,10 @@ const Play = () => {
             <Canvas isFullscreen={true} isMobileView={isMobile} />
           </div>
         </div>
+        
         <InventoryPanel />
         <InventoryIcon />
+        
         <div className={`absolute ${isMobile ? 'bottom-2 right-2' : 'bottom-4 right-4'} z-[100]`}>
           <Button 
             variant="secondary" 
