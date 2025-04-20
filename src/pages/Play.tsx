@@ -32,10 +32,12 @@ const Play = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!projectId) {
-      navigate('/');
+      setError('Project ID is missing from the URL.');
+      setIsLoading(false);
       return;
     }
     loadProjectData();
@@ -46,7 +48,6 @@ const Play = () => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
-
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -58,6 +59,7 @@ const Play = () => {
       setIsLoading(true);
       setCanvases([]);
       setActiveCanvasIndex(0);
+      setError(null);
 
       // Step 1: Load project meta info
       const { data: projectData, error: projectError } = await supabase
@@ -67,15 +69,17 @@ const Play = () => {
         .maybeSingle();
 
       if (projectError || !projectData) {
+        setError('Project not found. Please check the link or try again.');
+        setIsLoading(false);
         toast.error('Project not found');
         console.error("Supabase returned error or no project data:", projectError, projectData);
-        navigate('/');
         return;
       }
 
       if (projectData.is_public !== true && (!user || user?.id !== projectData.user_id)) {
+        setError("This project is private. Only the owner can view it.");
+        setIsLoading(false);
         toast.error("This project is private. Only the owner can view it.");
-        navigate('/');
         return;
       }
       setProjectName(projectData.name);
@@ -88,10 +92,9 @@ const Play = () => {
         .maybeSingle();
 
       if (error) {
-        toast.error('Could not load canvas data');
-        setCanvases([]);
-        setActiveCanvasIndex(0);
+        setError('Could not load canvas data. Please try again later.');
         setIsLoading(false);
+        toast.error('Could not load canvas data');
         console.error("Supabase project_canvases error:", error);
         return;
       }
@@ -100,6 +103,7 @@ const Play = () => {
       let index = 0;
       let debugLog = {};
 
+      // Parse and check the canvas structure
       if (data?.canvas_data) {
         const jsonData = data.canvas_data as Json;
         debugLog = { jsonData, typeofJson: typeof jsonData };
@@ -113,24 +117,25 @@ const Play = () => {
           index = typeof (jsonData as any).activeCanvasIndex === "number" ? (jsonData as any).activeCanvasIndex : 0;
           debugLog = { ...debugLog, canvasesArr, length: canvasesArr.length, index };
         } else {
-          toast.error('Invalid canvas structure, loading default canvas');
+          setError('Invalid canvas structure for this project. Please ask the owner to fix.');
           debugLog = { ...debugLog, error: "Invalid structure" };
           canvasesArr = [createDefaultCanvas()];
         }
       } else {
+        setError('No canvas found for this project. Showing a blank canvas.');
         canvasesArr = [createDefaultCanvas()];
         debugLog = { ...debugLog, error: "No canvas_data found" };
       }
       setCanvases(canvasesArr);
       setActiveCanvasIndex(index < canvasesArr.length ? index : 0);
 
-      // Extra safety: Check if canvasesArr is valid
+      // Further safety: fallback if structure is broken
       if (!canvasesArr.length || !Array.isArray(canvasesArr)) {
-        toast.error('No canvas found for this project; blank canvas loaded.');
+        setError('No canvas found for this project; blank canvas loaded.');
         setCanvases([createDefaultCanvas()]);
         setActiveCanvasIndex(0);
       } else if (!canvasesArr[0]?.id) {
-        toast.error('Malformed canvas data, loading default.');
+        setError('Malformed canvas data. Showing default canvas.');
         setCanvases([createDefaultCanvas()]);
         setActiveCanvasIndex(0);
       }
@@ -143,9 +148,10 @@ const Play = () => {
         debugLog,
         canvasesArr
       });
-    } catch (error) {
+    } catch (e: any) {
+      setError('Error loading project or canvas. Please try again.');
       toast.error('Error loading project or canvas');
-      console.error("Unhandled error loading project/canvas:", error);
+      console.error("Unhandled error loading project/canvas:", e);
       setCanvases([createDefaultCanvas()]);
       setActiveCanvasIndex(0);
       setProjectName('Unknown Project');
@@ -174,6 +180,18 @@ const Play = () => {
             CreativoCanvas
           </h1>
           <div className="w-12 h-12 border-4 border-canvas-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-2 text-canvas-purple">{projectName || 'No Project'}</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Button variant="default" onClick={() => navigate("/")}>Back to Projects</Button>
         </div>
       </div>
     );
@@ -219,4 +237,3 @@ const Play = () => {
 };
 
 export default Play;
-
