@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,7 +26,6 @@ const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [canvases, setCanvases] = useState<CanvasType[]>([]);
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -35,13 +35,11 @@ const Play = () => {
 
   useEffect(() => {
     if (!projectId) {
-      setErrorMessage('No project ID found in link.');
-      setIsLoading(false);
       navigate('/');
       return;
     }
     loadProjectData();
-  // eslint-disable-next-line
+    // eslint-disable-next-line
   }, [projectId]);
 
   useEffect(() => {
@@ -58,7 +56,6 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-      setErrorMessage(null);
 
       const { data, error } = await supabase
         .from('project_canvases')
@@ -67,7 +64,7 @@ const Play = () => {
         .maybeSingle();
 
       if (error) {
-        setErrorMessage('Could not load canvas data');
+        console.error('Supabase error loading project_canvases:', error);
         toast.error('Could not load canvas data');
         setCanvases([createDefaultCanvas()]);
         setActiveCanvasIndex(0);
@@ -89,20 +86,18 @@ const Play = () => {
             canvasesArr = jsonData.canvases as unknown as CanvasType[];
             index = typeof jsonData.activeCanvasIndex === "number" ? jsonData.activeCanvasIndex : 0;
           } else {
-            setErrorMessage('Invalid canvas structure, loading default canvas');
             toast.error('Invalid canvas structure, loading default canvas');
             canvasesArr = [createDefaultCanvas()];
             index = 0;
           }
         } catch (err) {
-          setErrorMessage('Corrupted canvas data, loading default canvas');
+          console.error('Error parsing canvas_data:', err);
           toast.error('Corrupted canvas data, loading default canvas');
           canvasesArr = [createDefaultCanvas()];
           index = 0;
         }
       } else {
-        setErrorMessage('No canvas found, blank canvas loaded');
-        toast.info('No canvas found, blank canvas loaded');
+        toast.info('No canvas found, loading blank canvas.');
         canvasesArr = [createDefaultCanvas()];
         index = 0;
       }
@@ -110,14 +105,13 @@ const Play = () => {
       setActiveCanvasIndex(index < canvasesArr.length ? index : 0);
 
       if (canvasesArr.length === 0) {
-        setErrorMessage('No canvas found for this project; blank canvas loaded.');
         toast.error('No canvas found for this project; blank canvas loaded.');
         setCanvases([createDefaultCanvas()]);
         setActiveCanvasIndex(0);
       }
     } catch (error) {
-      setErrorMessage('Error loading project or canvas. Blank canvas loaded.');
-      toast.error('Error loading project or canvas. Blank canvas loaded.');
+      console.error('Error loading project or canvas:', error);
+      toast.error('Error loading project or canvas. Loading blank canvas.');
       setCanvases([createDefaultCanvas()]);
       setActiveCanvasIndex(0);
     } finally {
@@ -145,21 +139,6 @@ const Play = () => {
             CreativoCanvas
           </h1>
           <div className="w-12 h-12 border-4 border-canvas-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
-        </div>
-      </div>
-    );
-  }
-
-  if (errorMessage) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <h2 className="text-xl font-bold mb-2 text-canvas-purple">{projectName || 'No Project'}</h2>
-          <p className="text-red-500 mb-8">
-            {errorMessage}
-          </p>
-          <Button variant="default" onClick={() => navigate("/")}>Back to Projects</Button>
-          <Button variant="outline" className="ml-2" onClick={loadProjectData}>Retry</Button>
         </div>
       </div>
     );
