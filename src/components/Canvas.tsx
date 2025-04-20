@@ -39,7 +39,6 @@ const Canvas = ({
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
   const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState<number>(1);
-  const [offset, setOffset] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -345,43 +344,18 @@ const Canvas = ({
     }
   }, [isMobileView, initialTouchDistance, initialZoom]);
 
-  const getCanvasPointFromEvent = (e: MouseEvent) => {
-    const container = containerRef.current;
-    if (!container) return { x: 0, y: 0 };
-    const rect = container.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    return { x, y };
-  };
-
   const handleWheel = (e: WheelEvent) => {
     if (e.ctrlKey) {
       e.preventDefault();
-      const container = containerRef.current;
-      if (!container) return;
-      const prevZoom = zoomLevel;
-      const rect = container.getBoundingClientRect();
-
-      const pointer = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-
-      let newZoom = prevZoom;
+      const delta = e.deltaY;
       const zoomFactor = 0.1;
-      if (e.deltaY > 0) {
-        newZoom = Math.max(prevZoom - zoomFactor, 0.2);
-      } else {
-        newZoom = Math.min(prevZoom + zoomFactor, 2);
-      }
-
-      const pointerCanvasX = (pointer.x - offset.x) / prevZoom;
-      const pointerCanvasY = (pointer.y - offset.y) / prevZoom;
-
-      const newOffset = {
-        x: pointer.x - pointerCanvasX * newZoom,
-        y: pointer.y - pointerCanvasY * newZoom
-      };
-
-      setZoomLevel(newZoom);
-      setOffset(newOffset);
+      
+      setZoomLevel(prev => {
+        const newZoom = delta > 0 
+          ? Math.max(prev - zoomFactor, 0.2) // Zoom out
+          : Math.min(prev + zoomFactor, 2);  // Zoom in
+        return newZoom;
+      });
     }
   };
 
@@ -393,25 +367,13 @@ const Canvas = ({
         container.removeEventListener('wheel', handleWheel);
       };
     }
-  }, [isMobileView, zoomLevel, offset]);
-
-  useEffect(() => {
-    if (!isGameMode && !isMobileView && zoomLevel === 1) {
-      setOffset({ x: 0, y: 0 });
-    }
-  }, [zoomLevel, isGameMode, isMobileView]);
-
-  useEffect(() => {
-    if ((isGameMode || isMobileView) && (offset.x !== 0 || offset.y !== 0)) {
-      setOffset({ x: 0, y: 0 });
-    }
-  }, [isGameMode, isMobileView]);
+  }, [isMobileView]);
 
   return <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
       <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{
-        transform: `scale(${displayZoomLevel}) translate(${offset.x/displayZoomLevel}px, ${offset.y/displayZoomLevel}px)`,
-        transformOrigin: '0 0',
+        transform: `scale(${displayZoomLevel})`,
+        transformOrigin: 'center center',
         transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
         position: 'absolute',
         top: '50%',
