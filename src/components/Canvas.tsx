@@ -39,6 +39,8 @@ const Canvas = ({
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
   const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState<number>(1);
+  const [isWheelZooming, setIsWheelZooming] = useState(false);
+  const wheelTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -361,15 +363,22 @@ const Canvas = ({
       
       (canvasContainer as HTMLElement).style.transformOrigin = `${percentX}% ${percentY}%`;
       
+      setIsWheelZooming(true);
+      
       const delta = e.deltaY;
       const zoomFactor = 0.1;
       
       setZoomLevel(prev => {
         const newZoom = delta > 0 
-          ? Math.max(prev - zoomFactor, 0.2) // Zoom out
-          : Math.min(prev + zoomFactor, 2);  // Zoom in
+          ? Math.max(prev - zoomFactor, 0.2)
+          : Math.min(prev + zoomFactor, 2);
         return newZoom;
       });
+      
+      clearTimeout(wheelTimeout.current);
+      wheelTimeout.current = setTimeout(() => {
+        setIsWheelZooming(false);
+      }, 150) as unknown as number;
     }
   };
 
@@ -389,7 +398,7 @@ const Canvas = ({
           className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} 
           style={{
             transform: `scale(${displayZoomLevel})`,
-            transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
+            transition: isWheelZooming ? 'none' : (isMobileView ? 'none' : 'transform 0.2s ease-out'),
             position: 'absolute',
             top: '50%',
             left: '50%',
