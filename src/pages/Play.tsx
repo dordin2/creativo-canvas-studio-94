@@ -13,7 +13,6 @@ import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { Database } from "@/types/database";
 
-// Helper: create a blank canvas (if none exist so we always show _something_)
 function createDefaultCanvas(): CanvasType {
   return {
     id: crypto.randomUUID(),
@@ -64,17 +63,22 @@ const Play = () => {
         .eq('id', projectId)
         .maybeSingle();
 
-      if (projectError || !projectData) {
+      if (projectError) {
         toast.error('Project not found');
         console.error('Project fetch error:', projectError);
         navigate('/');
         return;
       }
 
+      if (!projectData) {
+        toast.error("Project not found");
+        navigate("/");
+        return;
+      }
+
       if (projectData.is_public !== true) {
         if (!user || user?.id !== projectData.user_id) {
-          toast.error("This project is private");
-          console.warn("User tried to access private project", projectId, user?.id, projectData.user_id);
+          toast.error("This project is private. Only owner can view.");
           navigate('/');
           return;
         }
@@ -114,7 +118,6 @@ const Play = () => {
           canvasesArr = [createDefaultCanvas()];
         }
       } else {
-        // No data or old structure, always seed a default canvas so Play never blank!
         canvasesArr = [createDefaultCanvas()];
       }
       setCanvases(canvasesArr);
@@ -159,7 +162,6 @@ const Play = () => {
     );
   }
 
-  // If for some reason canvases failed to load (should never happen now)
   if (!canvases.length) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
