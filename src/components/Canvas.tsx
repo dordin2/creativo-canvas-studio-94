@@ -164,24 +164,20 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       ? Math.max(0.1, zoomLevel - zoomFactor)
       : Math.min(3, zoomLevel + zoomFactor);
     
-    const canvasWorkspace = document.querySelector('.canvas-workspace') as HTMLElement;
-    if (!canvasWorkspace) return;
+    const canvasContainer = containerRef.current;
+    if (!canvasContainer) return;
     
-    const rect = canvasWorkspace.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / canvasWorkspace.offsetWidth;
-    const y = (e.clientY - rect.top) / canvasWorkspace.offsetHeight;
+    const rect = canvasContainer.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width;
+    const y = (e.clientY - rect.top) / rect.height;
     
-    const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
-    if (canvasContainer) {
-      canvasContainer.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-    }
-    
+    canvasContainer.style.transformOrigin = `${x * 100}% ${y * 100}%`;
     setZoomLevel(newZoom);
   };
   
   useEffect(() => {
-    const canvasWorkspace = document.querySelector('.canvas-workspace');
-    if (!canvasWorkspace) return;
+    const canvas = containerRef.current;
+    if (!canvas) return;
     
     const wheelHandler = (e: WheelEvent) => {
       if (e.ctrlKey) {
@@ -189,10 +185,10 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       }
     };
     
-    canvasWorkspace.addEventListener('wheel', wheelHandler, { passive: false });
+    canvas.addEventListener('wheel', wheelHandler, { passive: false });
     
     return () => {
-      canvasWorkspace.removeEventListener('wheel', wheelHandler);
+      canvas.removeEventListener('wheel', wheelHandler);
     };
   }, [zoomLevel]);
 
@@ -442,7 +438,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
-      <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
+      <div className={`flex-1 flex items-center justify-center overflow-hidden ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
           transform: `scale(${displayZoomLevel})`,
           transition: 'transform 0.1s ease-out',
