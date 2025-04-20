@@ -1,10 +1,9 @@
-
 import { useDesignState } from "@/context/DesignContext";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Copy, ArrowLeft, ArrowRight, Move } from "lucide-react";
+import { Plus, Copy, X, Move } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -28,7 +27,6 @@ const CanvasTabs = () => {
   const [editingCanvasId, setEditingCanvasId] = useState<string | null>(null);
   const [newCanvasName, setNewCanvasName] = useState<string>('');
   
-  // For drag and drop functionality
   const [draggingIndex, setDraggingIndex] = useState<number | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -40,7 +38,6 @@ const CanvasTabs = () => {
 
   const handleDragStart = (e: React.DragEvent, index: number) => {
     e.dataTransfer.effectAllowed = 'move';
-    // Add a transparent drag ghost image
     const dragGhost = document.createElement('div');
     dragGhost.style.position = 'absolute';
     dragGhost.style.top = '-1000px';
@@ -48,8 +45,6 @@ const CanvasTabs = () => {
     e.dataTransfer.setDragImage(dragGhost, 0, 0);
     
     setDraggingIndex(index);
-    
-    // Store the index in the dataTransfer to use during drop
     e.dataTransfer.setData('text/plain', index.toString());
   };
 
@@ -78,7 +73,6 @@ const CanvasTabs = () => {
     setDragOverIndex(null);
   };
 
-  // Clean up any ghost elements when component unmounts
   useEffect(() => {
     return () => {
       const ghosts = document.querySelectorAll('div[style*="position: absolute; top: -1000px"]');
@@ -88,7 +82,7 @@ const CanvasTabs = () => {
 
   return (
     <div 
-      className={`flex items-center gap-1 p-2 overflow-x-auto ${language === 'he' ? 'rtl' : 'ltr'}`}
+      className={`flex items-center gap-1 p-1 overflow-x-auto border-b border-gray-100 bg-white/50 backdrop-blur-sm ${language === 'he' ? 'rtl' : 'ltr'}`}
       ref={tabsRef}
     >
       {canvases.map((canvas, index) => (
@@ -106,15 +100,15 @@ const CanvasTabs = () => {
         >
           <button
             className={cn(
-              "flex items-center py-1 px-3 text-sm rounded-t-md border border-gray-300 transition-colors",
+              "flex items-center py-1 px-2 text-xs rounded-md transition-all duration-200 hover:bg-gray-50",
               activeCanvasIndex === index 
-                ? "bg-white border-b-white font-medium text-canvas-purple" 
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200",
+                ? "text-canvas-purple bg-white shadow-sm ring-1 ring-gray-200/50" 
+                : "text-gray-500 hover:text-gray-700",
               draggingIndex === index && "opacity-50 border-dashed"
             )}
             onClick={() => setActiveCanvas(index)}
           >
-            <Move size={14} className="mr-1.5 cursor-move text-gray-500" />
+            <Move size={12} className="mr-1 cursor-move text-gray-400" />
             
             {editingCanvasId === canvas.id ? (
               <form
@@ -129,7 +123,7 @@ const CanvasTabs = () => {
                   type="text"
                   value={newCanvasName}
                   onChange={(e) => setNewCanvasName(e.target.value)}
-                  className="h-7 text-xs w-full"
+                  className="h-6 text-xs w-24"
                   autoFocus
                   onBlur={() => handleNameChange(canvas.id, newCanvasName || canvas.name)}
                 />
@@ -141,65 +135,64 @@ const CanvasTabs = () => {
                   setEditingCanvasId(canvas.id);
                   setNewCanvasName(canvas.name);
                 }}
+                className="truncate max-w-[100px]"
               >
                 {canvas.name}
               </span>
             )}
-          </button>
-          
-          <div className="flex items-center">
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <button
-                    className="ml-1 p-1 text-gray-500 hover:text-blue-500 rounded-full hover:bg-gray-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      duplicateCanvas(index);
-                    }}
-                    title="Duplicate Canvas"
-                  >
-                    <Copy size={14} />
-                  </button>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>{language === 'he' ? 'שכפול קנבס' : 'Duplicate Canvas'}</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-            
-            {canvases.length > 1 && (
+
+            <div className="flex items-center gap-0.5 ml-1">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      className="ml-1 p-1 text-gray-500 hover:text-red-500 rounded-full hover:bg-gray-100"
+                      className="p-1 text-gray-400 hover:text-blue-500 rounded-full hover:bg-gray-50"
                       onClick={(e) => {
                         e.stopPropagation();
-                        removeCanvas(index);
+                        duplicateCanvas(index);
                       }}
-                      title="Remove Canvas"
                     >
-                      <X size={14} />
+                      <Copy size={12} />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
-                    <p>{language === 'he' ? 'הסר קנבס' : 'Remove Canvas'}</p>
+                    <p>{language === 'he' ? 'שכפול קנבס' : 'Duplicate Canvas'}</p>
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
-            )}
-          </div>
+              
+              {canvases.length > 1 && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeCanvas(index);
+                        }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>{language === 'he' ? 'הסר קנבס' : 'Remove Canvas'}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
+          </button>
         </div>
       ))}
       
       <Button
         variant="ghost"
         size="sm"
-        className="flex-shrink-0 ml-2 gap-1"
+        className="flex-shrink-0 ml-1 gap-1 h-7 text-xs text-gray-500 hover:text-gray-700"
         onClick={addCanvas}
       >
-        <Plus size={16} />
+        <Plus size={12} />
         <span>{language === 'he' ? 'הוסף קאנבס' : 'Add Canvas'}</span>
       </Button>
     </div>
