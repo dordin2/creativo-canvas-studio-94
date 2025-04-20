@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
+import { Download, Share, Undo, Redo, Layers, Menu, Globe, Lock, Save } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -13,57 +13,60 @@ import LayersList from "./LayersList";
 import { useProject } from "@/context/ProjectContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { AdminGallery } from './admin/AdminGallery';
-import {
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { LibraryModal } from './library/LibraryModal';
-
 const Header = () => {
-  const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
-  const { t, language } = useLanguage();
-  const { projectId } = useProject();
+  const {
+    canvasRef,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    canvases,
+    activeCanvasIndex
+  } = useDesignState();
+  const {
+    t,
+    language
+  } = useLanguage();
+  const {
+    projectId,
+    isPublic,
+    toggleProjectVisibility,
+    saveProject
+  } = useProject();
   const isMobile = useIsMobile();
-  const { profile } = useAuth();
+  const {
+    profile
+  } = useAuth();
   const isAdmin = profile?.roles?.includes('admin');
-
   const handleDownload = () => {
     if (!canvasRef) return;
-    
     try {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       const canvasElement = canvasRef;
-      
       canvas.width = canvasElement.clientWidth;
       canvas.height = canvasElement.clientHeight;
-      
       if (ctx) {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-        
         const data = new XMLSerializer().serializeToString(canvasElement);
         const img = new Image();
-        const svgBlob = new Blob([data], { type: "image/svg+xml;charset=utf-8" });
+        const svgBlob = new Blob([data], {
+          type: "image/svg+xml;charset=utf-8"
+        });
         const url = URL.createObjectURL(svgBlob);
-        
-        img.onload = function() {
+        img.onload = function () {
           ctx.drawImage(img, 0, 0);
           URL.revokeObjectURL(url);
-          
-          const imgURI = canvas
-            .toDataURL("image/png")
-            .replace("image/png", "image/octet-stream");
-          
+          const imgURI = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream");
           const link = document.createElement("a");
           link.download = "canvas-design.png";
           link.href = imgURI;
           link.click();
-          
           toast.success(t('toast.success.download'));
         };
-        
         img.src = url;
       }
     } catch (error) {
@@ -71,21 +74,26 @@ const Header = () => {
       toast.error("Failed to download design. Please try again.");
     }
   };
-
   const handleShare = () => {
     toast.info(t('toast.info.share'));
   };
-
+  const handleSaveProject = () => {
+    saveProject(canvases, activeCanvasIndex);
+  };
   if (isMobile) {
-    return (
-      <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
+    return <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <div className="flex items-center">
-          <div className="font-bold text-lg bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
-            {t('app.title')}
-          </div>
+          
         </div>
         
         <div className="flex items-center gap-2">
+          <Button variant="ghost" size="icon" onClick={handleSaveProject} className="aspect-square">
+            <Save className="h-5 w-5" />
+          </Button>
+          
+          <Button variant="ghost" size="icon" onClick={toggleProjectVisibility} className="aspect-square">
+            {isPublic ? <Globe className="h-5 w-5 text-green-500" /> : <Lock className="h-5 w-5 text-red-500" />}
+          </Button>
           <GameModeToggle />
           <InteractiveModeToggle />
           <Drawer>
@@ -98,31 +106,13 @@ const Header = () => {
               <div className="space-y-4 mt-2">
                 <h3 className="font-medium text-lg">{t('app.tools')}</h3>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={undo} 
-                    disabled={!canUndo}
-                    className="justify-start hover:bg-gray-50"
-                  >
+                  <Button variant="outline" onClick={undo} disabled={!canUndo} className="justify-start hover:bg-gray-50">
                     <Undo className="h-4 w-4 mr-2" />
                     {t('app.undo')}
                   </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={redo} 
-                    disabled={!canRedo}
-                    className="justify-start hover:bg-gray-50"
-                  >
+                  <Button variant="outline" onClick={redo} disabled={!canRedo} className="justify-start hover:bg-gray-50">
                     <Redo className="h-4 w-4 mr-2" />
                     {t('app.redo')}
-                  </Button>
-                  <Button variant="outline" className="justify-start hover:bg-gray-50" onClick={handleShare}>
-                    <Share className="h-4 w-4 mr-2" />
-                    {t('app.share')}
-                  </Button>
-                  <Button variant="outline" className="justify-start hover:bg-gray-50" onClick={handleDownload}>
-                    <Download className="h-4 w-4 mr-2" />
-                    {t('app.download')}
                   </Button>
                 </div>
                 
@@ -141,12 +131,9 @@ const Header = () => {
             </DrawerContent>
           </Drawer>
         </div>
-      </header>
-    );
+      </header>;
   }
-
-  return (
-    <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
+  return <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center gap-3">
         <div className="font-bold text-xl bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
           {t('app.title')}
@@ -161,24 +148,10 @@ const Header = () => {
         {isAdmin && <AdminGallery />}
         <div className="h-6 w-px bg-gray-200"></div>
         <div className="flex items-center gap-2">
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={undo} 
-            title={t('app.undo')}
-            disabled={!canUndo}
-            className="hover:bg-gray-50"
-          >
+          <Button variant="outline" size="icon" onClick={undo} title={t('app.undo')} disabled={!canUndo} className="hover:bg-gray-50">
             <Undo className="h-4 w-4" />
           </Button>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            onClick={redo} 
-            title={t('app.redo')}
-            disabled={!canRedo}
-            className="hover:bg-gray-50"
-          >
+          <Button variant="outline" size="icon" onClick={redo} title={t('app.redo')} disabled={!canRedo} className="hover:bg-gray-50">
             <Redo className="h-4 w-4" />
           </Button>
           <div className="w-px h-6 bg-gray-200 mx-1"></div>
@@ -206,8 +179,6 @@ const Header = () => {
           </Button>
         </div>
       </div>
-    </header>
-  );
+    </header>;
 };
-
 export default Header;

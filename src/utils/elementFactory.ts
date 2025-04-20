@@ -1,13 +1,15 @@
-
 import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
 // Get canvas center point and account for element size
 export const getDefaultPosition = (canvasRef: HTMLDivElement | null, elementSize = { width: 0, height: 0 }) => {
   if (!canvasRef) return { x: 100, y: 100 };
   
+  const FIXED_CANVAS_WIDTH = 1600;
+  const FIXED_CANVAS_HEIGHT = 900;
+  
   return {
-    x: Math.max(0, (canvasRef.clientWidth / 2) - (elementSize.width / 2)),
-    y: Math.max(0, (canvasRef.clientHeight / 2) - (elementSize.height / 2))
+    x: Math.max(0, (FIXED_CANVAS_WIDTH / 2) - (elementSize.width / 2)),
+    y: Math.max(0, (FIXED_CANVAS_HEIGHT / 2) - (elementSize.height / 2))
   };
 };
 
@@ -15,9 +17,16 @@ export const getDefaultPosition = (canvasRef: HTMLDivElement | null, elementSize
 export const getDefaultImageSize = (canvasRef: HTMLDivElement | null) => {
   if (!canvasRef) return { width: 200, height: 150 };
   
-  // Calculate a reasonable default size based on canvas size
-  const width = Math.min(200, canvasRef.clientWidth * 0.3);
-  const height = Math.min(150, canvasRef.clientHeight * 0.3);
+  // Use the actual canvas dimensions, not the scaled dimensions
+  const canvasWidth = 1600; // Fixed canvas width
+  const canvasHeight = 900; // Fixed canvas height
+  
+  const FIXED_CANVAS_WIDTH = 1600;
+  const FIXED_CANVAS_HEIGHT = 900;
+  const MAX_CANVAS_IMAGE_SIZE_PERCENT = 0.5;
+  
+  const width = Math.round(FIXED_CANVAS_WIDTH * MAX_CANVAS_IMAGE_SIZE_PERCENT);
+  const height = Math.round(FIXED_CANVAS_HEIGHT * MAX_CANVAS_IMAGE_SIZE_PERCENT);
   
   return { width, height };
 };
@@ -268,4 +277,3 @@ export const createNewElement = (
       };
   }
 };
-
