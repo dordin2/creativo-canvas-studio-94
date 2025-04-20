@@ -348,33 +348,35 @@ const Canvas = ({
 
   const handleWheel = (e: WheelEvent) => {
     if (e.ctrlKey) {
-      e.preventDefault();
-      
       const canvasContainer = parentRef.current?.querySelector('.canvas-container');
       if (!canvasContainer) return;
-      
+
+      if (
+        !(containerRef.current && 
+          (e.target === containerRef.current || (containerRef.current as Node).contains(e.target as Node)))
+      ) {
+        e.preventDefault();
+        (canvasContainer as HTMLElement).style.transformOrigin = `50% 50%`;
+        return;
+      }
+
+      e.preventDefault();
+
       const rect = canvasContainer.getBoundingClientRect();
-      
       const x = e.clientX - rect.left;
       const y = e.clientY - rect.top;
-      
       const percentX = x / rect.width * 100;
       const percentY = y / rect.height * 100;
-      
       (canvasContainer as HTMLElement).style.transformOrigin = `${percentX}% ${percentY}%`;
-      
       setIsWheelZooming(true);
-      
       const delta = e.deltaY;
       const zoomFactor = 0.1;
-      
       setZoomLevel(prev => {
-        const newZoom = delta > 0 
+        const newZoom = delta > 0
           ? Math.max(prev - zoomFactor, 0.2)
           : Math.min(prev + zoomFactor, 2);
         return newZoom;
       });
-      
       clearTimeout(wheelTimeout.current);
       wheelTimeout.current = setTimeout(() => {
         setIsWheelZooming(false);
