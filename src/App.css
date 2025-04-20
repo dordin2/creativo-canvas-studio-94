@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -81,58 +82,33 @@
     overflow-y: auto;
     height: 60vh;
     padding: 0 1rem;
-    -webkit-overflow-scrolling: touch;
   }
   
   .mobile-properties {
     overflow-y: auto;
     height: 70vh;
     padding: 1rem;
-    -webkit-overflow-scrolling: touch;
   }
   
   .mobile-drawer-content {
     max-height: 75vh;
     overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-  }
-  
-  .canvas-workspace.game-mode {
-    overflow: auto;
-    -webkit-overflow-scrolling: touch;
-    height: 100%;
-    width: 100%;
-    touch-action: pan-x pan-y;
-  }
-  
-  .canvas-container.mobile-view {
-    touch-action: manipulation;
-    user-select: none;
-    -webkit-user-select: none;
-    padding: 0;
-    margin: 0;
-    height: 100%;
-    width: 100%;
   }
   
   /* Increase touch targets on mobile */
   button, a, .tab {
     min-height: 44px;
-    min-width: 44px;
-    padding: 12px;
   }
   
   /* Fix canvas controls for touch */
   .resize-handle {
-    width: 24px !important;
-    height: 24px !important;
-    touch-action: none;
+    width: 18px !important;
+    height: 18px !important;
   }
   
   .rotation-handle {
-    width: 32px !important;
-    height: 32px !important;
-    touch-action: none;
+    width: 24px !important;
+    height: 24px !important;
   }
   
   /* Fixed bottom nav for mobile */
@@ -152,11 +128,7 @@
   
   /* Adjust canvas workspace for mobile */
   .canvas-workspace {
-    touch-action: manipulation;
-    -webkit-overflow-scrolling: touch;
-    overflow: auto;
-    height: 100%;
-    width: 100%;
+    touch-action: none;
   }
   
   /* Ensure popover menus are visible on mobile */
@@ -164,46 +136,4 @@
     z-index: 1000;
     min-width: 250px;
   }
-  
-  /* Smooth scrolling for all scrollable containers */
-  * {
-    scroll-behavior: smooth;
-  }
-}
-
-/* Landscape orientation specific styles */
-@media (max-width: 768px) and (orientation: landscape) {
-  .canvas-workspace {
-    height: calc(100vh - 100px);
-  }
-  
-  .mobile-bottom-nav {
-    height: 60px;
-  }
-}
-
-/* Mobile interaction controls scrolling */
-.mobile-interaction-controls {
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-  overscroll-behavior-y: contain;
-  touch-action: pan-y;
-}
-
-.pb-safe {
-  padding-bottom: env(safe-area-inset-bottom);
-}
-
-/* Improve scrollbar visibility on mobile */
-.mobile-scrollbar::-webkit-scrollbar {
-  width: 4px;
-}
-
-.mobile-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.mobile-scrollbar::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 4px;
 }

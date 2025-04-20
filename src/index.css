@@ -441,20 +441,24 @@
   }
 }
 
+/* Update the header styles to ensure it stays on top */
 header {
   position: relative;
   z-index: 20 !important; /* Higher z-index for header */
 }
 
+/* Ensure all UI elements stay above the canvas */
 .bg-white.border-b.border-gray-200.py-2.px-4.flex.items-center.justify-between {
   position: relative;
   z-index: 20 !important; /* Higher z-index for top navbar */
 }
 
+/* Make sure the editor wrapper maintains proper stacking context */
 .flex.flex-col.h-screen.overflow-hidden {
   position: relative;
 }
 
+/* Ensure the canvas container doesn't overflow its bounds */
 .flex-1.overflow-hidden.flex.flex-col {
   position: relative;
   z-index: 1;

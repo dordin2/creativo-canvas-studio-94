@@ -1,3 +1,4 @@
+
 import { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useDesignState } from "@/context/DesignContext";
 
@@ -13,42 +14,61 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
 
   const handleStyle: CSSProperties = {
     position: 'absolute',
-    width: '12px',
-    height: '12px',
+    width: '10px',
+    height: '10px',
     background: 'white',
-    border: '2px solid #8B5CF6',
+    border: '2px solid #4F46E5',
     borderRadius: '50%',
     zIndex: 1001,
     pointerEvents: 'auto',
-    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-    transform: 'translate(-50%, -50%)',
   };
 
   const createResizeHandle = (position: string, cursorType: string, direction: string) => {
     let positionStyle: CSSProperties = {};
+    let transform = 'translate(-50%, -50%)';
     
     switch (position) {
       case 'nw':
-        positionStyle = { top: '0', left: '0' };
+        positionStyle = { top: '0px', left: '0px' };
+        transform = 'translate(-50%, -50%)';
+        break;
+      case 'n':
+        positionStyle = { top: '0px', left: '50%' };
+        transform = 'translate(-50%, -50%)';
         break;
       case 'ne':
-        positionStyle = { top: '0', right: '0' };
+        positionStyle = { top: '0px', right: '0px', left: 'auto' };
+        transform = 'translate(50%, -50%)';
+        break;
+      case 'e':
+        positionStyle = { top: '50%', right: '0px', left: 'auto' };
+        transform = 'translate(50%, -50%)';
         break;
       case 'se':
-        positionStyle = { bottom: '0', right: '0' };
+        positionStyle = { bottom: '0px', right: '0px', top: 'auto', left: 'auto' };
+        transform = 'translate(50%, 50%)';
+        break;
+      case 's':
+        positionStyle = { bottom: '0px', left: '50%', top: 'auto' };
+        transform = 'translate(-50%, 50%)';
         break;
       case 'sw':
-        positionStyle = { bottom: '0', left: '0' };
+        positionStyle = { bottom: '0px', left: '0px', top: 'auto' };
+        transform = 'translate(-50%, 50%)';
+        break;
+      case 'w':
+        positionStyle = { top: '50%', left: '0px' };
+        transform = 'translate(-50%, -50%)';
         break;
     }
     
     return (
       <div 
-        className="resize-handle resize-handle-visible"
+        className={`resize-handle resize-handle-visible cursor-${cursorType}`}
         style={{ 
           ...handleStyle, 
           ...positionStyle, 
-          cursor: cursorType,
+          transform,
           touchAction: 'none',
         }}
         onMouseDown={(e) => onResizeStart(e, direction)}
@@ -101,11 +121,16 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
   return (
     <>
       {createResizeHandle('nw', 'nw-resize', 'nw')}
+      {createResizeHandle('n', 'n-resize', 'n')}
       {createResizeHandle('ne', 'ne-resize', 'ne')}
+      {createResizeHandle('e', 'e-resize', 'e')}
       {createResizeHandle('se', 'se-resize', 'se')}
+      {createResizeHandle('s', 's-resize', 's')}
       {createResizeHandle('sw', 'sw-resize', 'sw')}
+      {createResizeHandle('w', 'w-resize', 'w')}
     </>
   );
 };
 
 export default ResizeHandles;
+

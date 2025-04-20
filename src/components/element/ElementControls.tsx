@@ -1,3 +1,4 @@
+
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Trash2, Copy, Eye, EyeOff, Maximize2, Frame } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
@@ -21,7 +22,6 @@ interface ElementControlsProps {
   onResizeStart: (e: React.MouseEvent, direction: string) => void;
   onRotateStart: (e: React.MouseEvent) => void;
   showControls: boolean;
-  canvasScale?: number;
 }
 
 const ElementControls = ({ 
@@ -30,8 +30,7 @@ const ElementControls = ({
   frameTransform, 
   onResizeStart, 
   onRotateStart,
-  showControls,
-  canvasScale = 1
+  showControls
 }: ElementControlsProps) => {
   const { updateElement, removeElement, addElement, canvases, activeCanvasIndex } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
@@ -125,67 +124,56 @@ const ElementControls = ({
   
   const posX = Math.round(element.position.x);
   const posY = Math.round(element.position.y);
+  
+  const frameStyle = {
+    position: 'absolute' as const,
+    left: posX,
+    top: posY,
+    width: elementDimensions.width,
+    height: elementDimensions.height,
+    transform: `rotate(${rotation}deg)`,
+    pointerEvents: 'none' as const,
+    zIndex: 1000 + element.layer,
+    border: isActive ? '1px solid #6366F1' : 'none',
+    opacity: 1,
+    boxSizing: 'border-box' as const,
+    borderRadius: '2px',
+  };
 
   return (
-    <div 
-      className="element-controls" 
-      style={{
-        position: 'absolute',
-        left: posX,
-        top: posY,
-        width: element.size?.width || 0,
-        height: element.size?.height || 0,
-        transform: `rotate(${rotation}deg) scale(${canvasScale})`,
-        transformOrigin: '0 0',
-        pointerEvents: 'none',
-        zIndex: 1000 + element.layer,
-      }}
-    >
-      {!isInteractiveMode && (
-        <>
-          <ResizeHandles
-            show={showResizeHandles}
-            onResizeStart={onResizeStart}
-          />
-          
-          <RotationHandle
-            show={showRotationHandle}
-            onRotateStart={onRotateStart}
-          />
-        </>
-      )}
+    <div className="element-controls-wrapper" style={{ pointerEvents: 'none' }}>
+      <div
+        className="element-frame"
+        style={frameStyle}
+      />
       
-      {isActive && !isInteractiveMode && (
-        <div 
-          className="element-controls"
-          style={{
-            position: 'absolute',
-            top: '-40px',
-            right: '0',
-            display: 'flex',
-            gap: '8px',
-            pointerEvents: 'auto',
-          }}
-        >
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-8 w-8 bg-white"
-                  onClick={handleDuplicate}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Duplicate</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
+      <div style={{...frameStyle, pointerEvents: 'none'}}>
+        {!isInteractiveMode && (
+          <>
+            <ResizeHandles
+              show={showResizeHandles}
+              onResizeStart={onResizeStart}
+            />
             
-          {canBeBackground && (
+            <RotationHandle
+              show={showRotationHandle}
+              onRotateStart={onRotateStart}
+            />
+          </>
+        )}
+        
+        {isActive && !isInteractiveMode && (
+          <div 
+            className="element-controls"
+            style={{
+              position: 'absolute',
+              top: '-40px',
+              right: '0',
+              display: 'flex',
+              gap: '8px',
+              pointerEvents: 'auto',
+            }}
+          >
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -193,19 +181,57 @@ const ElementControls = ({
                     variant="outline" 
                     size="icon" 
                     className="h-8 w-8 bg-white"
-                    onClick={handleSetAsBackground}
+                    onClick={handleDuplicate}
                   >
-                    <Maximize2 className="h-4 w-4" />
+                    <Copy className="h-4 w-4" />
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{language === 'he' ? 'הפוך לרקע' : 'Set as Background'}</p>
+                  <p>Duplicate</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          )}
             
-          {element.type === 'background' && (
+            {canBeBackground && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-8 w-8 bg-white"
+                      onClick={handleSetAsBackground}
+                    >
+                      <Maximize2 className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{language === 'he' ? 'הפוך לרקע' : 'Set as Background'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
+            {element.type === 'background' && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className="h-8 w-8 bg-white"
+                      onClick={handleDetachFromBackground}
+                    >
+                      <Frame className="h-4 w-4" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>{language === 'he' ? 'הפרד מהרקע' : 'Detach from Background'}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -213,59 +239,41 @@ const ElementControls = ({
                     variant="outline" 
                     size="icon" 
                     className="h-8 w-8 bg-white"
-                    onClick={handleDetachFromBackground}
+                    onClick={handleToggleVisibility}
                   >
-                    <Frame className="h-4 w-4" />
+                    {isVisible ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
                   </Button>
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>{language === 'he' ? 'הפרד מהרקע' : 'Detach from Background'}</p>
+                  <p>{isVisible ? 'Hide' : 'Show'}</p>
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-          )}
             
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-8 w-8 bg-white"
-                  onClick={handleToggleVisibility}
-                >
-                  {isVisible ? (
-                    <Eye className="h-4 w-4" />
-                  ) : (
-                    <EyeOff className="h-4 w-4" />
-                  )}
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>{isVisible ? 'Hide' : 'Show'}</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-            
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-8 w-8 bg-white text-red-500"
-                  onClick={handleDelete}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Delete</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        </div>
-      )}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    className="h-8 w-8 bg-white text-red-500"
+                    onClick={handleDelete}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Delete</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+        )}
+      </div>
     </div>
   );
 };

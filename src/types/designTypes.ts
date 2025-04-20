@@ -133,10 +133,6 @@ export interface DesignElement {
   name?: string;
   interaction?: InteractionConfig;
   inInventory?: boolean;
-  // Add the missing properties that were reported in the errors
-  alt?: string;
-  text?: string;
-  fill?: string;
 }
 
 export interface Canvas {

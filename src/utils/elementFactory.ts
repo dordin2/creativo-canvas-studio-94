@@ -1,27 +1,23 @@
+
 import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
 // Get canvas center point and account for element size
 export const getDefaultPosition = (canvasRef: HTMLDivElement | null, elementSize = { width: 0, height: 0 }) => {
-  // Use fixed canvas dimensions to ensure consistent placement
-  const FIXED_CANVAS_WIDTH = 1600;
-  const FIXED_CANVAS_HEIGHT = 900;
+  if (!canvasRef) return { x: 100, y: 100 };
   
-  // Calculate the center position, accounting for element size
   return {
-    x: Math.max(0, (FIXED_CANVAS_WIDTH / 2) - (elementSize.width / 2)),
-    y: Math.max(0, (FIXED_CANVAS_HEIGHT / 2) - (elementSize.height / 2))
+    x: Math.max(0, (canvasRef.clientWidth / 2) - (elementSize.width / 2)),
+    y: Math.max(0, (canvasRef.clientHeight / 2) - (elementSize.height / 2))
   };
 };
 
-// Get default size as 50% of canvas dimensions
+// Get default placeholder size for images
 export const getDefaultImageSize = (canvasRef: HTMLDivElement | null) => {
-  // Use fixed canvas dimensions for consistent sizing
-  const FIXED_CANVAS_WIDTH = 1600;
-  const FIXED_CANVAS_HEIGHT = 900;
-  const CANVAS_SIZE_PERCENT = 0.5; // 50% of canvas size
+  if (!canvasRef) return { width: 200, height: 150 };
   
-  const width = Math.round(FIXED_CANVAS_WIDTH * CANVAS_SIZE_PERCENT);
-  const height = Math.round(FIXED_CANVAS_HEIGHT * CANVAS_SIZE_PERCENT);
+  // Calculate a reasonable default size based on canvas size
+  const width = Math.min(200, canvasRef.clientWidth * 0.3);
+  const height = Math.min(150, canvasRef.clientHeight * 0.3);
   
   return { width, height };
 };
@@ -33,50 +29,46 @@ export const createNewElement = (
   layer: number,
   props?: any
 ): DesignElement => {
-  // Get default size as 50% of canvas
-  const defaultSize = getDefaultImageSize(canvasRef);
+  let size = { width: 100, height: 100 }; // Default size
   
-  // Define size based on element type, maintaining aspect ratios but at 50% canvas size
-  let size = { ...defaultSize }; // Default to 50% canvas size
-  
+  // Define size based on element type
   switch (type) {
     case 'rectangle':
-      size = { width: defaultSize.width / 2, height: defaultSize.height / 2 };
+      size = { width: 100, height: 80 };
       break;
     case 'circle':
-      const diameter = Math.min(defaultSize.width, defaultSize.height) / 2;
-      size = { width: diameter, height: diameter };
+      size = { width: 100, height: 100 };
       break;
     case 'triangle':
-      size = { width: defaultSize.width / 2, height: defaultSize.height / 2 };
+      size = { width: 50, height: 100 };
       break;
     case 'line':
-      size = { width: defaultSize.width / 2, height: 4 };
+      size = { width: 100, height: 2 };
       break;
     case 'heading':
-      size = { width: defaultSize.width / 2, height: defaultSize.height / 8 };
+      size = { width: 300, height: 50 };
       break;
     case 'subheading':
-      size = { width: defaultSize.width / 2.5, height: defaultSize.height / 10 };
+      size = { width: 250, height: 40 };
       break;
     case 'paragraph':
-      size = { width: defaultSize.width / 2, height: defaultSize.height / 4 };
+      size = { width: 300, height: 100 };
       break;
     case 'image':
-      size = props?.size || defaultSize;
+      size = props?.size || getDefaultImageSize(canvasRef);
       break;
     case 'puzzle':
-      size = { width: defaultSize.width / 3, height: defaultSize.height / 3 };
+      size = { width: 150, height: 150 };
       break;
     case 'sequencePuzzle':
     case 'clickSequencePuzzle':
-      size = { width: defaultSize.width / 2, height: defaultSize.height / 3 };
+      size = { width: 350, height: 150 };
       break;
     case 'sliderPuzzle':
       const orientation = props?.sliderPuzzleConfig?.orientation || 'horizontal';
       size = {
-        width: orientation === 'horizontal' ? defaultSize.width / 2 : defaultSize.width / 4,
-        height: orientation === 'horizontal' ? defaultSize.height / 3 : defaultSize.height / 2
+        width: orientation === 'horizontal' ? 300 : 150,
+        height: orientation === 'horizontal' ? 150 : 300
       };
       break;
   }
@@ -276,3 +268,4 @@ export const createNewElement = (
       };
   }
 };
+
