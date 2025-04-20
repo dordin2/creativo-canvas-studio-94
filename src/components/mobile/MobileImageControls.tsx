@@ -1,5 +1,4 @@
-
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { DesignElement } from "@/types/designTypes";
 import { useDesignState } from "@/context/DesignContext";
 import { getRotation } from "@/utils/elementStyles";
@@ -15,25 +14,24 @@ interface MobileImageControlsProps {
 
 const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) => {
   const { updateElement, isGameMode } = useDesignState();
-  const [scaleValue, setScaleValue] = useState<number>(50);
+  const [scaleValue, setScaleValue] = useState<number>(100);
   const [rotation, setRotation] = useState(getRotation(element));
-  
+
   useEffect(() => {
     if (element.originalSize && element.size && canvasSize.width && canvasSize.height) {
       const widthRatio = element.size.width / canvasSize.width;
       const heightRatio = element.size.height / canvasSize.height;
       const currentRatio = Math.max(widthRatio, heightRatio);
-      let scale = Math.round(currentRatio * 50);
-      scale = Math.min(Math.max(scale, 1), 100);
+      const scale = Math.round(currentRatio * 100);
       setScaleValue(scale);
     }
-  }, [element.originalSize, element.size, canvasSize, element.id]);
+  }, [element.originalSize, element.size, canvasSize]);
 
   useEffect(() => {
     setRotation(getRotation(element));
   }, [element]);
 
-  const handleImageResize = useCallback((value: number[]) => {
+  const handleImageResize = (value: number[]) => {
     if (!element.originalSize || !canvasSize.width || !canvasSize.height) return;
     
     const scalePercentage = value[0];
@@ -54,8 +52,7 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
       targetWidth = maxHeight * imageAspectRatio;
     }
     
-    const scaleFactor = (scalePercentage / 50);
-    
+    const scaleFactor = scalePercentage / 100;
     const newWidth = Math.round(targetWidth * scaleFactor);
     const newHeight = Math.round(targetHeight * scaleFactor);
     
@@ -65,9 +62,9 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
         height: newHeight
       }
     });
-  }, [element, canvasSize, updateElement]);
+  };
 
-  const handleRotationChange = useCallback((value: number[]) => {
+  const handleRotationChange = (value: number[]) => {
     if (isGameMode) return;
     
     const newRotation = Math.round(value[0]);
@@ -75,7 +72,7 @@ const MobileImageControls = ({ element, canvasSize }: MobileImageControlsProps) 
     updateElement(element.id, {
       style: { ...element.style, transform: `rotate(${newRotation}deg)` }
     });
-  }, [isGameMode, element, updateElement]);
+  };
 
   return (
     <ImageControlTabs

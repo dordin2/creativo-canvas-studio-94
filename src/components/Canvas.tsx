@@ -49,8 +49,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         const canvasWidth = FIXED_CANVAS_WIDTH;
         const canvasHeight = FIXED_CANVAS_HEIGHT;
         
-        setCanvasDimensions({ width: canvasWidth, height: canvasHeight });
-        
         if (isMobileView && isGameMode) {
           const scaleX = parentWidth / canvasWidth;
           const scaleY = parentHeight / canvasHeight;
@@ -65,6 +63,8 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             setZoomLevel(scale);
           }
         }
+        
+        setCanvasDimensions({ width: canvasWidth, height: canvasHeight });
       }
     };
     
@@ -398,26 +398,19 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
-      <div className={`flex-1 flex items-center justify-center ${
-        isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'
-      } ${isMobileView ? 'mobile-view' : ''}`}>
-        <div 
-          className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''} ${
-            isMobileView ? 'mobile-view' : ''
-          }`} 
-          style={{ 
-            transform: `scale(${displayZoomLevel})`, 
-            transformOrigin: 'center center',
-            transition: 'transform 0.2s ease-out',
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            translate: '-50% -50%',
-            width: 'fit-content',
-            height: 'fit-content',
-            zIndex: 1
-          }}
-        >
+      <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
+        <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
+          transform: `scale(${displayZoomLevel})`, 
+          transformOrigin: 'center center',
+          transition: 'transform 0.2s ease-out',
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          translate: '-50% -50%',
+          width: 'fit-content',
+          height: 'fit-content',
+          zIndex: 1
+        }}>
           <div
             ref={containerRef}
             className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`}
@@ -425,8 +418,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
               width: `${canvasDimensions.width}px`,
               height: `${canvasDimensions.height}px`,
               ...backgroundStyle,
-              overflow: 'hidden',
-              touchAction: isMobileView ? 'manipulation' : 'none'
+              overflow: 'hidden'
             }}
             onClick={handleCanvasClick}
             onDragOver={!isGameMode ? handleDragOver : undefined}

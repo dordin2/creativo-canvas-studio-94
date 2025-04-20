@@ -274,92 +274,115 @@ function calculateAppropriateImageSize(
 export const processImageUpload = (
   file: File, 
   onSuccess: (data: Partial<DesignElement>) => void,
-  onError?: (error: Error) => void
+  canvasWidth?: number,
+  canvasHeight?: number
 ): void => {
-  const reader = new FileReader();
+  if (!file.type.startsWith('image/')) {
+    toast.error("Please upload a valid image file");
+    return;
+  }
   
+  // Show loading toast
+  const loadingToast = toast.loading("Processing image...");
+  
+  const reader = new FileReader();
   reader.onload = async (e) => {
-    if (!e.target?.result) {
-      onError?.(new Error("Failed to read file"));
-      return;
-    }
-    
-    try {
-      const originalDataUrl = e.target.result as string;
-      
-      // Run compression and thumbnail generation concurrently
-      const [
-        compressedImage,
-        thumbnailDataUrl
-      ] = await Promise.all([
-        compressImageToWebP(originalDataUrl),
-        createThumbnail(originalDataUrl)
-      ]);
-      
-      // Generate cache key
-      const cacheKey = `img_${file.name}_${Date.now()}_${file.size}`;
-      const elementId = `temp_${cacheKey}`;
-      
-      // Store in memory cache immediately for fast access
-      memoryCache.set(cacheKey, compressedImage.dataUrl);
-      memoryCache.set(`${cacheKey}_thumbnail`, thumbnailDataUrl, true);
-      
-      // Calculate appropriate display size
-      const appropriateSize = calculateAppropriateImageSize(
-        compressedImage.width,
-        compressedImage.height
-      );
-      
-      // Store in IndexedDB in the background
-      saveImageToStorage(
-        elementId,
-        compressedImage.dataUrl,
-        thumbnailDataUrl,
-        {
-          fileMetadata: {
-            name: file.name,
-            type: file.type,
-            size: file.size,
-            lastModified: file.lastModified
-          },
-          originalSize: {
-            width: compressedImage.width,
-            height: compressedImage.height
-          },
-          cacheKey
-        }
-      ).catch(console.error);
-      
-      // Return processed data immediately
-      onSuccess({
-        dataUrl: compressedImage.dataUrl,
-        thumbnailDataUrl,
-        file,
-        fileMetadata: {
-          name: file.name,
-          type: file.type,
-          size: file.size,
-          lastModified: file.lastModified
-        },
-        originalSize: {
-          width: compressedImage.width,
-          height: compressedImage.height
-        },
-        size: appropriateSize,
-        cacheKey
-      });
-      
-      // Run pruning in background
-      pruneImageStorage().catch(console.error);
-      
-    } catch (error) {
-      console.error("Image processing error:", error);
-      onError?.(error as Error);
+    if (e.target?.result) {
+      try {
+        const originalDataUrl = e.target.result as string;
+        
+        // Compress image to WebP/JPEG
+        const { dataUrl: compressedDataUrl, width, height } = 
+          await compressImageToWebP(originalDataUrl);
+        
+        // Create thumbnail for lightweight previews
+        const thumbnailDataUrl = await createThumbnail(compressedDataUrl);
+        
+        // Calculate an appropriate display size based on canvas dimensions
+        // We ensure this is always applied, regardless of image size
+        const appropriateSize = calculateAppropriateImageSize(
+          width, 
+          height, 
+          canvasWidth || window.innerWidth * 0.7, 
+          canvasHeight || window.innerHeight * 0.7
+        );
+        
+        // Generate unique cache key
+        const cacheKey = `img_${file.name}_${Date.now()}_${file.size}`;
+        
+        // Store in memory cache for immediate access
+        memoryCache.set(cacheKey, compressedDataUrl);
+        memoryCache.set(`${cacheKey}_thumbnail`, thumbnailDataUrl, true);
+        
+        // Store in IndexedDB for persistent storage
+        const elementId = `temp_${cacheKey}`; // Temporary ID until element is created
+        await saveImageToStorage(
+          elementId,
+          compressedDataUrl,
+          thumbnailDataUrl,
+          {
+            fileMetadata: {
+              name: file.name,
+              type: file.type,
+              size: file.size,
+              lastModified: file.lastModified
+            },
+            originalSize: {  
+              width,
+              height
+            },
+            cacheKey
+          }
+        );
+        
+        // Log compression results
+        const originalSize = Math.round(originalDataUrl.length / 1024);
+        const compressedSize = Math.round(compressedDataUrl.length / 1024);
+        const compressionRatio = Math.round((compressedSize / originalSize) * 100);
+        
+        console.log("imageUploader - Compression results:", {
+          originalSize: `${originalSize}KB`,
+          compressedSize: `${compressedSize}KB`,
+          compressionRatio: `${compressionRatio}%`,
+          spaceReduction: `${originalSize - compressedSize}KB (${100 - compressionRatio}%)`,
+          originalDimensions: `${width}x${height}px`,
+          displayDimensions: `${appropriateSize.width}x${appropriateSize.height}px`
+        });
+        
+        // Clear loading toast
+        toast.dismiss(loadingToast);
+        
+        // Return processed image data
+        onSuccess({ 
+          dataUrl: compressedDataUrl, 
+          thumbnailDataUrl, 
+          src: undefined, 
+          file: file, 
+          cacheKey, 
+          size: appropriateSize,  // Use the appropriate scaled size
+          originalSize: {  
+            width,
+            height
+          }
+        });
+        
+        // Run pruning operation in background to manage storage size
+        pruneImageStorage().catch(err => {
+          console.error("Failed to prune image storage:", err);
+        });
+        
+        toast.success("Image optimized and uploaded");
+      } catch (error) {
+        console.error("Image processing error:", error);
+        toast.dismiss(loadingToast);
+        toast.error("Failed to optimize image");
+      }
     }
   };
   
   reader.onerror = () => {
-    onError?.(new Error("Failed to load image"));
+    toast.dismiss(loadingToast);
+    toast.error("Failed to load image");
   };
   
   reader.readAsDataURL(file);
