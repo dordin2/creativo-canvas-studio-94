@@ -27,7 +27,6 @@ interface DesignProviderProps {
     canvases?: Canvas[];
     activeCanvasIndex?: number;
     isGameMode?: boolean;
-    isInteractionMode?: boolean;
   };
 }
 
@@ -55,7 +54,6 @@ export const DesignProvider = ({
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
   } | null>(null);
-  const [isInteractionMode, setIsInteractionMode] = useState<boolean>(initialState.isInteractionMode || false);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
@@ -78,13 +76,6 @@ export const DesignProvider = ({
     setIsGameMode(prev => !prev);
     if (isGameMode) {
       setActiveElement(null);
-    }
-  };
-  
-  const toggleInteractionMode = () => {
-    setIsInteractionMode(prev => !prev);
-    if (isGameMode) {
-      toggleGameMode();
     }
   };
   
@@ -291,10 +282,9 @@ export const DesignProvider = ({
     if (!canvases || activeCanvasIndex < 0 || activeCanvasIndex >= canvases.length) {
       console.error("Invalid canvas state when trying to add element");
       toast.error("Could not add element: invalid canvas state");
-      return createNewElement(type, { x: 0, y: 0 }, 0, props);
+      return createNewElement(type, null, 0, props);
     }
     
-    const position = getDefaultPosition(canvasRef);
     const newLayer = getHighestLayer(elements);
     
     if (type === 'background') {
@@ -314,7 +304,7 @@ export const DesignProvider = ({
         }
       }
       
-      const backgroundElement = createNewElement(type, position, 0, props);
+      const backgroundElement = createNewElement(type, canvasRef, 0, props);
       const updatedCanvases = [...canvases];
       
       if (activeCanvasIndex >= 0 && activeCanvasIndex < updatedCanvases.length) {
@@ -330,27 +320,14 @@ export const DesignProvider = ({
       return backgroundElement;
     }
     
-    const newElement = createNewElement(type, position, newLayer, props);
+    const newElement = createNewElement(type, canvasRef, newLayer, props);
     
-    if (type === 'image') {
-      if (props?.dataUrl) {
-        console.log("DesignContext - Creating new image element with dataUrl length:", 
-          props.dataUrl.length);
-        
-        if (props.thumbnailDataUrl) {
-          console.log("DesignContext - Image has thumbnail preview");
-        }
-      }
+    if (type === 'image' && props?.dataUrl) {
+      console.log("DesignContext - Creating new image element with dataUrl length:", 
+        props.dataUrl.length);
       
-      if (props) {
-        if (props.size) newElement.size = { ...props.size };
-        if (props.originalSize) newElement.originalSize = { ...props.originalSize };
-        if (props.style) newElement.style = { ...props.style };
-        if (props.dataUrl) newElement.dataUrl = props.dataUrl;
-        if (props.thumbnailDataUrl) newElement.thumbnailDataUrl = props.thumbnailDataUrl;
-        if (props.src) newElement.src = props.src;
-        if (props.cacheKey) newElement.cacheKey = props.cacheKey;
-        if (props.fileMetadata) newElement.fileMetadata = { ...props.fileMetadata };
+      if (props.thumbnailDataUrl) {
+        console.log("DesignContext - Image has thumbnail preview");
       }
     }
     
@@ -711,9 +688,7 @@ export const DesignProvider = ({
     removeFromInventory,
     setDraggedInventoryItem,
     handleItemCombination,
-    setCanvases,
-    isInteractionMode,
-    toggleInteractionMode,
+    setCanvases
   };
   
   return (

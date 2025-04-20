@@ -1,3 +1,4 @@
+
 import { CSSProperties } from "react";
 
 export type Json =
@@ -183,8 +184,6 @@ export interface DesignContextType {
   setDraggedInventoryItem: (element: DesignElement | null) => void;
   handleItemCombination: (inventoryItemId: string, targetElementId: string) => void;
   setCanvases: (canvases: Canvas[]) => void;
-  isInteractionMode: boolean;
-  toggleInteractionMode: () => void;
 }
 
 export const generateId = (): string => {

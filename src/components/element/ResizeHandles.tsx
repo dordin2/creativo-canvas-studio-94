@@ -1,16 +1,15 @@
 
-import { CSSProperties } from "react";
+import { CSSProperties, MouseEvent as ReactMouseEvent } from "react";
 import { useDesignState } from "@/context/DesignContext";
 
 interface ResizeHandlesProps {
   show: boolean;
-  onResizeStart: (e: React.MouseEvent, direction: string) => void;
+  onResizeStart: (e: ReactMouseEvent, direction: string) => void;
 }
 
 const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
   const { isGameMode } = useDesignState();
   
-  // Don't show resize handles in game mode
   if (!show || isGameMode) return null;
 
   const handleStyle: CSSProperties = {
@@ -24,9 +23,7 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
     pointerEvents: 'auto',
   };
 
-  // Helper function to create handles with better touch targets
   const createResizeHandle = (position: string, cursorType: string, direction: string) => {
-    // Define positioning based on handle location
     let positionStyle: CSSProperties = {};
     let transform = 'translate(-50%, -50%)';
     
@@ -72,46 +69,48 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
           ...handleStyle, 
           ...positionStyle, 
           transform,
-          // Touch area improvement
           touchAction: 'none',
         }}
         onMouseDown={(e) => onResizeStart(e, direction)}
         onTouchStart={(e) => {
-          // Prevent scrolling when using handles on touch devices
           e.preventDefault();
           const touch = e.touches[0];
           
-          // Create a compatible synthetic event with all required properties
           const syntheticEvent = {
             clientX: touch.clientX,
             clientY: touch.clientY,
-            preventDefault: () => {},
-            stopPropagation: () => {},
+            preventDefault: () => e.preventDefault(),
+            stopPropagation: () => e.stopPropagation(),
             target: e.target,
             currentTarget: e.currentTarget,
-            bubbles: true,
             type: 'mousedown',
-            // Add missing properties required by React.MouseEvent
+            nativeEvent: e.nativeEvent,
+            persist: () => {},
             altKey: false,
             button: 0,
             buttons: 1,
             ctrlKey: false,
             metaKey: false,
-            shiftKey: false,
-            relatedTarget: null,
-            screenX: touch.screenX,
-            screenY: touch.screenY,
-            pageX: touch.pageX || touch.clientX,
-            pageY: touch.pageY || touch.clientY,
-            // These are typically used in mouse events
             movementX: 0,
             movementY: 0,
-            detail: 0,
+            pageX: touch.pageX,
+            pageY: touch.pageY,
+            screenX: touch.screenX,
+            screenY: touch.screenY,
+            shiftKey: false,
             view: window,
-            // Ensure we have all event methods
+            detail: 0,
+            pointerId: 0,
+            pointerType: 'touch',
+            bubbles: true,
+            cancelable: true,
             getModifierState: () => false,
-            nativeEvent: touch
-          } as unknown as React.MouseEvent;
+            relatedTarget: null,
+            which: 1,
+            isPrimary: true,
+            layerX: 0,
+            layerY: 0,
+          } as unknown as ReactMouseEvent<HTMLDivElement, MouseEvent>;
           
           onResizeStart(syntheticEvent, direction);
         }}
@@ -134,3 +133,4 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
 };
 
 export default ResizeHandles;
+

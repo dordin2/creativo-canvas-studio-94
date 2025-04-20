@@ -115,32 +115,6 @@
     cursor: none !important;
   }
 
-  /* Game mode specific styles */
-  .game-mode-workspace * {
-    cursor: default !important;
-  }
-
-  .game-mode-workspace .canvas-element {
-    cursor: default !important;
-  }
-
-  /* When in game mode, only show pointer cursor on interactive elements */
-  .game-mode-workspace .canvas-element[data-interactive="true"] {
-    cursor: pointer !important;
-  }
-
-  :fullscreen .game-mode-workspace * {
-    cursor: default !important;
-  }
-
-  :fullscreen .canvas-element {
-    cursor: default !important;
-  }
-
-  :fullscreen .canvas-element[data-interactive="true"] {
-    cursor: pointer !important;
-  }
-  
   #cursor-preview {
     pointer-events: none;
     position: fixed;
@@ -152,7 +126,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #FFFFFF;
+  }
+  
+  #cursor-preview.bg-white {
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
     border-radius: 8px;
   }
@@ -170,16 +146,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background-color: #FFFFFF;
+    background-color: white;
   }
   
   .canvas-element {
-    @apply transition-transform duration-150 relative shadow-sm;
+    @apply cursor-move transition-transform duration-150 relative shadow-element hover:shadow-glow;
     will-change: transform, left, top;
     touch-action: none;
     pointer-events: auto !important;
-    transition: transform 0.15s ease-out;
-    background-color: #FFFFFF;
+    transition: transform 0.15s ease-out, box-shadow 0.2s ease-in-out;
   }
 
   .canvas-element.dragging {
@@ -193,13 +168,12 @@
   
   .canvas-element.drop-target {
     @apply outline-2 outline outline-canvas-purple ring-2 ring-canvas-purple;
-    box-shadow: 0 0 15px #8B5CF6;
+    box-shadow: 0 0 15px rgba(139, 92, 246, 0.5);
   }
   
   .sequence-item {
     user-select: none;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-    background-color: #FFFFFF;
+    transition: transform 0.2s ease, opacity 0.2s ease, box-shadow 0.2s ease;
   }
   
   .sequence-item.dragging {
@@ -209,7 +183,7 @@
   }
   
   .sequence-item.drop-target {
-    box-shadow: 0 0 0 2px #8B5CF6;
+    box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.8);
     transform: scale(1.05);
     z-index: 10;
   }
@@ -218,14 +192,13 @@
     position: relative;
     overflow: visible !important;
     pointer-events: auto;
-    z-index: 1;
-    background-color: #FFFFFF;
+    z-index: 1; /* Ensure canvas container has explicit z-index */
   }
   
   .canvas-container > div:first-child {
     overflow: hidden !important;
     pointer-events: auto;
-    @apply rounded-lg shadow-md bg-white;
+    @apply rounded-lg shadow-canvas bg-white;
   }
 
   .game-mode-workspace {
@@ -306,7 +279,6 @@
     pointer-events: none;
     z-index: 999;
     box-sizing: border-box;
-    background-color: #FFFFFF;
     @apply rounded-sm;
   }
 }

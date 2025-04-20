@@ -114,23 +114,6 @@ const TextProperties = ({ element }: { element: DesignElement }) => {
         />
       </div>
 
-      <div>
-        <Label>Background Color</Label>
-        <HexColorPicker 
-          color={element.style?.backgroundColor as string || 'transparent'} 
-          onChange={(color) => updateElement(element.id, {
-            style: { ...element.style, backgroundColor: color }
-          })}
-          className="w-full mb-2 mt-2"
-        />
-        <Input 
-          value={element.style?.backgroundColor as string || 'transparent'} 
-          onChange={(e) => updateElement(element.id, {
-            style: { ...element.style, backgroundColor: e.target.value }
-          })}
-        />
-      </div>
-
       <div className="space-y-2">
         <Label>Font Size</Label>
         <Select 

@@ -8,13 +8,13 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { DesignProvider } from "@/context/DesignContext";
 import { ProjectProvider } from "@/context/ProjectContext";
 import { AuthProvider } from "@/context/AuthContext";
+import { InteractiveModeProvider } from "@/context/InteractiveModeContext";
 import Projects from "./pages/Projects";
 import Editor from "./pages/Editor";
 import Play from "./pages/Play";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Payment from "./pages/Payment";
-import Admin from "./pages/Admin";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -27,12 +27,11 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
-            {/* Redirect root to auth page */}
             <Route 
               path="/" 
               element={
                 <AuthProvider>
-                  <Navigate to="/auth" replace />
+                  <Projects />
                 </AuthProvider>
               } 
             />
@@ -45,25 +44,17 @@ const App = () => (
               } 
             />
             <Route 
-              path="/projects" 
-              element={
-                <AuthProvider>
-                  <ProtectedRoute>
-                    <Projects />
-                  </ProtectedRoute>
-                </AuthProvider>
-              } 
-            />
-            <Route 
               path="/editor/:projectId" 
               element={
                 <AuthProvider>
                   <ProtectedRoute>
-                    <DesignProvider>
+                    <InteractiveModeProvider>
                       <ProjectProvider>
-                        <Editor />
+                        <DesignProvider>
+                          <Editor />
+                        </DesignProvider>
                       </ProjectProvider>
-                    </DesignProvider>
+                    </InteractiveModeProvider>
                   </ProtectedRoute>
                 </AuthProvider>
               } 
@@ -72,7 +63,11 @@ const App = () => (
               path="/play/:projectId" 
               element={
                 <AuthProvider>
-                  <Play />
+                  <ProjectProvider>
+                    <DesignProvider>
+                      <Play />
+                    </DesignProvider>
+                  </ProjectProvider>
                 </AuthProvider>
               } 
             />
@@ -82,16 +77,6 @@ const App = () => (
                 <AuthProvider>
                   <ProtectedRoute>
                     <Payment />
-                  </ProtectedRoute>
-                </AuthProvider>
-              } 
-            />
-            <Route 
-              path="/admin" 
-              element={
-                <AuthProvider>
-                  <ProtectedRoute>
-                    <Admin />
                   </ProtectedRoute>
                 </AuthProvider>
               } 
