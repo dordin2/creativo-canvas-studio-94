@@ -11,22 +11,27 @@ import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
+import { useProject } from "@/context/ProjectContext";
 import { toast } from "sonner";
-import { Database } from "@/types/database";
+
+function createDefaultCanvas(): CanvasType {
+  return {
+    id: crypto.randomUUID(),
+    name: "Canvas 1",
+    elements: [],
+  };
+}
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [canvases, setCanvases] = useState<CanvasType[]>([]);
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
-  const [projectName, setProjectName] = useState("");
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
-
-  // New: track error for better feedback.
-  const [error, setError] = useState<string | null>(null);
+  const { projectName, isPublic } = useProject();
 
   useEffect(() => {
     if (!projectId) {
@@ -34,13 +39,14 @@ const Play = () => {
       return;
     }
     loadProjectData();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line
   }, [projectId]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
     };
+
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => {
       document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -50,39 +56,7 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-      setError(null);
 
-      // Fetch project details
-      const { data: projectData, error: projectError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('id', projectId)
-        .single();
-
-      if (projectError || !projectData) {
-        setError('Project not found');
-        toast.error('Project not found');
-        setTimeout(() => navigate('/'), 1200);
-        return;
-      }
-
-      // Access control:
-      // If NOT public AND there is a user AND user != project owner: deny.
-      // If NOT public AND NO user: deny.
-      // Public: allow all (even if !user).
-      if (projectData.is_public === false) {
-        // Project is private
-        if (!user?.id || user.id !== projectData.user_id) {
-          setError("This project is private");
-          toast.error("This project is private");
-          setTimeout(() => navigate('/'), 1200);
-          return;
-        }
-      }
-
-      setProjectName(projectData.name);
-
-      // Fetch canvas data
       const { data, error } = await supabase
         .from('project_canvases')
         .select('canvas_data')
@@ -90,39 +64,56 @@ const Play = () => {
         .maybeSingle();
 
       if (error) {
-        setError("Failed to load project data");
-        toast.error("Failed to load project data");
-        setTimeout(() => navigate('/'), 1200);
+        console.error('Supabase error loading project_canvases:', error);
+        toast.error('Could not load canvas data');
+        setCanvases([createDefaultCanvas()]);
+        setActiveCanvasIndex(0);
+        setIsLoading(false);
         return;
       }
 
-      if (data && data.canvas_data) {
-        const jsonData = data.canvas_data as Json;
-        if (
-          typeof jsonData === 'object' && 
-          jsonData !== null &&
-          'canvases' in jsonData && 
-          'activeCanvasIndex' in jsonData &&
-          Array.isArray(jsonData.canvases)
-        ) {
-          setCanvases(jsonData.canvases as unknown as CanvasType[]);
-          setActiveCanvasIndex(jsonData.activeCanvasIndex as number);
-        } else {
-          setError("Invalid project data format");
-          toast.error("Invalid project data format");
-          setTimeout(() => navigate('/'), 1200);
-          return;
+      let canvasesArr: CanvasType[] = [];
+      let index = 0;
+      if (data?.canvas_data) {
+        try {
+          const jsonData = data.canvas_data as Json;
+          if (
+            typeof jsonData === 'object' &&
+            jsonData !== null &&
+            'canvases' in jsonData &&
+            Array.isArray(jsonData.canvases)
+          ) {
+            canvasesArr = jsonData.canvases as unknown as CanvasType[];
+            index = typeof jsonData.activeCanvasIndex === "number" ? jsonData.activeCanvasIndex : 0;
+          } else {
+            toast.error('Invalid canvas structure, loading default canvas');
+            canvasesArr = [createDefaultCanvas()];
+            index = 0;
+          }
+        } catch (err) {
+          console.error('Error parsing canvas_data:', err);
+          toast.error('Corrupted canvas data, loading default canvas');
+          canvasesArr = [createDefaultCanvas()];
+          index = 0;
         }
       } else {
-        setError("No canvas data found for this project");
-        toast.error("No canvas data found for this project");
-        setTimeout(() => navigate('/'), 1200);
-        return;
+        toast.info('No canvas found, loading blank canvas.');
+        canvasesArr = [createDefaultCanvas()];
+        index = 0;
+      }
+      setCanvases(canvasesArr);
+      setActiveCanvasIndex(index < canvasesArr.length ? index : 0);
+
+      if (canvasesArr.length === 0) {
+        toast.error('No canvas found for this project; blank canvas loaded.');
+        setCanvases([createDefaultCanvas()]);
+        setActiveCanvasIndex(0);
       }
     } catch (error) {
-      setError('Unknown error loading project data');
-      toast.error('Unknown error loading project data');
-      setTimeout(() => navigate('/'), 1200);
+      console.error('Error loading project or canvas:', error);
+      toast.error('Error loading project or canvas. Loading blank canvas.');
+      setCanvases([createDefaultCanvas()]);
+      setActiveCanvasIndex(0);
     } finally {
       setIsLoading(false);
     }
@@ -153,14 +144,16 @@ const Play = () => {
     );
   }
 
-  if (error) {
+  if (!canvases.length) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-white">
-        <h2 className="text-2xl font-semibold mb-4 text-red-500">Error</h2>
-        <p className="text-md text-gray-700 mb-8">{error}</p>
-        <Button variant="secondary" onClick={() => navigate("/")}>
-          Go Home
-        </Button>
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-2 text-canvas-purple">{projectName || 'No Project'}</h2>
+          <p className="text-gray-500 mb-8">
+            No canvas found or error loading. Try reloading or returning to your projects.
+          </p>
+          <Button variant="default" onClick={() => navigate("/")}>Back to Projects</Button>
+        </div>
       </div>
     );
   }
