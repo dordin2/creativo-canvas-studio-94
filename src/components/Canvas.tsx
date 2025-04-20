@@ -39,8 +39,6 @@ const Canvas = ({
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
   const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState<number>(1);
-  const [isWheelZooming, setIsWheelZooming] = useState(false);
-  const wheelTimeout = useRef<number | null>(null);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -348,39 +346,16 @@ const Canvas = ({
 
   const handleWheel = (e: WheelEvent) => {
     if (e.ctrlKey) {
-      const canvasContainer = parentRef.current?.querySelector('.canvas-container');
-      if (!canvasContainer) return;
-
-      if (
-        !(containerRef.current && 
-          (e.target === containerRef.current || (containerRef.current as Node).contains(e.target as Node)))
-      ) {
-        e.preventDefault();
-        (canvasContainer as HTMLElement).style.transformOrigin = `50% 50%`;
-        return;
-      }
-
       e.preventDefault();
-
-      const rect = canvasContainer.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
-      const percentX = x / rect.width * 100;
-      const percentY = y / rect.height * 100;
-      (canvasContainer as HTMLElement).style.transformOrigin = `${percentX}% ${percentY}%`;
-      setIsWheelZooming(true);
       const delta = e.deltaY;
       const zoomFactor = 0.1;
+      
       setZoomLevel(prev => {
-        const newZoom = delta > 0
-          ? Math.max(prev - zoomFactor, 0.2)
-          : Math.min(prev + zoomFactor, 2);
+        const newZoom = delta > 0 
+          ? Math.max(prev - zoomFactor, 0.2) // Zoom out
+          : Math.min(prev + zoomFactor, 2);  // Zoom in
         return newZoom;
       });
-      clearTimeout(wheelTimeout.current);
-      wheelTimeout.current = setTimeout(() => {
-        setIsWheelZooming(false);
-      }, 150) as unknown as number;
     }
   };
 
@@ -396,33 +371,24 @@ const Canvas = ({
 
   return <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
       <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
-        <div 
-          className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} 
-          style={{
-            transform: `scale(${displayZoomLevel})`,
-            transition: isWheelZooming ? 'none' : (isMobileView ? 'none' : 'transform 0.2s ease-out'),
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            translate: '-50% -50%',
-            width: 'fit-content',
-            height: 'fit-content',
-            zIndex: 1
-          }}
-        >
-          <div ref={containerRef} 
-            className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`} 
-            style={{
-              width: `${canvasDimensions.width}px`,
-              height: `${canvasDimensions.height}px`,
-              ...backgroundStyle,
-              overflow: 'hidden'
-            }} 
-            onClick={handleCanvasClick} 
-            onDragOver={!isGameMode ? handleDragOver : undefined} 
-            onDragLeave={!isGameMode ? handleDragLeave : undefined} 
-            onDrop={!isGameMode ? handleDrop : undefined}
-          >
+        <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{
+        transform: `scale(${displayZoomLevel})`,
+        transformOrigin: 'center center',
+        transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
+        position: 'absolute',
+        top: '50%',
+        left: '50%',
+        translate: '-50% -50%',
+        width: 'fit-content',
+        height: 'fit-content',
+        zIndex: 1
+      }}>
+          <div ref={containerRef} className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`} style={{
+          width: `${canvasDimensions.width}px`,
+          height: `${canvasDimensions.height}px`,
+          ...backgroundStyle,
+          overflow: 'hidden'
+        }} onClick={handleCanvasClick} onDragOver={!isGameMode ? handleDragOver : undefined} onDragLeave={!isGameMode ? handleDragLeave : undefined} onDrop={!isGameMode ? handleDrop : undefined}>
             {renderElements()}
           </div>
         </div>
