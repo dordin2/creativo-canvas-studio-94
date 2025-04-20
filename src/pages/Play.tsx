@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,6 +56,10 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
+      setCanvases([]);
+      setActiveCanvasIndex(0);
+
+      // Step 1: Load project meta info
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
@@ -63,6 +68,7 @@ const Play = () => {
 
       if (projectError || !projectData) {
         toast.error('Project not found');
+        console.error("Supabase returned error or no project data:", projectError, projectData);
         navigate('/');
         return;
       }
@@ -74,6 +80,7 @@ const Play = () => {
       }
       setProjectName(projectData.name);
 
+      // Step 2: Load canvas data
       const { data, error } = await supabase
         .from('project_canvases')
         .select('canvas_data')
@@ -85,36 +92,60 @@ const Play = () => {
         setCanvases([]);
         setActiveCanvasIndex(0);
         setIsLoading(false);
+        console.error("Supabase project_canvases error:", error);
         return;
       }
 
       let canvasesArr: CanvasType[] = [];
       let index = 0;
+      let debugLog = {};
+
       if (data?.canvas_data) {
         const jsonData = data.canvas_data as Json;
+        debugLog = { jsonData, typeofJson: typeof jsonData };
         if (
           typeof jsonData === 'object' &&
           jsonData !== null &&
           'canvases' in jsonData &&
-          Array.isArray(jsonData.canvases)
+          Array.isArray((jsonData as any).canvases)
         ) {
-          canvasesArr = jsonData.canvases as unknown as CanvasType[];
-          index = typeof jsonData.activeCanvasIndex === "number" ? jsonData.activeCanvasIndex : 0;
+          canvasesArr = (jsonData as any).canvases;
+          index = typeof (jsonData as any).activeCanvasIndex === "number" ? (jsonData as any).activeCanvasIndex : 0;
+          debugLog = { ...debugLog, canvasesArr, length: canvasesArr.length, index };
         } else {
           toast.error('Invalid canvas structure, loading default canvas');
+          debugLog = { ...debugLog, error: "Invalid structure" };
           canvasesArr = [createDefaultCanvas()];
         }
       } else {
         canvasesArr = [createDefaultCanvas()];
+        debugLog = { ...debugLog, error: "No canvas_data found" };
       }
       setCanvases(canvasesArr);
       setActiveCanvasIndex(index < canvasesArr.length ? index : 0);
 
-      if (canvasesArr.length === 0) {
+      // Extra safety: Check if canvasesArr is valid
+      if (!canvasesArr.length || !Array.isArray(canvasesArr)) {
         toast.error('No canvas found for this project; blank canvas loaded.');
+        setCanvases([createDefaultCanvas()]);
+        setActiveCanvasIndex(0);
+      } else if (!canvasesArr[0]?.id) {
+        toast.error('Malformed canvas data, loading default.');
+        setCanvases([createDefaultCanvas()]);
+        setActiveCanvasIndex(0);
       }
+
+      // Debug: Log the situation
+      console.log("loadProjectData debug:", {
+        projectId,
+        projectData,
+        canvasQueryData: data,
+        debugLog,
+        canvasesArr
+      });
     } catch (error) {
       toast.error('Error loading project or canvas');
+      console.error("Unhandled error loading project/canvas:", error);
       setCanvases([createDefaultCanvas()]);
       setActiveCanvasIndex(0);
       setProjectName('Unknown Project');
@@ -188,3 +219,4 @@ const Play = () => {
 };
 
 export default Play;
+
