@@ -15,7 +15,6 @@ import PuzzleModal from "./element/PuzzleModal";
 import SequencePuzzleModal from "./element/SequencePuzzleModal";
 import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
 import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
-import InteractionContextMenu from './element/InteractionContextMenu';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -25,7 +24,7 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader";
+import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 const DraggableElement = ({ element, isActive, children }: {
@@ -46,8 +45,7 @@ const DraggableElement = ({ element, isActive, children }: {
     inventoryItems,
     draggedInventoryItem,
     setDraggedInventoryItem,
-    handleItemCombination,
-    elements
+    handleItemCombination
   } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
   
@@ -82,11 +80,9 @@ const DraggableElement = ({ element, isActive, children }: {
   
   const isInInventory = element.inInventory || inventoryItems.some(item => item.elementId === element.id);
   
-  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
-    if ('button' in e && e.button !== 0) return;
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
     e.stopPropagation();
-    
-    if (element.layer === 0) return;
     
     if (isImageElement && isGameMode) {
       e.preventDefault();
@@ -109,26 +105,15 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isEditing || isInteractiveMode) return;
     
     if (!isSequencePuzzleElement) {
-      let pos = { x: 0, y: 0 };
-      if ('touches' in e && e.touches.length > 0) {
-        pos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      } else if ('clientX' in e) {
-        pos = { x: e.clientX, y: e.clientY };
-      }
       startDrag(e, element.position);
       setIsDragging(true);
-      setStartPos(pos);
     }
+    
+    setStartPos({ x: e.clientX, y: e.clientY });
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
     if (isGameMode) {
-      return;
-    }
-    
-    if (element.layer === 0 && element.type === 'image') {
-      e.stopPropagation();
-      handleDetachFromBackground(e);
       return;
     }
     
@@ -147,23 +132,6 @@ const DraggableElement = ({ element, isActive, children }: {
       e.stopPropagation();
       handleInteraction();
     }
-  };
-
-  const handleDetachFromBackground = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (element.layer !== 0) return;
-    
-    updateElement(element.id, {
-      position: { x: 100, y: 100 },
-      size: { 
-        width: element.originalSize?.width || 400,
-        height: element.originalSize?.height || 225
-      },
-      layer: Math.max(...elements.map(el => el.layer)) + 1
-    });
-    
-    toast.success('Background image detached');
   };
 
   const handleInteraction = () => {
@@ -215,9 +183,7 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  const handleDuplicate = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
+  const handleDuplicate = () => {
     console.log("DraggableElement - Original element to duplicate:", element);
     
     // Use the utility function to prepare the element for duplication
@@ -571,11 +537,9 @@ const DraggableElement = ({ element, isActive, children }: {
     ...elementStyle,
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
-    cursor: element.layer === 0 
-      ? 'default'
-      : (isGameMode 
-          ? (hasInteraction ? 'pointer' : 'default') 
-          : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab'))),
+    cursor: isGameMode 
+      ? (hasInteraction ? 'pointer' : 'default') 
+      : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute' as 'absolute',
@@ -666,37 +630,12 @@ const DraggableElement = ({ element, isActive, children }: {
 
   return (
     <>
-      {isInteractiveMode ? (
-        <InteractionContextMenu element={element}>
-          {createElementContent(elementRef)}
-        </InteractionContextMenu>
+      {isGameMode ? (
+        createElementContent(elementRef)
       ) : (
         <ContextMenu>
           <ContextMenuTrigger asChild>
-            <div
-              id={`element-${element.id}`}
-              ref={elementRef}
-              className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
-              style={combinedStyle}
-              onMouseDown={handleMouseDown}
-              onTouchStart={handleMouseDown}
-              onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
-              onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
-              draggable={isGameMode && isImageElement ? false : undefined}
-            >
-              {childContent}
-              {showInteractionIndicator && (
-                <div className={indicatorStyles} title={
-                  interactionType === 'canvasNavigation' 
-                    ? "Click to navigate to another canvas" 
-                    : interactionType === 'addToInventory'
-                      ? "Click to add to inventory"
-                      : interactionType === 'combinable'
-                        ? "Can be combined with inventory items"
-                        : ""
-                }></div>
-              )}
-            </div>
+            {createElementContent(elementRef)}
           </ContextMenuTrigger>
           <ContextMenuContent>
             <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">

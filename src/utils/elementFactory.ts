@@ -1,13 +1,12 @@
-
 import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
-// Get canvas center point and account for element size
-export const getDefaultPosition = (canvasRef: HTMLDivElement | null, elementSize = { width: 0, height: 0 }) => {
+// Default positions for new elements
+export const getDefaultPosition = (canvasRef: HTMLDivElement | null) => {
   if (!canvasRef) return { x: 100, y: 100 };
   
   return {
-    x: Math.max(0, (canvasRef.clientWidth / 2) - (elementSize.width / 2)),
-    y: Math.max(0, (canvasRef.clientHeight / 2) - (elementSize.height / 2))
+    x: canvasRef.clientWidth / 2 - 50,
+    y: canvasRef.clientHeight / 2 - 50
   };
 };
 
@@ -25,64 +24,17 @@ export const getDefaultImageSize = (canvasRef: HTMLDivElement | null) => {
 // Factory function to create new elements
 export const createNewElement = (
   type: ElementType, 
-  canvasRef: HTMLDivElement | null,
+  position: { x: number; y: number }, 
   layer: number,
   props?: any
 ): DesignElement => {
-  let size = { width: 100, height: 100 }; // Default size
-  
-  // Define size based on element type
-  switch (type) {
-    case 'rectangle':
-      size = { width: 100, height: 80 };
-      break;
-    case 'circle':
-      size = { width: 100, height: 100 };
-      break;
-    case 'triangle':
-      size = { width: 50, height: 100 };
-      break;
-    case 'line':
-      size = { width: 100, height: 2 };
-      break;
-    case 'heading':
-      size = { width: 300, height: 50 };
-      break;
-    case 'subheading':
-      size = { width: 250, height: 40 };
-      break;
-    case 'paragraph':
-      size = { width: 300, height: 100 };
-      break;
-    case 'image':
-      size = props?.size || getDefaultImageSize(canvasRef);
-      break;
-    case 'puzzle':
-      size = { width: 150, height: 150 };
-      break;
-    case 'sequencePuzzle':
-    case 'clickSequencePuzzle':
-      size = { width: 350, height: 150 };
-      break;
-    case 'sliderPuzzle':
-      const orientation = props?.sliderPuzzleConfig?.orientation || 'horizontal';
-      size = {
-        width: orientation === 'horizontal' ? 300 : 150,
-        height: orientation === 'horizontal' ? 150 : 300
-      };
-      break;
-  }
-  
-  // Get centered position based on element size
-  const position = getDefaultPosition(canvasRef, size);
-  
   switch (type) {
     case 'rectangle':
       return {
         id: generateId(),
         type,
         position,
-        size,
+        size: { width: 100, height: 80 },
         style: { backgroundColor: '#8B5CF6', borderRadius: '4px', transform: 'rotate(0deg)' },
         layer
       };
@@ -92,7 +44,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size,
+        size: { width: 100, height: 100 },
         style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
         layer
       };
@@ -102,7 +54,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size,
+        size: { width: 50, height: 100 },
         style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
         layer
       };
@@ -112,7 +64,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size,
+        size: { width: 100, height: 2 },
         style: { backgroundColor: '#8B5CF6', transform: 'rotate(0deg)' },
         layer
       };
@@ -123,7 +75,7 @@ export const createNewElement = (
         type,
         position,
         content: 'Add a heading',
-        size,
+        size: { width: 300, height: 50 },
         style: { color: '#1F2937', transform: 'rotate(0deg)' },
         layer
       };
@@ -134,7 +86,7 @@ export const createNewElement = (
         type,
         position,
         content: 'Add a subheading',
-        size,
+        size: { width: 250, height: 40 },
         style: { color: '#1F2937', transform: 'rotate(0deg)' },
         layer
       };
@@ -145,23 +97,24 @@ export const createNewElement = (
         type,
         position,
         content: 'Add your text here. Click to edit this text.',
-        size,
+        size: { width: 300, height: 100 },
         style: { color: '#1F2937', transform: 'rotate(0deg)' },
         layer
       };
       
     case 'image':
+      // If props includes size, use that; otherwise, use default
+      // Props will include size for uploaded images that have been scaled
+      const initialSize = props?.size || { width: 200, height: 150 };
+      
       return {
         id: generateId(),
         type,
         position,
-        size,
-        originalSize: props?.originalSize || size,
-        src: props?.src,
+        size: initialSize,
+        originalSize: props?.originalSize || initialSize, // Store original dimensions
         style: { transform: 'rotate(0deg)' },
-        layer,
-        dataUrl: props?.dataUrl,
-        thumbnailDataUrl: props?.thumbnailDataUrl
+        layer
       };
       
     case 'background':
@@ -172,7 +125,7 @@ export const createNewElement = (
         style: props?.gradient 
           ? { background: props.gradient } 
           : { backgroundColor: props?.color || '#FFFFFF' },
-        layer: 0
+        layer: 0 // Background is always at layer 0
       };
 
     case 'puzzle':
@@ -181,7 +134,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size,
+        size: { width: 150, height: 150 },
         style: { backgroundColor: '#F3F4F6', borderRadius: '8px', transform: 'rotate(0deg)' },
         layer,
         puzzleConfig: props?.puzzleConfig || {
@@ -200,7 +153,7 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size,
+        size: { width: 350, height: 150 },
         style: { backgroundColor: '#EFF6FF', borderRadius: '8px', transform: 'rotate(0deg)' },
         layer,
         sequencePuzzleConfig: props?.sequencePuzzleConfig || {
@@ -216,8 +169,8 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size,
-        style: { backgroundColor: '#E8F5E9', borderRadius: '8px', transform: 'rotate(0deg)' },
+        size: { width: 350, height: 150 },
+        style: { backgroundColor: '#E8F5E9', borderRadius: '8px', transform: 'rotate(0deg)' }, // Green background to differentiate
         layer,
         clickSequencePuzzleConfig: props?.clickSequencePuzzleConfig || {
           name: props?.name || 'Click Sequence Puzzle',
@@ -240,9 +193,12 @@ export const createNewElement = (
         id: generateId(),
         type,
         position,
-        size,
+        size: { 
+          width: orientation === 'horizontal' ? 300 : 150, 
+          height: orientation === 'horizontal' ? 150 : 300 
+        },
         style: { 
-          backgroundColor: '#F0F9FF',
+          backgroundColor: '#F0F9FF', // Light blue background
           borderRadius: '8px', 
           transform: 'rotate(0deg)' 
         },
@@ -268,4 +224,3 @@ export const createNewElement = (
       };
   }
 };
-

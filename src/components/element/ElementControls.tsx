@@ -1,6 +1,5 @@
-
 import { DesignElement, useDesignState } from "@/context/DesignContext";
-import { Trash2, Copy, Eye, EyeOff, Maximize2, Frame } from "lucide-react";
+import { Trash2, Copy, Eye, EyeOff, Zap, Navigation } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
 import RotationHandle from "./RotationHandle";
 import { Button } from "@/components/ui/button";
@@ -13,7 +12,6 @@ import {
 import { getRotation } from "@/utils/elementStyles";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
-import { useLanguage } from "@/context/LanguageContext";
 
 interface ElementControlsProps {
   isActive: boolean;
@@ -32,63 +30,18 @@ const ElementControls = ({
   onRotateStart,
   showControls
 }: ElementControlsProps) => {
-  const { updateElement, removeElement, addElement, canvases, activeCanvasIndex } = useDesignState();
+  const { updateElement, removeElement, addElement, canvases } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
-  const { t, language } = useLanguage();
   
-  const hasValidAspectRatio = () => {
-    if (element.type !== 'image' || !element.originalSize) return false;
-    const { width, height } = element.originalSize;
-    const aspectRatio = width / height;
-    const targetRatio = 16 / 9;
-    const tolerance = 0.1;
-    return Math.abs(aspectRatio - targetRatio) < tolerance;
-  };
-
-  const canBeBackground = element.type === 'image' && hasValidAspectRatio();
-  
-  const handleSetAsBackground = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const currentCanvas = canvases[activeCanvasIndex];
-    if (currentCanvas) {
-      const backgroundElement = currentCanvas.elements.find(el => el.layer === 0);
-      if (backgroundElement) {
-        updateElement(backgroundElement.id, {
-          layer: Math.max(...currentCanvas.elements.map(el => el.layer)) + 1
-        });
-      }
-    }
-    
-    updateElement(element.id, {
-      position: { x: 0, y: 0 },
-      size: { width: 1600, height: 900 },
-      layer: 0
-    });
-  };
-  
-  const handleDetachFromBackground = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (element.layer !== 0) return;
-    
-    updateElement(element.id, {
-      position: { x: 100, y: 100 },
-      size: { 
-        width: element.originalSize?.width || 400,
-        height: element.originalSize?.height || 225
-      },
-      layer: 1
-    });
-  };
-
-  if ((!showControls && !isActive) || element.isHidden || element.layer === 0) {
+  // Don't render controls at all if the element is hidden or it's the background
+  if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
     return null;
   }
 
   const showResizeHandles = isActive && !isInteractiveMode;
   const showRotationHandle = isActive && !isInteractiveMode;
   
+  // Round dimensions to ensure consistency with the element
   const elementDimensions = {
     width: element.size?.width ? Math.round(element.size.width) : 0,
     height: element.size?.height ? Math.round(element.size.height) : 0
@@ -99,10 +52,12 @@ const ElementControls = ({
     
     console.log("ElementControls - Original element to duplicate:", element);
     
+    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("ElementControls - Duplicate props before adding:", duplicateProps);
     
+    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
@@ -113,18 +68,48 @@ const ElementControls = ({
     });
   };
 
+  const handleToggleInteractive = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    const currentInteraction = element.interaction || { type: 'none' };
+    
+    // Toggle between 'none' and the last selected interaction type or default to 'puzzle'
+    const newType = currentInteraction.type === 'none' ? 
+      (currentInteraction.type === 'none' ? 'puzzle' : currentInteraction.type) : 
+      'none';
+      
+    updateElement(element.id, {
+      interaction: {
+        ...currentInteraction,
+        type: newType
+      }
+    });
+  };
+
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     removeElement(element.id);
   };
 
   const isVisible = !element.isHidden;
+  const isInteractive = element.interaction?.type !== 'none' && element.interaction?.type !== undefined;
   
+  // Check if the element is a puzzle type - don't show interactive button for puzzles
+  const isPuzzleElement = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'].includes(element.type);
+
+  // Check if this element has canvas navigation interaction
+  const hasCanvasNavigation = element.interaction?.type === 'canvasNavigation';
+  const targetCanvasName = hasCanvasNavigation && element.interaction?.targetCanvasId 
+    ? canvases.find(c => c.id === element.interaction?.targetCanvasId)?.name || 'Unknown Canvas'
+    : '';
+
+  // Get the current rotation directly from the element style for consistent transforms
   const rotation = getRotation(element);
   
+  // Use exact positioning with Math.round to ensure consistency
   const posX = Math.round(element.position.x);
   const posY = Math.round(element.position.y);
   
+  // Apply the same transformation to the frame as the element has
   const frameStyle = {
     position: 'absolute' as const,
     left: posX,
@@ -174,6 +159,32 @@ const ElementControls = ({
               pointerEvents: 'auto',
             }}
           >
+            {!isPuzzleElement && (
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button 
+                      variant="outline" 
+                      size="icon" 
+                      className={`h-8 w-8 bg-white ${isInteractive ? 'text-blue-600 border-blue-600' : ''}`}
+                      onClick={handleToggleInteractive}
+                    >
+                      {hasCanvasNavigation ? (
+                        <Navigation className="h-4 w-4" />
+                      ) : (
+                        <Zap className="h-4 w-4" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    {hasCanvasNavigation 
+                      ? `Canvas Navigation to: ${targetCanvasName}`
+                      : (isInteractive ? 'Interactive (On)' : 'Interactive (Off)')}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+            
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -191,46 +202,6 @@ const ElementControls = ({
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
-            
-            {canBeBackground && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      className="h-8 w-8 bg-white"
-                      onClick={handleSetAsBackground}
-                    >
-                      <Maximize2 className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{language === 'he' ? 'הפוך לרקע' : 'Set as Background'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-            
-            {element.type === 'background' && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button 
-                      variant="outline" 
-                      size="icon" 
-                      className="h-8 w-8 bg-white"
-                      onClick={handleDetachFromBackground}
-                    >
-                      <Frame className="h-4 w-4" />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{language === 'he' ? 'הפרד מהרקע' : 'Detach from Background'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
             
             <TooltipProvider>
               <Tooltip>
