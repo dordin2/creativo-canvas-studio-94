@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,9 +16,10 @@ import { Database } from "@/types/database";
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [canvases, setCanvases] = useState<CanvasType[]>([]);
-  const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
+  const [canvases, setCanvases] = useState<CanvasType[] | null>(null);
+  const [activeCanvasIndex, setActiveCanvasIndex] = useState<number>(0);
   const [projectName, setProjectName] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -29,7 +31,7 @@ const Play = () => {
       navigate('/');
       return;
     }
-    
+
     loadProjectData();
   }, [projectId]);
 
@@ -48,60 +50,63 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-      
+      setError(null);
+
       // Fetch project details
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
         .single();
-      
+
       if (projectError) {
         throw projectError;
       }
-      
+
       if (projectData) {
-        // Check if this is a private project and the user has access
         if (projectData.user_id && projectData.is_public === false && user?.id !== projectData.user_id) {
           toast.error("This project is private");
           navigate('/');
           return;
         }
-        
         setProjectName(projectData.name);
       } else {
         throw new Error('Project not found');
       }
-      
+
       // Fetch canvas data
       const { data, error } = await supabase
         .from('project_canvases')
         .select('canvas_data')
         .eq('project_id', projectId)
         .maybeSingle();
-      
+
       if (error) {
         throw error;
       }
-      
+
       if (data && data.canvas_data) {
-        // Properly assert the type with a type guard
         const jsonData = data.canvas_data as Json;
-        
-        // Check if the structure matches what we expect
-        if (typeof jsonData === 'object' && jsonData !== null && 
-            'canvases' in jsonData && 'activeCanvasIndex' in jsonData &&
-            Array.isArray(jsonData.canvases)) {
-          
-          // Now we can safely cast to the expected type
+        if (
+          typeof jsonData === 'object' &&
+          jsonData !== null &&
+          'canvases' in jsonData &&
+          'activeCanvasIndex' in jsonData &&
+          Array.isArray(jsonData.canvases)
+        ) {
           setCanvases(jsonData.canvases as unknown as CanvasType[]);
           setActiveCanvasIndex(jsonData.activeCanvasIndex as number);
         } else {
-          console.error("Invalid canvas data structure:", jsonData);
+          setError("Invalid canvas data structure");
+          setCanvases(null);
           throw new Error('Invalid project data format');
         }
+      } else {
+        setError("No canvas data found");
+        setCanvases(null);
       }
-    } catch (error) {
+    } catch (error: any) {
+      setError(error?.message || 'Unknown error');
       console.error('Error loading project data:', error);
       navigate('/');
     } finally {
@@ -134,6 +139,22 @@ const Play = () => {
     );
   }
 
+  if (error || !canvases || canvases.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-white px-4">
+        <h1 className="text-3xl font-bold text-red-600 mb-4">
+          {error ? "Error loading game" : "No data found"}
+        </h1>
+        <p className="text-md text-gray-600 mb-6">
+          {error ? error : "There was a problem loading this game. Double check your link or contact support."}
+        </p>
+        <Button variant="secondary" onClick={() => window.location.reload()}>
+          Try Again
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
@@ -142,13 +163,11 @@ const Play = () => {
             <Canvas isFullscreen={true} isMobileView={isMobile} />
           </div>
         </div>
-        
         <InventoryPanel />
         <InventoryIcon />
-        
         <div className={`absolute ${isMobile ? 'bottom-2 right-2' : 'bottom-4 right-4'} z-[100]`}>
-          <Button 
-            variant="secondary" 
+          <Button
+            variant="secondary"
             className={`shadow-md bg-white hover:bg-gray-100 ${isMobile ? 'px-2 py-1 text-xs' : ''}`}
             onClick={toggleFullscreen}
           >
@@ -162,3 +181,4 @@ const Play = () => {
 };
 
 export default Play;
+
