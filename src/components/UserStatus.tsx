@@ -1,74 +1,93 @@
 
 import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuGroup,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { LogOut, Settings, User, Shield } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { Badge } from "@/components/ui/badge";
-import { UserCheck } from "lucide-react";
-import { 
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 
 export function UserStatus() {
-  const { user } = useAuth();
-  const [isPro, setIsPro] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
+  const { user, profile, signOut } = useAuth();
+  const [isAdmin, setIsAdmin] = useState(false);
+  const navigate = useNavigate();
+  
   useEffect(() => {
-    if (!user) {
-      setIsLoading(false);
-      return;
-    }
-
-    const checkUserPayments = async () => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
       try {
-        // Check if user has any completed payments
-        const { data, error } = await supabase
-          .from("payments")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("status", "completed")
-          .limit(1);
-
-        if (error) throw error;
+        const { data, error } = await supabase.rpc('is_admin');
         
-        // User is pro if they have at least one completed payment
-        setIsPro(data && data.length > 0);
+        if (error) {
+          console.error("Error checking admin status:", error);
+          return;
+        }
+        
+        setIsAdmin(data);
       } catch (error) {
-        console.error("Error checking user status:", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Error checking admin status:", error);
       }
     };
-
-    checkUserPayments();
+    
+    checkAdminStatus();
   }, [user]);
 
-  if (!user || isLoading) return null;
-
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <div className="flex items-center gap-2">
-            {isPro ? (
-              <Badge variant="default" className="bg-gradient-to-r from-canvas-purple to-canvas-indigo flex gap-1 items-center">
-                <UserCheck className="h-3 w-3" />
-                Pro
-              </Badge>
-            ) : (
-              <Badge variant="outline" className="flex gap-1 items-center">
-                Regular
-              </Badge>
-            )}
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+          <Avatar className="h-8 w-8">
+            <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.display_name || "User"} />
+            <AvatarFallback className="bg-primary text-white">
+              {profile?.display_name?.[0].toUpperCase() || user?.email?.[0].toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="w-56" align="end" forceMount>
+        <DropdownMenuLabel className="font-normal">
+          <div className="flex flex-col space-y-1">
+            <p className="text-sm font-medium leading-none">
+              {profile?.display_name || "User"}
+            </p>
+            <p className="text-xs leading-none text-muted-foreground">
+              {user?.email}
+            </p>
           </div>
-        </TooltipTrigger>
-        <TooltipContent>
-          {isPro ? "Thank you for supporting!" : "Support this project to become Pro"}
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator />
+        <DropdownMenuGroup>
+          <DropdownMenuItem>
+            <User className="mr-2 h-4 w-4" />
+            <span>Profile</span>
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Settings className="mr-2 h-4 w-4" />
+            <span>Settings</span>
+          </DropdownMenuItem>
+          {isAdmin && (
+            <DropdownMenuItem onClick={() => navigate('/admin')}>
+              <Shield className="mr-2 h-4 w-4 text-blue-500" />
+              <span>Admin Dashboard</span>
+            </DropdownMenuItem>
+          )}
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem onClick={() => signOut()}>
+          <LogOut className="mr-2 h-4 w-4" />
+          <span>Log out</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

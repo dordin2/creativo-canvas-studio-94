@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -7,13 +8,13 @@ import { LanguageProvider } from "@/context/LanguageContext";
 import { DesignProvider } from "@/context/DesignContext";
 import { ProjectProvider } from "@/context/ProjectContext";
 import { AuthProvider } from "@/context/AuthContext";
-import { InteractiveModeProvider } from "@/context/InteractiveModeContext";
 import Projects from "./pages/Projects";
 import Editor from "./pages/Editor";
 import Play from "./pages/Play";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import Payment from "./pages/Payment";
+import Admin from "./pages/Admin";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
 const queryClient = new QueryClient();
@@ -26,11 +27,12 @@ const App = () => (
           <Toaster />
           <Sonner />
           <Routes>
+            {/* Redirect root to auth page */}
             <Route 
               path="/" 
               element={
                 <AuthProvider>
-                  <Projects />
+                  <Navigate to="/auth" replace />
                 </AuthProvider>
               } 
             />
@@ -43,17 +45,25 @@ const App = () => (
               } 
             />
             <Route 
+              path="/projects" 
+              element={
+                <AuthProvider>
+                  <ProtectedRoute>
+                    <Projects />
+                  </ProtectedRoute>
+                </AuthProvider>
+              } 
+            />
+            <Route 
               path="/editor/:projectId" 
               element={
                 <AuthProvider>
                   <ProtectedRoute>
-                    <InteractiveModeProvider>
-                      <DesignProvider>
-                        <ProjectProvider>
-                          <Editor />
-                        </ProjectProvider>
-                      </DesignProvider>
-                    </InteractiveModeProvider>
+                    <DesignProvider>
+                      <ProjectProvider>
+                        <Editor />
+                      </ProjectProvider>
+                    </DesignProvider>
                   </ProtectedRoute>
                 </AuthProvider>
               } 
@@ -72,6 +82,16 @@ const App = () => (
                 <AuthProvider>
                   <ProtectedRoute>
                     <Payment />
+                  </ProtectedRoute>
+                </AuthProvider>
+              } 
+            />
+            <Route 
+              path="/admin" 
+              element={
+                <AuthProvider>
+                  <ProtectedRoute>
+                    <Admin />
                   </ProtectedRoute>
                 </AuthProvider>
               } 

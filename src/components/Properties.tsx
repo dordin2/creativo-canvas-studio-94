@@ -1,21 +1,21 @@
 
 import { useDesignState } from "@/context/DesignContext";
-import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import ElementProperties from "./properties/ElementProperties";
 import NoElementSelected from "./properties/NoElementSelected";
+import InteractionProperties from "./properties/InteractionProperties";
 
 const Properties = () => {
-  const { activeElement } = useDesignState();
-  const { isInteractiveMode } = useInteractiveMode();
+  const { activeElement, isInteractionMode } = useDesignState();
   
   if (!activeElement) {
     return <NoElementSelected />;
   }
   
-  return <ElementProperties 
-    element={activeElement} 
-    isInteractiveMode={isInteractiveMode} 
-  />;
+  if (isInteractionMode) {
+    return <InteractionProperties element={activeElement} />;
+  }
+  
+  return <ElementProperties element={activeElement} />;
 };
 
 export default Properties;

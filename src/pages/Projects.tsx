@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -39,11 +38,9 @@ const Projects = () => {
       setIsLoading(true);
       let query = supabase.from('projects').select('*');
       
-      // If user is logged in, fetch only their projects
       if (user) {
         query = query.eq('user_id', user.id);
       } else {
-        // For non-authenticated users, only show public projects (null user_id)
         query = query.is('user_id', null);
       }
       
@@ -74,7 +71,6 @@ const Projects = () => {
         description: newProjectDescription.trim() || null 
       };
       
-      // Add user_id for authenticated users
       if (user) {
         projectData.user_id = user.id;
       }
@@ -91,7 +87,6 @@ const Projects = () => {
       
       toast.success('Project created successfully');
       
-      // Create initial canvas data for this project
       const initialCanvasData = {
         canvases: [{
           id: crypto.randomUUID(),
@@ -118,7 +113,6 @@ const Projects = () => {
       setNewProjectName("");
       setNewProjectDescription("");
       
-      // Navigate to editor with the project ID
       navigate(`/editor/${data.id}`);
     } catch (error) {
       console.error('Error creating project:', error);
@@ -141,7 +135,6 @@ const Projects = () => {
     });
   };
 
-  // Handle navigation to auth page
   const goToAuth = () => {
     navigate('/auth');
   };
@@ -232,7 +225,6 @@ const Projects = () => {
         )}
       </div>
       
-      {/* New Project Dialog */}
       <Dialog open={newProjectOpen} onOpenChange={setNewProjectOpen}>
         <DialogContent>
           <DialogHeader>

@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import React, { useRef, useState, useEffect, CSSProperties } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
@@ -24,14 +24,15 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
-import { useInteractiveMode } from "@/context/InteractiveModeContext";
+import { getImageFromCache } from "@/utils/imageUploader";
 
-const DraggableElement = ({ element, isActive, children }: {
+interface DraggableElementProps {
   element: DesignElement;
-  isActive: boolean;
-  children: React.ReactNode;
-}) => {
+  children?: React.ReactNode;
+  isActive?: boolean;
+}
+
+const DraggableElement = ({ element, children, isActive = false }: DraggableElementProps) => {
   const { 
     updateElement, 
     updateElementWithoutHistory,
@@ -45,9 +46,9 @@ const DraggableElement = ({ element, isActive, children }: {
     inventoryItems,
     draggedInventoryItem,
     setDraggedInventoryItem,
-    handleItemCombination
+    handleItemCombination,
+    isInteractionMode,
   } = useDesignState();
-  const { isInteractiveMode } = useInteractiveMode();
   
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -84,6 +85,11 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
+    if (isInteractionMode) {
+      setActiveElement(element);
+      return;
+    }
+    
     if (isImageElement && isGameMode) {
       e.preventDefault();
       
@@ -102,7 +108,7 @@ const DraggableElement = ({ element, isActive, children }: {
     
     setActiveElement(element);
     
-    if (isEditing || isInteractiveMode) return;
+    if (isEditing) return;
     
     if (!isSequencePuzzleElement) {
       startDrag(e, element.position);
@@ -186,12 +192,10 @@ const DraggableElement = ({ element, isActive, children }: {
   const handleDuplicate = () => {
     console.log("DraggableElement - Original element to duplicate:", element);
     
-    // Use the utility function to prepare the element for duplication
     const duplicateProps = prepareElementForDuplication(element);
     
     console.log("DraggableElement - Duplicate props before adding:", duplicateProps);
     
-    // Add the duplicated element
     addElement(element.type, duplicateProps);
   };
 
@@ -248,7 +252,6 @@ const DraggableElement = ({ element, isActive, children }: {
         break;
     }
     
-    // Trigger the actual item combination in the DesignContext
     handleItemCombination(draggedItemId, element.id);
   };
 
@@ -533,31 +536,54 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }
 
-  const combinedStyle = {
+  const shouldShowControls = !isGameMode && !isInteractionMode ? showControls : (isActive && isInteractionMode);
+  
+  const isDraggingDisabled = isGameMode || isInteractionMode;
+  const isResizingDisabled = isGameMode || isInteractionMode;
+
+  const combinedStyle: CSSProperties = {
     ...elementStyle,
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
-    cursor: isGameMode 
-      ? (hasInteraction ? 'pointer' : 'default') 
-      : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
+    cursor: isInteractionMode ? 'pointer' : 
+           isGameMode ? (hasInteraction ? 'pointer' : 'default') :
+           isDragging ? 'grabbing' : 'grab',
+    pointerEvents: element.isHidden ? 'none' : 'auto',
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
-    position: 'absolute' as 'absolute',
-    border: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
-    outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
-    boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
-    backgroundColor: isGameMode && isImageElement ? 'transparent' : elementStyle.backgroundColor,
+    position: 'absolute',
+    backgroundColor: (element.style?.backgroundColor as string) || 'transparent',
+    border: isGameMode && isImageElement ? 'none' : 
+           isInteractionMode && isActive ? '2px solid #6366F1' :
+           isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : 
+           elementStyle.border,
+    outline: isGameMode && isImageElement ? 'none' : 
+            isInteractionMode && isActive ? '2px solid #6366F1' :
+            isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : 
+            elementStyle.outline,
+    boxShadow: isGameMode && isImageElement ? 'none' : 
+              (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
+  };
+
+  const handleElementClick = (e: React.MouseEvent) => {
+    if (isGameMode && hasInteraction && !isDragging) {
+      e.stopPropagation();
+      handleInteraction();
+    }
   };
 
   const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
     <div
       id={`element-${element.id}`}
       ref={ref}
-      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+      className={`canvas-element ${isDragging ? 'dragging' : ''} ${
+        element.isHidden ? 'opacity-0 pointer-events-none' : ''
+      }`}
       style={combinedStyle}
-      onMouseDown={handleMouseDown}
+      onMouseDown={!isDraggingDisabled ? handleMouseDown : undefined}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
-      onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+      onClick={handleElementClick}
+      data-interactive={element.interaction?.type ? "true" : "false"}
       draggable={isGameMode && isImageElement ? false : undefined}
     >
       {childContent}
@@ -583,45 +609,45 @@ const DraggableElement = ({ element, isActive, children }: {
         setImageLoaded(true);
       };
       
-      // Use progressive loading with thumbnail then full image
       if (element.thumbnailDataUrl && !imageLoaded) {
         const loadMainImage = async () => {
           if (!element.dataUrl && element.cacheKey) {
-            // Try to load the full image from cache if not already loaded
             const cachedImage = await getImageFromCache(element.cacheKey);
             if (cachedImage) {
-              // We can't modify element directly, so we'll update it through the context
               updateElementWithoutHistory(element.id, { dataUrl: cachedImage });
             }
           }
         };
         
-        // Start loading the full resolution image
         loadMainImage();
-        
-        const thumbnailImg = (
-          <img 
-            src={element.thumbnailDataUrl}
-            alt="Element thumbnail"
-            className="w-full h-full object-contain blur-[1px]"
-            style={{ position: 'absolute', top: 0, left: 0, transition: 'opacity 0.2s' }}
-          />
-        );
-        
-        const mainImg = (
-          <img 
-            src={element.dataUrl || element.src}
-            alt="Element"
-            className={`w-full h-full object-contain ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
-            onLoad={handleImageLoad}
-            style={{ transition: 'opacity 0.3s' }}
-          />
-        );
         
         children = (
           <div className="relative w-full h-full">
-            {!imageLoaded && thumbnailImg}
-            {mainImg}
+            {!imageLoaded && element.thumbnailDataUrl && (
+              <img 
+                src={element.thumbnailDataUrl}
+                alt="Element thumbnail"
+                className="w-full h-full object-contain blur-[1px]"
+                style={{ 
+                  position: 'absolute', 
+                  top: 0, 
+                  left: 0, 
+                  transition: 'opacity 0.2s',
+                  zIndex: 1
+                }}
+              />
+            )}
+            <img 
+              src={element.dataUrl || element.src}
+              alt="Element"
+              className={`w-full h-full object-contain ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={handleImageLoad}
+              style={{ 
+                transition: 'opacity 0.3s',
+                position: 'relative',
+                zIndex: 2
+              }}
+            />
           </div>
         );
       }
@@ -630,7 +656,7 @@ const DraggableElement = ({ element, isActive, children }: {
 
   return (
     <>
-      {isGameMode ? (
+      {isGameMode || isInteractionMode ? (
         createElementContent(elementRef)
       ) : (
         <ContextMenu>
@@ -670,7 +696,7 @@ const DraggableElement = ({ element, isActive, children }: {
           frameTransform={frameTransform}
           onResizeStart={handleResizeStart}
           onRotateStart={handleRotateStart}
-          showControls={showControls && isActive && !element.isHidden}
+          showControls={shouldShowControls && !element.isHidden}
         />
       )}
       
