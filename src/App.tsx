@@ -63,11 +63,7 @@ const App = () => (
               path="/play/:projectId" 
               element={
                 <AuthProvider>
-                  <ProjectProvider>
-                    <DesignProvider>
-                      <Play />
-                    </DesignProvider>
-                  </ProjectProvider>
+                  <Play />
                 </AuthProvider>
               } 
             />

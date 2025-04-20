@@ -109,15 +109,16 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isEditing || isInteractiveMode) return;
     
     if (!isSequencePuzzleElement) {
+      let pos = { x: 0, y: 0 };
+      if ('touches' in e && e.touches.length > 0) {
+        pos = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      } else if ('clientX' in e) {
+        pos = { x: e.clientX, y: e.clientY };
+      }
       startDrag(e, element.position);
       setIsDragging(true);
+      setStartPos(pos);
     }
-    
-    const coords = 'touches' in e 
-      ? { x: e.touches[0].clientX, y: e.touches[0].clientY }
-      : { x: e.clientX, y: e.clientY };
-    
-    setStartPos(coords);
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
@@ -21,48 +20,6 @@ import {
 } from "@/components/ui/drawer";
 import { LibraryModal } from './library/LibraryModal';
 
-// פונקציה חדשה לטיפול בשיתוף - העתקה של קישור ללוח
-const useShareGameLink = () => {
-  const { projectId } = useProject();
-
-  const shareGameLink = React.useCallback(() => {
-    // בונים את קישור המשחק תמיד בפורמט הנכון
-    const url = `${window.location.origin}/play/${projectId}`;
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard.writeText(url)
-        .then(() => {
-          toast.success("Game link copied to clipboard!");
-        })
-        .catch(() => {
-          toast.info(
-            <div>
-              <div>Copy this link to share your game:</div>
-              <div
-                className="p-2 mt-2 rounded bg-gray-100 font-mono select-all break-all"
-                style={{ wordBreak: "break-all" }}
-              >{url}</div>
-              <div className="mt-2 text-xs text-gray-500">(Right-click and select &quot;Copy&quot; if it didn&apos;t copy automatically)</div>
-            </div>,
-            { duration: 9000 }
-          );
-        });
-    } else {
-      toast.info(
-        <div>
-          <div>Copy this link to share your game:</div>
-          <div
-            className="p-2 mt-2 rounded bg-gray-100 font-mono select-all break-all"
-            style={{ wordBreak: "break-all" }}
-          >{url}</div>
-          <div className="mt-2 text-xs text-gray-500">(Right-click and select &quot;Copy&quot; if it didn&apos;t copy automatically)</div>
-        </div>,
-        { duration: 9000 }
-      );
-    }
-  }, [projectId]);
-  return shareGameLink;
-};
-
 const Header = () => {
   const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
   const { t, language } = useLanguage();
@@ -70,40 +27,43 @@ const Header = () => {
   const isMobile = useIsMobile();
   const { profile } = useAuth();
   const isAdmin = profile?.roles?.includes('admin');
-  const shareGameLink = useShareGameLink();
 
   const handleDownload = () => {
     if (!canvasRef) return;
+    
     try {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
       const canvasElement = canvasRef;
-
+      
       canvas.width = canvasElement.clientWidth;
       canvas.height = canvasElement.clientHeight;
+      
       if (ctx) {
         ctx.fillStyle = "white";
         ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+        
         const data = new XMLSerializer().serializeToString(canvasElement);
         const img = new Image();
         const svgBlob = new Blob([data], { type: "image/svg+xml;charset=utf-8" });
         const url = URL.createObjectURL(svgBlob);
+        
         img.onload = function() {
           ctx.drawImage(img, 0, 0);
           URL.revokeObjectURL(url);
-
+          
           const imgURI = canvas
             .toDataURL("image/png")
             .replace("image/png", "image/octet-stream");
-
+          
           const link = document.createElement("a");
           link.download = "canvas-design.png";
           link.href = imgURI;
           link.click();
-
+          
           toast.success(t('toast.success.download'));
         };
+        
         img.src = url;
       }
     } catch (error) {
@@ -112,7 +72,9 @@ const Header = () => {
     }
   };
 
-  // הפונקציה הישנה הוסרה כי כל הלוגיקה עכשיו בתוך useShareGameLink
+  const handleShare = () => {
+    toast.info(t('toast.info.share'));
+  };
 
   if (isMobile) {
     return (
@@ -122,6 +84,7 @@ const Header = () => {
             {t('app.title')}
           </div>
         </div>
+        
         <div className="flex items-center gap-2">
           <GameModeToggle />
           <InteractiveModeToggle />
@@ -153,11 +116,7 @@ const Header = () => {
                     <Redo className="h-4 w-4 mr-2" />
                     {t('app.redo')}
                   </Button>
-                  <Button
-                    variant="outline"
-                    className="justify-start hover:bg-gray-50"
-                    onClick={shareGameLink}
-                  >
+                  <Button variant="outline" className="justify-start hover:bg-gray-50" onClick={handleShare}>
                     <Share className="h-4 w-4 mr-2" />
                     {t('app.share')}
                   </Button>
@@ -166,14 +125,14 @@ const Header = () => {
                     {t('app.download')}
                   </Button>
                 </div>
-
+                
                 <div className="pt-2">
                   <h3 className="font-medium mb-2">{language === 'he' ? 'שכבות' : 'Layers'}</h3>
                   <div className="border rounded-md p-2 bg-gray-50">
                     <LayersList />
                   </div>
                 </div>
-
+                
                 <div className="pt-2">
                   <h3 className="font-medium mb-2">{t('app.settings')}</h3>
                   <LanguageSwitcher />
@@ -195,7 +154,7 @@ const Header = () => {
         <div className="h-6 w-px bg-gray-200 mx-1"></div>
         <LanguageSwitcher />
       </div>
-
+      
       <div className="flex items-center gap-4">
         <GameModeToggle />
         <InteractiveModeToggle />
@@ -237,11 +196,7 @@ const Header = () => {
               </div>
             </SheetContent>
           </Sheet>
-          <Button
-            variant="outline"
-            className="gap-2 hover:bg-gray-50"
-            onClick={shareGameLink}
-          >
+          <Button variant="outline" className="gap-2 hover:bg-gray-50" onClick={handleShare}>
             <Share className="h-4 w-4" />
             <span>{t('app.share')}</span>
           </Button>
