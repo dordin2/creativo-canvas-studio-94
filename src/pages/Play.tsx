@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +10,8 @@ import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
-import { useProject } from "@/context/ProjectContext";
 import { toast } from "sonner";
+import { Database } from "@/types/database";
 
 function createDefaultCanvas(): CanvasType {
   return {
@@ -26,12 +25,12 @@ const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [canvases, setCanvases] = useState<CanvasType[]>([]);
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
+  const [projectName, setProjectName] = useState("");
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
-  const { projectName, isPublic } = useProject();
 
   useEffect(() => {
     if (!projectId) {
@@ -56,9 +55,25 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
+      const { data: projectData, error: projectError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('id', projectId)
+        .maybeSingle();
 
-      // We don't need to fetch project info anymore as it's handled by ProjectContext
-      // We only need to get the canvas data
+      if (projectError || !projectData) {
+        toast.error('Project not found');
+        navigate('/');
+        return;
+      }
+
+      if (projectData.is_public !== true && (!user || user?.id !== projectData.user_id)) {
+        toast.error("This project is private. Only the owner can view it.");
+        navigate('/');
+        return;
+      }
+      setProjectName(projectData.name);
+
       const { data, error } = await supabase
         .from('project_canvases')
         .select('canvas_data')
@@ -102,6 +117,7 @@ const Play = () => {
       toast.error('Error loading project or canvas');
       setCanvases([createDefaultCanvas()]);
       setActiveCanvasIndex(0);
+      setProjectName('Unknown Project');
     } finally {
       setIsLoading(false);
     }
