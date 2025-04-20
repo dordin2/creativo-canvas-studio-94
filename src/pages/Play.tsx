@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -20,11 +19,6 @@ function createDefaultCanvas(): CanvasType {
     id: crypto.randomUUID(),
     name: "Canvas 1",
     elements: [],
-    background: "#ffffff",
-    width: 1600,
-    height: 900,
-    layer: 0,
-    // Any other fields needed by CanvasType, add here as needed!
   };
 }
 
@@ -206,4 +200,3 @@ const Play = () => {
 };
 
 export default Play;
-
