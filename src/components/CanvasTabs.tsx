@@ -1,9 +1,10 @@
+
 import { useDesignState } from "@/context/DesignContext";
 import { Button } from "@/components/ui/button";
 import { Plus, Copy, X, Move } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/context/LanguageContext";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import {
   Tooltip,
@@ -82,7 +83,7 @@ const CanvasTabs = () => {
 
   return (
     <div 
-      className={`flex items-center gap-1 p-1 overflow-x-auto border-b border-gray-100 bg-white/50 backdrop-blur-sm ${language === 'he' ? 'rtl' : 'ltr'}`}
+      className="flex items-center gap-0.5 px-1 overflow-x-auto border-b border-gray-100/20 bg-white/30 backdrop-blur-[2px]"
       ref={tabsRef}
     >
       {canvases.map((canvas, index) => (
@@ -100,15 +101,15 @@ const CanvasTabs = () => {
         >
           <button
             className={cn(
-              "flex items-center py-1 px-2 text-xs rounded-md transition-all duration-200 hover:bg-gray-50",
+              "flex items-center gap-0.5 py-0.5 px-1.5 text-[11px] rounded transition-all duration-200",
               activeCanvasIndex === index 
-                ? "text-canvas-purple bg-white shadow-sm ring-1 ring-gray-200/50" 
-                : "text-gray-500 hover:text-gray-700",
+                ? "text-canvas-purple bg-white/70 shadow-sm ring-1 ring-gray-200/30" 
+                : "text-gray-500 hover:text-gray-700 hover:bg-white/40",
               draggingIndex === index && "opacity-50 border-dashed"
             )}
             onClick={() => setActiveCanvas(index)}
           >
-            <Move size={12} className="mr-1 cursor-move text-gray-400" />
+            <Move size={10} className="cursor-move text-gray-400" />
             
             {editingCanvasId === canvas.id ? (
               <form
@@ -123,7 +124,7 @@ const CanvasTabs = () => {
                   type="text"
                   value={newCanvasName}
                   onChange={(e) => setNewCanvasName(e.target.value)}
-                  className="h-6 text-xs w-24"
+                  className="h-5 text-[11px] w-20"
                   autoFocus
                   onBlur={() => handleNameChange(canvas.id, newCanvasName || canvas.name)}
                 />
@@ -135,24 +136,24 @@ const CanvasTabs = () => {
                   setEditingCanvasId(canvas.id);
                   setNewCanvasName(canvas.name);
                 }}
-                className="truncate max-w-[100px]"
+                className="truncate max-w-[80px]"
               >
                 {canvas.name}
               </span>
             )}
 
-            <div className="flex items-center gap-0.5 ml-1">
+            <div className="flex items-center gap-px">
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <button
-                      className="p-1 text-gray-400 hover:text-blue-500 rounded-full hover:bg-gray-50"
+                      className="p-0.5 text-gray-400 hover:text-blue-500 rounded hover:bg-white/50"
                       onClick={(e) => {
                         e.stopPropagation();
                         duplicateCanvas(index);
                       }}
                     >
-                      <Copy size={12} />
+                      <Copy size={10} />
                     </button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -166,13 +167,13 @@ const CanvasTabs = () => {
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
-                        className="p-1 text-gray-400 hover:text-red-500 rounded-full hover:bg-gray-50"
+                        className="p-0.5 text-gray-400 hover:text-red-500 rounded hover:bg-white/50"
                         onClick={(e) => {
                           e.stopPropagation();
                           removeCanvas(index);
                         }}
                       >
-                        <X size={12} />
+                        <X size={10} />
                       </button>
                     </TooltipTrigger>
                     <TooltipContent>
@@ -189,10 +190,10 @@ const CanvasTabs = () => {
       <Button
         variant="ghost"
         size="sm"
-        className="flex-shrink-0 ml-1 gap-1 h-7 text-xs text-gray-500 hover:text-gray-700"
+        className="flex-shrink-0 ml-0.5 gap-0.5 h-5 text-[11px] text-gray-500 hover:text-gray-700 hover:bg-white/40"
         onClick={addCanvas}
       >
-        <Plus size={12} />
+        <Plus size={10} />
         <span>{language === 'he' ? 'הוסף קאנבס' : 'Add Canvas'}</span>
       </Button>
     </div>
@@ -200,3 +201,4 @@ const CanvasTabs = () => {
 };
 
 export default CanvasTabs;
+
