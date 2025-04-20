@@ -25,6 +25,7 @@ import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -46,6 +47,7 @@ const DraggableElement = ({ element, isActive, children }: {
     setDraggedInventoryItem,
     handleItemCombination
   } = useDesignState();
+  const { isInteractiveMode } = useInteractiveMode();
   
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -100,7 +102,7 @@ const DraggableElement = ({ element, isActive, children }: {
     
     setActiveElement(element);
     
-    if (isEditing) return;
+    if (isEditing || isInteractiveMode) return;
     
     if (!isSequencePuzzleElement) {
       startDrag(e, element.position);
