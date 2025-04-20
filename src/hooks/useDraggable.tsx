@@ -1,6 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
+import { viewportToCanvasCoordinates, getCanvasScale } from '@/utils/coordinateUtils';
 
 interface Position {
   x: number;
@@ -14,7 +15,7 @@ export const useDraggable = (elementId: string) => {
   const elementInitialPos = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
   const animationFrame = useRef<number | null>(null);
-  const mousePosition = useRef<Position>({ x: 0, y: 0 });
+  const dragStartOffset = useRef<Position | null>(null);
 
   // Find the current element to access its properties
   const currentElement = elements.find(el => el.id === elementId);
@@ -114,37 +115,53 @@ export const useDraggable = (elementId: string) => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
+      if (!isDragging || !startPosition.current || !elementInitialPos.current || !dragStartOffset.current) return;
       
       // Don't drag images in game mode unless they are interactive
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
         return;
       }
+
+      // Get the canvas container and its properties
+      const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
+      if (!canvasContainer) return;
+
+      const canvasRect = canvasContainer.getBoundingClientRect();
+      const canvasScale = getCanvasScale(canvasContainer);
       
-      // Update current mouse position immediately for responsive feel
-      mousePosition.current = { x: e.clientX, y: e.clientY };
+      // Calculate new position based on mouse movement and canvas scale
+      const currentPos = viewportToCanvasCoordinates(e.clientX, e.clientY, {
+        canvasScale,
+        canvasRect
+      });
+      
+      const startPos = viewportToCanvasCoordinates(startPosition.current.x, startPosition.current.y, {
+        canvasScale,
+        canvasRect
+      });
+      
+      // Calculate the delta movement accounting for scale
+      const deltaX = currentPos.x - startPos.x;
+      const deltaY = currentPos.y - startPos.y;
 
       // Mark that we've started dragging (for history tracking)
       if (!isDragStarted.current) {
         isDragStarted.current = true;
       }
 
-      // Cancel any existing animation frame to prevent queuing updates
+      // Cancel any existing animation frame
       if (animationFrame.current !== null) {
         cancelAnimationFrame(animationFrame.current);
       }
 
       // Use requestAnimationFrame for smooth updates
       animationFrame.current = requestAnimationFrame(() => {
-        // Calculate the new position
-        const deltaX = mousePosition.current.x - startPosition.current!.x;
-        const deltaY = mousePosition.current.y - startPosition.current!.y;
-
+        // Calculate new position relative to initial element position
         const newX = elementInitialPos.current!.x + deltaX;
         const newY = elementInitialPos.current!.y + deltaY;
         
-        // Immediately update the element's position for responsive dragging
-        updateElementWithoutHistory(elementId, { 
+        // Update element position
+        updateElementWithoutHistory(elementId, {
           position: { x: newX, y: newY },
           style: {
             ...currentElement?.style,
@@ -214,9 +231,28 @@ export const useDraggable = (elementId: string) => {
     
     e.stopPropagation();
     setIsDragging(true);
+    
+    // Store the initial mouse position
     startPosition.current = { x: e.clientX, y: e.clientY };
     elementInitialPos.current = initialPosition;
-    isDragStarted.current = false; // Reset the drag started flag
+    isDragStarted.current = false;
+    
+    // Store the offset between mouse position and element position
+    const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
+    if (canvasContainer) {
+      const canvasRect = canvasContainer.getBoundingClientRect();
+      const canvasScale = getCanvasScale(canvasContainer);
+      
+      const elementPos = viewportToCanvasCoordinates(e.clientX, e.clientY, {
+        canvasScale,
+        canvasRect
+      });
+      
+      dragStartOffset.current = {
+        x: elementPos.x - initialPosition.x,
+        y: elementPos.y - initialPosition.y
+      };
+    }
     
     // Set willChange to transform for better performance during drag
     if (currentElement) {
