@@ -34,6 +34,8 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   const [zoomLevel, setZoomLevel] = useState(1);
   const parentRef = useRef<HTMLDivElement>(null);
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
+  const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
+  const [initialZoom, setInitialZoom] = useState<number>(1);
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -405,13 +407,55 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     setZoomLevel(prev => Math.max(prev - 0.1, 0.2));
   };
 
+  const calculateTouchDistance = (touch1: Touch, touch2: Touch) => {
+    const dx = touch1.clientX - touch2.clientX;
+    const dy = touch1.clientY - touch2.clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  const handleTouchStart = (e: TouchEvent) => {
+    if (e.touches.length === 2) {
+      const distance = calculateTouchDistance(e.touches[0], e.touches[1]);
+      setInitialTouchDistance(distance);
+      setInitialZoom(zoomLevel);
+    }
+  };
+
+  const handleTouchMove = (e: TouchEvent) => {
+    if (e.touches.length === 2 && initialTouchDistance !== null) {
+      const currentDistance = calculateTouchDistance(e.touches[0], e.touches[1]);
+      const scale = currentDistance / initialTouchDistance;
+      const newZoom = Math.min(Math.max(initialZoom * scale, 0.2), 2);
+      setZoomLevel(newZoom);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setInitialTouchDistance(null);
+  };
+
+  useEffect(() => {
+    if (isMobileView && containerRef.current) {
+      const element = containerRef.current;
+      element.addEventListener('touchstart', handleTouchStart);
+      element.addEventListener('touchmove', handleTouchMove);
+      element.addEventListener('touchend', handleTouchEnd);
+
+      return () => {
+        element.removeEventListener('touchstart', handleTouchStart);
+        element.removeEventListener('touchmove', handleTouchMove);
+        element.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [isMobileView, initialTouchDistance, initialZoom]);
+
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
       <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
           transform: `scale(${displayZoomLevel})`, 
           transformOrigin: 'center center',
-          transition: 'transform 0.2s ease-out',
+          transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
           position: 'absolute',
           top: '50%',
           left: '50%',
@@ -450,8 +494,8 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           </div>
         )}
         
-        {!isGameMode && (
-          <div className="zoom-controls">
+        {!isGameMode && !isMobileView && (
+          <div className="zoom-controls absolute bottom-4 right-4 flex items-center gap-2 bg-white rounded-lg shadow-md p-2">
             <Button
               variant="outline"
               size="icon"
@@ -460,7 +504,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             >
               <Minus className="h-4 w-4" />
             </Button>
-            <span>{Math.round(zoomLevel * 100)}%</span>
+            <span className="min-w-[3rem] text-center">{Math.round(zoomLevel * 100)}%</span>
             <Button
               variant="outline"
               size="icon"
