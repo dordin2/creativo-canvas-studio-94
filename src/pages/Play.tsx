@@ -57,8 +57,6 @@ const Play = () => {
     try {
       setIsLoading(true);
 
-      // We don't need to fetch project info anymore as it's handled by ProjectContext
-      // We only need to get the canvas data
       const { data, error } = await supabase
         .from('project_canvases')
         .select('canvas_data')
@@ -66,8 +64,9 @@ const Play = () => {
         .maybeSingle();
 
       if (error) {
+        console.error('Supabase error loading project_canvases:', error);
         toast.error('Could not load canvas data');
-        setCanvases([]);
+        setCanvases([createDefaultCanvas()]);
         setActiveCanvasIndex(0);
         setIsLoading(false);
         return;
@@ -76,30 +75,43 @@ const Play = () => {
       let canvasesArr: CanvasType[] = [];
       let index = 0;
       if (data?.canvas_data) {
-        const jsonData = data.canvas_data as Json;
-        if (
-          typeof jsonData === 'object' &&
-          jsonData !== null &&
-          'canvases' in jsonData &&
-          Array.isArray(jsonData.canvases)
-        ) {
-          canvasesArr = jsonData.canvases as unknown as CanvasType[];
-          index = typeof jsonData.activeCanvasIndex === "number" ? jsonData.activeCanvasIndex : 0;
-        } else {
-          toast.error('Invalid canvas structure, loading default canvas');
+        try {
+          const jsonData = data.canvas_data as Json;
+          if (
+            typeof jsonData === 'object' &&
+            jsonData !== null &&
+            'canvases' in jsonData &&
+            Array.isArray(jsonData.canvases)
+          ) {
+            canvasesArr = jsonData.canvases as unknown as CanvasType[];
+            index = typeof jsonData.activeCanvasIndex === "number" ? jsonData.activeCanvasIndex : 0;
+          } else {
+            toast.error('Invalid canvas structure, loading default canvas');
+            canvasesArr = [createDefaultCanvas()];
+            index = 0;
+          }
+        } catch (err) {
+          console.error('Error parsing canvas_data:', err);
+          toast.error('Corrupted canvas data, loading default canvas');
           canvasesArr = [createDefaultCanvas()];
+          index = 0;
         }
       } else {
+        toast.info('No canvas found, loading blank canvas.');
         canvasesArr = [createDefaultCanvas()];
+        index = 0;
       }
       setCanvases(canvasesArr);
       setActiveCanvasIndex(index < canvasesArr.length ? index : 0);
 
       if (canvasesArr.length === 0) {
         toast.error('No canvas found for this project; blank canvas loaded.');
+        setCanvases([createDefaultCanvas()]);
+        setActiveCanvasIndex(0);
       }
     } catch (error) {
-      toast.error('Error loading project or canvas');
+      console.error('Error loading project or canvas:', error);
+      toast.error('Error loading project or canvas. Loading blank canvas.');
       setCanvases([createDefaultCanvas()]);
       setActiveCanvasIndex(0);
     } finally {
