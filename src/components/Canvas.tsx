@@ -152,46 +152,6 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     }
   };
   
-  const handleWheel = (e: WheelEvent) => {
-    if (!e.ctrlKey) return;
-    
-    e.preventDefault();
-    e.stopPropagation();
-    
-    const delta = e.deltaY;
-    const zoomFactor = 0.1;
-    const newZoom = delta > 0 
-      ? Math.max(0.1, zoomLevel - zoomFactor)
-      : Math.min(3, zoomLevel + zoomFactor);
-    
-    const canvasContainer = containerRef.current;
-    if (!canvasContainer) return;
-    
-    const rect = canvasContainer.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = (e.clientY - rect.top) / rect.height;
-    
-    canvasContainer.style.transformOrigin = `${x * 100}% ${y * 100}%`;
-    setZoomLevel(newZoom);
-  };
-  
-  useEffect(() => {
-    const canvas = containerRef.current;
-    if (!canvas) return;
-    
-    const wheelHandler = (e: WheelEvent) => {
-      if (e.ctrlKey) {
-        handleWheel(e);
-      }
-    };
-    
-    canvas.addEventListener('wheel', wheelHandler, { passive: false });
-    
-    return () => {
-      canvas.removeEventListener('wheel', wheelHandler);
-    };
-  }, [zoomLevel]);
-
   const renderElements = () => {
     const sortedElements = [...elements]
       .filter(element => element.type !== 'background')
@@ -438,10 +398,11 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
-      <div className={`flex-1 flex items-center justify-center overflow-hidden ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
+      <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
         <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
-          transform: `scale(${displayZoomLevel})`,
-          transition: 'transform 0.1s ease-out',
+          transform: `scale(${displayZoomLevel})`, 
+          transformOrigin: 'center center',
+          transition: 'transform 0.2s ease-out',
           position: 'absolute',
           top: '50%',
           left: '50%',

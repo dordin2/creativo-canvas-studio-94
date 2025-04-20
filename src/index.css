@@ -192,9 +192,7 @@
     position: relative;
     overflow: visible !important;
     pointer-events: auto;
-    z-index: 1;
-    will-change: transform;
-    transform-origin: center center;
+    z-index: 1; /* Ensure canvas container has explicit z-index */
   }
   
   .canvas-container > div:first-child {
@@ -292,8 +290,7 @@
     linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
   position: relative;
-  z-index: 1;
-  overflow: hidden;
+  z-index: 1; /* Ensure workspace has explicit z-index */
 }
 
 .cursor-nw-resize { cursor: nw-resize; }
