@@ -7,6 +7,7 @@ import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import { Button } from "./ui/button";
+import { ScrollArea } from "./ui/scroll-area";
 
 interface CanvasProps {
   isFullscreen?: boolean;
@@ -39,6 +40,7 @@ const Canvas = ({
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
   const [initialTouchDistance, setInitialTouchDistance] = useState<number | null>(null);
   const [initialZoom, setInitialZoom] = useState<number>(1);
+  const [scrollPosition, setScrollPosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -369,37 +371,80 @@ const Canvas = ({
     }
   }, [isMobileView]);
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLDivElement;
+    setScrollPosition({
+      x: target.scrollLeft,
+      y: target.scrollTop
+    });
+  };
+
   return <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
       <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
-        <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{
-        transform: `scale(${displayZoomLevel})`,
-        transformOrigin: 'center center',
-        transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
-        position: 'absolute',
-        top: '50%',
-        left: '50%',
-        translate: '-50% -50%',
-        width: 'fit-content',
-        height: 'fit-content',
-        zIndex: 1
-      }}>
-          <div ref={containerRef} className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`} style={{
-          width: `${canvasDimensions.width}px`,
-          height: `${canvasDimensions.height}px`,
-          ...backgroundStyle,
-          overflow: 'hidden'
-        }} onClick={handleCanvasClick} onDragOver={!isGameMode ? handleDragOver : undefined} onDragLeave={!isGameMode ? handleDragLeave : undefined} onDrop={!isGameMode ? handleDrop : undefined}>
-            {renderElements()}
+        <ScrollArea className="w-full h-full overflow-hidden" style={{
+          maxWidth: '100vw',
+          maxHeight: '100vh'
+        }}>
+          <div className="canvas-container relative" style={{
+            transform: `scale(${displayZoomLevel})`,
+            transformOrigin: '0 0',
+            transition: isMobileView ? 'none' : 'transform 0.2s ease-out',
+            width: 'fit-content',
+            height: 'fit-content',
+            padding: '20px'
+          }}>
+            <div ref={containerRef} 
+                 className={`relative shadow-lg rounded-lg ${!isGameMode && isDraggingOver ? 'ring-2 ring-primary' : ''}`} 
+                 style={{
+                   width: `${canvasDimensions.width}px`,
+                   height: `${canvasDimensions.height}px`,
+                   ...backgroundStyle,
+                   overflow: 'hidden'
+                 }} 
+                 onClick={handleCanvasClick} 
+                 onDragOver={!isGameMode ? handleDragOver : undefined} 
+                 onDragLeave={!isGameMode ? handleDragLeave : undefined} 
+                 onDrop={!isGameMode ? handleDrop : undefined}
+                 onScroll={handleScroll}>
+              {renderElements()}
+            </div>
           </div>
-        </div>
+        </ScrollArea>
         
         {isGameMode && !isMobileView && <div className="fullscreen-controls">
-            <button onClick={toggleFullscreen} title={isFullscreenActive ? "Exit Fullscreen" : "Enter Fullscreen"} className="fullscreen-button">
-              {isFullscreenActive ? <Minimize size={18} /> : <Maximize size={18} />}
-            </button>
+            <Button variant="outline" size="icon" onClick={toggleFullscreen} title={isFullscreenActive ? "Exit Fullscreen" : "Enter Fullscreen"}>
+              {isFullscreenActive ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+            </Button>
           </div>}
         
-        {!isGameMode && !isMobileView}
+        {!isGameMode && !isMobileView && (
+          <div className="absolute bottom-4 right-4 flex gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setZoomLevel(prev => Math.max(prev - 0.1, 0.2))}
+              disabled={zoomLevel <= 0.2}
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setZoomLevel(prev => Math.min(prev + 0.1, 2))}
+              disabled={zoomLevel >= 2}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => setZoomLevel(1)}
+              disabled={zoomLevel === 1}
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
       </div>
     </div>;
 };
