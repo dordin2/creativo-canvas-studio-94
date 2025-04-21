@@ -23,6 +23,7 @@ import {
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import FloatingAddButton from "@/components/FloatingAddButton";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -138,6 +139,17 @@ const Editor = () => {
 
   const goBackToProjects = () => {
     navigate('/');
+  };
+
+  const handleFloatingAdd = () => {
+    const tab = document.querySelector('[data-state="active"][role="tab"]:not([aria-controls*="background"])');
+    if (tab && typeof (tab as HTMLElement).click === "function") {
+      (tab as HTMLElement).click();
+    }
+    const sidebar = document.querySelector(".sidebar-panel");
+    if (sidebar && typeof sidebar.scrollIntoView === "function") {
+      sidebar.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+    }
   };
 
   if (isLoading) {
@@ -402,6 +414,9 @@ const Editor = () => {
             </Button>
           </div>
         </>
+      )}
+      {!isGameMode && !isMobile && (
+        <FloatingAddButton onClick={handleFloatingAdd} />
       )}
     </div>
   );
