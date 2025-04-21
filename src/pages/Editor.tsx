@@ -126,19 +126,21 @@ const Editor = () => {
     }
   };
 
-  const handleShareGame = () => {
+  const handleShareGame = async () => {
     const shareUrl = `${window.location.origin}/play/${projectId}`;
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard
-        .writeText(shareUrl)
-        .then(() => {
-          toast.success("Game link copied to clipboard!");
-        })
-        .catch((err) => {
-          console.error("Failed to copy link:", err);
-          promptManualCopy(shareUrl);
-        });
-    } else {
+    try {
+      const toastId = toast.loading('Saving project before sharing...');
+      await handleSaveProject();
+      toast.dismiss(toastId);
+
+      if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success("Game link copied to clipboard! (Project just saved)");
+      } else {
+        promptManualCopy(shareUrl);
+      }
+    } catch (err) {
+      toast.error('Failed to save before sharing. Try again.');
       promptManualCopy(shareUrl);
     }
   };
