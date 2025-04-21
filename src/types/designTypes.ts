@@ -156,6 +156,7 @@ export interface DesignContextType {
   inventoryItems: InventoryItem[];
   showInventory: boolean;
   draggedInventoryItem: DesignElement | null;
+  zoom: number; // Added zoom property
   toggleGameMode: () => void;
   toggleInventory: () => void;
   setCanvasRef: (ref: HTMLDivElement) => void;

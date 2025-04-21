@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { 
@@ -27,6 +28,7 @@ interface DesignProviderProps {
     canvases?: Canvas[];
     activeCanvasIndex?: number;
     isGameMode?: boolean;
+    zoom?: number;
   };
 }
 
@@ -50,6 +52,7 @@ export const DesignProvider = ({
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [showInventory, setShowInventory] = useState<boolean>(false);
   const [draggedInventoryItem, setDraggedInventoryItem] = useState<DesignElement | null>(null);
+  const [zoom, setZoom] = useState<number>(initialState.zoom || 1); // Added zoom state with default value 1
   const [gameModeState, setGameModeState] = useState<{
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
@@ -662,6 +665,7 @@ export const DesignProvider = ({
     inventoryItems,
     showInventory,
     draggedInventoryItem,
+    zoom, // Added zoom to context value
     toggleGameMode,
     toggleInventory,
     setCanvasRef,

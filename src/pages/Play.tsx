@@ -23,6 +23,7 @@ const Play = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const [zoom, setZoom] = useState(1);
 
   useEffect(() => {
     if (!projectId) {
@@ -135,7 +136,7 @@ const Play = () => {
   }
 
   return (
-    <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
+    <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true, zoom }}>
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
           <div className="fixed-canvas-container">
