@@ -1,5 +1,6 @@
+
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Canvas from "@/components/Canvas";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
@@ -18,11 +19,17 @@ const Play = () => {
   const [canvases, setCanvases] = useState<CanvasType[]>([]);
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
   const [projectName, setProjectName] = useState("");
+  const [projectOwnerId, setProjectOwnerId] = useState<string | null>(null);
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+
+  // NEW: check if we're using the ?asUserId=OWNER_ID mode, for "view as owner"
+  const asUserId = searchParams.get('asUserId');
+  const [isViewingAsOwner, setIsViewingAsOwner] = useState<boolean>(false);
 
   useEffect(() => {
     if (!projectId) {
@@ -30,7 +37,8 @@ const Play = () => {
       return;
     }
     loadProjectData();
-  }, [projectId]);
+    // eslint-disable-next-line
+  }, [projectId, user, asUserId]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -57,15 +65,24 @@ const Play = () => {
         navigate('/');
         return;
       }
+      setProjectName(projectData.name);
+      setProjectOwnerId(projectData.user_id || null);
 
+      // Check for special view-as-owner public mode
       if (projectData.is_public !== true) {
-        if (!user || user?.id !== projectData.user_id) {
+        // If not public, only allow owner or view-as-owner link
+        // user?.id === owner OR asUserId === owner
+        if (!(user && user.id === projectData.user_id) && asUserId !== projectData.user_id) {
           toast.error("This project is private");
           navigate('/');
           return;
         }
+        if (asUserId === projectData.user_id) {
+          setIsViewingAsOwner(true);
+        }
+      } else {
+        setIsViewingAsOwner(false);
       }
-      setProjectName(projectData.name);
 
       const { data, error } = await supabase
         .from('project_canvases')
@@ -145,6 +162,12 @@ const Play = () => {
   return (
     <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
+        {/* If in "view as owner" mode, show a notice */}
+        {isViewingAsOwner && (
+          <div className="w-full bg-yellow-100 text-yellow-700 text-center py-1 px-3 text-xs shadow z-[200]">
+            Viewing as project OWNER (Preview Link)
+          </div>
+        )}
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
           <div className="fixed-canvas-container">
             <Canvas isFullscreen={true} isMobileView={isMobile} />
