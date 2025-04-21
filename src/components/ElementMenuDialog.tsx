@@ -22,12 +22,11 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
 }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
     <DialogContent
-      // Ensure dialog covers whole viewport, always has top padding
-      className="fixed w-full max-w-none h-full max-h-none rounded-none p-0 overflow-y-auto bg-white !top-0 !left-0"
-      style={{ inset: 0, paddingTop: 20, paddingBottom: 20 }}
+      className="fixed w-full max-w-md sm:max-w-3xl h-full max-h-[98vh] rounded-lg p-0 overflow-y-auto bg-white !top-1 !left-1 shadow-2xl border border-gray-200"
+      style={{ inset: '8px', paddingTop: 0, paddingBottom: 0 }}
     >
-      <div className="flex flex-col h-full min-h-[calc(100vh-40px)] bg-white">
-        <div className="flex items-center justify-between border-b p-4 shadow-sm bg-white sticky top-0 z-10">
+      <div className="flex flex-col h-full min-h-[calc(100vh-32px)] bg-white">
+        <div className="flex items-center justify-between border-b p-4 shadow-sm bg-white sticky top-0 z-10" style={{ minHeight: 56 }}>
           <DialogHeader className="flex flex-row items-center gap-4 w-full">
             <DialogTitle className="text-2xl text-canvas-purple font-bold">
               הוספת אלמנט - תפריט הספרייה
@@ -49,4 +48,3 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     </DialogContent>
   </Dialog>
 );
-
