@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/Header";
@@ -30,24 +29,12 @@ const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
-  const {
-    isGameMode,
-    toggleGameMode,
-    canvases,
-    activeCanvasIndex,
-    setCanvases: updateCanvases,
-    activeElement
-  } = useDesignState();
-  const {
-    projectName,
-    saveProject,
-    isPublic,
-    toggleProjectVisibility
-  } = useProject();
-  const isMobile = useIsMobile();
+  const [searchParams] = useSearchParams();
+  const { user } = useProject();
+  const [isOwner, setIsOwner] = useState(false);
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
-  const isAdmin = true; // Assuming isAdmin is true for demonstration purposes
+  const isAdmin = true;
   const [canvasSize, setCanvasSize] = useState({
     width: 0,
     height: 0
@@ -58,8 +45,8 @@ const Editor = () => {
       navigate('/');
       return;
     }
-    loadProjectData();
-  }, [projectId]);
+    checkProjectOwner();
+  }, [projectId, user]);
 
   useEffect(() => {
     if (isMobile && activeElement) {
@@ -81,6 +68,42 @@ const Editor = () => {
     window.addEventListener('resize', updateCanvasSize);
     return () => window.removeEventListener('resize', updateCanvasSize);
   }, []);
+
+  const checkProjectOwner = async () => {
+    setIsLoading(true);
+    try {
+      const { data: projectData, error } = await supabase
+        .from('projects')
+        .select('user_id')
+        .eq('id', projectId)
+        .maybeSingle();
+
+      if (error || !projectData) {
+        toast.error('Project not found');
+        navigate('/');
+        return;
+      }
+      if (user && projectData.user_id && user.id === projectData.user_id) {
+        setIsOwner(true);
+        setIsLoading(false);
+        loadProjectData();
+      } else {
+        const asUserId = searchParams.get('asUserId');
+        if (asUserId && asUserId === projectData.user_id) {
+          setIsOwner(true);
+          setIsLoading(false);
+          loadProjectData();
+        } else {
+          navigate(`/play/${projectId}`);
+        }
+      }
+    } catch (err) {
+      toast.error('Failed to check project permissions');
+      navigate('/');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const loadProjectData = async () => {
     try {
@@ -162,7 +185,6 @@ const Editor = () => {
       </div>;
   }
 
-  // Mobile non-game mode rendering
   if (isMobile && !isGameMode) {
     return <div className="flex flex-col h-screen overflow-hidden">
         <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
@@ -252,7 +274,6 @@ const Editor = () => {
       </div>;
   }
 
-  // Mobile game mode rendering
   if (isMobile && isGameMode) {
     return <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
@@ -273,7 +294,6 @@ const Editor = () => {
       </div>;
   }
 
-  // Desktop rendering
   return <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
       {!isGameMode && <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
           <div className="flex items-center">
@@ -339,4 +359,3 @@ const Editor = () => {
     </div>;
 };
 export default Editor;
-
