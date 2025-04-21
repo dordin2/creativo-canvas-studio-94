@@ -32,7 +32,7 @@ const Play = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
-  const [error, setError] = useState<string | null>(null);
+  const [privateError, setPrivateError] = useState<string | null>(null);
 
   // Check for fullscreen changes
   useEffect(() => {
@@ -48,20 +48,21 @@ const Play = () => {
   // Load project data on component mount
   useEffect(() => {
     if (!projectId) {
-      setError('Missing project ID in URL.');
+      setProjectName("Untitled Project");
+      setCanvases([createDefaultCanvas()]);
+      setActiveCanvasIndex(0);
       setIsLoading(false);
       return;
     }
-    
     loadProjectData();
+    // eslint-disable-next-line
   }, [projectId]);
 
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-      setError(null);
-      console.log("Loading project data for projectId:", projectId);
-      
+      setPrivateError(null);
+
       // Step 1: Load project metadata
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
@@ -69,34 +70,23 @@ const Play = () => {
         .eq('id', projectId)
         .maybeSingle();
 
-      if (projectError) {
-        console.error("Error fetching project:", projectError);
-        setError('Failed to load project. Please check your connection and try again.');
-        setIsLoading(false);
-        return;
-      }
-
-      if (!projectData) {
-        console.error("No project found with ID:", projectId);
-        setError('Project not found. It may have been deleted or you might have the wrong link.');
+      if (projectError || !projectData) {
+        setProjectName("Untitled Project");
+        setCanvases([createDefaultCanvas()]);
+        setActiveCanvasIndex(0);
         setIsLoading(false);
         return;
       }
 
       // Check project access permissions
       if (projectData.is_public !== true && (!user || user.id !== projectData.user_id)) {
-        console.log("Project is private and user is not owner:", {
-          isPublic: projectData.is_public, 
-          userId: user?.id, 
-          projectUserId: projectData.user_id
-        });
-        setError("This project is private. Only the owner can view it.");
+        setPrivateError("This project is private. Only the owner can view it.");
         setIsLoading(false);
         return;
       }
 
       setProjectName(projectData.name || "Untitled Project");
-      
+
       // Step 2: Load canvas data
       const { data, error } = await supabase
         .from('project_canvases')
@@ -104,19 +94,10 @@ const Play = () => {
         .eq('project_id', projectId)
         .maybeSingle();
 
-      if (error) {
-        console.error("Error fetching canvas data:", error);
-        setError('Could not load canvas data. Please try again later.');
-        setIsLoading(false);
-        return;
-      }
-
       // Parse and validate canvas data
-      if (data?.canvas_data) {
-        console.log("Canvas data found, processing...");
+      if (!error && data?.canvas_data) {
         try {
           const jsonData = data.canvas_data as Json;
-          
           if (
             typeof jsonData === 'object' && 
             jsonData !== null && 
@@ -124,44 +105,27 @@ const Play = () => {
             Array.isArray((jsonData as any).canvases) &&
             (jsonData as any).canvases.length > 0
           ) {
-            // Valid canvas data structure
             const canvasArr = (jsonData as any).canvases as CanvasType[];
             const activeIndex = typeof (jsonData as any).activeCanvasIndex === "number" 
               ? (jsonData as any).activeCanvasIndex 
               : 0;
-              
-            if (canvasArr.length === 0 || !canvasArr[0]?.id) {
-              // Invalid canvas data, use default
-              console.warn("Canvas data is empty or invalid, using default canvas");
-              setCanvases([createDefaultCanvas()]);
-              setActiveCanvasIndex(0);
-            } else {
-              // Set the parsed canvas data
-              setCanvases(canvasArr);
-              setActiveCanvasIndex(
-                activeIndex < canvasArr.length ? activeIndex : 0
-              );
-            }
+            setCanvases(canvasArr);
+            setActiveCanvasIndex(
+              activeIndex < canvasArr.length ? activeIndex : 0
+            );
           } else {
-            // Invalid canvas structure
-            console.warn("Invalid canvas structure, using default canvas");
             setCanvases([createDefaultCanvas()]);
             setActiveCanvasIndex(0);
           }
-        } catch (parseError) {
-          console.error("Error parsing canvas data:", parseError);
+        } catch {
           setCanvases([createDefaultCanvas()]);
           setActiveCanvasIndex(0);
         }
       } else {
-        // No canvas data found
-        console.log("No canvas data found, using default canvas");
         setCanvases([createDefaultCanvas()]);
         setActiveCanvasIndex(0);
       }
-    } catch (e) {
-      console.error("Unexpected error loading project/canvas:", e);
-      setError('An unexpected error occurred. Please try again later.');
+    } catch {
       setCanvases([createDefaultCanvas()]);
       setActiveCanvasIndex(0);
     } finally {
@@ -172,7 +136,6 @@ const Play = () => {
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
         toast.error("Could not enter fullscreen mode");
       });
     } else {
@@ -197,18 +160,16 @@ const Play = () => {
     );
   }
 
-  // Error state
-  if (error) {
+  // Error ONLY for private projects
+  if (privateError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center max-w-md mx-auto p-6 border rounded-lg shadow-md">
           <h2 className="text-xl font-bold mb-3 text-canvas-purple">{projectName || 'Shared Game'}</h2>
           <div className="text-red-500 mb-4">
-            <p className="mb-2">{error}</p>
+            <p className="mb-2">{privateError}</p>
             <p className="text-sm text-gray-500">
-              {error.includes("private") 
-                ? "You need to be the project owner or the project needs to be public to view it." 
-                : "There was a problem loading the game."}
+              You need to be the project owner or the project needs to be public to view it.
             </p>
           </div>
           <div className="flex justify-center gap-3">
@@ -224,7 +185,7 @@ const Play = () => {
     );
   }
 
-  // Render the game
+  // Render the game always if not private error
   return (
     <DesignProvider 
       initialState={{ 
