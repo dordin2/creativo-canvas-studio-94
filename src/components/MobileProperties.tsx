@@ -13,6 +13,11 @@ const MobileProperties = () => {
     return <NoElementSelected />;
   }
 
+  // Don't show image properties in the drawer since they're now at the bottom
+  if (activeElement.type === 'image') {
+    return null;
+  }
+
   return (
     <div className={`p-4 space-y-4 ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="pb-2">

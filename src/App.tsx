@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -48,11 +49,11 @@ const App = () => (
                 <AuthProvider>
                   <ProtectedRoute>
                     <InteractiveModeProvider>
-                      <DesignProvider>
-                        <ProjectProvider>
+                      <ProjectProvider>
+                        <DesignProvider>
                           <Editor />
-                        </ProjectProvider>
-                      </DesignProvider>
+                        </DesignProvider>
+                      </ProjectProvider>
                     </InteractiveModeProvider>
                   </ProtectedRoute>
                 </AuthProvider>
@@ -62,7 +63,11 @@ const App = () => (
               path="/play/:projectId" 
               element={
                 <AuthProvider>
-                  <Play />
+                  <ProjectProvider>
+                    <DesignProvider>
+                      <Play />
+                    </DesignProvider>
+                  </ProjectProvider>
                 </AuthProvider>
               } 
             />

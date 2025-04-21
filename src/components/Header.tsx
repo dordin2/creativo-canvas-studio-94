@@ -1,7 +1,9 @@
+import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 import LanguageSwitcher from "./LanguageSwitcher";
 import GameModeToggle from "./GameModeToggle";
@@ -10,17 +12,21 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import LayersList from "./LayersList";
 import { useProject } from "@/context/ProjectContext";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { AdminGallery } from './admin/AdminGallery';
 import {
   Drawer,
   DrawerContent,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { LibraryModal } from './library/LibraryModal';
 
 const Header = () => {
   const { canvasRef, undo, redo, canUndo, canRedo } = useDesignState();
   const { t, language } = useLanguage();
   const { projectId } = useProject();
   const isMobile = useIsMobile();
+  const { profile } = useAuth();
+  const isAdmin = profile?.roles?.includes('admin');
 
   const handleDownload = () => {
     if (!canvasRef) return;
@@ -152,6 +158,7 @@ const Header = () => {
       <div className="flex items-center gap-4">
         <GameModeToggle />
         <InteractiveModeToggle />
+        {isAdmin && <AdminGallery />}
         <div className="h-6 w-px bg-gray-200"></div>
         <div className="flex items-center gap-2">
           <Button 
