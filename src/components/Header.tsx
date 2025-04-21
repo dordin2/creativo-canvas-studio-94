@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
+import { Download, Share, Undo, Redo, Layers, Menu, key } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -76,6 +76,10 @@ const Header = () => {
     toast.info(t('toast.info.share'));
   };
 
+  const handleCreateGameCode = () => {
+    toast.info("פיצ'ר יצירת קוד משחק יגיע בקרוב!");
+  };
+
   if (isMobile) {
     return (
       <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
@@ -86,6 +90,15 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            className="hover:bg-gray-50"
+            onClick={handleCreateGameCode}
+            title="יצירת קוד משחק"
+          >
+            <key className="h-4 w-4" />
+          </Button>
           <GameModeToggle />
           <InteractiveModeToggle />
           <Drawer>
@@ -156,6 +169,15 @@ const Header = () => {
       </div>
       
       <div className="flex items-center gap-4">
+        <Button
+          variant="outline"
+          size="icon"
+          className="hover:bg-gray-50"
+          onClick={handleCreateGameCode}
+          title="יצירת קוד משחק"
+        >
+          <key className="h-4 w-4" />
+        </Button>
         <GameModeToggle />
         <InteractiveModeToggle />
         {isAdmin && <AdminGallery />}
