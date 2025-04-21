@@ -11,6 +11,7 @@ export type Database = {
     Tables: {
       library_elements: {
         Row: {
+          category: string
           created_at: string | null
           created_by: string | null
           id: string
@@ -18,6 +19,7 @@ export type Database = {
           name: string
         }
         Insert: {
+          category?: string
           created_at?: string | null
           created_by?: string | null
           id?: string
@@ -25,6 +27,7 @@ export type Database = {
           name: string
         }
         Update: {
+          category?: string
           created_at?: string | null
           created_by?: string | null
           id?: string
@@ -140,6 +143,7 @@ export type Database = {
         Row: {
           created_at: string
           description: string | null
+          game_code: string | null
           id: string
           is_public: boolean | null
           name: string
@@ -149,6 +153,7 @@ export type Database = {
         Insert: {
           created_at?: string
           description?: string | null
+          game_code?: string | null
           id?: string
           is_public?: boolean | null
           name: string
@@ -158,6 +163,7 @@ export type Database = {
         Update: {
           created_at?: string
           description?: string | null
+          game_code?: string | null
           id?: string
           is_public?: boolean | null
           name?: string
