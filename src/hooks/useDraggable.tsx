@@ -1,5 +1,7 @@
+
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
+import { viewportToCanvasCoordinates, getCanvasScale } from '@/utils/coordinateUtils';
 
 interface Position {
   x: number;
@@ -7,13 +9,13 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode, zoom } = useDesignState();
+  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
   const isDragStarted = useRef<boolean>(false);
   const animationFrame = useRef<number | null>(null);
-  const mousePosition = useRef<Position>({ x: 0, y: 0 });
+  const dragStartOffset = useRef<Position | null>(null);
 
   // Find the current element to access its properties
   const currentElement = elements.find(el => el.id === elementId);
@@ -113,35 +115,53 @@ export const useDraggable = (elementId: string) => {
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
-      if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
-
+      if (!isDragging || !startPosition.current || !elementInitialPos.current || !dragStartOffset.current) return;
+      
       // Don't drag images in game mode unless they are interactive
-      if (isGameMode && currentElement?.type === 'image' && !currentElement?.interaction?.type) {
+      if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
         return;
       }
 
-      mousePosition.current = { x: e.clientX, y: e.clientY };
+      // Get the canvas container and its properties
+      const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
+      if (!canvasContainer) return;
 
+      const canvasRect = canvasContainer.getBoundingClientRect();
+      const canvasScale = getCanvasScale(canvasContainer);
+      
+      // Calculate new position based on mouse movement and canvas scale
+      const currentPos = viewportToCanvasCoordinates(e.clientX, e.clientY, {
+        canvasScale,
+        canvasRect
+      });
+      
+      const startPos = viewportToCanvasCoordinates(startPosition.current.x, startPosition.current.y, {
+        canvasScale,
+        canvasRect
+      });
+      
+      // Calculate the delta movement accounting for scale
+      const deltaX = currentPos.x - startPos.x;
+      const deltaY = currentPos.y - startPos.y;
+
+      // Mark that we've started dragging (for history tracking)
       if (!isDragStarted.current) {
         isDragStarted.current = true;
       }
 
+      // Cancel any existing animation frame
       if (animationFrame.current !== null) {
         cancelAnimationFrame(animationFrame.current);
       }
 
-      // הוספת התחשבות בזום - ברירת מחדל zoom=1 אם אינו קיים
-      const canvasZoom = typeof zoom === 'number' && zoom > 0 ? zoom : 1;
-
+      // Use requestAnimationFrame for smooth updates
       animationFrame.current = requestAnimationFrame(() => {
-        // חישוב שינויי מיקום באופן יחסי לזום
-        const deltaX = (mousePosition.current.x - startPosition.current!.x) / canvasZoom;
-        const deltaY = (mousePosition.current.y - startPosition.current!.y) / canvasZoom;
-
+        // Calculate new position relative to initial element position
         const newX = elementInitialPos.current!.x + deltaX;
         const newY = elementInitialPos.current!.y + deltaY;
         
-        updateElementWithoutHistory(elementId, { 
+        // Update element position
+        updateElementWithoutHistory(elementId, {
           position: { x: newX, y: newY },
           style: {
             ...currentElement?.style,
@@ -195,11 +215,11 @@ export const useDraggable = (elementId: string) => {
         animationFrame.current = null;
       }
     };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, zoom]);
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
     // Don't start drag for static images in game mode
-    if (isGameMode && currentElement?.type === 'image' && !currentElement?.interaction?.type) {
+    if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
     }
@@ -211,9 +231,28 @@ export const useDraggable = (elementId: string) => {
     
     e.stopPropagation();
     setIsDragging(true);
+    
+    // Store the initial mouse position
     startPosition.current = { x: e.clientX, y: e.clientY };
     elementInitialPos.current = initialPosition;
-    isDragStarted.current = false; // Reset the drag started flag
+    isDragStarted.current = false;
+    
+    // Store the offset between mouse position and element position
+    const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
+    if (canvasContainer) {
+      const canvasRect = canvasContainer.getBoundingClientRect();
+      const canvasScale = getCanvasScale(canvasContainer);
+      
+      const elementPos = viewportToCanvasCoordinates(e.clientX, e.clientY, {
+        canvasScale,
+        canvasRect
+      });
+      
+      dragStartOffset.current = {
+        x: elementPos.x - initialPosition.x,
+        y: elementPos.y - initialPosition.y
+      };
+    }
     
     // Set willChange to transform for better performance during drag
     if (currentElement) {

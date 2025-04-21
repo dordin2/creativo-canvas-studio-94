@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
 import { 
@@ -28,7 +27,6 @@ interface DesignProviderProps {
     canvases?: Canvas[];
     activeCanvasIndex?: number;
     isGameMode?: boolean;
-    zoom?: number;
   };
 }
 
@@ -52,7 +50,6 @@ export const DesignProvider = ({
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [showInventory, setShowInventory] = useState<boolean>(false);
   const [draggedInventoryItem, setDraggedInventoryItem] = useState<DesignElement | null>(null);
-  const [zoom, setZoom] = useState<number>(initialState.zoom || 1); // Added zoom state with default value 1
   const [gameModeState, setGameModeState] = useState<{
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
@@ -285,10 +282,9 @@ export const DesignProvider = ({
     if (!canvases || activeCanvasIndex < 0 || activeCanvasIndex >= canvases.length) {
       console.error("Invalid canvas state when trying to add element");
       toast.error("Could not add element: invalid canvas state");
-      return createNewElement(type, { x: 0, y: 0 }, 0, props);
+      return createNewElement(type, null, 0, props);
     }
     
-    const position = getDefaultPosition(canvasRef);
     const newLayer = getHighestLayer(elements);
     
     if (type === 'background') {
@@ -308,7 +304,7 @@ export const DesignProvider = ({
         }
       }
       
-      const backgroundElement = createNewElement(type, position, 0, props);
+      const backgroundElement = createNewElement(type, canvasRef, 0, props);
       const updatedCanvases = [...canvases];
       
       if (activeCanvasIndex >= 0 && activeCanvasIndex < updatedCanvases.length) {
@@ -324,7 +320,7 @@ export const DesignProvider = ({
       return backgroundElement;
     }
     
-    const newElement = createNewElement(type, position, newLayer, props);
+    const newElement = createNewElement(type, canvasRef, newLayer, props);
     
     if (type === 'image' && props?.dataUrl) {
       console.log("DesignContext - Creating new image element with dataUrl length:", 
@@ -665,7 +661,6 @@ export const DesignProvider = ({
     inventoryItems,
     showInventory,
     draggedInventoryItem,
-    zoom, // Added zoom to context value
     toggleGameMode,
     toggleInventory,
     setCanvasRef,

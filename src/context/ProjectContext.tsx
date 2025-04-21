@@ -12,8 +12,6 @@ type ProjectContextType = {
   projectName: string;
   isPublic: boolean;
   isLoading: boolean;
-  user: any; 
-  zoom?: number; // Added zoom property
   saveProject: (canvases: Canvas[], activeCanvasIndex: number) => Promise<void>;
   toggleProjectVisibility: () => Promise<void>;
 };
@@ -25,7 +23,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const [projectName, setProjectName] = useState<string>("");
   const [isPublic, setIsPublic] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [zoom, setZoom] = useState<number>(1); // Added zoom state with default 1
   const navigate = useNavigate();
   const { user } = useAuth();
   
@@ -174,8 +171,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     projectName,
     isPublic,
     isLoading,
-    user,
-    zoom, // Added zoom to context value
     saveProject,
     toggleProjectVisibility
   };

@@ -15,6 +15,7 @@ import PuzzleModal from "./element/PuzzleModal";
 import SequencePuzzleModal from "./element/SequencePuzzleModal";
 import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
 import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
+import InteractionContextMenu from './element/InteractionContextMenu';
 import {
   ContextMenu,
   ContextMenuContent,
@@ -24,7 +25,8 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
+import { getImageFromCache } from "@/utils/imageUploader";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -44,8 +46,10 @@ const DraggableElement = ({ element, isActive, children }: {
     inventoryItems,
     draggedInventoryItem,
     setDraggedInventoryItem,
-    handleItemCombination
+    handleItemCombination,
+    elements
   } = useDesignState();
+  const { isInteractiveMode } = useInteractiveMode();
   
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
@@ -82,6 +86,9 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
+    // Prevent dragging if element is a background
+    if (element.layer === 0) return;
+    
     if (isImageElement && isGameMode) {
       e.preventDefault();
       
@@ -100,7 +107,7 @@ const DraggableElement = ({ element, isActive, children }: {
     
     setActiveElement(element);
     
-    if (isEditing) return;
+    if (isEditing || isInteractiveMode) return;
     
     if (!isSequencePuzzleElement) {
       startDrag(e, element.position);
@@ -112,6 +119,12 @@ const DraggableElement = ({ element, isActive, children }: {
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
     if (isGameMode) {
+      return;
+    }
+    
+    if (element.layer === 0 && element.type === 'image') {
+      e.stopPropagation();
+      handleDetachFromBackground(e);
       return;
     }
     
@@ -130,6 +143,23 @@ const DraggableElement = ({ element, isActive, children }: {
       e.stopPropagation();
       handleInteraction();
     }
+  };
+
+  const handleDetachFromBackground = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (element.layer !== 0) return;
+    
+    updateElement(element.id, {
+      position: { x: 100, y: 100 },
+      size: { 
+        width: element.originalSize?.width || 400,
+        height: element.originalSize?.height || 225
+      },
+      layer: Math.max(...elements.map(el => el.layer)) + 1
+    });
+    
+    toast.success('Background image detached');
   };
 
   const handleInteraction = () => {
@@ -181,7 +211,9 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   };
 
-  const handleDuplicate = () => {
+  const handleDuplicate = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
     console.log("DraggableElement - Original element to duplicate:", element);
     
     // Use the utility function to prepare the element for duplication
@@ -535,9 +567,11 @@ const DraggableElement = ({ element, isActive, children }: {
     ...elementStyle,
     zIndex: element.layer,
     transition: isDragging ? 'none' : 'transform 0.1s ease',
-    cursor: isGameMode 
-      ? (hasInteraction ? 'pointer' : 'default') 
-      : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
+    cursor: element.layer === 0 
+      ? 'default'
+      : (isGameMode 
+          ? (hasInteraction ? 'pointer' : 'default') 
+          : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab'))),
     willChange: isDragging ? 'transform' : 'auto',
     opacity: element.isHidden ? 0 : 1,
     position: 'absolute' as 'absolute',
@@ -628,8 +662,10 @@ const DraggableElement = ({ element, isActive, children }: {
 
   return (
     <>
-      {isGameMode ? (
-        createElementContent(elementRef)
+      {isInteractiveMode ? (
+        <InteractionContextMenu element={element}>
+          {createElementContent(elementRef)}
+        </InteractionContextMenu>
       ) : (
         <ContextMenu>
           <ContextMenuTrigger asChild>
