@@ -1,4 +1,3 @@
-
 import { DesignElement } from "@/context/DesignContext";
 import TextProperties from "./TextProperties";
 import ShapeProperties from "./ShapeProperties";
@@ -12,25 +11,21 @@ import SliderPuzzleProperties from "./SliderPuzzleProperties";
 import InteractionProperties from "./InteractionProperties";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useEffect } from "react";
-import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 interface ElementPropertiesProps {
   element: DesignElement;
-  isInteractiveMode?: boolean;
+  isInteractiveMode?: boolean;  // Add optional isInteractiveMode prop
 }
 
 const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProps) => {
-  const { isInteractiveMode: contextInteractiveMode } = useInteractiveMode();
-  const isCurrentlyInteractiveMode = isInteractiveMode ?? contextInteractiveMode;
-
   const textElements = ['heading', 'subheading', 'paragraph'];
   const shapeElements = ['rectangle', 'circle', 'triangle', 'line'];
   const puzzleElements = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'];
   
   // Don't show interaction properties for puzzle elements and backgrounds
   const canHaveInteraction = !puzzleElements.includes(element.type) && element.type !== 'background';
-
-  // Keep the global drag styles
+  
+  // Add global CSS for drag operations
   useEffect(() => {
     const styleElement = document.createElement('style');
     styleElement.id = 'global-drag-styles';
@@ -60,17 +55,7 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
       // We don't remove it on unmount because other components might need it
     };
   }, []);
-
-  // Only show interaction properties in interactive mode
-  if (isCurrentlyInteractiveMode) {
-    return (
-      <div className="properties-panel p-4 space-y-6">
-        <h2 className="text-lg font-semibold mb-4">Properties</h2>
-        {canHaveInteraction && <InteractionProperties element={element} />}
-      </div>
-    );
-  }
-
+  
   // Common properties that appear in both tabs and non-tabs view
   const renderCommonProperties = () => (
     <>
@@ -102,20 +87,16 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
         <Tabs defaultValue="properties">
           <TabsList className="w-full">
             <TabsTrigger value="properties" className="flex-1">Properties</TabsTrigger>
-            {isCurrentlyInteractiveMode && (
-              <TabsTrigger value="interaction" className="flex-1">Interaction</TabsTrigger>
-            )}
+            <TabsTrigger value="interaction" className="flex-1">Interaction</TabsTrigger>
           </TabsList>
           
           <TabsContent value="properties" className="space-y-6 pt-4">
             {renderCommonProperties()}
           </TabsContent>
           
-          {isCurrentlyInteractiveMode && (
-            <TabsContent value="interaction" className="space-y-6 pt-4">
-              <InteractionProperties element={element} />
-            </TabsContent>
-          )}
+          <TabsContent value="interaction" className="space-y-6 pt-4">
+            <InteractionProperties element={element} />
+          </TabsContent>
         </Tabs>
       ) : (
         renderCommonProperties()
