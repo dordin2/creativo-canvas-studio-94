@@ -1,3 +1,4 @@
+
 import { toast } from "sonner";
 import { DesignElement } from "@/types/designTypes";
 import { 
@@ -13,7 +14,7 @@ const IMAGE_QUALITY = 0.85; // Default quality setting for WebP compression
 const MAX_DIMENSION = 1200; // Default max dimension for full images
 const THUMBNAIL_DIMENSION = 150; // Thumbnail size for lightweight previews
 const WEBP_SUPPORT = !!window.createImageBitmap; // Check for WebP support
-const MAX_CANVAS_IMAGE_SIZE_PERCENT = 0.5; // Maximum percentage of canvas dimension an image should initially occupy
+const MAX_CANVAS_IMAGE_SIZE_PERCENT = 0.3; // Maximum percentage of canvas dimension an image should initially occupy
 
 // Memory cache for rapidly accessing recently used images
 class ImageMemoryCache {
