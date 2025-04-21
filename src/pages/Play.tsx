@@ -6,14 +6,14 @@ import Canvas from "@/components/Canvas";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { Maximize, Minimize, ChevronLeft } from "lucide-react";
+import { Maximize, Minimize } from "lucide-react";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { Database } from "@/types/database";
 
-// Create a default canvas to use as fallback
 function createDefaultCanvas(): CanvasType {
   return {
     id: crypto.randomUUID(),
@@ -24,16 +24,26 @@ function createDefaultCanvas(): CanvasType {
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const [canvases, setCanvases] = useState<CanvasType[]>([createDefaultCanvas()]);
+  const [canvases, setCanvases] = useState<CanvasType[]>([]);
   const [activeCanvasIndex, setActiveCanvasIndex] = useState(0);
-  const [projectName, setProjectName] = useState("Untitled Project");
+  const [projectName, setProjectName] = useState("");
   const { projectId } = useParams<{ projectId: string }>();
   const navigate = useNavigate();
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
+  const [error, setError] = useState<string | null>(null);
 
-  // Check for fullscreen changes
+  useEffect(() => {
+    if (!projectId) {
+      setError('Project ID is missing from the URL.');
+      setIsLoading(false);
+      return;
+    }
+    loadProjectData();
+    // eslint-disable-next-line
+  }, [projectId]);
+
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
@@ -44,31 +54,35 @@ const Play = () => {
     };
   }, []);
 
-  // Load project data on component mount
-  useEffect(() => {
-    if (!projectId) {
-      setProjectName("Untitled Project");
-      setCanvases([createDefaultCanvas()]);
-      setActiveCanvasIndex(0);
-      setIsLoading(false);
-      return;
-    }
-    loadProjectData();
-    // eslint-disable-next-line
-  }, [projectId]);
-
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
+      setCanvases([]);
+      setActiveCanvasIndex(0);
+      setError(null);
 
-      // Step 1: Load project metadata
-      const { data: projectData } = await supabase
+      // Step 1: Load project meta info
+      const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
         .maybeSingle();
 
-      setProjectName(projectData?.name || "Untitled Project");
+      if (projectError || !projectData) {
+        setError('Project not found. Please check the link or try again.');
+        setIsLoading(false);
+        toast.error('Project not found');
+        console.error("Supabase returned error or no project data:", projectError, projectData);
+        return;
+      }
+
+      if (projectData.is_public !== true && (!user || user?.id !== projectData.user_id)) {
+        setError("This project is private. Only the owner can view it.");
+        setIsLoading(false);
+        toast.error("This project is private. Only the owner can view it.");
+        return;
+      }
+      setProjectName(projectData.name);
 
       // Step 2: Load canvas data
       const { data, error } = await supabase
@@ -77,40 +91,70 @@ const Play = () => {
         .eq('project_id', projectId)
         .maybeSingle();
 
-      // Parse and validate canvas data
-      if (!error && data?.canvas_data) {
-        try {
-          const jsonData = data.canvas_data as Json;
-          if (
-            typeof jsonData === 'object' && 
-            jsonData !== null && 
-            'canvases' in jsonData && 
-            Array.isArray((jsonData as any).canvases) &&
-            (jsonData as any).canvases.length > 0
-          ) {
-            const canvasArr = (jsonData as any).canvases as CanvasType[];
-            const activeIndex = typeof (jsonData as any).activeCanvasIndex === "number" 
-              ? (jsonData as any).activeCanvasIndex 
-              : 0;
-            setCanvases(canvasArr);
-            setActiveCanvasIndex(
-              activeIndex < canvasArr.length ? activeIndex : 0
-            );
-          } else {
-            setCanvases([createDefaultCanvas()]);
-            setActiveCanvasIndex(0);
-          }
-        } catch {
-          setCanvases([createDefaultCanvas()]);
-          setActiveCanvasIndex(0);
+      if (error) {
+        setError('Could not load canvas data. Please try again later.');
+        setIsLoading(false);
+        toast.error('Could not load canvas data');
+        console.error("Supabase project_canvases error:", error);
+        return;
+      }
+
+      let canvasesArr: CanvasType[] = [];
+      let index = 0;
+      let debugLog = {};
+
+      // Parse and check the canvas structure
+      if (data?.canvas_data) {
+        const jsonData = data.canvas_data as Json;
+        debugLog = { jsonData, typeofJson: typeof jsonData };
+        if (
+          typeof jsonData === 'object' &&
+          jsonData !== null &&
+          'canvases' in jsonData &&
+          Array.isArray((jsonData as any).canvases)
+        ) {
+          canvasesArr = (jsonData as any).canvases;
+          index = typeof (jsonData as any).activeCanvasIndex === "number" ? (jsonData as any).activeCanvasIndex : 0;
+          debugLog = { ...debugLog, canvasesArr, length: canvasesArr.length, index };
+        } else {
+          setError('Invalid canvas structure for this project. Please ask the owner to fix.');
+          debugLog = { ...debugLog, error: "Invalid structure" };
+          canvasesArr = [createDefaultCanvas()];
         }
       } else {
+        setError('No canvas found for this project. Showing a blank canvas.');
+        canvasesArr = [createDefaultCanvas()];
+        debugLog = { ...debugLog, error: "No canvas_data found" };
+      }
+      setCanvases(canvasesArr);
+      setActiveCanvasIndex(index < canvasesArr.length ? index : 0);
+
+      // Further safety: fallback if structure is broken
+      if (!canvasesArr.length || !Array.isArray(canvasesArr)) {
+        setError('No canvas found for this project; blank canvas loaded.');
+        setCanvases([createDefaultCanvas()]);
+        setActiveCanvasIndex(0);
+      } else if (!canvasesArr[0]?.id) {
+        setError('Malformed canvas data. Showing default canvas.');
         setCanvases([createDefaultCanvas()]);
         setActiveCanvasIndex(0);
       }
-    } catch {
+
+      // Debug: Log the situation
+      console.log("loadProjectData debug:", {
+        projectId,
+        projectData,
+        canvasQueryData: data,
+        debugLog,
+        canvasesArr
+      });
+    } catch (e: any) {
+      setError('Error loading project or canvas. Please try again.');
+      toast.error('Error loading project or canvas');
+      console.error("Unhandled error loading project/canvas:", e);
       setCanvases([createDefaultCanvas()]);
       setActiveCanvasIndex(0);
+      setProjectName('Unknown Project');
     } finally {
       setIsLoading(false);
     }
@@ -119,7 +163,7 @@ const Play = () => {
   const toggleFullscreen = () => {
     if (!document.fullscreenElement) {
       document.documentElement.requestFullscreen().catch(err => {
-        toast.error("Could not enter fullscreen mode");
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
       });
     } else {
       if (document.exitFullscreen) {
@@ -128,7 +172,6 @@ const Play = () => {
     }
   };
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -137,42 +180,47 @@ const Play = () => {
             CreativoCanvas
           </h1>
           <div className="w-12 h-12 border-4 border-canvas-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
-          <p className="mt-4 text-gray-500">Loading game...</p>
         </div>
       </div>
     );
   }
 
-  // Always show the game view, no access/permission check
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-2 text-canvas-purple">{projectName || 'No Project'}</h2>
+          <p className="text-gray-600 mb-6">{error}</p>
+          <Button variant="default" onClick={() => navigate("/")}>Back to Projects</Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!canvases.length) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center">
+          <h2 className="text-xl font-bold mb-2 text-canvas-purple">{projectName || 'No Project'}</h2>
+          <p className="text-gray-500 mb-8">
+            No canvas found or error loading. Try reloading or returning to your projects.
+          </p>
+          <Button variant="default" onClick={() => navigate("/")}>Back to Projects</Button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <DesignProvider 
-      initialState={{ 
-        canvases, 
-        activeCanvasIndex, 
-        isGameMode: true 
-      }}
-    >
+    <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
           <div className="fixed-canvas-container">
             <Canvas isFullscreen={true} isMobileView={isMobile} />
           </div>
         </div>
-        
         <InventoryPanel />
         <InventoryIcon />
-        
-        <div className="absolute bottom-4 left-4 z-[100]">
-          <Button 
-            variant="secondary" 
-            className="shadow-md bg-white hover:bg-gray-100 px-2 py-1 text-sm flex items-center" 
-            onClick={() => navigate("/")}
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            Exit
-          </Button>
-        </div>
-        
         <div className={`absolute ${isMobile ? 'bottom-2 right-2' : 'bottom-4 right-4'} z-[100]`}>
           <Button 
             variant="secondary" 
@@ -189,4 +237,3 @@ const Play = () => {
 };
 
 export default Play;
-
