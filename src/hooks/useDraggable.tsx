@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -16,22 +15,18 @@ export const useDraggable = (elementId: string) => {
   const animationFrame = useRef<number | null>(null);
   const mousePosition = useRef<Position>({ x: 0, y: 0 });
 
-  // Find the current element to access its properties
   const currentElement = elements.find(el => el.id === elementId);
   
-  // Check if this is a puzzle element, slider puzzle, or image
   const isPuzzleElement = currentElement?.type === 'puzzle';
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
   const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
   const isImageElement = currentElement?.type === 'image';
 
-  // Handle drops from inventory items
   useEffect(() => {
     if (!currentElement) return;
     
     const handleDragOver = (e: MouseEvent) => {
       if (draggedInventoryItem && currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
-        // Make the element a drop target
         const element = document.getElementById(`element-${elementId}`);
         if (element) {
           element.classList.add('drop-target');
@@ -46,11 +41,9 @@ export const useDraggable = (elementId: string) => {
       }
     };
     
-    // This will be called when another element is being custom-dragged over this element
     const handleCustomDragOver = (e: CustomEvent) => {
       if (!draggedInventoryItem) return;
       
-      // Check if the mouse is over this element
       const element = document.getElementById(`element-${elementId}`);
       if (!element) return;
       
@@ -58,14 +51,12 @@ export const useDraggable = (elementId: string) => {
       const x = e.detail.clientX;
       const y = e.detail.clientY;
       
-      // Check if the mouse is over this element
       if (
         x >= rect.left && 
         x <= rect.right && 
         y >= rect.top && 
         y <= rect.bottom
       ) {
-        // Check if this element can interact with the dragged item
         if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
           element.classList.add('drop-target');
         }
@@ -74,7 +65,6 @@ export const useDraggable = (elementId: string) => {
       }
     };
     
-    // This will be called when a custom drag operation ends over this element
     const handleCustomDrop = (e: CustomEvent) => {
       if (!draggedInventoryItem) return;
       
@@ -85,24 +75,20 @@ export const useDraggable = (elementId: string) => {
       const x = e.detail.clientX;
       const y = e.detail.clientY;
       
-      // Check if the drop happened over this element
       if (
         x >= rect.left && 
         x <= rect.right && 
         y >= rect.top && 
         y <= rect.bottom
       ) {
-        // Check if this element can interact with the dragged item
         if (currentElement.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
           handleItemCombination(draggedInventoryItem.id, elementId);
         }
       }
       
-      // Remove the drop-target class
       element.classList.remove('drop-target');
     };
     
-    // Listen for custom events for drag-and-drop
     document.addEventListener('custom-drag-over', handleCustomDragOver as EventListener);
     document.addEventListener('custom-drop', handleCustomDrop as EventListener);
     
@@ -115,35 +101,33 @@ export const useDraggable = (elementId: string) => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
-      
-      // Don't drag images in game mode unless they are interactive
+
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
         return;
       }
-      
-      // Update current mouse position immediately for responsive feel
-      mousePosition.current = { x: e.clientX, y: e.clientY };
 
-      // Mark that we've started dragging (for history tracking)
+      const scale = window.devicePixelRatio || 1;
+
+      mousePosition.current = { 
+        x: e.clientX / scale, 
+        y: e.clientY / scale 
+      };
+
       if (!isDragStarted.current) {
         isDragStarted.current = true;
       }
 
-      // Cancel any existing animation frame to prevent queuing updates
       if (animationFrame.current !== null) {
         cancelAnimationFrame(animationFrame.current);
       }
 
-      // Use requestAnimationFrame for smooth updates
       animationFrame.current = requestAnimationFrame(() => {
-        // Calculate the new position
-        const deltaX = mousePosition.current.x - startPosition.current!.x;
-        const deltaY = mousePosition.current.y - startPosition.current!.y;
+        const deltaX = mousePosition.current.x - (startPosition.current!.x / scale);
+        const deltaY = mousePosition.current.y - (startPosition.current!.y / scale);
 
         const newX = elementInitialPos.current!.x + deltaX;
         const newY = elementInitialPos.current!.y + deltaY;
-        
-        // Immediately update the element's position for responsive dragging
+
         updateElementWithoutHistory(elementId, { 
           position: { x: newX, y: newY },
           style: {
@@ -157,9 +141,7 @@ export const useDraggable = (elementId: string) => {
     const handleMouseUp = () => {
       setIsDragging(false);
       
-      // If we actually dragged (not just clicked), commit the final position to history
       if (isDragStarted.current) {
-        // Reset willChange property when dragging ends
         if (currentElement) {
           updateElementWithoutHistory(elementId, {
             style: {
@@ -176,7 +158,6 @@ export const useDraggable = (elementId: string) => {
       startPosition.current = null;
       elementInitialPos.current = null;
       
-      // Cancel any pending animation frame
       if (animationFrame.current !== null) {
         cancelAnimationFrame(animationFrame.current);
         animationFrame.current = null;
@@ -192,7 +173,6 @@ export const useDraggable = (elementId: string) => {
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
       
-      // Clean up any pending animation frame
       if (animationFrame.current !== null) {
         cancelAnimationFrame(animationFrame.current);
         animationFrame.current = null;
@@ -201,24 +181,21 @@ export const useDraggable = (elementId: string) => {
   }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
-    // Don't start drag for static images in game mode
     if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
     }
     
-    // Prevent browser's native drag behavior for images and puzzle elements
     if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
       e.preventDefault();
     }
     
     e.stopPropagation();
     setIsDragging(true);
-    startPosition.current = { x: e.clientX, y: e.clientY };
+    startPosition.current = { x: e.clientX / window.devicePixelRatio || 1, y: e.clientY / window.devicePixelRatio || 1 };
     elementInitialPos.current = initialPosition;
-    isDragStarted.current = false; // Reset the drag started flag
+    isDragStarted.current = false;
     
-    // Set willChange to transform for better performance during drag
     if (currentElement) {
       updateElementWithoutHistory(elementId, {
         style: {
