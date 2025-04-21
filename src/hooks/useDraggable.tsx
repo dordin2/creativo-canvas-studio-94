@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 
@@ -8,7 +7,7 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
+  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode, zoom } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
@@ -115,35 +114,33 @@ export const useDraggable = (elementId: string) => {
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isDragging || !startPosition.current || !elementInitialPos.current) return;
-      
+
       // Don't drag images in game mode unless they are interactive
-      if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
+      if (isGameMode && currentElement?.type === 'image' && !currentElement?.interaction?.type) {
         return;
       }
-      
-      // Update current mouse position immediately for responsive feel
+
       mousePosition.current = { x: e.clientX, y: e.clientY };
 
-      // Mark that we've started dragging (for history tracking)
       if (!isDragStarted.current) {
         isDragStarted.current = true;
       }
 
-      // Cancel any existing animation frame to prevent queuing updates
       if (animationFrame.current !== null) {
         cancelAnimationFrame(animationFrame.current);
       }
 
-      // Use requestAnimationFrame for smooth updates
+      // הוספת התחשבות בזום - ברירת מחדל zoom=1 אם אינו קיים
+      const canvasZoom = typeof zoom === 'number' && zoom > 0 ? zoom : 1;
+
       animationFrame.current = requestAnimationFrame(() => {
-        // Calculate the new position
-        const deltaX = mousePosition.current.x - startPosition.current!.x;
-        const deltaY = mousePosition.current.y - startPosition.current!.y;
+        // חישוב שינויי מיקום באופן יחסי לזום
+        const deltaX = (mousePosition.current.x - startPosition.current!.x) / canvasZoom;
+        const deltaY = (mousePosition.current.y - startPosition.current!.y) / canvasZoom;
 
         const newX = elementInitialPos.current!.x + deltaX;
         const newY = elementInitialPos.current!.y + deltaY;
         
-        // Immediately update the element's position for responsive dragging
         updateElementWithoutHistory(elementId, { 
           position: { x: newX, y: newY },
           style: {
@@ -198,11 +195,11 @@ export const useDraggable = (elementId: string) => {
         animationFrame.current = null;
       }
     };
-  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, isImageElement]);
+  }, [isDragging, elementId, updateElementWithoutHistory, commitToHistory, currentElement, isGameMode, zoom]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
     // Don't start drag for static images in game mode
-    if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
+    if (isGameMode && currentElement?.type === 'image' && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
     }
