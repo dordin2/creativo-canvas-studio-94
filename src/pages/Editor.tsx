@@ -127,19 +127,30 @@ const Editor = () => {
   };
 
   const handleShareGame = () => {
-    const shareUrl = `${window.location.origin}/play/${projectId}`;
-    if (navigator.clipboard && window.isSecureContext) {
-      navigator.clipboard
-        .writeText(shareUrl)
-        .then(() => {
-          toast.success("Game link copied to clipboard!");
-        })
-        .catch((err) => {
-          console.error("Failed to copy link:", err);
-          promptManualCopy(shareUrl);
-        });
-    } else {
-      promptManualCopy(shareUrl);
+    try {
+      if (!projectId) {
+        toast.error("Cannot share: No project ID available");
+        return;
+      }
+
+      const shareUrl = `${window.location.origin}/play/${projectId}`;
+      
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard
+          .writeText(shareUrl)
+          .then(() => {
+            toast.success("Game link copied to clipboard! Share it with others to play your game.");
+          })
+          .catch((err) => {
+            console.error("Failed to copy link:", err);
+            promptManualCopy(shareUrl);
+          });
+      } else {
+        promptManualCopy(shareUrl);
+      }
+    } catch (error) {
+      console.error("Error in share game functionality:", error);
+      toast.error("Failed to share game. Please try again.");
     }
   };
 
@@ -154,7 +165,7 @@ const Editor = () => {
           {url}
         </div>
         <div className="mt-2 text-xs text-gray-500">
-          (Right-click and select &quot;Copy&quot; if it didn&apos;t copy automatically)
+          (Select the URL and copy it manually)
         </div>
       </div>,
       { duration: 10000 }
