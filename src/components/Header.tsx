@@ -1,6 +1,7 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo, Layers, Menu, key } from "lucide-react";
+import { Download, Share, Undo, Redo, Layers, Menu, Key } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useAuth } from "@/context/AuthContext";
@@ -97,7 +98,7 @@ const Header = () => {
             onClick={handleCreateGameCode}
             title="יצירת קוד משחק"
           >
-            <key className="h-4 w-4" />
+            <Key className="h-4 w-4" />
           </Button>
           <GameModeToggle />
           <InteractiveModeToggle />
@@ -176,7 +177,7 @@ const Header = () => {
           onClick={handleCreateGameCode}
           title="יצירת קוד משחק"
         >
-          <key className="h-4 w-4" />
+          <Key className="h-4 w-4" />
         </Button>
         <GameModeToggle />
         <InteractiveModeToggle />
