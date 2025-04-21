@@ -24,7 +24,7 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
+import { getImageFromCache } from "@/utils/imageUploader";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -78,12 +78,14 @@ const DraggableElement = ({ element, isActive, children }: {
   
   const isInInventory = element.inInventory || inventoryItems.some(item => item.elementId === element.id);
   
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (e.button !== 0) return;
+  const handleMouseDown = (e: React.MouseEvent | React.TouchEvent) => {
+    if ('button' in e && e.button !== 0) return;
     e.stopPropagation();
-    
+
+    if (element.layer === 0) return;
+
     if (isImageElement && isGameMode) {
-      e.preventDefault();
+      if ('preventDefault' in e) e.preventDefault();
       
       if (hasInteraction) {
         handleInteraction();
@@ -103,11 +105,23 @@ const DraggableElement = ({ element, isActive, children }: {
     if (isEditing) return;
     
     if (!isSequencePuzzleElement) {
-      startDrag(e, element.position);
+      let clientX: number, clientY: number;
+      if ('touches' in e && e.touches.length) {
+        clientX = e.touches[0].clientX;
+        clientY = e.touches[0].clientY;
+      } else if ('clientX' in e) {
+        clientX = e.clientX;
+        clientY = e.clientY;
+      } else {
+        return;
+      }
+      startDrag(
+        { ...e, clientX, clientY } as unknown as React.MouseEvent,
+        element.position
+      );
       setIsDragging(true);
+      setStartPos({ x: clientX, y: clientY });
     }
-    
-    setStartPos({ x: e.clientX, y: e.clientY });
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
@@ -554,6 +568,7 @@ const DraggableElement = ({ element, isActive, children }: {
       className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
       style={combinedStyle}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleMouseDown}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
       draggable={isGameMode && isImageElement ? false : undefined}
