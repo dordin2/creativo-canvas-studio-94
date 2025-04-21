@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,6 +19,7 @@ import { PaymentButton } from "@/components/PaymentButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileSidebar from "@/components/MobileSidebar";
 import MobileProperties from "@/components/MobileProperties";
+import { useAuth } from "@/context/AuthContext";
 import { 
   Drawer,
   DrawerContent,
@@ -37,6 +39,7 @@ const Editor = () => {
     activeElement
   } = useDesignState();
   const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
+  const { user } = useAuth();
   const isMobile = useIsMobile();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
@@ -47,6 +50,9 @@ const Editor = () => {
       return;
     }
     
+    // Check if current user is the project owner
+    checkProjectOwnership();
+    
     loadProjectData();
   }, [projectId]);
 
@@ -55,6 +61,32 @@ const Editor = () => {
       setShowMobileProperties(true);
     }
   }, [activeElement, isMobile]);
+
+  const checkProjectOwnership = async () => {
+    if (!projectId || !user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('user_id, is_public')
+        .eq('id', projectId)
+        .single();
+      
+      if (error) {
+        throw error;
+      }
+      
+      // If user is not the owner and project is not public, redirect to play mode
+      if (data.user_id !== user.id && !data.is_public) {
+        toast.error("You don't have permission to edit this project");
+        navigate(`/play/${projectId}`);
+      }
+    } catch (error) {
+      console.error('Error checking project ownership:', error);
+      toast.error('Failed to check project permissions');
+      navigate('/');
+    }
+  };
 
   const loadProjectData = async () => {
     try {

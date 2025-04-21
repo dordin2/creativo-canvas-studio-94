@@ -12,6 +12,7 @@ type ProjectContextType = {
   projectName: string;
   isPublic: boolean;
   isLoading: boolean;
+  user: any; // Add user property to the context type
   saveProject: (canvases: Canvas[], activeCanvasIndex: number) => Promise<void>;
   toggleProjectVisibility: () => Promise<void>;
 };
@@ -171,6 +172,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     projectName,
     isPublic,
     isLoading,
+    user, // Add user to the context value
     saveProject,
     toggleProjectVisibility
   };
