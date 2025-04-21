@@ -24,6 +24,7 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import FloatingElementsButton from "@/components/FloatingElementsButton";
 import MobileImageControls from "@/components/mobile/MobileImageControls";
 import ImageControlTabs from "@/components/mobile/ImageControlTabs";
+import { useGameModeNavigation } from "@/hooks/useGameModeNavigation";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -50,11 +51,12 @@ const Editor = () => {
   const isMobile = useIsMobile();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
-  const isAdmin = true; // Assuming isAdmin is true for demonstration purposes
+  const isAdmin = true;
   const [canvasSize, setCanvasSize] = useState({
     width: 0,
     height: 0
   });
+  const { goToEditor, goToPlayMode, isInGameModeRoute } = useGameModeNavigation();
 
   useEffect(() => {
     if (!projectId) {
@@ -187,7 +189,7 @@ const Editor = () => {
       </div>;
   }
 
-  if (isMobile && !isGameMode) {
+  if (isMobile && !isInGameModeRoute) {
     return <div className="flex flex-col h-screen overflow-hidden">
         <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
           <div className="flex items-center">
@@ -278,7 +280,7 @@ const Editor = () => {
       </div>;
   }
 
-  if (isMobile && isGameMode) {
+  if (isMobile && isInGameModeRoute) {
     return <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
           <div className="fixed-canvas-container">
@@ -290,16 +292,16 @@ const Editor = () => {
         <InventoryIcon />
         
         <div className="absolute bottom-4 left-4 z-[100]">
-          <Button variant="secondary" className="shadow-md bg-white hover:bg-gray-100 px-2 py-1" onClick={toggleGameMode}>
+          <Button variant="secondary" className="shadow-md bg-white hover:bg-gray-100 px-2 py-1" onClick={goToEditor}>
             <ChevronLeft className="mr-1 h-4 w-4" />
-            <span className="text-sm">Exit</span>
+            <span className="text-sm">יציאה</span>
           </Button>
         </div>
       </div>;
   }
 
-  return <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
-      {!isGameMode && <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
+  return <div className={`flex flex-col h-screen overflow-hidden ${isInGameModeRoute ? 'p-0 m-0' : ''}`}>
+      {!isInGameModeRoute && <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
           <div className="flex items-center">
             <Button variant="ghost" onClick={goBackToProjects} className="mr-2">
               <ChevronLeft className="mr-1" />
@@ -325,13 +327,13 @@ const Editor = () => {
             </Button>
           </div>
         </div>}
-      {!isGameMode && <div className="z-30 relative"><Header /></div>}
-      <div className={`flex flex-1 overflow-hidden relative ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
-        {!isGameMode && <div className="flex-shrink-0 w-64 z-20 relative">
+      {!isInGameModeRoute && <div className="z-30 relative"><Header /></div>}
+      <div className={`flex flex-1 overflow-hidden relative ${isInGameModeRoute ? 'h-screen w-screen p-0 m-0' : ''}`}>
+        {!isInGameModeRoute && <div className="flex-shrink-0 w-64 z-20 relative">
             <Sidebar />
           </div>}
         <div className="flex-1 overflow-hidden flex flex-col relative z-1">
-          {!isGameMode ? <>
+          {!isInGameModeRoute ? <>
               <div className="z-10 relative">
                 <CanvasTabs />
               </div>
@@ -342,21 +344,21 @@ const Editor = () => {
               <Canvas isFullscreen={true} />
             </div>}
         </div>
-        {!isGameMode && <div className="flex-shrink-0 w-80 z-20 relative">
+        {!isInGameModeRoute && <div className="flex-shrink-0 w-80 z-20 relative">
             <Properties />
           </div>}
       </div>
-      {isGameMode && <>
+      {isInGameModeRoute && <>
           <InventoryPanel />
           <InventoryIcon />
           <div className="absolute bottom-4 left-4 z-[100]">
-            <Button variant="secondary" className="shadow-md bg-white hover:bg-gray-100" onClick={toggleGameMode}>
+            <Button variant="secondary" className="shadow-md bg-white hover:bg-gray-100" onClick={goToEditor}>
               <ChevronLeft className="mr-1" />
-              Exit Game Mode
+              יציאה ממצב משחק
             </Button>
           </div>
         </>}
-      {!isGameMode && <FloatingElementsButton />}
+      {!isInGameModeRoute && <FloatingElementsButton />}
     </div>;
 };
 

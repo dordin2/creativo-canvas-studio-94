@@ -1,31 +1,35 @@
 
 import React from "react";
-import { useDesignState } from "@/context/DesignContext";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Play } from "lucide-react";
+import { Play, ArrowLeft } from "lucide-react";
+import { useGameModeNavigation } from "@/hooks/useGameModeNavigation";
 
+/**
+ * GameModeToggle: switches between Game (Play) and Editor modes with navigation and url change.
+ */
 const GameModeToggle = () => {
-  const { isGameMode, toggleGameMode } = useDesignState();
+  const { goToPlayMode, goToEditor, isInGameModeRoute } = useGameModeNavigation();
 
   return (
     <TooltipProvider>
       <Tooltip>
-        <TooltipTrigger 
-          asChild 
-          onClick={toggleGameMode}
+        <TooltipTrigger
+          asChild
+          onClick={isInGameModeRoute ? goToEditor : goToPlayMode}
           className="cursor-pointer"
         >
           <div className="flex items-center gap-4 mr-4">
-            <Play 
-              className={`h-5 w-5 ${isGameMode ? 'text-canvas-purple' : 'text-gray-500'}`} 
-            />
+            {isInGameModeRoute
+              ? <ArrowLeft className="h-5 w-5 text-canvas-purple" />
+              : <Play className="h-5 w-5 text-gray-500" />
+            }
           </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">
           <p>
-            {isGameMode 
-              ? 'Exit Play Preview (Game state will be preserved)' 
-              : 'Enter Play Preview (Inventory items will be remembered)'}
+            {isInGameModeRoute
+              ? 'חזור לעורך (Editor)'
+              : 'פתיחת תצוגת משחק (Play) בלינק נפרד'}
           </p>
         </TooltipContent>
       </Tooltip>
