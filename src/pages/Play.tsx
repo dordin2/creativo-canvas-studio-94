@@ -32,7 +32,6 @@ const Play = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const isMobile = useIsMobile();
   const { user } = useAuth();
-  const [privateError, setPrivateError] = useState<string | null>(null);
 
   // Check for fullscreen changes
   useEffect(() => {
@@ -61,31 +60,15 @@ const Play = () => {
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-      setPrivateError(null);
 
       // Step 1: Load project metadata
-      const { data: projectData, error: projectError } = await supabase
+      const { data: projectData } = await supabase
         .from('projects')
         .select('*')
         .eq('id', projectId)
         .maybeSingle();
 
-      if (projectError || !projectData) {
-        setProjectName("Untitled Project");
-        setCanvases([createDefaultCanvas()]);
-        setActiveCanvasIndex(0);
-        setIsLoading(false);
-        return;
-      }
-
-      // Check project access permissions
-      if (projectData.is_public !== true && (!user || user.id !== projectData.user_id)) {
-        setPrivateError("This project is private. Only the owner can view it.");
-        setIsLoading(false);
-        return;
-      }
-
-      setProjectName(projectData.name || "Untitled Project");
+      setProjectName(projectData?.name || "Untitled Project");
 
       // Step 2: Load canvas data
       const { data, error } = await supabase
@@ -160,32 +143,7 @@ const Play = () => {
     );
   }
 
-  // Error ONLY for private projects
-  if (privateError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center max-w-md mx-auto p-6 border rounded-lg shadow-md">
-          <h2 className="text-xl font-bold mb-3 text-canvas-purple">{projectName || 'Shared Game'}</h2>
-          <div className="text-red-500 mb-4">
-            <p className="mb-2">{privateError}</p>
-            <p className="text-sm text-gray-500">
-              You need to be the project owner or the project needs to be public to view it.
-            </p>
-          </div>
-          <div className="flex justify-center gap-3">
-            <Button variant="outline" onClick={() => loadProjectData()}>
-              Try Again
-            </Button>
-            <Button variant="default" onClick={() => navigate("/")}>
-              Back to Projects
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // Render the game always if not private error
+  // Always show the game view, no access/permission check
   return (
     <DesignProvider 
       initialState={{ 
@@ -231,3 +189,4 @@ const Play = () => {
 };
 
 export default Play;
+
