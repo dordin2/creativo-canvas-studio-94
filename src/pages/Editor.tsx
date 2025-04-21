@@ -416,7 +416,7 @@ const Editor = () => {
         </>
       )}
       {!isGameMode && !isMobile && (
-        <FloatingAddButton onClick={handleFloatingAdd} />
+        <FloatingAddButton />
       )}
     </div>
   );
