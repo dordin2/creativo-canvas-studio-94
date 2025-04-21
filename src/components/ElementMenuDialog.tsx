@@ -21,14 +21,11 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
   onOpenChange,
 }) => (
   <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent
-      className="fixed w-full max-w-md sm:max-w-3xl h-full max-h-[98vh] rounded-lg p-0 overflow-y-auto bg-white !top-1 !left-1 shadow-2xl border border-gray-200"
-      style={{ inset: '8px', paddingTop: 0, paddingBottom: 0 }}
-    >
-      <div className="flex flex-col h-full min-h-[calc(100vh-32px)] bg-white">
-        <div className="flex items-center justify-between border-b p-4 shadow-sm bg-white sticky top-0 z-10" style={{ minHeight: 56 }}>
+    <DialogContent className="fixed inset-4 sm:inset-8 w-[calc(100%-2rem)] sm:w-[calc(100%-4rem)] max-w-4xl mx-auto h-[calc(100vh-2rem)] sm:h-[calc(100vh-4rem)] rounded-lg p-0 overflow-hidden bg-white shadow-2xl border border-gray-200">
+      <div className="flex flex-col h-full bg-white">
+        <div className="flex items-center justify-between border-b p-4 shadow-sm bg-white sticky top-0 z-50">
           <DialogHeader className="flex flex-row items-center gap-4 w-full">
-            <DialogTitle className="text-2xl text-canvas-purple font-bold">
+            <DialogTitle className="text-xl sm:text-2xl text-canvas-purple font-bold">
               הוספת אלמנט - תפריט הספרייה
             </DialogTitle>
           </DialogHeader>
@@ -41,7 +38,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
             </button>
           </DialogClose>
         </div>
-        <div className="flex-1 overflow-y-auto px-2 pt-4 pb-8">
+        <div className="flex-1 overflow-y-auto p-4">
           <AdminGallery />
         </div>
       </div>
