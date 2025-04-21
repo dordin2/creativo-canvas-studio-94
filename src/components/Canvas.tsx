@@ -112,6 +112,18 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     }
   };
   
+  const handleZoomIn = () => {
+    setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
+  };
+  
+  const handleZoomOut = () => {
+    setZoomLevel(prevZoom => Math.max(prevZoom - 0.1, 0.5));
+  };
+  
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+  };
+  
   const handleCanvasClick = (e: React.MouseEvent) => {
     if (e.target === containerRef.current && !isGameMode) {
       setActiveElement(null);
@@ -428,6 +440,21 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
             {renderElements()}
           </div>
         </div>
+        
+        {!isGameMode && (
+          <div className="zoom-controls">
+            <button onClick={handleZoomOut} title="Zoom Out">
+              <Minus size={16} />
+            </button>
+            <span>{Math.round(zoomLevel * 100)}%</span>
+            <button onClick={handleZoomIn} title="Zoom In">
+              <Plus size={16} />
+            </button>
+            <button onClick={handleResetZoom} title="Reset Zoom">
+              <RotateCcw size={16} />
+            </button>
+          </div>
+        )}
         
         {isGameMode && !isMobileView && (
           <div className="fullscreen-controls">

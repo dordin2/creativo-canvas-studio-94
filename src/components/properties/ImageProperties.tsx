@@ -1,3 +1,4 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -20,41 +21,25 @@ const ImageProperties = ({
     isGameMode
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [scaleValue, setScaleValue] = useState<number>(100);
+  const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
   const [rotation, setRotation] = useState(getRotation(element));
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
-  const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
+  // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
-    const updateCanvasSize = () => {
-      const canvas = document.querySelector('.canvas-container');
-      if (canvas) {
-        setCanvasSize({
-          width: canvas.clientWidth,
-          height: canvas.clientHeight
-        });
-      }
-    };
-
-    updateCanvasSize();
-    window.addEventListener('resize', updateCanvasSize);
-    return () => window.removeEventListener('resize', updateCanvasSize);
-  }, []);
-
-  useEffect(() => {
-    if (element.originalSize && element.size && canvasSize.width && canvasSize.height) {
-      const widthRatio = element.size.width / canvasSize.width;
-      const heightRatio = element.size.height / canvasSize.height;
-      const currentRatio = Math.max(widthRatio, heightRatio);
-      const scale = Math.round(currentRatio * 100);
-      setScaleValue(scale);
+    if (element.originalSize && element.size) {
+      const currentScale = Math.round((element.size.width / element.originalSize.width) * 100);
+      setScaleValue(currentScale || 100);
     }
-  }, [element.originalSize, element.size, canvasSize]);
+    
+    setRotation(getRotation(element));
+  }, [element.id, element.originalSize, element.size, element]);
 
   useEffect(() => {
+    // Try to recover image from cache if we have a cache key but no dataUrl
     const loadImages = async () => {
       if (element.cacheKey) {
         if (!imageSrc) {
@@ -77,6 +62,7 @@ const ImageProperties = ({
     
     loadImages();
     
+    // Calculate image stats for display
     if (imageSrc || element.src) {
       const size = imageSrc ? 
         estimateDataUrlSize(imageSrc) :
@@ -119,6 +105,7 @@ const ImageProperties = ({
     const file = e.target.files[0];
     console.log("ImageProperties - Selected file:", file.name, file.type, file.size);
     
+    // Reset the image loaded state before loading new image
     setImageLoaded(false);
     
     handleImageUpload(element.id, file);
@@ -129,30 +116,12 @@ const ImageProperties = ({
   };
   
   const handleImageResize = (value: number[]) => {
-    if (!element.originalSize || !canvasSize.width || !canvasSize.height) return;
-    
+    if (!element.originalSize) return;
     const scalePercentage = value[0];
     setScaleValue(scalePercentage);
-    
-    const maxWidth = canvasSize.width;
-    const maxHeight = canvasSize.height;
-    
-    const imageAspectRatio = element.originalSize.width / element.originalSize.height;
-    const canvasAspectRatio = maxWidth / maxHeight;
-    
-    let targetWidth, targetHeight;
-    if (imageAspectRatio > canvasAspectRatio) {
-      targetWidth = maxWidth;
-      targetHeight = maxWidth / imageAspectRatio;
-    } else {
-      targetHeight = maxHeight;
-      targetWidth = maxHeight * imageAspectRatio;
-    }
-    
     const scaleFactor = scalePercentage / 100;
-    const newWidth = Math.round(targetWidth * scaleFactor);
-    const newHeight = Math.round(targetHeight * scaleFactor);
-    
+    const newWidth = Math.round(element.originalSize.width * scaleFactor);
+    const newHeight = Math.round(element.originalSize.height * scaleFactor);
     updateElement(element.id, {
       size: {
         width: newWidth,
@@ -162,7 +131,7 @@ const ImageProperties = ({
   };
   
   const handleRotationChange = (value: number[]) => {
-    if (isGameMode) return;
+    if (isGameMode) return; // No rotation in game mode
     
     const newRotation = Math.round(value[0]);
     setRotation(newRotation);
@@ -174,9 +143,11 @@ const ImageProperties = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isGameMode) return;
     
+    // Parse input and handle non-numeric input
     const inputValue = e.target.value;
     const newRotation = parseInt(inputValue) || 0;
     
+    // Keep rotation between -360 and 360 degrees
     const boundedRotation = Math.max(-360, Math.min(360, newRotation));
     
     handleRotationChange([boundedRotation]);
@@ -187,6 +158,7 @@ const ImageProperties = ({
   };
   
   const renderImagePreview = () => {
+    // If we have a thumbnailSrc, use it until the full image is loaded
     const mainSrc = imageSrc || element.src;
     
     if (!mainSrc) {
@@ -255,20 +227,13 @@ const ImageProperties = ({
       
       <div className="mt-4">
         <div className="flex items-center justify-between mb-2">
-          <Label>Image Size</Label>
+          <Label>Resize Image</Label>
           <span className="text-sm font-medium">{scaleValue}%</span>
         </div>
-        <Slider 
-          value={[scaleValue]} 
-          min={1} 
-          max={100} 
-          step={1} 
-          onValueChange={handleImageResize} 
-          className="mb-2" 
-        />
+        <Slider value={[scaleValue]} min={10} max={200} step={1} onValueChange={handleImageResize} className="mb-2" />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>1%</span>
-          <span>100%</span>
+          <span>10%</span>
+          <span>200%</span>
         </div>
         <div className="text-sm mt-2">
           {element.size?.width} × {element.size?.height} px
