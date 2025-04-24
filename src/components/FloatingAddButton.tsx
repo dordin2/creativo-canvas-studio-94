@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ElementMenuDialog } from "./ElementMenuDialog";
 import { useAuth } from "@/context/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface FloatingAddButtonProps {
@@ -12,11 +13,34 @@ interface FloatingAddButtonProps {
 
 const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({ className }) => {
   const [open, setOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
   const { user } = useAuth();
+
+  React.useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data, error } = await supabase.rpc('is_admin');
+        if (error) throw error;
+        setIsAdmin(!!data);
+      } catch (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
 
   const handleOpenDialog = () => {
     if (!user) {
       toast.error("יש להתחבר כדי להוסיף אלמנטים");
+      return;
+    }
+    
+    if (!isAdmin) {
+      toast.error("רק מנהלים יכולים להוסיף אלמנטים");
       return;
     }
     

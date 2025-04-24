@@ -1,7 +1,5 @@
-
 import React, { useState, useEffect } from 'react';
 import { supabase } from "@/integrations/supabase/client";
-import { DialogTrigger, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Images, Upload, Trash2, AlertCircle } from 'lucide-react';
 import { toast } from "sonner";
@@ -15,7 +13,7 @@ interface LibraryImage {
   image_path: string;
   name: string;
   created_at: string;
-  created_by?: string; // Track who created the image
+  created_by?: string;
 }
 
 const FILE_SIZE_LIMIT = 5 * 1024 * 1024; // 5MB limit
@@ -27,7 +25,7 @@ export function AdminGallery() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageName, setImageName] = useState('');
   const [isAdmin, setIsAdmin] = useState(false);
-  const { user, profile, session } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   // Check if user is authenticated and has admin rights
@@ -137,7 +135,7 @@ export function AdminGallery() {
     }
 
     try {
-      // Rate limiting check - could be enhanced with a proper service
+      // Rate limiting check
       const recentUploads = localStorage.getItem('recentUploads');
       const uploads = recentUploads ? JSON.parse(recentUploads) : [];
       const now = Date.now();
@@ -149,10 +147,6 @@ export function AdminGallery() {
         toast.error('הגעת למגבלת העלאות. נסה שוב מאוחר יותר');
         return;
       }
-      
-      // Update recent uploads
-      uploads.push(now);
-      localStorage.setItem('recentUploads', JSON.stringify(uploads));
 
       // Create a safe filename
       const safeFileName = generateSafeFilename(imageFile.name);
@@ -187,6 +181,10 @@ export function AdminGallery() {
       fetchAdminImages();
       setImageFile(null);
       setImageName('');
+      
+      // Update recent uploads
+      uploads.push(now);
+      localStorage.setItem('recentUploads', JSON.stringify(uploads));
       
       // Reset the file input
       const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
