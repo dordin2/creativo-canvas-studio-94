@@ -5,8 +5,13 @@ import ElementProperties from "./properties/ElementProperties";
 import NoElementSelected from "./properties/NoElementSelected";
 
 const Properties = () => {
-  const { activeElement } = useDesignState();
+  const { activeElement, isGameMode } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
+  
+  // Don't show properties in game mode
+  if (isGameMode) {
+    return null;
+  }
   
   if (!activeElement) {
     return <NoElementSelected />;
