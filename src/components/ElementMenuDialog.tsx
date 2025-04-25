@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, Image, X, Palette } from "lucide-react";
+import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, Image, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { processImageUpload } from "@/utils/imageUploader";
@@ -109,28 +109,6 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     }
   ];
 
-  const backgroundColors = [
-    { color: "#8E9196", name: "Neutral Gray" },
-    { color: "#9b87f5", name: "Primary Purple" },
-    { color: "#F2FCE2", name: "Soft Green" },
-    { color: "#FEF7CD", name: "Soft Yellow" },
-    { color: "#FEC6A1", name: "Soft Orange" },
-    { color: "#E5DEFF", name: "Soft Purple" },
-    { color: "#FFDEE2", name: "Soft Pink" },
-    { color: "#D3E4FD", name: "Soft Blue" },
-  ];
-
-  const backgroundGradients = [
-    { gradient: "linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%)", name: "Warm Sand" },
-    { gradient: "linear-gradient(to right, #ee9ca7, #ffdde1)", name: "Soft Peach" },
-    { gradient: "linear-gradient(to top, #accbee 0%, #e7f0fd 100%)", name: "Cool Sky" },
-    { gradient: "linear-gradient(to top, #d299c2 0%, #fef9d7 100%)", name: "Sweet Morning" },
-    { gradient: "linear-gradient(90deg, hsla(24, 100%, 83%, 1) 0%, hsla(341, 91%, 68%, 1) 100%)", name: "Sunset" },
-    { gradient: "linear-gradient(90deg, hsla(221, 45%, 73%, 1) 0%, hsla(220, 78%, 29%, 1) 100%)", name: "Deep Ocean" },
-    { gradient: "linear-gradient(90deg, hsla(139, 70%, 75%, 1) 0%, hsla(63, 90%, 76%, 1) 100%)", name: "Fresh Grass" },
-    { gradient: "linear-gradient(90deg, hsla(186, 33%, 94%, 1) 0%, hsla(216, 41%, 79%, 1) 100%)", name: "Gentle Sky" },
-  ];
-
   const handleImageUploadClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -143,9 +121,6 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
   const handleElementClick = (type: string, config?: any) => {
     if (type === 'image') {
       fileInputRef.current?.click();
-    } else if (type === 'background') {
-      addElement('background', config);
-      onOpenChange(false);
     } else {
       addElement(type as any, config);
       onOpenChange(false);
@@ -183,9 +158,6 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsTrigger>
                 <TabsTrigger value="puzzles" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Puzzles' : 'פאזלים'}
-                </TabsTrigger>
-                <TabsTrigger value="backgrounds" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
-                  {language === 'en' ? 'Backgrounds' : 'רקעים'}
                 </TabsTrigger>
                 <TabsTrigger value="media" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Media' : 'מדיה'}
@@ -257,50 +229,6 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                           <span>{puzzle.label}</span>
                         </Button>
                       ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="backgrounds" className="m-0">
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="text-lg font-semibold mb-4">
-                          {language === 'en' ? 'Solid Colors' : 'צבעים אחידים'}
-                        </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                          {backgroundColors.map((bg) => (
-                            <Button
-                              key={bg.color}
-                              variant="outline"
-                              className="h-24 flex flex-col items-center justify-center gap-2"
-                              style={{ backgroundColor: bg.color }}
-                              onClick={() => handleElementClick('background', { color: bg.color })}
-                            >
-                              <Palette className="h-8 w-8" style={{ color: 'white' }} />
-                              <span className="text-white text-shadow">{bg.name}</span>
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div>
-                        <h3 className="text-lg font-semibold mb-4">
-                          {language === 'en' ? 'Gradients' : 'גרדיאנטים'}
-                        </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                          {backgroundGradients.map((bg) => (
-                            <Button
-                              key={bg.gradient}
-                              variant="outline"
-                              className="h-24 flex flex-col items-center justify-center gap-2"
-                              style={{ background: bg.gradient }}
-                              onClick={() => handleElementClick('background', { gradient: bg.gradient })}
-                            >
-                              <Palette className="h-8 w-8" style={{ color: 'white' }} />
-                              <span className="text-white text-shadow">{bg.name}</span>
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
                     </div>
                   </TabsContent>
 
