@@ -231,11 +231,25 @@ export const DesignProvider = ({
     return canvas.elements.find(el => el.id === elementId) || null;
   };
   
+  useEffect(() => {
+    if (canvases.length > 0 && !hasInitialState) {
+      console.log('Setting up initial history state from loaded project');
+      setHasInitialState(true);
+      const newHistory = [JSON.parse(JSON.stringify(canvases))];
+      setHistory(newHistory);
+      setHistoryIndex(0);
+      setLastSavedStateIndex(0);
+      setHasChanges(false);
+    }
+  }, [canvases, hasInitialState]);
+
   const addToHistory = useCallback((newCanvases: Canvas[]) => {
     if (!newCanvases || newCanvases.length === 0) {
       console.warn('Attempted to save invalid state to history');
       return;
     }
+
+    console.log('Adding new state to history, hasInitialState:', hasInitialState);
 
     if (!hasInitialState) {
       console.log('Setting initial state');
@@ -243,7 +257,6 @@ export const DesignProvider = ({
       const newHistory = [JSON.parse(JSON.stringify(newCanvases))];
       setHistory(newHistory);
       setHistoryIndex(0);
-      setLastSavedStateIndex(0);
       return;
     }
 
@@ -261,8 +274,12 @@ export const DesignProvider = ({
     setHistoryIndex(newHistoryIndex);
     setHasChanges(true);
     
-    console.log('Added new state to history, total states:', newHistory.length);
-  }, [history, historyIndex, hasInitialState]);
+    console.log('Added new state to history:', {
+      totalStates: newHistory.length,
+      currentIndex: newHistoryIndex,
+      lastSavedIndex: lastSavedStateIndex
+    });
+  }, [history, historyIndex, hasInitialState, lastSavedStateIndex]);
   
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
     ? (canvases[activeCanvasIndex]?.elements || []) 
@@ -629,17 +646,25 @@ export const DesignProvider = ({
   };
   
   const undo = useCallback(() => {
+    console.log('Attempting undo operation:', {
+      historyIndex,
+      lastSavedStateIndex,
+      hasChanges,
+      historyLength: history.length
+    });
+
     if (!hasChanges) {
       toast.info(t('toast.info.noChangesYet'));
       return;
     }
 
     if (historyIndex <= lastSavedStateIndex) {
+      console.log('Cannot undo past the last saved state');
       toast.info('Cannot undo past the last saved state');
       return;
     }
 
-    if (history.length === 0 || !history[historyIndex - 1]) {
+    if (history.length === 0 || historyIndex <= 0 || !history[historyIndex - 1]) {
       console.error('Invalid history state detected');
       return;
     }
@@ -652,10 +677,12 @@ export const DesignProvider = ({
       return;
     }
 
+    console.log('Performing undo to index:', newIndex);
     setCanvases(previousState);
     setHistoryIndex(newIndex);
 
     if (newIndex === lastSavedStateIndex) {
+      console.log('Reached last saved state, resetting hasChanges');
       setHasChanges(false);
     }
 
@@ -721,6 +748,10 @@ export const DesignProvider = ({
     try {
       if (projectSaveFunction) {
         await projectSaveFunction(canvases, activeCanvasIndex);
+        console.log('Project saved, updating indices:', {
+          currentHistoryIndex: historyIndex,
+          currentHistoryLength: history.length
+        });
         setLastSavedStateIndex(historyIndex);
         setHasChanges(false);
         toast.success('Project saved successfully');
@@ -733,13 +764,6 @@ export const DesignProvider = ({
       toast.error('Failed to save project');
     }
   };
-
-  useEffect(() => {
-    if (history.length === 0 && canvases.length > 0 && !hasInitialState) {
-      console.log('Setting up initial history state');
-      addToHistory(canvases);
-    }
-  }, [canvases, history.length, addToHistory, hasInitialState]);
 
   const value = {
     canvases,
