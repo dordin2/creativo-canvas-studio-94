@@ -7,6 +7,7 @@ import Canvas from "@/components/Canvas";
 import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
 import { useDesignState } from "@/context/DesignContext";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const Editor = () => {
   const isMobile = useIsMobile();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
+  const { isInteractiveMode } = useInteractiveMode();
 
   useEffect(() => {
     if (!projectId) {
@@ -387,7 +389,7 @@ const Editor = () => {
             </div>
           )}
         </div>
-        {!isGameMode && (
+        {!isGameMode && isInteractiveMode && (
           <div className="flex-shrink-0 w-80 z-20 relative">
             <Properties />
           </div>
