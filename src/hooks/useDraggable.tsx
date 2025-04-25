@@ -1,8 +1,7 @@
-
 import { useState, useEffect, useRef } from 'react';
-import { useDesignState } from '@/context/DesignContext';
-import { useInteractiveMode } from '@/context/InteractiveModeContext';
+import { useDesignState } from '@/context/DesignState';
 import { viewportToCanvasCoordinates, getCanvasScale } from '@/utils/coordinateUtils';
+import { useInteractiveMode } from '@/context/InteractiveModeContext';
 
 interface Position {
   x: number;
@@ -210,13 +209,14 @@ export const useDraggable = (elementId: string) => {
   ]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
-    if (isInteractiveMode || (isGameMode && isImageElement && !currentElement?.interaction?.type)) {
+    if (isGameMode && !isInteractiveMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
     }
 
-    if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
+    if (isGameMode && !isInteractiveMode) {
       e.preventDefault();
+      return;
     }
 
     e.stopPropagation();
@@ -224,7 +224,7 @@ export const useDraggable = (elementId: string) => {
 
     startPosition.current = { x: e.clientX, y: e.clientY };
     elementInitialPos.current = initialPosition;
-    isDragStarted.current = false;
+    isDragStarted.current = false; // Reset the drag started flag
 
     const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
     if (canvasContainer) {
