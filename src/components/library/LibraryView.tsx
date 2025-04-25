@@ -1,9 +1,8 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useDesignState } from "@/context/DesignContext";
 import { Loader2 } from "lucide-react";
 import { processLibraryImage } from "@/utils/imageUploader";
+import { useDesignState } from "@/context/DesignContext";
 
 interface LibraryImage {
   id: string;
@@ -11,8 +10,14 @@ interface LibraryImage {
   name: string;
 }
 
-export const LibraryView = ({ onClose }: { onClose: () => void }) => {
-  const { addElement, canvasRef, updateElement } = useDesignState();
+export const LibraryView = ({ 
+  onClose, 
+  onImageSelect 
+}: { 
+  onClose: () => void;
+  onImageSelect?: (image: LibraryImage) => void;
+}) => {
+  const designState = useDesignState && typeof useDesignState === 'function' ? useDesignState() : null;
   
   const { data: images, isLoading } = useQuery({
     queryKey: ['library-images'],
@@ -28,17 +33,23 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
   });
   
   const handleImageClick = (image: LibraryImage) => {
-    // Get initial size based on canvas
-    const canvasDimensions = canvasRef ? {
-      width: canvasRef.clientWidth,
-      height: canvasRef.clientHeight
+    if (onImageSelect) {
+      onImageSelect(image);
+      onClose();
+      return;
+    }
+    
+    if (!designState) return;
+    
+    const canvasDimensions = designState.canvasRef ? {
+      width: designState.canvasRef.clientWidth,
+      height: designState.canvasRef.clientHeight
     } : {
       width: window.innerWidth * 0.7,
       height: window.innerHeight * 0.7
     };
     
-    // Add element immediately with the URL
-    const newElement = addElement('image', {
+    const newElement = designState.addElement('image', {
       src: image.image_path,
       name: image.name,
       size: {
@@ -47,14 +58,12 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
       }
     });
     
-    // Process image in background
     processLibraryImage(
       image.image_path,
       canvasDimensions.width,
       canvasDimensions.height
     ).then((processedImage) => {
-      // Update the element with processed data
-      updateElement(newElement.id, processedImage);
+      designState.updateElement(newElement.id, processedImage);
     }).catch((error) => {
       console.error('Background image processing failed:', error);
     });

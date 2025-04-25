@@ -8,7 +8,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { toast } from "sonner";
 import { Plus, Folder, Clock, LogOut, UserCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
-import { Database } from "@/types/database";
 import { ElementMenuDialog } from "@/components/ElementMenuDialog";
 
 type Project = {
@@ -139,6 +138,16 @@ const Projects = () => {
 
   const goToAuth = () => {
     navigate('/auth');
+  };
+
+  const handleElementSelect = () => {
+    toast.info("This feature is only available in the editor");
+    setLibraryOpen(false);
+  };
+  
+  const handleImageUpload = () => {
+    toast.info("This feature is only available in the editor");
+    setLibraryOpen(false);
   };
   
   return (
@@ -277,7 +286,10 @@ const Projects = () => {
       
       <ElementMenuDialog 
         open={libraryOpen} 
-        onOpenChange={setLibraryOpen} 
+        onOpenChange={setLibraryOpen}
+        onElementSelect={handleElementSelect}
+        onImageUpload={handleImageUpload}
+        designProviderAvailable={false}
       />
     </div>
   );
