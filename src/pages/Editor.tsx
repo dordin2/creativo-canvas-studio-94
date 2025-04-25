@@ -23,6 +23,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import FloatingAddButton from "@/components/FloatingAddButton";
+import FloatingSmartSlider from "@/components/FloatingSmartSlider";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -375,6 +376,9 @@ const Editor = () => {
           {!isGameMode ? (
             <>
               <CanvasTabs />
+              {activeElement && !isGameMode && activeElement.size && (
+                <FloatingSmartSlider element={activeElement} />
+              )}
               <Canvas />
             </>
           ) : (

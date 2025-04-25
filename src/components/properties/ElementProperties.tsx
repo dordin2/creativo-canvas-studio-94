@@ -8,7 +8,6 @@ import SequencePuzzleProperties from "./SequencePuzzleProperties";
 import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
 import SliderPuzzleProperties from "./SliderPuzzleProperties";
 import InteractionProperties from "./InteractionProperties";
-import SmartSlider from "./SmartSlider";
 import { useEffect } from "react";
 
 interface ElementPropertiesProps {
@@ -62,11 +61,6 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
         <InteractionProperties element={element} />
       </div>
     );
-  }
-
-  // In regular mode, only show SmartSlider for elements with size
-  if (element.size || element.style?.transform) {
-    return <SmartSlider element={element} />;
   }
 
   return null;

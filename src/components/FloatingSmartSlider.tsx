@@ -7,15 +7,14 @@ import { RotateCw } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { getRotation } from "@/utils/elementStyles";
 
-interface SmartSliderProps {
+interface FloatingSmartSliderProps {
   element: DesignElement;
 }
 
-const SmartSlider = ({ element }: SmartSliderProps) => {
+const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
   const { updateElement } = useDesignState();
   const [isRotationMode, setIsRotationMode] = useState(false);
   
-  // Scale calculation (10% to 200%)
   const calculateScale = () => {
     if (element.originalSize && element.size) {
       return Math.round((element.size.width / element.originalSize.width) * 100);
@@ -47,31 +46,33 @@ const SmartSlider = ({ element }: SmartSliderProps) => {
   };
   
   return (
-    <div className="flex items-center gap-4 p-4 bg-white rounded-lg">
-      <div className="flex-1">
-        <Slider 
-          value={[isRotationMode ? getRotation(element) : calculateScale()]}
-          min={isRotationMode ? -180 : 10}
-          max={isRotationMode ? 180 : 200}
-          step={1}
-          onValueChange={isRotationMode ? handleRotationChange : handleScaleChange}
-          className="w-full"
-        />
-      </div>
-      
-      <Toggle 
-        pressed={isRotationMode}
-        onPressedChange={setIsRotationMode}
-        className="ml-2"
-      >
-        <RotateCw className="h-4 w-4" />
-      </Toggle>
-      
-      <div className="w-12 text-sm font-medium text-gray-600">
-        {isRotationMode ? `${getRotation(element)}°` : `${calculateScale()}%`}
+    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 min-w-[300px] animate-fade-in">
+      <div className="flex items-center gap-4 p-3 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
+        <div className="flex-1">
+          <Slider 
+            value={[isRotationMode ? getRotation(element) : calculateScale()]}
+            min={isRotationMode ? -180 : 10}
+            max={isRotationMode ? 180 : 200}
+            step={1}
+            onValueChange={isRotationMode ? handleRotationChange : handleScaleChange}
+            className="w-full"
+          />
+        </div>
+        
+        <Toggle 
+          pressed={isRotationMode}
+          onPressedChange={setIsRotationMode}
+          className="ml-2"
+        >
+          <RotateCw className="h-4 w-4" />
+        </Toggle>
+        
+        <div className="w-12 text-sm font-medium text-gray-600">
+          {isRotationMode ? `${getRotation(element)}°` : `${calculateScale()}%`}
+        </div>
       </div>
     </div>
   );
 };
 
-export default SmartSlider;
+export default FloatingSmartSlider;
