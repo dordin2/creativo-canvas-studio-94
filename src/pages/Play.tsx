@@ -11,7 +11,7 @@ import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { isValidCanvas } from "@/utils/canvasValidation";
+import { Database } from "@/types/database";
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -84,29 +84,20 @@ const Play = () => {
         throw error;
       }
       
-      if (data?.canvas_data) {
-        const canvasData = data.canvas_data as Json;
+      if (data && data.canvas_data) {
+        // Properly assert the type with a type guard
+        const jsonData = data.canvas_data as Json;
         
-        if (typeof canvasData === 'object' && canvasData !== null && 
-            'canvases' in canvasData && 'activeCanvasIndex' in canvasData &&
-            Array.isArray(canvasData.canvases)) {
+        // Check if the structure matches what we expect
+        if (typeof jsonData === 'object' && jsonData !== null && 
+            'canvases' in jsonData && 'activeCanvasIndex' in jsonData &&
+            Array.isArray(jsonData.canvases)) {
           
-          const validatedCanvases = canvasData.canvases
-            .filter((canvas): canvas is CanvasType => isValidCanvas(canvas));
-          
-          if (validatedCanvases.length === 0) {
-            console.error("No valid canvases found in data");
-            throw new Error('No valid canvas data found');
-          }
-          
-          setCanvases(validatedCanvases);
-          setActiveCanvasIndex(
-            typeof canvasData.activeCanvasIndex === 'number' 
-              ? Math.min(canvasData.activeCanvasIndex, validatedCanvases.length - 1) 
-              : 0
-          );
+          // Now we can safely cast to the expected type
+          setCanvases(jsonData.canvases as unknown as CanvasType[]);
+          setActiveCanvasIndex(jsonData.activeCanvasIndex as number);
         } else {
-          console.error("Invalid canvas data structure:", canvasData);
+          console.error("Invalid canvas data structure:", jsonData);
           throw new Error('Invalid project data format');
         }
       }
@@ -143,27 +134,8 @@ const Play = () => {
     );
   }
 
-  if (!canvases.length) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
-        <div className="text-center">
-          <h1 className="text-xl font-semibold text-gray-700 mb-2">
-            No canvas data found
-          </h1>
-          <p className="text-gray-500">
-            This project appears to be empty
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <DesignProvider initialState={{ 
-      canvases, 
-      activeCanvasIndex, 
-      isGameMode: true 
-    }}>
+    <DesignProvider initialState={{ canvases, activeCanvasIndex, isGameMode: true }}>
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
           <div className="fixed-canvas-container">
