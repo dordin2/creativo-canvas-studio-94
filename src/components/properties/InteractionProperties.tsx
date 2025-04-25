@@ -1,13 +1,12 @@
-
 import React, { useState } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { 
   InteractionType, 
-  PuzzleType, 
-  MessagePosition, 
-  CombinationResultType,
-  ElementType
-} from "@/types/designTypes";
+  MessagePosition,
+  CombinationResultType 
+} from '@/types/interactionTypes';
+import { PuzzleType } from '@/types/puzzleTypes';
+import { DesignElement } from '@/types/elementTypes';
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";

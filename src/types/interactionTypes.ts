@@ -1,13 +1,6 @@
 
-import { 
-  PuzzleConfig, 
-  SequencePuzzleConfig, 
-  ClickSequencePuzzleConfig, 
-  SliderPuzzleConfig, 
-  PuzzleType 
-} from './puzzleTypes';
+import { PuzzleConfig, SequencePuzzleConfig, ClickSequencePuzzleConfig, SliderPuzzleConfig } from './puzzleTypes';
 
-// Interaction types
 export type InteractionType = 
   | 'none' 
   | 'message' 
@@ -23,11 +16,7 @@ export type CombinationResultType =
   | 'canvasNavigation' 
   | 'puzzle';
 
-// Inventory item - reference to an element that is in the inventory
-export interface InventoryItem {
-  elementId: string; // ID of the element in the inventory
-  canvasId: string;  // ID of the canvas the element belongs to
-}
+export type MessagePosition = 'top' | 'bottom' | 'left' | 'right' | 'center';
 
 // Result of combining two elements
 export interface CombinationResult {
@@ -51,9 +40,10 @@ export interface Interaction {
   soundUrl?: string;
   targetCanvasId?: string;
   puzzleType?: 'puzzle' | 'sequencePuzzle' | 'clickSequencePuzzle' | 'sliderPuzzle';
+  messagePosition?: MessagePosition;
   
   // For combinable items
-  canCombineWith?: string[]; // IDs of inventory items that can be combined with this element
+  canCombineWith?: string[];
   combinationResult?: CombinationResult;
   
   // For puzzle interaction
