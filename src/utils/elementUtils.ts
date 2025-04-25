@@ -6,72 +6,25 @@ import { DesignElement, FileMetadata } from "@/types/designTypes";
  * Handles special cases like image data that can't be easily JSON serialized
  */
 export const prepareElementForDuplication = (element: DesignElement): Partial<DesignElement> => {
-  // First handle image-specific data that needs special handling
-  let imageData = {};
+  let duplicate;
   
+  // For image elements, use the specialized cloneImageElement function
   if (element.type === 'image') {
-    console.log("ElementUtils - Preparing image data for duplication");
+    console.log("ElementUtils - Using cloneImageElement for image duplication");
+    duplicate = cloneImageElement(element);
     
-    // Preserve image-specific data before JSON serialization
-    imageData = {
-      dataUrl: element.dataUrl,
-      thumbnailDataUrl: element.thumbnailDataUrl,
-      src: element.src,
-      cacheKey: element.cacheKey
-    };
-    
-    if (element.file) {
-      imageData = {
-        ...imageData,
-        fileMetadata: {
-          name: element.file.name,
-          type: element.file.type,
-          size: element.file.size,
-          lastModified: element.file.lastModified
-        }
-      };
-    }
-    
-    if (element.originalSize) {
-      imageData = {
-        ...imageData,
-        originalSize: { ...element.originalSize }
-      };
-    }
-    
-    console.log("ElementUtils - Image data prepared:", {
-      hasDataUrl: !!element.dataUrl,
-      hasThumbnail: !!element.thumbnailDataUrl,
-      hasSrc: !!element.src,
-      hasCacheKey: !!element.cacheKey,
-      hasFileMetadata: !!element.file,
-      hasOriginalSize: !!element.originalSize
-    });
-  }
-  
-  // Create base duplicate through serialization (excluding image data)
-  const elementForSerialization = { ...element };
-  if (element.type === 'image') {
-    delete elementForSerialization.dataUrl;
-    delete elementForSerialization.thumbnailDataUrl;
-    delete elementForSerialization.file;
-  }
-  
-  // Create the duplicate through serialization
-  const duplicate = JSON.parse(JSON.stringify(elementForSerialization));
-  
-  // Restore image data if this was an image element
-  if (element.type === 'image') {
-    Object.assign(duplicate, imageData);
-    
-    console.log("ElementUtils - Final duplicate image data:", {
+    console.log("ElementUtils - Cloned image data:", {
       hasDataUrl: !!duplicate.dataUrl,
       hasThumbnail: !!duplicate.thumbnailDataUrl,
       hasSrc: !!duplicate.src,
       hasCacheKey: !!duplicate.cacheKey,
       hasFileMetadata: !!duplicate.fileMetadata,
-      hasOriginalSize: !!duplicate.originalSize
+      hasOriginalSize: !!duplicate.originalSize,
+      hasFile: !!duplicate.file
     });
+  } else {
+    // For non-image elements, use regular JSON serialization
+    duplicate = JSON.parse(JSON.stringify(element));
   }
   
   // Position the duplicate slightly offset from the original
@@ -96,10 +49,16 @@ export const cloneImageElement = (element: DesignElement): Partial<DesignElement
     return JSON.parse(JSON.stringify(element));
   }
   
-  // Create a basic clone
-  const clone = JSON.parse(JSON.stringify(element));
+  // Create a base clone without the sensitive data
+  const baseElement = { ...element };
+  delete baseElement.dataUrl;
+  delete baseElement.thumbnailDataUrl;
+  delete baseElement.file;
   
-  // Ensure image-specific properties are properly preserved
+  // Create the clone through serialization for the base properties
+  const clone = JSON.parse(JSON.stringify(baseElement));
+  
+  // Directly copy image-specific properties to ensure they're preserved
   if (element.dataUrl) {
     clone.dataUrl = element.dataUrl;
   }
@@ -137,4 +96,3 @@ export const cloneImageElement = (element: DesignElement): Partial<DesignElement
   
   return clone;
 };
-

@@ -492,10 +492,19 @@ export const DesignProvider = ({
     const sourceCanvas = canvases[index];
     if (!sourceCanvas) return;
     
+    const duplicatedElements = sourceCanvas.elements.map(element => {
+      const duplicatedElement = prepareElementForDuplication(element);
+      return {
+        ...duplicatedElement,
+        id: generateId(),
+        position: { ...element.position }
+      };
+    });
+    
     const duplicatedCanvas: Canvas = {
       id: generateId(),
       name: `${sourceCanvas.name} (Copy)`,
-      elements: JSON.parse(JSON.stringify(sourceCanvas.elements))
+      elements: duplicatedElements as DesignElement[]
     };
     
     const updatedCanvases = [...canvases];
