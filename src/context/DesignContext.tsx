@@ -18,6 +18,7 @@ import { processImageUpload } from "@/utils/imageUploader";
 import { getHighestLayer, handleBackgroundLayer } from "@/utils/layerUtils";
 import { useLanguage } from "@/context/LanguageContext";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
+import { useProject } from "@/context/ProjectContext";
 
 const DesignContext = createContext<DesignContextType | undefined>(undefined);
 
@@ -58,6 +59,7 @@ export const DesignProvider = ({
   const [hasChanges, setHasChanges] = useState<boolean>(false);
   const [lastSavedStateIndex, setLastSavedStateIndex] = useState<number>(-1);
   const { t } = useLanguage();
+  const { saveProject: projectSaveFunction } = useProject();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
     setCanvasRefState(ref);
@@ -717,10 +719,15 @@ export const DesignProvider = ({
 
   const handleProjectSave = async () => {
     try {
-      await saveProject(canvases, activeCanvasIndex);
-      setLastSavedStateIndex(historyIndex);
-      setHasChanges(false);
-      toast.success('Project saved successfully');
+      if (projectSaveFunction) {
+        await projectSaveFunction(canvases, activeCanvasIndex);
+        setLastSavedStateIndex(historyIndex);
+        setHasChanges(false);
+        toast.success('Project saved successfully');
+      } else {
+        console.error('saveProject function is not available');
+        toast.error('Cannot save project: save function not available');
+      }
     } catch (error) {
       console.error('Error saving project:', error);
       toast.error('Failed to save project');
