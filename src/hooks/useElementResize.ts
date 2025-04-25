@@ -1,9 +1,8 @@
-
 import { useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 
 export const useElementResize = (element: DesignElement) => {
-  const { updateElement, updateElementWithoutHistory, commitToHistory } = useDesignState();
+  const { updateElement } = useDesignState();
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
@@ -41,7 +40,7 @@ export const useElementResize = (element: DesignElement) => {
 
   const updateElementSize = (newWidth: number, newHeight: number, newX: number, newY: number) => {
     // Round values to eliminate sub-pixel rendering issues that cause jumping
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       size: { 
         width: Math.round(newWidth), 
         height: Math.round(newHeight) 
@@ -187,10 +186,6 @@ export const useElementResize = (element: DesignElement) => {
     };
 
     const handleMouseUp = () => {
-      if (isResizing) {
-        // Only commit to history when the resize operation is complete
-        commitToHistory();
-      }
       setIsResizing(false);
       setResizeDirection(null);
     };
@@ -211,8 +206,7 @@ export const useElementResize = (element: DesignElement) => {
     startPosition,
     resizeDirection, 
     element, 
-    updateElementWithoutHistory,
-    commitToHistory,
+    updateElement,
     originalAspectRatio
   ]);
 
