@@ -1,10 +1,11 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
 import { Loader2 } from "lucide-react";
-import { processLibraryImage } from "@/utils/imageUploader";
-import { toast } from "sonner";
+import { 
+  getInitialLibraryImageData, 
+  processLibraryImageInBackground 
+} from "@/utils/libraryImageProcessor";
 
 interface LibraryImage {
   id: string;
@@ -13,7 +14,7 @@ interface LibraryImage {
 }
 
 export const LibraryView = ({ onClose }: { onClose: () => void }) => {
-  const { addElement, canvasRef } = useDesignState();
+  const { addElement, updateElement, canvasRef } = useDesignState();
   
   const { data: images, isLoading } = useQuery({
     queryKey: ['library-images'],
@@ -29,8 +30,6 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
   });
   
   const handleImageClick = async (image: LibraryImage) => {
-    const loadingToast = toast.loading("Processing image...");
-    
     try {
       // Get canvas dimensions if available
       const canvasDimensions = canvasRef ? {
@@ -38,26 +37,30 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
         height: canvasRef.clientHeight
       } : undefined;
       
-      // Process the library image
-      const processedImage = await processLibraryImage(
+      // Get initial image data for immediate display
+      const initialData = await getInitialLibraryImageData(
         image.image_path,
         canvasDimensions?.width,
         canvasDimensions?.height
       );
       
-      // Create new image element with the processed library image
-      addElement('image', {
-        ...processedImage,
+      // Create and add the element immediately
+      const newElement = addElement('image', {
+        ...initialData,
+        src: image.image_path,
         name: image.name
       });
       
-      toast.dismiss(loadingToast);
-      toast.success("Image added to canvas");
+      // Process the image in the background
+      processLibraryImageInBackground(
+        image.image_path,
+        newElement,
+        (updates) => updateElement(newElement.id, updates)
+      );
+      
       onClose();
     } catch (error) {
       console.error('Error processing library image:', error);
-      toast.dismiss(loadingToast);
-      toast.error("Failed to process image");
     }
   };
   
