@@ -506,12 +506,6 @@ export const processLibraryImage = async (
         const width = img.naturalWidth;
         const height = img.naturalHeight;
         
-        // Convert to WebP/JPEG with compression
-        const { dataUrl: compressedDataUrl } = await compressImageToWebP(imageUrl);
-        
-        // Create thumbnail
-        const thumbnailDataUrl = await createThumbnail(compressedDataUrl);
-        
         // Calculate appropriate size based on canvas dimensions
         const appropriateSize = calculateAppropriateImageSize(
           width,
@@ -520,36 +514,29 @@ export const processLibraryImage = async (
           canvasHeight || window.innerHeight * 0.7
         );
         
-        // Generate unique cache key
-        const cacheKey = `lib_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-        
-        // Store in memory cache and IndexedDB
-        memoryCache.set(cacheKey, compressedDataUrl);
-        memoryCache.set(`${cacheKey}_thumbnail`, thumbnailDataUrl, true);
-        
-        // Save to IndexedDB
-        await saveImageToStorage(
-          cacheKey,
-          compressedDataUrl,
-          thumbnailDataUrl,
-          {
-            cacheKey,
-            originalSize: { width, height }
-          }
-        );
-        
-        resolve({
-          src: imageUrl,
-          dataUrl: compressedDataUrl,
-          thumbnailDataUrl,
-          cacheKey,
-          size: appropriateSize,
-          originalSize: {
-            width,
-            height
-          }
+        // Create thumbnail in background
+        createThumbnail(imageUrl).then(thumbnailDataUrl => {
+          resolve({
+            src: imageUrl,
+            thumbnailDataUrl,
+            size: appropriateSize,
+            originalSize: {
+              width,
+              height
+            }
+          });
+        }).catch(error => {
+          console.error('Thumbnail creation failed:', error);
+          // Still resolve with main image data even if thumbnail fails
+          resolve({
+            src: imageUrl,
+            size: appropriateSize,
+            originalSize: {
+              width,
+              height
+            }
+          });
         });
-        
       } catch (error) {
         console.error('Error processing library image:', error);
         reject(error);
