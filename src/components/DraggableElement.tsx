@@ -24,11 +24,7 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader";
-import { Zap } from 'lucide-react';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { Button } from "@/components/ui/button";
-import ElementProperties from "./properties/ElementProperties";
+import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -65,7 +61,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const [combinationPuzzleModal, setCombinationPuzzleModal] = useState(false);
   const [combinationMessage, setCombinationMessage] = useState('');
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [showInteractionDialog, setShowInteractionDialog] = useState(false);
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -631,9 +626,6 @@ const DraggableElement = ({ element, isActive, children }: {
     }
   }
 
-  const showZapButton = isActive && isGameMode === false && isInteractiveMode && !element.isHidden && 
-    !puzzleElements.includes(element.type) && element.type !== 'background';
-
   return (
     <>
       {isGameMode ? (
@@ -669,26 +661,6 @@ const DraggableElement = ({ element, isActive, children }: {
         </ContextMenu>
       )}
 
-      {showZapButton && (
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                size="icon"
-                variant="ghost"
-                className="absolute -top-10 left-1/2 transform -translate-x-1/2 z-50 bg-white hover:bg-white/90 shadow-md"
-                onClick={() => setShowInteractionDialog(true)}
-              >
-                <Zap className="h-4 w-4 text-canvas-purple" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>{language === 'en' ? 'Element Settings' : 'הגדרות אלמנט'}</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-      )}
-
       {!isGameMode && (
         <ElementControls
           isActive={isActive}
@@ -699,16 +671,7 @@ const DraggableElement = ({ element, isActive, children }: {
           showControls={showControls && isActive && !element.isHidden}
         />
       )}
-
-      {showZapButton && (
-        <ElementProperties 
-          element={element} 
-          isInteractiveMode={true} 
-          isOpen={showInteractionDialog}
-          onOpenChange={setShowInteractionDialog}
-        />
-      )}
-
+      
       {interactionType === 'sound' && element.interaction?.soundUrl && (
         <audio 
           ref={audioRef}
