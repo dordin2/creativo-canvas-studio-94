@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, Image, X } from "lucide-react";
+import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, Image, X, Palette } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { processImageUpload } from "@/utils/imageUploader";
@@ -127,6 +127,29 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     }
   };
 
+  const solidColors = [
+    { color: '#F1F0FB', label: language === 'en' ? 'Soft Gray' : 'אפור בהיר' },
+    { color: '#FEF7CD', label: language === 'en' ? 'Soft Yellow' : 'צהוב בהיר' },
+    { color: '#E5DEFF', label: language === 'en' ? 'Soft Purple' : 'סגול בהיר' },
+    { color: '#D3E4FD', label: language === 'en' ? 'Soft Blue' : 'כחול בהיר' },
+    { color: '#FFDEE2', label: language === 'en' ? 'Soft Pink' : 'ורוד בהיר' },
+    { color: '#FDE1D3', label: language === 'en' ? 'Soft Peach' : 'אפרסק בהיר' },
+    { color: '#F2FCE2', label: language === 'en' ? 'Soft Green' : 'ירוק בהיר' },
+    { color: '#FFFFFF', label: language === 'en' ? 'Pure White' : 'לבן' },
+  ];
+
+  const gradients = [
+    { gradient: 'linear-gradient(to right, #ffc3a0 0%, #ffafbd 100%)', label: language === 'en' ? 'Peach Sunset' : 'שקיעת אפרסק' },
+    { gradient: 'linear-gradient(to top, #e6b980 0%, #eacda3 100%)', label: language === 'en' ? 'Golden Hour' : 'שעת זהב' },
+    { gradient: 'linear-gradient(to right, #243949 0%, #517fa4 100%)', label: language === 'en' ? 'Ocean Blue' : 'כחול אוקיינוס' },
+    { gradient: 'linear-gradient(108deg, rgba(223,234,247,1) 11.2%, rgba(244,248,252,1) 91.1%)', label: language === 'en' ? 'Soft Sky' : 'שמיים בהירים' },
+  ];
+
+  const handleBackgroundClick = (style: any) => {
+    addElement('background', style);
+    onOpenChange(false);
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-[800px] w-[800px] max-h-[800px] h-[800px] p-0 gap-0 overflow-hidden">
@@ -161,6 +184,9 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsTrigger>
                 <TabsTrigger value="media" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Media' : 'מדיה'}
+                </TabsTrigger>
+                <TabsTrigger value="backgrounds" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
+                  {language === 'en' ? 'Backgrounds' : 'רקעים'}
                 </TabsTrigger>
                 <TabsTrigger value="library" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Library' : 'ספרייה'}
@@ -242,6 +268,48 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                         <Image className="h-8 w-8" />
                         <span>{language === 'en' ? 'Upload Image' : 'העלאת תמונה'}</span>
                       </Button>
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="backgrounds" className="m-0">
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">
+                          {language === 'en' ? 'Solid Colors' : 'צבעים אחידים'}
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          {solidColors.map((item) => (
+                            <Button
+                              key={item.color}
+                              variant="outline"
+                              className="h-24 flex flex-col items-center justify-center gap-2 hover:opacity-90"
+                              style={{ backgroundColor: item.color }}
+                              onClick={() => handleBackgroundClick({ color: item.color })}
+                            >
+                              <span className="text-sm text-gray-600">{item.label}</span>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div>
+                        <h3 className="text-sm font-medium mb-3">
+                          {language === 'en' ? 'Gradients' : 'גרדיאנטים'}
+                        </h3>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                          {gradients.map((item) => (
+                            <Button
+                              key={item.gradient}
+                              variant="outline"
+                              className="h-24 flex flex-col items-center justify-center gap-2 hover:opacity-90"
+                              style={{ background: item.gradient }}
+                              onClick={() => handleBackgroundClick({ gradient: item.gradient })}
+                            >
+                              <span className="text-sm text-white text-shadow">{item.label}</span>
+                            </Button>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </TabsContent>
 
