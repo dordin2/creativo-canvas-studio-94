@@ -3,7 +3,6 @@ import TextProperties from "./TextProperties";
 import ShapeProperties from "./ShapeProperties";
 import ImageProperties from "./ImageProperties";
 import LayerProperties from "./LayerProperties";
-import PositionProperties from "./PositionProperties";
 import PuzzleProperties from "./PuzzleProperties";
 import SequencePuzzleProperties from "./SequencePuzzleProperties";
 import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
@@ -59,8 +58,6 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
   // Common properties that appear in both tabs and non-tabs view
   const renderCommonProperties = () => (
     <>
-      <PositionProperties element={element} />
-      
       {textElements.includes(element.type) && <TextProperties element={element} />}
       
       {shapeElements.includes(element.type) && <ShapeProperties element={element} />}
