@@ -389,10 +389,8 @@ const Editor = () => {
             </div>
           )}
         </div>
-        {!isGameMode && isInteractiveMode && (
-          <div className="flex-shrink-0 w-80 z-20 relative">
-            <Properties />
-          </div>
+        {!isGameMode && (
+          <Properties />
         )}
       </div>
       {isGameMode && (
