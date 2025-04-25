@@ -47,21 +47,21 @@ const isValidCanvasState = (canvases: Canvas[]): boolean => {
 
 export const DesignProvider = ({ 
   children, 
-  initialState = {} 
+  initialState: providedInitialState = {} 
 }: DesignProviderProps) => {
   const [canvases, setCanvases] = useState<Canvas[]>(
-    initialState.canvases || [
+    providedInitialState.canvases || [
       { id: generateId(), name: "Canvas 1", elements: [] }
     ]
   );
   const [activeCanvasIndex, setActiveCanvasIndex] = useState<number>(
-    initialState.activeCanvasIndex !== undefined ? initialState.activeCanvasIndex : 0
+    providedInitialState.activeCanvasIndex !== undefined ? providedInitialState.activeCanvasIndex : 0
   );
   const [activeElement, setActiveElement] = useState<DesignElement | null>(null);
   const [canvasRef, setCanvasRefState] = useState<HTMLDivElement | null>(null);
   const [history, setHistory] = useState<Canvas[][]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
-  const [isGameMode, setIsGameMode] = useState<boolean>(initialState.isGameMode || false);
+  const [isGameMode, setIsGameMode] = useState<boolean>(providedInitialState.isGameMode || false);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [showInventory, setShowInventory] = useState<boolean>(false);
   const [draggedInventoryItem, setDraggedInventoryItem] = useState<DesignElement | null>(null);
@@ -72,6 +72,19 @@ export const DesignProvider = ({
   const [initialLoadComplete, setInitialLoadComplete] = useState<boolean>(false);
   const [initialState, setInitialState] = useState<Canvas[] | null>(null);
   const { t } = useLanguage();
+  
+  const [savedInitialState, setSavedInitialState] = useState<Canvas[] | null>(null);
+  
+  const resetToInitialState = useCallback(() => {
+    if (savedInitialState) {
+      setCanvases(JSON.parse(JSON.stringify(savedInitialState)));
+      setActiveElement(null);
+      toast.info(t('toast.info.reachedInitialState') || "Reset to initial state");
+      
+      setHistory([JSON.parse(JSON.stringify(savedInitialState))]);
+      setHistoryIndex(0);
+    }
+  }, [savedInitialState, t]);
   
   useEffect(() => {
     if (canvases.length > 0 && !initialState) {
@@ -249,18 +262,25 @@ export const DesignProvider = ({
     return canvas.elements.find(el => el.id === elementId) || null;
   };
   
+  useEffect(() => {
+    if (!initialLoadComplete && canvases.length > 0) {
+      setSavedInitialState(JSON.parse(JSON.stringify(canvases)));
+      addToHistory(canvases, true);
+      setInitialLoadComplete(true);
+    }
+  }, [canvases, initialLoadComplete, addToHistory]);
+
   const addToHistory = useCallback((newCanvases: Canvas[], isInitialLoad: boolean = false) => {
     if (!isValidCanvasState(newCanvases)) {
       console.error("Invalid canvas state detected, not adding to history");
       return;
     }
-
+    
     if (isInitialLoad) {
       const initialHistory = [JSON.parse(JSON.stringify(newCanvases))];
       setHistory(initialHistory);
       setHistoryIndex(0);
-      setInitialLoadComplete(true);
-      setInitialState(JSON.parse(JSON.stringify(newCanvases)));
+      setSavedInitialState(JSON.parse(JSON.stringify(newCanvases)));
     } else {
       const currentHistoryState = history[historyIndex];
       const isStateDifferent = !currentHistoryState || 
@@ -678,15 +698,14 @@ export const DesignProvider = ({
           toast.success(t('toast.success.undo'));
         } else {
           resetToInitialState();
-          toast.info(t('toast.info.reachedInitialState') || "Reached initial state");
         }
       } else {
-        if (initialState) {
-          setCanvases(JSON.parse(JSON.stringify(initialState)));
+        if (savedInitialState) {
+          setCanvases(JSON.parse(JSON.stringify(savedInitialState)));
           setActiveElement(null);
           toast.warning(t('toast.warning.invalidStateRecovery') || "Recovered from invalid state");
           
-          setHistory([JSON.parse(JSON.stringify(initialState))]);
+          setHistory([JSON.parse(JSON.stringify(savedInitialState))]);
           setHistoryIndex(0);
         } else {
           toast.error(t('toast.error.cannotUndo') || "Cannot undo: history state is invalid");
@@ -695,7 +714,7 @@ export const DesignProvider = ({
     } else {
       toast.info(t('toast.info.noMoreUndo'));
     }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t, initialState, resetToInitialState]);
+  }, [historyIndex, history, activeElement, activeCanvasIndex, t, savedInitialState, resetToInitialState]);
   
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
