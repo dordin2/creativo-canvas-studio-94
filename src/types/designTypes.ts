@@ -184,6 +184,7 @@ export interface DesignContextType {
   handleItemCombination: (inventoryItemId: string, targetElementId: string) => void;
   setCanvases: (canvases: Canvas[]) => void;
   resetToInitialState: () => void;
+  projectLoadingComplete: () => void;
 }
 
 export const generateId = (): string => {

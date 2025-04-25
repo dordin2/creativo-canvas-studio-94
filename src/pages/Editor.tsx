@@ -35,7 +35,8 @@ const Editor = () => {
     activeCanvasIndex, 
     setCanvases: updateCanvases,
     activeElement,
-    resetToInitialState
+    resetToInitialState,
+    projectLoadingComplete
   } = useDesignState();
   const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
   const isMobile = useIsMobile();
@@ -93,21 +94,34 @@ const Editor = () => {
                           );
           
           if (isValid) {
-            updateCanvases(JSON.parse(JSON.stringify(canvasData.canvases)));
+            const processedCanvases = JSON.parse(JSON.stringify(canvasData.canvases));
+            updateCanvases(processedCanvases);
             console.log("Canvas data loaded successfully with", 
               canvasData.canvases.length, "canvases");
+              
+            // Signal that project loading is now complete
+            setTimeout(() => {
+              projectLoadingComplete();
+            }, 100);
           } else {
             console.error("Invalid canvas data structure:", jsonData);
             toast.error('Invalid project data format');
             updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
                             name: "Canvas 1", elements: [] }]);
+            projectLoadingComplete();
           }
         } else {
           console.error("Invalid canvas data structure:", jsonData);
           toast.error('Invalid project data format');
           updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
                           name: "Canvas 1", elements: [] }]);
+          projectLoadingComplete();
         }
+      } else {
+        // No data found, initialize with empty canvas
+        updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
+                        name: "Canvas 1", elements: [] }]);
+        projectLoadingComplete();
       }
       
     } catch (error) {
@@ -115,6 +129,7 @@ const Editor = () => {
       toast.error('Failed to load project data');
       updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
                       name: "Canvas 1", elements: [] }]);
+      projectLoadingComplete();
     } finally {
       setIsLoading(false);
     }

@@ -72,6 +72,7 @@ export const DesignProvider = ({
   const [initialLoadComplete, setInitialLoadComplete] = useState<boolean>(false);
   const [initialState, setInitialState] = useState<Canvas[] | null>(null);
   const [savedInitialState, setSavedInitialState] = useState<Canvas[] | null>(null);
+  const [projectLoaded, setProjectLoaded] = useState<boolean>(false);
   const { t } = useLanguage();
   
   const addToHistory = useCallback((newCanvases: Canvas[], isInitialLoad: boolean = false) => {
@@ -85,6 +86,7 @@ export const DesignProvider = ({
       setHistory(initialHistory);
       setHistoryIndex(0);
       setSavedInitialState(JSON.parse(JSON.stringify(newCanvases)));
+      console.log("Initial history created with state:", newCanvases.length, "canvases");
     } else {
       const currentHistoryState = history[historyIndex];
       const isStateDifferent = !currentHistoryState || 
@@ -96,33 +98,60 @@ export const DesignProvider = ({
         newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
         setHistory(newHistory);
         setHistoryIndex(newHistoryIndex);
+        console.log("Added to history at index:", newHistoryIndex);
       }
     }
   }, [history, historyIndex]);
   
   const resetToInitialState = useCallback(() => {
+    console.log("Attempting to reset to initial state");
+    console.log("Saved initial state exists:", savedInitialState !== null);
+    console.log("History length:", history.length);
+    
     const fallback = history[0] ? JSON.parse(JSON.stringify(history[0])) : null;
+    console.log("Fallback state exists:", fallback !== null);
 
     if (savedInitialState || fallback) {
-      setCanvases(savedInitialState ?? fallback);
+      // Deep clone to avoid reference issues
+      const stateToUse = savedInitialState 
+        ? JSON.parse(JSON.stringify(savedInitialState))
+        : JSON.parse(JSON.stringify(fallback));
+      
+      console.log("Resetting to state with", stateToUse.length, "canvases");
+      setCanvases(stateToUse);
       setActiveElement(null);
       toast.info(t('toast.info.reachedInitialState'));
-      setHistory([savedInitialState ?? fallback]);
+      
+      // Reset history to just contain this initial state
+      setHistory([stateToUse]);
       setHistoryIndex(0);
+    } else {
+      console.error("Could not find any valid initial state to reset to");
+      toast.error("Could not restore initial state");
     }
   }, [savedInitialState, history, t]);
   
+  const validateStateBeforeUndo = useCallback((state: Canvas[] | undefined): boolean => {
+    if (!state) return false;
+    return isValidCanvasState(state);
+  }, []);
+  
   const undo = useCallback(() => {
+    console.log("Undo called. Current history index:", historyIndex, "History length:", history.length);
+    
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
       const previousState = history[newIndex];
       
-      if (previousState && isValidCanvasState(previousState)) {
-        setCanvases(previousState);
+      if (previousState && validateStateBeforeUndo(previousState)) {
+        console.log("Valid previous state found at index:", newIndex);
+        // Deep clone to avoid reference issues
+        const previousStateClone = JSON.parse(JSON.stringify(previousState));
+        setCanvases(previousStateClone);
         setHistoryIndex(newIndex);
         
         if (activeElement) {
-          const activeCanvas = previousState[activeCanvasIndex];
+          const activeCanvas = previousStateClone[activeCanvasIndex];
           if (activeCanvas) {
             const elementStillExists = activeCanvas.elements.some(e => e.id === activeElement.id);
             if (!elementStillExists) {
@@ -144,12 +173,13 @@ export const DesignProvider = ({
           toast.success(t('toast.success.undo'));
         }
       } else {
+        console.error("Invalid previous state, attempting to reset to initial state");
         resetToInitialState();
       }
     } else {
       toast.info(t('toast.info.noMoreUndo') || "No more undo available");
     }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t, resetToInitialState]);
+  }, [historyIndex, history, activeElement, activeCanvasIndex, t, resetToInitialState, validateStateBeforeUndo]);
   
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
@@ -758,6 +788,30 @@ export const DesignProvider = ({
     }
   }, [canvases, initialState, history, initialLoadComplete, t]);
   
+  useEffect(() => {
+    if (projectLoaded && canvases.length > 0 && !initialLoadComplete) {
+      console.log("Project loaded, initializing history and saving initial state");
+      const initialCanvasState = JSON.parse(JSON.stringify(canvases));
+      setSavedInitialState(initialCanvasState);
+      addToHistory(canvases, true);
+      setInitialLoadComplete(true);
+    }
+  }, [projectLoaded, canvases, initialLoadComplete, addToHistory]);
+  
+  useEffect(() => {
+    if (!initialLoadComplete && canvases.length > 0 && savedInitialState === null && projectLoaded) {
+      console.log("Initializing history with loaded state for the first time");
+      setSavedInitialState(JSON.parse(JSON.stringify(canvases)));
+      addToHistory(canvases, true);
+      setInitialLoadComplete(true);
+    }
+  }, [canvases, initialLoadComplete, addToHistory, savedInitialState, projectLoaded]);
+  
+  const projectLoadingComplete = () => {
+    console.log("Project loading completed");
+    setProjectLoaded(true);
+  };
+  
   const value = {
     canvases,
     activeCanvasIndex,
@@ -796,7 +850,8 @@ export const DesignProvider = ({
     setDraggedInventoryItem,
     handleItemCombination,
     setCanvases,
-    resetToInitialState
+    resetToInitialState,
+    projectLoadingComplete
   };
   
   return (
