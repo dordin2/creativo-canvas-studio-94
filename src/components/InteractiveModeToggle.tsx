@@ -1,7 +1,8 @@
 
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
-import { Button } from "@/components/ui/button";
-import { Pencil, Zap } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Eye } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const InteractiveModeToggle = () => {
@@ -11,18 +12,17 @@ const InteractiveModeToggle = () => {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleInteractiveMode}
-            className={isInteractiveMode ? 'text-canvas-purple' : 'text-gray-500 hover:text-gray-700'}
-          >
-            {isInteractiveMode ? (
-              <Zap className="h-5 w-5" />
-            ) : (
-              <Pencil className="h-5 w-5" />
-            )}
-          </Button>
+          <div className="flex items-center gap-2">
+            <Eye className={`h-5 w-5 ${isInteractiveMode ? 'text-canvas-purple' : 'text-gray-500'}`} />
+            <Switch
+              id="interactive-mode"
+              checked={isInteractiveMode}
+              onCheckedChange={toggleInteractiveMode}
+            />
+            <Label htmlFor="interactive-mode" className={`text-sm font-medium cursor-pointer ${isInteractiveMode ? 'text-canvas-purple' : 'text-gray-500'}`}>
+              Interactive Mode
+            </Label>
+          </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">
           <p>

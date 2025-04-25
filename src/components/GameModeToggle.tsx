@@ -1,8 +1,9 @@
 
 import React from "react";
 import { useDesignState } from "@/context/DesignContext";
-import { Button } from "@/components/ui/button";
-import { Play } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Gamepad2 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const GameModeToggle = () => {
@@ -12,14 +13,17 @@ const GameModeToggle = () => {
     <TooltipProvider>
       <Tooltip>
         <TooltipTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={toggleGameMode}
-            className={isGameMode ? 'text-canvas-purple' : 'text-gray-500 hover:text-gray-700'}
-          >
-            <Play className="h-5 w-5" />
-          </Button>
+          <div className="flex items-center gap-2">
+            <Gamepad2 className={`h-5 w-5 ${isGameMode ? 'text-canvas-purple' : 'text-gray-500'}`} />
+            <Switch
+              id="game-mode"
+              checked={isGameMode}
+              onCheckedChange={toggleGameMode}
+            />
+            <Label htmlFor="game-mode" className={`text-sm font-medium cursor-pointer ${isGameMode ? 'text-canvas-purple' : 'text-gray-500'}`}>
+              Game Mode
+            </Label>
+          </div>
         </TooltipTrigger>
         <TooltipContent side="bottom">
           <p>
