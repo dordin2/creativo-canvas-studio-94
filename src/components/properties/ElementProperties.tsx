@@ -91,25 +91,7 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
   return (
     <div className="properties-panel p-4 space-y-6">
       <h2 className="text-lg font-semibold mb-4">Properties</h2>
-      
-      {canHaveInteraction ? (
-        <Tabs defaultValue="properties">
-          <TabsList className="w-full">
-            <TabsTrigger value="properties" className="flex-1">Properties</TabsTrigger>
-            <TabsTrigger value="interaction" className="flex-1">Interaction</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="properties" className="space-y-6 pt-4">
-            {renderCommonProperties()}
-          </TabsContent>
-          
-          <TabsContent value="interaction" className="space-y-6 pt-4">
-            <InteractionProperties element={element} />
-          </TabsContent>
-        </Tabs>
-      ) : (
-        renderCommonProperties()
-      )}
+      {renderCommonProperties()}
     </div>
   );
 };
