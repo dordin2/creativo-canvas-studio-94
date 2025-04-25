@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { useDesignState } from '@/context/DesignState';
+import { useDesignState } from '@/context/DesignContext';
 import { viewportToCanvasCoordinates, getCanvasScale } from '@/utils/coordinateUtils';
-import { useInteractiveMode } from '@/context/InteractiveModeContext';
 
 interface Position {
   x: number;
@@ -10,7 +9,6 @@ interface Position {
 
 export const useDraggable = (elementId: string) => {
   const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
-  const { isInteractiveMode } = useInteractiveMode();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
@@ -209,14 +207,13 @@ export const useDraggable = (elementId: string) => {
   ]);
 
   const startDrag = (e: React.MouseEvent, initialPosition: Position) => {
-    if (isGameMode && !isInteractiveMode && isImageElement && !currentElement?.interaction?.type) {
+    if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
       e.preventDefault();
       return;
     }
 
-    if (isGameMode && !isInteractiveMode) {
+    if (isImageElement || isPuzzleElement || isSliderPuzzleElement) {
       e.preventDefault();
-      return;
     }
 
     e.stopPropagation();
