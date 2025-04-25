@@ -389,9 +389,7 @@ const Editor = () => {
             </div>
           )}
         </div>
-        {!isGameMode && (
-          <Properties />
-        )}
+        {!isGameMode && <Properties />}
       </div>
       {isGameMode && (
         <>
