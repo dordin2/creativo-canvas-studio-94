@@ -313,8 +313,7 @@
 
 .properties-panel {
   @apply h-full bg-sidebar-background text-sidebar-foreground overflow-y-auto border-l border-gray-200 shadow-sm;
-  min-width: 20rem;
-  width: 20rem;
+  width: 320px;
   flex: 0 0 auto;
   position: relative;
   z-index: 10; /* Higher z-index for properties panel */
@@ -463,4 +462,13 @@ header {
   position: relative;
   z-index: 1;
   isolation: isolate; /* Create stacking context */
+}
+
+.interactive-mode-workspace {
+  padding: 1rem;
+  background: transparent;
+}
+
+.interactive-mode-canvas-container {
+  transition: transform 0.3s ease-out, width 0.3s ease-out;
 }

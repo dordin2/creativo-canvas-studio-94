@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -381,16 +382,16 @@ const Editor = () => {
               {activeElement && !isGameMode && !isInteractiveMode && activeElement.size && (
                 <FloatingSmartSlider element={activeElement} />
               )}
-              <Canvas />
+              <Canvas isFullscreen={false} isInteractiveMode={isInteractiveMode} />
             </>
           ) : (
             <div className="fixed-canvas-container">
-              <Canvas isFullscreen={true} />
+              <Canvas isFullscreen={true} isMobileView={isMobile} />
             </div>
           )}
         </div>
         {!isGameMode && isInteractiveMode && (
-          <div className="flex-shrink-0 w-80 z-20 relative">
+          <div className="properties-panel flex-shrink-0">
             <Properties />
           </div>
         )}
