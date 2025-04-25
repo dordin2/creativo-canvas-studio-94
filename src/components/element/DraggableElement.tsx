@@ -1,0 +1,471 @@
+
+import { useRef, useState, useEffect } from "react";
+import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { useDraggable } from "@/hooks/useDraggable";
+import { useElementResize } from "@/hooks/useElementResize";
+import { useElementRotation } from "@/hooks/useElementRotation";
+import { getElementStyle, getRotation } from "@/utils/elementStyles";
+import ElementControls from "./ElementControls";
+import EditableText from "./EditableText";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
+import { Copy, Trash2, Eye, EyeOff, Zap } from "lucide-react";
+import { toast } from "sonner";
+import { prepareElementForDuplication } from "@/utils/element/elementUtils";
+import { getImageFromCache } from "@/utils/image/imageUploader";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
+import { useElementInteraction } from "@/hooks/element/useElementInteraction";
+import { useInventoryInteraction } from "@/hooks/inventory/useInventoryInteraction";
+import ElementContent from "./ElementContent";
+
+interface DraggableElementProps {
+  element: DesignElement;
+  isActive: boolean;
+  children: React.ReactNode;
+}
+
+const DraggableElement = ({ 
+  element, 
+  isActive, 
+  children 
+}: DraggableElementProps) => {
+  const { 
+    updateElement, 
+    updateElementWithoutHistory,
+    setActiveElement, 
+    removeElement, 
+    addElement, 
+    isGameMode, 
+    inventoryItems,
+    draggedInventoryItem
+  } = useDesignState();
+  
+  const { isInteractiveMode } = useInteractiveMode();
+  
+  const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
+  const elementRef = useRef<HTMLDivElement>(null);
+  const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [showControls, setShowControls] = useState(false);
+  const [isDropTarget, setIsDropTarget] = useState(false);
+  const [imageLoaded, setImageLoaded] = useState(false);
+
+  const { isResizing, handleResizeStart } = useElementResize(element);
+  const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
+  
+  const { 
+    showMessageModal,
+    setShowMessageModal,
+    showPuzzleModal,
+    setShowPuzzleModal,
+    combinationPuzzleModal,
+    setCombinationPuzzleModal,
+    combinationMessage,
+    setCombinationMessage,
+    audioRef,
+    handleInteraction,
+    renderPuzzleModal,
+    renderCombinationPuzzleModal,
+    hasInteraction,
+    interactionType,
+    showInteractionIndicator,
+    indicatorStyles
+  } = useElementInteraction(element);
+  
+  const {
+    handleItemCombination,
+    handleCombinationResult,
+    isInInventory
+  } = useInventoryInteraction(element);
+
+  const textElementTypes = ['heading', 'subheading', 'paragraph'];
+  const isSequencePuzzleElement = element.type === 'sequencePuzzle';
+  const isPuzzleElement = element.type === 'puzzle';
+  const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
+  const isSliderPuzzleElement = element.type === 'sliderPuzzle';
+  const isImageElement = element.type === 'image';
+  
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    e.stopPropagation();
+    
+    if (isImageElement && isGameMode) {
+      e.preventDefault();
+      
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
+    }
+    
+    if (isGameMode) {
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
+    }
+    
+    setActiveElement(element);
+    
+    if (isEditing) return;
+    
+    if (!isSequencePuzzleElement) {
+      startDrag(e, element.position);
+      setIsDragging(true);
+    }
+    
+    setStartPos({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleTextDoubleClick = (e: React.MouseEvent) => {
+    if (isGameMode) {
+      return;
+    }
+    
+    if (textElementTypes.includes(element.type)) {
+      e.stopPropagation();
+      setIsEditing(true);
+      setTimeout(() => {
+        if (textInputRef.current) {
+          textInputRef.current.focus();
+        }
+      }, 10);
+    } else if (isSequencePuzzleElement) {
+      startDrag(e, element.position);
+      setIsDragging(true);
+    } else if (hasInteraction && !isEditing && !isDragging) {
+      e.stopPropagation();
+      handleInteraction();
+    }
+  };
+
+  const handlePuzzleClick = (e: React.MouseEvent) => {
+    if (isGameMode) {
+      e.stopPropagation();
+      handleInteraction();
+      return;
+    }
+    
+    if (isPuzzleElement && !isDragging) {
+      e.stopPropagation();
+      // The modal is now handled directly in the PuzzleElement component
+    }
+  };
+
+  const handleDuplicate = () => {
+    console.log("DraggableElement - Original element to duplicate:", element);
+    
+    // Use the utility function to prepare the element for duplication
+    const duplicateProps = prepareElementForDuplication(element);
+    
+    console.log("DraggableElement - Duplicate props before adding:", duplicateProps);
+    
+    // Add the duplicated element
+    addElement(element.type, duplicateProps);
+  };
+
+  const handleToggleVisibility = () => {
+    updateElement(element.id, {
+      isHidden: !element.isHidden
+    });
+  };
+
+  const handleDelete = () => {
+    removeElement(element.id);
+  };
+  
+  const handleZapClick = () => {
+    // This function is intentionally empty as the Zap button doesn't do anything
+    console.log("Zap button clicked - no action");
+  };
+
+  useEffect(() => {
+    const handleMouseUp = () => {
+      setIsDragging(false);
+    };
+
+    if (isDragging) {
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
+  useEffect(() => {
+    const handleMouseEnter = () => {
+      if (!isGameMode) {
+        setShowControls(true);
+      }
+    };
+
+    const handleMouseLeave = () => {
+      if (!isDragging) {
+        setShowControls(false);
+      }
+    };
+
+    const element = elementRef.current;
+    if (element) {
+      element.addEventListener('mouseenter', handleMouseEnter);
+      element.addEventListener('mouseleave', handleMouseLeave);
+    }
+
+    return () => {
+      if (element) {
+        element.removeEventListener('mouseenter', handleMouseEnter);
+        element.removeEventListener('mouseleave', handleMouseLeave);
+      }
+    };
+  }, [isDragging, isGameMode]);
+  
+  useEffect(() => {
+    const handleCustomDragOver = (e: CustomEvent) => {
+      if (!isGameMode || !draggedInventoryItem) return;
+      
+      const rect = elementRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      
+      const x = e.detail.clientX;
+      const y = e.detail.clientY;
+      
+      const isMouseOver = 
+        x >= rect.left && 
+        x <= rect.right && 
+        y >= rect.top && 
+        y <= rect.bottom;
+      
+      if (isMouseOver) {
+        if (element.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
+          setIsDropTarget(true);
+        }
+      } else {
+        setIsDropTarget(false);
+      }
+    };
+    
+    const handleCustomDrop = (e: CustomEvent) => {
+      if (!isGameMode || !draggedInventoryItem) {
+        setIsDropTarget(false);
+        return;
+      }
+      
+      const rect = elementRef.current?.getBoundingClientRect();
+      if (!rect) {
+        setIsDropTarget(false);
+        return;
+      }
+      
+      const x = e.detail.clientX;
+      const y = e.detail.clientY;
+      
+      const isDroppedOverThis = 
+        x >= rect.left && 
+        x <= rect.right && 
+        y >= rect.top && 
+        y <= rect.bottom;
+      
+      if (isDroppedOverThis) {
+        if (element.interaction?.canCombineWith?.includes(draggedInventoryItem.id)) {
+          handleCombinationResult(draggedInventoryItem.id);
+        }
+      }
+      
+      setIsDropTarget(false);
+    };
+    
+    if (isGameMode) {
+      document.addEventListener('custom-drag-over', handleCustomDragOver as EventListener);
+      document.addEventListener('custom-drop', handleCustomDrop as EventListener);
+    }
+    
+    return () => {
+      document.removeEventListener('custom-drag-over', handleCustomDragOver as EventListener);
+      document.removeEventListener('custom-drop', handleCustomDrop as EventListener);
+    };
+  }, [isGameMode, draggedInventoryItem, element.id, element.interaction?.canCombineWith, handleItemCombination]);
+
+  useEffect(() => {
+    if (showMessageModal) {
+      // Message is auto-closed in the InteractionMessageModal component
+    }
+  }, [showMessageModal]);
+
+  const elementStyle = getElementStyle(element, isDragging);
+  const rotation = getRotation(element);
+  const frameTransform = `rotate(${rotation}deg)`;
+
+  let childContent = children;
+  
+  if (textElementTypes.includes(element.type)) {
+    childContent = (
+      <EditableText
+        element={element}
+        isEditing={isEditing && !isGameMode}
+        setIsEditing={setIsEditing}
+        textInputRef={textInputRef}
+      />
+    );
+  } else if (element.type === 'image' && element.dataUrl) {
+    // Use progressive loading for image elements
+    if (element.thumbnailDataUrl && !imageLoaded) {
+      const loadMainImage = async () => {
+        if (!element.dataUrl && element.cacheKey) {
+          // Try to load the full image from cache if not already loaded
+          const cachedImage = await getImageFromCache(element.cacheKey);
+          if (cachedImage) {
+            // Update through the context
+            updateElementWithoutHistory(element.id, { dataUrl: cachedImage });
+          }
+        }
+      };
+      
+      // Start loading the full resolution image
+      loadMainImage();
+      
+      const handleImageLoad = () => {
+        setImageLoaded(true);
+      };
+      
+      childContent = (
+        <div className="relative w-full h-full">
+          {!imageLoaded && (
+            <img 
+              src={element.thumbnailDataUrl}
+              alt="Element thumbnail"
+              className="w-full h-full object-contain blur-[1px]"
+              style={{ position: 'absolute', top: 0, left: 0, transition: 'opacity 0.2s' }}
+            />
+          )}
+          <img 
+            src={element.dataUrl || element.src}
+            alt="Element"
+            className={`w-full h-full object-contain ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={handleImageLoad}
+            style={{ transition: 'opacity 0.3s' }}
+          />
+        </div>
+      );
+    }
+  }
+
+  if ((isInInventory || element.isHidden) && !isActive) {
+    return null;
+  }
+
+  const combinedStyle = {
+    ...elementStyle,
+    zIndex: element.layer,
+    transition: isDragging ? 'none' : 'transform 0.1s ease',
+    cursor: isGameMode 
+      ? (hasInteraction ? 'pointer' : 'default') 
+      : (isDragging ? 'move' : (hasInteraction ? 'pointer' : 'grab')),
+    willChange: isDragging ? 'transform' : 'auto',
+    opacity: element.isHidden ? 0 : 1,
+    position: 'absolute' as 'absolute',
+    border: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.border),
+    outline: isGameMode && isImageElement ? 'none' : (isGameMode ? (isDropTarget ? '2px dashed #8B5CF6' : 'none') : elementStyle.outline),
+    boxShadow: isGameMode && isImageElement ? 'none' : (isDropTarget ? '0 0 15px rgba(139, 92, 246, 0.5)' : elementStyle.boxShadow),
+    backgroundColor: isGameMode && isImageElement ? 'transparent' : elementStyle.backgroundColor,
+  };
+
+  const createElementContent = (ref: React.RefObject<HTMLDivElement>) => (
+    <div
+      id={`element-${element.id}`}
+      ref={ref}
+      className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
+      style={combinedStyle}
+      onMouseDown={handleMouseDown}
+      onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
+      onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
+      draggable={isGameMode && isImageElement ? false : undefined}
+    >
+      {childContent}
+      {showInteractionIndicator && (
+        <div className={indicatorStyles} title={
+          interactionType === 'canvasNavigation' 
+            ? "Click to navigate to another canvas" 
+            : interactionType === 'addToInventory'
+              ? "Click to add to inventory"
+              : interactionType === 'combinable'
+                ? "Can be combined with inventory items"
+                : ""
+        }></div>
+      )}
+    </div>
+  );
+
+  return (
+    <>
+      {isGameMode ? (
+        createElementContent(elementRef)
+      ) : (
+        <ContextMenu>
+          <ContextMenuTrigger asChild>
+            {createElementContent(elementRef)}
+          </ContextMenuTrigger>
+          <ContextMenuContent>
+            <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
+              <Copy className="h-4 w-4" />
+              <span>Duplicate</span>
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
+              {element.isHidden ? (
+                <>
+                  <Eye className="h-4 w-4" />
+                  <span>Show</span>
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-4 w-4" />
+                  <span>Hide</span>
+                </>
+              )}
+            </ContextMenuItem>
+            {isInteractiveMode && (
+              <ContextMenuItem onClick={handleZapClick} className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                <span>Lightning</span>
+              </ContextMenuItem>
+            )}
+            <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
+              <Trash2 className="h-4 w-4" />
+              <span>Delete</span>
+            </ContextMenuItem>
+          </ContextMenuContent>
+        </ContextMenu>
+      )}
+
+      {!isGameMode && (
+        <ElementControls
+          isActive={isActive}
+          element={element}
+          frameTransform={frameTransform}
+          onResizeStart={handleResizeStart}
+          onRotateStart={handleRotateStart}
+          showControls={showControls && isActive && !element.isHidden}
+        />
+      )}
+      
+      {interactionType === 'sound' && element.interaction?.soundUrl && (
+        <audio 
+          ref={audioRef}
+          src={element.interaction.soundUrl}
+          style={{ display: 'none' }}
+        />
+      )}
+      
+      {renderPuzzleModal()}
+      {renderCombinationPuzzleModal()}
+    </>
+  );
+};
+
+export default DraggableElement;
