@@ -5,11 +5,15 @@ import ElementProperties from "./properties/ElementProperties";
 import NoElementSelected from "./properties/NoElementSelected";
 
 const Properties = () => {
-  const { activeElement } = useDesignState();
+  const { activeElement, showInteractionPanel } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
   
   if (!activeElement) {
     return <NoElementSelected />;
+  }
+  
+  if (isInteractiveMode && !showInteractionPanel) {
+    return null;
   }
   
   return (

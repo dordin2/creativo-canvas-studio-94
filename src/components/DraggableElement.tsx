@@ -45,7 +45,8 @@ const DraggableElement = ({ element, isActive, children }: {
     inventoryItems,
     draggedInventoryItem,
     setDraggedInventoryItem,
-    handleItemCombination
+    handleItemCombination,
+    setShowInteractionPanel,
   } = useDesignState();
   
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
@@ -250,6 +251,11 @@ const DraggableElement = ({ element, isActive, children }: {
     
     // Trigger the actual item combination in the DesignContext
     handleItemCombination(draggedItemId, element.id);
+  };
+
+  const handleZapClick = () => {
+    setActiveElement(element);
+    setShowInteractionPanel(true);
   };
 
   useEffect(() => {
@@ -639,7 +645,7 @@ const DraggableElement = ({ element, isActive, children }: {
           </ContextMenuTrigger>
           <ContextMenuContent>
             {isInteractiveMode ? (
-              <ContextMenuItem className="flex items-center gap-2">
+              <ContextMenuItem onClick={handleZapClick} className="flex items-center gap-2">
                 <Zap className="h-4 w-4" />
                 <span>Zap</span>
               </ContextMenuItem>
