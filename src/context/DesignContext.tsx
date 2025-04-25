@@ -54,6 +54,7 @@ export const DesignProvider = ({
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
   } | null>(null);
+  const [initialLoadComplete, setInitialLoadComplete] = useState<boolean>(false);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
@@ -226,12 +227,19 @@ export const DesignProvider = ({
     return canvas.elements.find(el => el.id === elementId) || null;
   };
   
-  const addToHistory = useCallback((newCanvases: Canvas[]) => {
-    const newHistoryIndex = historyIndex + 1;
-    const newHistory = history.slice(0, newHistoryIndex);
-    newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
-    setHistory(newHistory);
-    setHistoryIndex(newHistoryIndex);
+  const addToHistory = useCallback((newCanvases: Canvas[], isInitialLoad: boolean = false) => {
+    if (isInitialLoad) {
+      const initialHistory = [JSON.parse(JSON.stringify(newCanvases))];
+      setHistory(initialHistory);
+      setHistoryIndex(0);
+      setInitialLoadComplete(true);
+    } else {
+      const newHistoryIndex = historyIndex + 1;
+      const newHistory = history.slice(0, newHistoryIndex);
+      newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
+      setHistory(newHistory);
+      setHistoryIndex(newHistoryIndex);
+    }
   }, [history, historyIndex]);
   
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
@@ -602,27 +610,32 @@ export const DesignProvider = ({
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
       const previousState = history[newIndex];
-      setCanvases(previousState);
-      setHistoryIndex(newIndex);
       
-      if (activeElement) {
-        const activeCanvas = previousState[activeCanvasIndex];
-        if (activeCanvas) {
-          const elementStillExists = activeCanvas.elements.some(e => e.id === activeElement.id);
-          if (!elementStillExists) {
-            setActiveElement(null);
-          } else {
-            const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
-            if (updatedActiveElement) {
-              setActiveElement(updatedActiveElement);
+      if (previousState && previousState.length > 0) {
+        setCanvases(previousState);
+        setHistoryIndex(newIndex);
+        
+        if (activeElement) {
+          const activeCanvas = previousState[activeCanvasIndex];
+          if (activeCanvas) {
+            const elementStillExists = activeCanvas.elements.some(e => e.id === activeElement.id);
+            if (!elementStillExists) {
+              setActiveElement(null);
+            } else {
+              const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
+              if (updatedActiveElement) {
+                setActiveElement(updatedActiveElement);
+              }
             }
+          } else {
+            setActiveElement(null);
           }
-        } else {
-          setActiveElement(null);
         }
+        
+        toast.success(t('toast.success.undo'));
+      } else {
+        toast.info(t('toast.info.noMoreUndo'));
       }
-      
-      toast.success(t('toast.success.undo'));
     } else {
       toast.info(t('toast.info.noMoreUndo'));
     }
@@ -656,10 +669,10 @@ export const DesignProvider = ({
   }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
   useEffect(() => {
-    if (history.length === 0 && canvases.length > 0) {
-      addToHistory(canvases);
+    if (!initialLoadComplete && canvases.length > 0) {
+      addToHistory(canvases, true);
     }
-  }, [canvases, history.length, addToHistory]);
+  }, [canvases, initialLoadComplete, addToHistory]);
   
   const value = {
     canvases,
