@@ -10,9 +10,10 @@ import SliderPuzzleElement from "./element/SliderPuzzleElement";
 interface CanvasProps {
   isFullscreen?: boolean;
   isMobileView?: boolean;
+  isInteractiveMode?: boolean;
 }
 
-const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => {
+const Canvas = ({ isFullscreen = false, isMobileView = false, isInteractiveMode = false }: CanvasProps) => {
   const { 
     canvasRef, 
     setCanvasRef, 
@@ -54,6 +55,11 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           const scaleY = parentHeight / canvasHeight;
           const scale = Math.min(scaleX, scaleY);
           setZoomLevel(scale);
+        } else if (isInteractiveMode) {
+          const scaleX = (parentWidth - 40) / canvasWidth;
+          const scaleY = (parentHeight - 40) / canvasHeight;
+          const scale = Math.min(scaleX, scaleY);
+          setZoomLevel(scale);
         } else {
           const scaleX = (parentWidth - 40) / canvasWidth;
           const scaleY = (parentHeight - 40) / canvasHeight;
@@ -86,7 +92,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
       }
       window.removeEventListener("resize", handleResize);
     };
-  }, [isGameMode, isMobileView]);
+  }, [isGameMode, isMobileView, isInteractiveMode]);
   
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -410,11 +416,11 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   
   return (
     <div ref={parentRef} className="flex-1 flex flex-col h-full relative">
-      <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : 'canvas-workspace p-4'}`}>
-        <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : ''}`} style={{ 
+      <div className={`flex-1 flex items-center justify-center ${isGameMode ? 'game-mode-workspace p-0 m-0' : isInteractiveMode ? 'interactive-mode-workspace' : 'canvas-workspace p-4'}`}>
+        <div className={`canvas-container ${isGameMode ? 'game-mode-canvas-container' : isInteractiveMode ? 'interactive-mode-canvas-container' : ''}`} style={{ 
           transform: `scale(${displayZoomLevel})`, 
           transformOrigin: 'center center',
-          transition: 'transform 0.2s ease-out',
+          transition: 'transform 0.2s ease-out, width 0.3s ease-out',
           position: 'absolute',
           top: '50%',
           left: '50%',
