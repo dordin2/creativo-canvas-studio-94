@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { useDesignState } from "@/context/DesignContext";
 import { 
   InteractionType, 
   MessagePosition,
@@ -19,9 +19,7 @@ import {
   Music, 
   Puzzle, 
   Navigation, 
-  ShoppingBasket, 
-  Combine,
-  Split
+  ShoppingBasket
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PuzzleProperties from "./PuzzleProperties";
@@ -41,9 +39,9 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
   const [puzzleTab, setPuzzleTab] = useState<string>("puzzleType");
   
   const interactionConfig = element.interaction || { 
-    type: 'none',
+    type: 'none' as InteractionType,
     message: '',
-    sound: '',
+    soundUrl: '',
     puzzleType: 'puzzle',
     messagePosition: 'top' as MessagePosition,
     puzzleConfig: {

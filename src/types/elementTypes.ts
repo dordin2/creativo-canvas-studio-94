@@ -46,7 +46,7 @@ export interface DesignElement {
   style?: React.CSSProperties;
   isHidden?: boolean;
   inInventory?: boolean;
-  name?: string;
+  name: string; // Added this as required property
   
   // Image specific properties
   dataUrl?: string;
