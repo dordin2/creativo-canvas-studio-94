@@ -11,20 +11,10 @@ import SequencePuzzleElement from "./element/SequencePuzzleElement";
 import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import InteractionMessageModal from "./element/InteractionMessageModal";
-import PuzzleModal from "./element/PuzzleModal";
-import SequencePuzzleModal from "./element/SequencePuzzleModal";
-import { SliderPuzzleModal } from "./element/SliderPuzzleModal";
-import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
-import {
-  ContextMenu,
-  ContextMenuContent,
-  ContextMenuItem,
-  ContextMenuTrigger,
-} from "@/components/ui/context-menu";
-import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
-import { toast } from "sonner";
-import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
+import ElementProperties from "./properties/ElementProperties";
+import { Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -61,6 +51,8 @@ const DraggableElement = ({ element, isActive, children }: {
   const [combinationPuzzleModal, setCombinationPuzzleModal] = useState(false);
   const [combinationMessage, setCombinationMessage] = useState('');
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [showInteractionDialog, setShowInteractionDialog] = useState(false);
+  const { isInteractiveMode } = useInteractiveMode();
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -248,6 +240,11 @@ const DraggableElement = ({ element, isActive, children }: {
     
     // Trigger the actual item combination in the DesignContext
     handleItemCombination(draggedItemId, element.id);
+  };
+
+  const handleZapClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowInteractionDialog(true);
   };
 
   useEffect(() => {
@@ -699,6 +696,26 @@ const DraggableElement = ({ element, isActive, children }: {
             setCombinationMessage('');
           }}
           message={combinationMessage}
+        />
+      )}
+      
+      {isActive && isInteractiveMode && !isGameMode && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="absolute -top-10 right-0 bg-white hover:bg-white hover:text-canvas-purple hover:border-canvas-purple z-50"
+          onClick={handleZapClick}
+        >
+          <Zap className="h-4 w-4 text-canvas-purple" />
+        </Button>
+      )}
+      
+      {isInteractiveMode && (
+        <ElementProperties 
+          element={element} 
+          isInteractiveMode={isInteractiveMode}
+          isOpen={showInteractionDialog}
+          onOpenChange={setShowInteractionDialog}
         />
       )}
     </>
