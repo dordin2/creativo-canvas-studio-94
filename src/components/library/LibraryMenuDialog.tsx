@@ -20,6 +20,13 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   open,
   onOpenChange,
 }) => {
+  // Define preventZoom BEFORE useEffect to resolve the useState error
+  const preventZoom = React.useCallback((e: WheelEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+    }
+  }, []);
+
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -33,13 +40,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
       document.body.style.overflow = "";
       document.removeEventListener("wheel", preventZoom);
     };
-  }, [open]);
-
-  const preventZoom = (e: WheelEvent) => {
-    if (e.ctrlKey) {
-      e.preventDefault();
-    }
-  };
+  }, [open, preventZoom]);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
