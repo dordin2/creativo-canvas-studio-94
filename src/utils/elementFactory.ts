@@ -1,3 +1,4 @@
+
 import { ElementType, DesignElement, generateId, PuzzleType, SliderOrientation } from "@/types/designTypes";
 
 // Default positions for new elements
@@ -106,7 +107,8 @@ export const createNewElement = (
       // If props includes size, use that; otherwise, use default
       const initialSize = props?.size || { width: 200, height: 150 };
       
-      const imageElement = {
+      // Create a base image element with the required fields
+      const baseImageElement = {
         id: generateId(),
         type,
         position,
@@ -115,6 +117,10 @@ export const createNewElement = (
         style: { transform: 'rotate(0deg)' },
         layer
       };
+      
+      // Create a complete image element by casting to DesignElement
+      // This allows us to add the optional image-specific properties
+      const imageElement = baseImageElement as DesignElement;
 
       // Copy all image-specific properties if they exist in props
       if (props?.dataUrl) imageElement.dataUrl = props.dataUrl;
