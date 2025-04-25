@@ -71,9 +71,8 @@ export const DesignProvider = ({
   } | null>(null);
   const [initialLoadComplete, setInitialLoadComplete] = useState<boolean>(false);
   const [initialState, setInitialState] = useState<Canvas[] | null>(null);
-  const { t } = useLanguage();
-  
   const [savedInitialState, setSavedInitialState] = useState<Canvas[] | null>(null);
+  const { t } = useLanguage();
   
   const addToHistory = useCallback((newCanvases: Canvas[], isInitialLoad: boolean = false) => {
     if (!isValidCanvasState(newCanvases)) {
@@ -102,15 +101,16 @@ export const DesignProvider = ({
   }, [history, historyIndex]);
   
   const resetToInitialState = useCallback(() => {
-    if (savedInitialState) {
-      setCanvases(JSON.parse(JSON.stringify(savedInitialState)));
+    const fallback = history[0] ? JSON.parse(JSON.stringify(history[0])) : null;
+
+    if (savedInitialState || fallback) {
+      setCanvases(savedInitialState ?? fallback);
       setActiveElement(null);
-      toast.info(t('toast.info.reachedInitialState') || "Reset to initial state");
-      
-      setHistory([JSON.parse(JSON.stringify(savedInitialState))]);
+      toast.info(t('toast.info.reachedInitialState'));
+      setHistory([savedInitialState ?? fallback]);
       setHistoryIndex(0);
     }
-  }, [savedInitialState, t]);
+  }, [savedInitialState, history, t]);
   
   const undo = useCallback(() => {
     if (historyIndex > 0) {
@@ -360,7 +360,7 @@ export const DesignProvider = ({
   };
   
   useEffect(() => {
-    if (!initialLoadComplete && canvases.length > 0) {
+    if (!initialLoadComplete && canvases.length > 0 && savedInitialState === null) {
       setSavedInitialState(JSON.parse(JSON.stringify(canvases)));
       addToHistory(canvases, true);
       setInitialLoadComplete(true);
