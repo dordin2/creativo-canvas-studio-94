@@ -24,10 +24,8 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
   const { user } = useAuth();
 
   React.useEffect(() => {
-    // כאשר הדיאלוג נפתח, נקבע את סגנון הגוף כדי למנוע גלילה וזום
     if (open) {
       document.body.style.overflow = "hidden";
-      // הוספת מאזין אירועים למניעת זום באמצעות מקש Ctrl + גלגלת העכבר
       document.addEventListener("wheel", preventZoom, { passive: false });
     } else {
       document.body.style.overflow = "";
@@ -40,12 +38,13 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     };
   }, [open]);
 
-  // פונקציה למניעת זום באמצעות גלגלת העכבר בשילוב עם מקש Ctrl
   const preventZoom = (e: WheelEvent) => {
     if (e.ctrlKey) {
       e.preventDefault();
     }
   };
+
+  if (!user) return null;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -54,7 +53,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
           <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-50">
             <DialogHeader className="flex flex-row items-center gap-4 w-full">
               <DialogTitle className="text-xl sm:text-2xl text-canvas-purple font-bold">
-                הוספת אלמנט - תפריט הספרייה
+                ניהול ספריית האלמנטים
               </DialogTitle>
             </DialogHeader>
             <DialogClose asChild>
