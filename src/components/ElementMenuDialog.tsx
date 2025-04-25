@@ -13,6 +13,7 @@ import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizonta
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
 import { processImageUpload } from "@/utils/imageUploader";
+import { LibraryView } from "./library/LibraryView";
 
 interface ElementMenuDialogProps {
   open: boolean;
@@ -160,6 +161,9 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 <TabsTrigger value="media" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Media' : 'מדיה'}
                 </TabsTrigger>
+                <TabsTrigger value="library" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
+                  {language === 'en' ? 'Library' : 'ספרייה'}
+                </TabsTrigger>
               </TabsList>
 
               <input
@@ -235,6 +239,10 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                       <span>{language === 'en' ? 'Upload Image' : 'העלאת תמונה'}</span>
                     </Button>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="library" className="m-0">
+                  <LibraryView onClose={() => onOpenChange(false)} />
                 </TabsContent>
               </div>
             </Tabs>
