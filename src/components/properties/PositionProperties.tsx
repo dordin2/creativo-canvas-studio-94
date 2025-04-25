@@ -29,28 +29,6 @@ const PositionProperties = ({
     });
   };
   
-  const handleWidthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!element.size) return;
-    
-    updateElement(element.id, {
-      size: {
-        ...element.size,
-        width: Math.round(Number(e.target.value))
-      }
-    });
-  };
-  
-  const handleHeightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!element.size) return;
-    
-    updateElement(element.id, {
-      size: {
-        ...element.size,
-        height: Math.round(Number(e.target.value))
-      }
-    });
-  };
-  
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
@@ -73,29 +51,6 @@ const PositionProperties = ({
           />
         </div>
       </div>
-      
-      {element.size && (
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          <div>
-            <Label htmlFor="size-width">Width</Label>
-            <Input
-              id="size-width"
-              type="number"
-              value={Math.round(element.size.width)}
-              onChange={handleWidthChange}
-            />
-          </div>
-          <div>
-            <Label htmlFor="size-height">Height</Label>
-            <Input
-              id="size-height"
-              type="number"
-              value={Math.round(element.size.height)}
-              onChange={handleHeightChange}
-            />
-          </div>
-        </div>
-      )}
     </div>
   );
 };
