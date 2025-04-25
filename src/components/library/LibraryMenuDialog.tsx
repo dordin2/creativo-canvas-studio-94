@@ -8,7 +8,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { X } from "lucide-react";
-import { LibraryView } from "./LibraryView";
+import { AdminLibraryView } from "./AdminLibraryView";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -61,7 +61,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            <LibraryView onClose={() => onOpenChange(false)} />
+            <AdminLibraryView onClose={() => onOpenChange(false)} />
           </div>
         </div>
       </DialogContent>
