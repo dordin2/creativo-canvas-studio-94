@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useRef } from "react";
 import {
   Dialog,
   DialogContent,
@@ -13,6 +12,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, Image, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import { processImageUpload } from "@/utils/imageUploader";
 
 interface ElementMenuDialogProps {
   open: boolean;
@@ -25,8 +25,8 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
 }) => {
   const { addElement, handleImageUpload } = useDesignState();
   const { language } = useLanguage();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Prevent zooming on mobile when dialog is open
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -95,7 +95,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     },
     { 
       icon: MousePointerClick, 
-      label: language === 'en' ? 'Clicks' : 'קליקים', 
+      label: language === 'en' ? 'Clicks' : 'קלicks', 
       type: 'clickSequencePuzzle',
       className: 'bg-[#E5DEFF]'
     },
@@ -108,8 +108,12 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
   ];
 
   const handleElementClick = (type: string, config?: any) => {
-    addElement(type as any, config);
-    onOpenChange(false);
+    if (type === 'image') {
+      fileInputRef.current?.click();
+    } else {
+      addElement(type as any, config);
+      onOpenChange(false);
+    }
   };
 
   const handleImageUploadClick = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -157,6 +161,15 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                   {language === 'en' ? 'Media' : 'מדיה'}
                 </TabsTrigger>
               </TabsList>
+
+              <input
+                type="file"
+                id="image-upload"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleImageUploadClick}
+              />
 
               <div className="p-4">
                 <TabsContent value="shapes" className="m-0">
@@ -215,16 +228,9 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <Button
                       variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2 bg-[#D3E4FD] hover:bg-[#D3E4FD]/90 relative overflow-hidden"
-                      onClick={() => document.getElementById('image-upload')?.click()}
+                      className="h-24 flex flex-col items-center justify-center gap-2 bg-[#D3E4FD] hover:bg-[#D3E4FD]/90"
+                      onClick={() => handleElementClick('image')}
                     >
-                      <input
-                        type="file"
-                        id="image-upload"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleImageUploadClick}
-                      />
                       <Image className="h-8 w-8" />
                       <span>{language === 'en' ? 'Upload Image' : 'העלאת תמונה'}</span>
                     </Button>
