@@ -21,11 +21,10 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Copy, Trash2, Eye, EyeOff, Zap } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
-import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -51,7 +50,7 @@ const DraggableElement = ({ element, isActive, children }: {
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
-  const audioRef = useRef<HTMLAudioElement | HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
@@ -62,7 +61,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const [combinationPuzzleModal, setCombinationPuzzleModal] = useState(false);
   const [combinationMessage, setCombinationMessage] = useState('');
   const [imageLoaded, setImageLoaded] = useState(false);
-  const { isInteractiveMode } = useInteractiveMode();
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
@@ -638,36 +636,27 @@ const DraggableElement = ({ element, isActive, children }: {
             {createElementContent(elementRef)}
           </ContextMenuTrigger>
           <ContextMenuContent>
-            {!isInteractiveMode ? (
-              <>
-                <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
-                  <Copy className="h-4 w-4" />
-                  <span>Duplicate</span>
-                </ContextMenuItem>
-                <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
-                  {element.isHidden ? (
-                    <>
-                      <Eye className="h-4 w-4" />
-                      <span>Show</span>
-                    </>
-                  ) : (
-                    <>
-                      <EyeOff className="h-4 w-4" />
-                      <span>Hide</span>
-                    </>
-                  )}
-                </ContextMenuItem>
-                <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
-                  <Trash2 className="h-4 w-4" />
-                  <span>Delete</span>
-                </ContextMenuItem>
-              </>
-            ) : (
-              <ContextMenuItem className="flex items-center gap-2">
-                <Zap className="h-4 w-4" />
-                <span>Interactive</span>
-              </ContextMenuItem>
-            )}
+            <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
+              <Copy className="h-4 w-4" />
+              <span>Duplicate</span>
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
+              {element.isHidden ? (
+                <>
+                  <Eye className="h-4 w-4" />
+                  <span>Show</span>
+                </>
+              ) : (
+                <>
+                  <EyeOff className="h-4 w-4" />
+                  <span>Hide</span>
+                </>
+              )}
+            </ContextMenuItem>
+            <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
+              <Trash2 className="h-4 w-4" />
+              <span>Delete</span>
+            </ContextMenuItem>
           </ContextMenuContent>
         </ContextMenu>
       )}
