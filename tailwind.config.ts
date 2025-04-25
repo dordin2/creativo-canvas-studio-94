@@ -1,4 +1,3 @@
-
 import type { Config } from "tailwindcss";
 
 const config = {
@@ -59,7 +58,6 @@ const config = {
         "canvas-indigo": "#6366F1",
         "design-blue": "#1E40AF",
         "design-blue-light": "#60A5FA",
-        // Add sidebar colors
         sidebar: {
           background: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -108,9 +106,21 @@ const config = {
         "canvas": "0 0 0 1px rgba(0, 0, 0, 0.05), 0 2px 8px rgba(0, 0, 0, 0.08)",
         "glow": "0 0 10px rgba(139, 92, 246, 0.3)",
       },
+      textShadow: {
+        DEFAULT: '0 1px 3px rgba(0, 0, 0, 0.3)',
+      },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    plugin(function({ addUtilities }) {
+      addUtilities({
+        '.text-shadow': {
+          textShadow: '0 1px 3px rgba(0, 0, 0, 0.3)',
+        },
+      })
+    }),
+  ],
 } satisfies Config;
 
 export default config;
