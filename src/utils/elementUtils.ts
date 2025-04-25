@@ -96,6 +96,10 @@ export const cloneImageElement = (element: DesignElement): Partial<DesignElement
   return clone;
 };
 
+/**
+ * Calculates an appropriate display size for an image based on canvas dimensions
+ * Ensures images are scaled to a consistent percentage of canvas size
+ */
 export const calculateAppropriateImageSize = (
   originalWidth: number,
   originalHeight: number,
@@ -132,5 +136,3 @@ export const calculateAppropriateImageSize = (
 
   return { width: targetWidth, height: targetHeight };
 };
-
-export { calculateAppropriateImageSize };
