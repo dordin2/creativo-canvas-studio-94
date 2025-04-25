@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/drawer";
 import FloatingAddButton from "@/components/FloatingAddButton";
 import FloatingSmartSlider from "@/components/FloatingSmartSlider";
+import InteractionSettingsButton from "@/components/InteractionSettingsButton";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -382,6 +383,9 @@ const Editor = () => {
                 <FloatingSmartSlider element={activeElement} />
               )}
               <Canvas />
+              {!isInteractiveMode && activeElement && (
+                <InteractionSettingsButton />
+              )}
             </>
           ) : (
             <div className="fixed-canvas-container">
