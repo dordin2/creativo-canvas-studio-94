@@ -4,8 +4,6 @@ import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
 import { useElementRotation } from "@/hooks/useElementRotation";
 import { getElementStyle, getRotation } from "@/utils/elementStyles";
-import { useInteractiveMode } from "@/context/InteractiveModeContext";
-import { useLanguage } from "@/context/LanguageContext";
 import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
@@ -26,15 +24,13 @@ import {
 import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader";
+import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
   isActive: boolean;
   children: React.ReactNode;
 }) => {
-  const { isInteractiveMode } = useInteractiveMode();
-  const { language } = useLanguage();
   const { 
     updateElement, 
     updateElementWithoutHistory,
@@ -70,8 +66,6 @@ const DraggableElement = ({ element, isActive, children }: {
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
 
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
-  const puzzleElements = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'];
-  const shapeElements = ['rectangle', 'circle', 'triangle', 'line'];
   const isSequencePuzzleElement = element.type === 'sequencePuzzle';
   const isPuzzleElement = element.type === 'puzzle';
   const isClickSequencePuzzleElement = element.type === 'clickSequencePuzzle';
