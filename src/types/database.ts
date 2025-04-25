@@ -1,4 +1,5 @@
-import { Json } from "./supabaseTypes";
+
+import { Json } from "./designTypes";
 
 export type Database = {
   public: {

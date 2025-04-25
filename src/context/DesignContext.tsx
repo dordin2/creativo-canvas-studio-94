@@ -1,16 +1,23 @@
-import { createContext, useContext, useState, useCallback, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { toast } from "sonner";
-import { ElementType, DesignElement } from "@/types/elementTypes";
-import { DesignContextType } from "@/types/contextTypes";
-import { Canvas } from "@/types/canvasTypes";
-import { InventoryItem } from "@/types/gameTypes";
-import { generateId } from "@/utils/idGenerator";
-import { InteractionType } from "@/types/interactionTypes";
+import { 
+  ElementType, 
+  DesignElement, 
+  DesignContextType,
+  Canvas,
+  generateId,
+  InteractionType,
+  InventoryItem,
+  CombinationResultType
+} from "@/types/designTypes";
+import { 
+  getDefaultPosition, 
+  createNewElement 
+} from "@/utils/elementFactory";
+import { processImageUpload } from "@/utils/imageUploader";
+import { getHighestLayer, handleBackgroundLayer } from "@/utils/layerUtils";
 import { useLanguage } from "@/context/LanguageContext";
-import { createNewElement, prepareElementForDuplication } from "@/utils/element/elementUtils";
-import { getDefaultPosition, getHighestLayer } from "@/utils/layer/layerUtils";
-import { processImageUpload } from "@/utils/image/imageUploader";
-import { handleBackgroundLayer } from "@/utils/elementUtils";
+import { prepareElementForDuplication } from "@/utils/elementUtils";
 
 const DesignContext = createContext<DesignContextType | undefined>(undefined);
 

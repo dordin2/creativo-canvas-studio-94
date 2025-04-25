@@ -1,12 +1,13 @@
+
 import React, { useState } from "react";
-import { useDesignState } from "@/context/DesignContext";
+import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { 
   InteractionType, 
-  MessagePosition,
-  CombinationResultType 
-} from '@/types/interactionTypes';
-import { PuzzleType } from '@/types/puzzleTypes';
-import { DesignElement } from '@/types/elementTypes';
+  PuzzleType, 
+  MessagePosition, 
+  CombinationResultType,
+  ElementType
+} from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,9 @@ import {
   Music, 
   Puzzle, 
   Navigation, 
-  ShoppingBasket
+  ShoppingBasket, 
+  Combine,
+  Split
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import PuzzleProperties from "./PuzzleProperties";
@@ -39,9 +42,9 @@ const InteractionProperties: React.FC<InteractionPropertiesProps> = ({ element }
   const [puzzleTab, setPuzzleTab] = useState<string>("puzzleType");
   
   const interactionConfig = element.interaction || { 
-    type: 'none' as InteractionType,
+    type: 'none',
     message: '',
-    soundUrl: '',
+    sound: '',
     puzzleType: 'puzzle',
     messagePosition: 'top' as MessagePosition,
     puzzleConfig: {
