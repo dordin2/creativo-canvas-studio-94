@@ -207,8 +207,8 @@ export type Database = {
         Returns: boolean
       }
       make_user_admin: {
-        Args: { admin_email: string }
-        Returns: string
+        Args: Record<PropertyKey, never> | { admin_email: string }
+        Returns: undefined
       }
     }
     Enums: {
