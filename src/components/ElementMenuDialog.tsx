@@ -8,9 +8,11 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
-import { AdminGallery } from "./AdminGallery";
-import { X } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useDesignState } from "@/context/DesignContext";
+import { useLanguage } from "@/context/LanguageContext";
+import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, X } from "lucide-react";
+import { Button } from "./ui/button";
+import { cn } from "@/lib/utils";
 
 interface ElementMenuDialogProps {
   open: boolean;
@@ -21,8 +23,10 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
   open,
   onOpenChange,
 }) => {
-  const { user } = useAuth();
+  const { addElement } = useDesignState();
+  const { language } = useLanguage();
 
+  // Prevent zooming on mobile when dialog is open
   React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -44,7 +48,69 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     }
   };
 
-  if (!user) return null;
+  const shapes = [
+    { icon: Square, label: language === 'en' ? 'Rectangle' : 'מלבן', type: 'rectangle' },
+    { icon: Circle, label: language === 'en' ? 'Circle' : 'עיגול', type: 'circle' },
+    { icon: Triangle, label: language === 'en' ? 'Triangle' : 'משולש', type: 'triangle' },
+    { 
+      icon: () => <div className="w-5 h-0.5 bg-current"></div>, 
+      label: language === 'en' ? 'Line' : 'קו', 
+      type: 'line' 
+    }
+  ];
+
+  const text = [
+    { 
+      icon: Type, 
+      label: language === 'en' ? 'Heading' : 'כותרת', 
+      type: 'heading',
+      className: 'text-lg font-bold'
+    },
+    { 
+      icon: Type, 
+      label: language === 'en' ? 'Subheading' : 'כותרת משנה', 
+      type: 'subheading',
+      className: 'text-base font-semibold'
+    },
+    { 
+      icon: Type, 
+      label: language === 'en' ? 'Paragraph' : 'פסקה', 
+      type: 'paragraph',
+      className: 'text-sm'
+    }
+  ];
+
+  const puzzles = [
+    { 
+      icon: Lock, 
+      label: language === 'en' ? 'Lock' : 'מנעול', 
+      type: 'puzzle',
+      className: 'bg-[#E5DEFF]'
+    },
+    { 
+      icon: MoveHorizontal, 
+      label: language === 'en' ? 'Sequence' : 'רצף', 
+      type: 'sequencePuzzle',
+      className: 'bg-[#E5DEFF]'
+    },
+    { 
+      icon: MousePointerClick, 
+      label: language === 'en' ? 'Clicks' : 'קליקים', 
+      type: 'clickSequencePuzzle',
+      className: 'bg-[#E5DEFF]'
+    },
+    { 
+      icon: SlidersHorizontal, 
+      label: language === 'en' ? 'Slider' : 'מחוון', 
+      type: 'sliderPuzzle',
+      className: 'bg-[#E5DEFF]'
+    }
+  ];
+
+  const handleElementClick = (type: string, config?: any) => {
+    addElement(type as any, config);
+    onOpenChange(false);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -53,23 +119,87 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
           <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-50">
             <DialogHeader className="flex flex-row items-center gap-4 w-full">
               <DialogTitle className="text-xl sm:text-2xl text-canvas-purple font-bold">
-                ניהול ספריית האלמנטים
+                {language === 'en' ? 'Add New Element' : 'הוספת אלמנט חדש'}
               </DialogTitle>
             </DialogHeader>
             <DialogClose asChild>
               <button
                 className="text-gray-700 hover:text-canvas-purple transition-colors"
-                aria-label="סגור תפריט"
+                aria-label={language === 'en' ? 'Close menu' : 'סגור תפריט'}
               >
                 <X size={28} />
               </button>
             </DialogClose>
           </div>
+
           <div className="flex-1 overflow-y-auto p-4">
-            <AdminGallery />
+            {/* Shapes Section */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4 text-canvas-purple">
+                {language === 'en' ? 'Shapes' : 'צורות'}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {shapes.map((shape) => (
+                  <Button
+                    key={shape.type}
+                    variant="outline"
+                    className="h-24 flex flex-col items-center justify-center gap-2 bg-[#F1F0FB] hover:bg-[#F1F0FB]/90"
+                    onClick={() => handleElementClick(shape.type)}
+                  >
+                    <shape.icon className="h-8 w-8" />
+                    <span>{shape.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Text Section */}
+            <div className="mb-8">
+              <h3 className="text-lg font-semibold mb-4 text-canvas-purple">
+                {language === 'en' ? 'Text' : 'טקסט'}
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {text.map((item) => (
+                  <Button
+                    key={item.type}
+                    variant="outline"
+                    className="h-24 flex flex-col items-center justify-center gap-2 bg-[#FEF7CD] hover:bg-[#FEF7CD]/90"
+                    onClick={() => handleElementClick(item.type)}
+                  >
+                    <item.icon className="h-8 w-8" />
+                    <span className={item.className}>{item.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+
+            {/* Puzzles Section */}
+            <div>
+              <h3 className="text-lg font-semibold mb-4 text-canvas-purple">
+                {language === 'en' ? 'Puzzles' : 'פאזלים'}
+              </h3>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {puzzles.map((puzzle) => (
+                  <Button
+                    key={puzzle.type}
+                    variant="outline"
+                    className={cn(
+                      "h-24 flex flex-col items-center justify-center gap-2",
+                      puzzle.className,
+                      "hover:opacity-90"
+                    )}
+                    onClick={() => handleElementClick(puzzle.type)}
+                  >
+                    <puzzle.icon className="h-8 w-8" />
+                    <span>{puzzle.label}</span>
+                  </Button>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+
