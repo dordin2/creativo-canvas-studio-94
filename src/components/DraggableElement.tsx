@@ -3,6 +3,7 @@ import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
 import { useElementRotation } from "@/hooks/useElementRotation";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import { getElementStyle, getRotation } from "@/utils/elementStyles";
 import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
@@ -21,10 +22,10 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
+import { getImageFromCache } from "@/utils/imageUploader";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -64,6 +65,7 @@ const DraggableElement = ({ element, isActive, children }: {
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
+  const { isInteractiveMode } = useInteractiveMode();
 
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
   const isSequencePuzzleElement = element.type === 'sequencePuzzle';
@@ -636,27 +638,36 @@ const DraggableElement = ({ element, isActive, children }: {
             {createElementContent(elementRef)}
           </ContextMenuTrigger>
           <ContextMenuContent>
-            <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
-              <Copy className="h-4 w-4" />
-              <span>Duplicate</span>
-            </ContextMenuItem>
-            <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
-              {element.isHidden ? (
-                <>
-                  <Eye className="h-4 w-4" />
-                  <span>Show</span>
-                </>
-              ) : (
-                <>
-                  <EyeOff className="h-4 w-4" />
-                  <span>Hide</span>
-                </>
-              )}
-            </ContextMenuItem>
-            <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
-              <Trash2 className="h-4 w-4" />
-              <span>Delete</span>
-            </ContextMenuItem>
+            {isInteractiveMode ? (
+              <ContextMenuItem className="flex items-center gap-2">
+                <Zap className="h-4 w-4" />
+                <span>Zap</span>
+              </ContextMenuItem>
+            ) : (
+              <>
+                <ContextMenuItem onClick={handleDuplicate} className="flex items-center gap-2">
+                  <Copy className="h-4 w-4" />
+                  <span>Duplicate</span>
+                </ContextMenuItem>
+                <ContextMenuItem onClick={handleToggleVisibility} className="flex items-center gap-2">
+                  {element.isHidden ? (
+                    <>
+                      <Eye className="h-4 w-4" />
+                      <span>Show</span>
+                    </>
+                  ) : (
+                    <>
+                      <EyeOff className="h-4 w-4" />
+                      <span>Hide</span>
+                    </>
+                  )}
+                </ContextMenuItem>
+                <ContextMenuItem onClick={handleDelete} className="flex items-center gap-2 text-red-500">
+                  <Trash2 className="h-4 w-4" />
+                  <span>Delete</span>
+                </ContextMenuItem>
+              </>
+            )}
           </ContextMenuContent>
         </ContextMenu>
       )}
