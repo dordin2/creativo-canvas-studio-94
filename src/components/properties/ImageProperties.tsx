@@ -1,277 +1,86 @@
-import { useRef, useState, useEffect } from "react";
+
+import { useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Image as ImageIcon } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
-import { getImageFromCache, estimateDataUrlSize } from "@/utils/imageUploader";
 import { getRotation } from "@/utils/elementStyles";
-import { useImageResize } from "@/hooks/useImageResize";
+import ImageUploader from "./image/ImageUploader";
+import ImagePreview from "./image/ImagePreview";
+import ImageStats from "./image/ImageStats";
+import ImageResizer from "./image/ImageResizer";
 
-const ImageProperties = ({
-  element
-}: {
-  element: DesignElement;
-}) => {
-  const {
-    updateElement,
-    handleImageUpload,
-    isGameMode
-  } = useDesignState();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+const ImageProperties = ({ element }: { element: DesignElement }) => {
+  const { updateElement, isGameMode } = useDesignState();
   const [rotation, setRotation] = useState(getRotation(element));
-  const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
-  const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
-  const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
+  const [imageSrc, setImageSrc] = useState<string | undefined>(
+    element.dataUrl || element.src
+  );
 
-  const {
-    isDragging,
-    currentScale,
-    handleResizeStart,
-    handleResize,
-    handleResizeEnd
-  } = useImageResize(element);
-
-  // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
-    if (element.originalSize && element.size) {
-      const currentScale = Math.round((element.size.width / element.originalSize.width) * 100);
-      setScaleValue(currentScale || 100);
-    }
-    
     setRotation(getRotation(element));
-  }, [element.id, element.originalSize, element.size, element]);
+  }, [element]);
 
-  useEffect(() => {
-    // Try to recover image from cache if we have a cache key but no dataUrl
-    const loadImages = async () => {
-      if (element.cacheKey) {
-        if (!imageSrc) {
-          const cachedImage = await getImageFromCache(element.cacheKey);
-          if (cachedImage) {
-            console.log("ImageProperties - Recovered image from cache:", element.cacheKey);
-            setImageSrc(cachedImage);
-          }
-        }
-        
-        if (!thumbnailSrc) {
-          const cachedThumbnail = await getImageFromCache(element.cacheKey, true);
-          if (cachedThumbnail) {
-            console.log("ImageProperties - Recovered thumbnail from cache");
-            setThumbnailSrc(cachedThumbnail);
-          }
-        }
-      }
-    };
-    
-    loadImages();
-    
-    // Calculate image stats for display
-    if (imageSrc || element.src) {
-      const size = imageSrc ? 
-        estimateDataUrlSize(imageSrc) :
-        0;
-      
-      let sizeStr = 'Unknown';
-      if (size > 0) {
-        sizeStr = size > 1024 * 1024 ? 
-          `${(size / (1024 * 1024)).toFixed(2)}MB` : 
-          `${(size / 1024).toFixed(2)}KB`;
-      } else if (element.file) {
-        sizeStr = element.file.size > 1024 * 1024 ? 
-          `${(element.file.size / (1024 * 1024)).toFixed(2)}MB` : 
-          `${(element.file.size / 1024).toFixed(2)}KB`;
-      }
-      
-      const dimensions = element.originalSize ? 
-        `${element.originalSize.width} × ${element.originalSize.height}px` :
-        'Unknown';
-      
-      setImageStats({
-        size: sizeStr,
-        dimensions
-      });
-    }
-  }, [element.id, element.cacheKey, imageSrc, thumbnailSrc, element.src, element.file, element.originalSize]);
-
-  const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const url = e.target.value;
-    updateElement(element.id, {
-      src: url,
-      dataUrl: undefined,
-      file: undefined
-    });
-    setImageSrc(url);
-  };
-  
-  const handleImageFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    console.log("ImageProperties - Selected file:", file.name, file.type, file.size);
-    
-    // Reset the image loaded state before loading new image
-    setImageLoaded(false);
-    
-    handleImageUpload(element.id, file);
-  };
-  
-  // Directly open file dialog when clicking the button
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
-  
   const handleRotationChange = (value: number[]) => {
-    if (isGameMode) return; // No rotation in game mode
-    
+    if (isGameMode) return;
+
     const newRotation = Math.round(value[0]);
     setRotation(newRotation);
     updateElement(element.id, {
-      style: { ...element.style, transform: `rotate(${newRotation}deg)` }
+      style: { ...element.style, transform: `rotate(${newRotation}deg)` },
     });
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isGameMode) return;
-    
-    // Parse input and handle non-numeric input
+
     const inputValue = e.target.value;
     const newRotation = parseInt(inputValue) || 0;
-    
-    // Keep rotation between -360 and 360 degrees
     const boundedRotation = Math.max(-360, Math.min(360, newRotation));
-    
+
     handleRotationChange([boundedRotation]);
   };
-  
-  const handleImageLoad = () => {
-    setImageLoaded(true);
-  };
-  
-  const renderImagePreview = () => {
-    // If we have a thumbnailSrc, use it until the full image is loaded
-    const mainSrc = imageSrc || element.src;
-    
-    if (!mainSrc) {
-      return (
-        <div className="w-full h-32 flex items-center justify-center bg-muted rounded-md">
-          <ImageIcon className="w-8 h-8 text-muted-foreground" />
-          <span className="ml-2 text-sm text-muted-foreground">No image</span>
-        </div>
-      );
-    }
-    
-    return (
-      <div className="mt-4 border rounded-md p-2 bg-background relative">
-        {!imageLoaded && thumbnailSrc && (
-          <img 
-            src={thumbnailSrc} 
-            alt="Preview loading" 
-            className="w-full h-32 object-contain blur-[2px]" 
-          />
-        )}
-        <img 
-          src={mainSrc} 
-          alt="Preview" 
-          className={`w-full h-32 object-contain ${!imageLoaded ? 'opacity-0 absolute' : 'opacity-100'}`}
-          onLoad={handleImageLoad}
-          onError={(e) => {
-            console.error("Image failed to load:", mainSrc ? "src exists" : "no src");
-            e.currentTarget.src = "/placeholder.svg";
-            setImageLoaded(true);
-          }}
-        />
-      </div>
-    );
-  };
-  
-  return <div className="space-y-4">
-    <div>
-      <Label>Image</Label>
-      <div className="mt-2 flex flex-col gap-2">
-        <input type="file" ref={fileInputRef} onChange={handleImageFileSelect} accept="image/*" className="hidden" />
-        <Button variant="outline" onClick={triggerFileInput} className="w-full flex items-center justify-center gap-2">
-          <Upload className="h-4 w-4" />
-          {element.file ? "Change Image" : "Choose Image"}
-        </Button>
-        {element.file && <p className="text-xs text-muted-foreground">
-          {element.file.name}
-        </p>}
-        {element.fileMetadata && !element.file && <p className="text-xs text-muted-foreground">
-          {element.fileMetadata.name} (duplicated)
-        </p>}
-        
-        {imageStats && (
-          <div className="text-xs text-muted-foreground mt-1">
-            <div className="flex justify-between">
-              <span>Size:</span>
-              <span className="font-medium">{imageStats.size}</span>
-            </div>
-            <div className="flex justify-between">
-              <span>Dimensions:</span>
-              <span className="font-medium">{imageStats.dimensions}</span>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-      
-    <div className="mt-4">
-      <div className="flex items-center justify-between mb-2">
-        <Label>Resize Image</Label>
-        <span className="text-sm font-medium">{currentScale}%</span>
-      </div>
-      <Slider 
-        defaultValue={[100]}
-        value={[currentScale]}
-        min={10} 
-        max={200} 
-        step={1} 
-        className="mb-2"
-        onValueChange={handleResize}
-        onValueCommit={handleResizeEnd}
-        onPointerDown={() => handleResizeStart()}
-      />
-      <div className="flex items-center justify-between text-xs text-muted-foreground">
-        <span>10%</span>
-        <span>200%</span>
-      </div>
-      <div className="text-sm mt-2">
-        {element.size?.width} × {element.size?.height} px
-      </div>
-    </div>
-      
-    {renderImagePreview()}
-      
+
+  return (
     <div className="space-y-4">
-      <Label>Rotation</Label>
-      <div className="space-y-2">
-        <Slider
-          value={[rotation]}
-          min={-180}
-          max={180}
-          step={1}
-          onValueChange={handleRotationChange}
-          disabled={isGameMode}
-          className="my-4"
-        />
-        <div className="flex gap-4 items-center">
-          <Input 
-            type="number" 
-            value={rotation}
-            onChange={handleInputChange}
-            min={-360}
-            max={360}
-            className="w-24"
+      <div>
+        <Label>Image</Label>
+        <ImageUploader element={element} />
+        <ImageStats element={element} imageSrc={imageSrc} />
+      </div>
+
+      <ImageResizer element={element} />
+      <ImagePreview element={element} />
+
+      <div className="space-y-4">
+        <Label>Rotation</Label>
+        <div className="space-y-2">
+          <Slider
+            value={[rotation]}
+            min={-180}
+            max={180}
+            step={1}
+            onValueChange={handleRotationChange}
             disabled={isGameMode}
+            className="my-4"
           />
-          <span className="text-sm">degrees</span>
+          <div className="flex gap-4 items-center">
+            <Input
+              type="number"
+              value={rotation}
+              onChange={handleInputChange}
+              min={-360}
+              max={360}
+              className="w-24"
+              disabled={isGameMode}
+            />
+            <span className="text-sm">degrees</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>;
+  );
 };
 
 export default ImageProperties;
