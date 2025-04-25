@@ -23,9 +23,33 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
 }) => {
   const { user } = useAuth();
 
+  React.useEffect(() => {
+    // כאשר הדיאלוג נפתח, נקבע את סגנון הגוף כדי למנוע גלילה וזום
+    if (open) {
+      document.body.style.overflow = "hidden";
+      // הוספת מאזין אירועים למניעת זום באמצעות מקש Ctrl + גלגלת העכבר
+      document.addEventListener("wheel", preventZoom, { passive: false });
+    } else {
+      document.body.style.overflow = "";
+      document.removeEventListener("wheel", preventZoom);
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+      document.removeEventListener("wheel", preventZoom);
+    };
+  }, [open]);
+
+  // פונקציה למניעת זום באמצעות גלגלת העכבר בשילוב עם מקש Ctrl
+  const preventZoom = (e: WheelEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed inset-0 w-full h-full max-w-none p-0 m-0 overflow-hidden border-none rounded-none bg-white">
+      <DialogContent className="fixed inset-0 w-screen h-screen max-w-none p-0 m-0 overflow-hidden border-none rounded-none bg-white" style={{ transform: "none" }}>
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-50">
             <DialogHeader className="flex flex-row items-center gap-4 w-full">
