@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -9,6 +8,7 @@ import { Upload, Image as ImageIcon } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { getImageFromCache, estimateDataUrlSize } from "@/utils/imageUploader";
 import { getRotation } from "@/utils/elementStyles";
+import { useImageResize } from "@/hooks/useImageResize";
 
 const ImageProperties = ({
   element
@@ -21,12 +21,19 @@ const ImageProperties = ({
     isGameMode
   } = useDesignState();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
   const [rotation, setRotation] = useState(getRotation(element));
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
+
+  const {
+    isDragging,
+    currentScale,
+    handleResizeStart,
+    handleResize,
+    handleResizeEnd
+  } = useImageResize(element);
 
   // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
@@ -114,21 +121,6 @@ const ImageProperties = ({
   // Directly open file dialog when clicking the button
   const triggerFileInput = () => {
     fileInputRef.current?.click();
-  };
-  
-  const handleImageResize = (value: number[]) => {
-    if (!element.originalSize) return;
-    const scalePercentage = value[0];
-    setScaleValue(scalePercentage);
-    const scaleFactor = scalePercentage / 100;
-    const newWidth = Math.round(element.originalSize.width * scaleFactor);
-    const newHeight = Math.round(element.originalSize.height * scaleFactor);
-    updateElement(element.id, {
-      size: {
-        width: newWidth,
-        height: newHeight
-      }
-    });
   };
   
   const handleRotationChange = (value: number[]) => {
@@ -229,9 +221,19 @@ const ImageProperties = ({
     <div className="mt-4">
       <div className="flex items-center justify-between mb-2">
         <Label>Resize Image</Label>
-        <span className="text-sm font-medium">{scaleValue}%</span>
+        <span className="text-sm font-medium">{currentScale}%</span>
       </div>
-      <Slider value={[scaleValue]} min={10} max={200} step={1} onValueChange={handleImageResize} className="mb-2" />
+      <Slider 
+        defaultValue={[100]}
+        value={[currentScale]}
+        min={10} 
+        max={200} 
+        step={1} 
+        className="mb-2"
+        onValueChange={handleResize}
+        onValueCommit={handleResizeEnd}
+        onPointerDown={() => handleResizeStart()}
+      />
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>10%</span>
         <span>200%</span>
