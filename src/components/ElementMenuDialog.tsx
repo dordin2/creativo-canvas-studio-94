@@ -1,5 +1,4 @@
-
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -30,7 +29,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
   const { language } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
       document.addEventListener("wheel", preventZoom, { passive: false });
@@ -148,9 +147,9 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
             </DialogClose>
           </div>
 
-          <Tabs defaultValue="shapes" className="flex-1">
+          <Tabs defaultValue="shapes" className="flex-1 flex flex-col">
             <div className="border-b bg-white">
-              <TabsList className="w-full justify-center h-12 bg-transparent">
+              <TabsList className="w-full justify-center h-12 bg-transparent gap-4">
                 <TabsTrigger value="shapes" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Shapes' : 'צורות'}
                 </TabsTrigger>
@@ -178,82 +177,83 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
               onChange={handleImageUploadClick}
             />
 
-            <ScrollArea className="flex-1">
-              <div className="p-6">
-                <TabsContent value="shapes" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {shapes.map((shape) => (
+            <div className="flex-1 overflow-hidden">
+              <ScrollArea className="h-full">
+                <div className="p-6">
+                  <TabsContent value="shapes" className="m-0">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {shapes.map((shape) => (
+                        <Button
+                          key={shape.type}
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2 bg-[#F1F0FB] hover:bg-[#F1F0FB]/90"
+                          onClick={() => handleElementClick(shape.type)}
+                        >
+                          <shape.icon className="h-8 w-8" />
+                          <span>{shape.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="text" className="m-0">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {text.map((item) => (
+                        <Button
+                          key={item.type}
+                          variant="outline"
+                          className="h-24 flex flex-col items-center justify-center gap-2 bg-[#FEF7CD] hover:bg-[#FEF7CD]/90"
+                          onClick={() => handleElementClick(item.type)}
+                        >
+                          <item.icon className="h-8 w-8" />
+                          <span className={item.className}>{item.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="puzzles" className="m-0">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                      {puzzles.map((puzzle) => (
+                        <Button
+                          key={puzzle.type}
+                          variant="outline"
+                          className={cn(
+                            "h-24 flex flex-col items-center justify-center gap-2",
+                            puzzle.className,
+                            "hover:opacity-90"
+                          )}
+                          onClick={() => handleElementClick(puzzle.type)}
+                        >
+                          <puzzle.icon className="h-8 w-8" />
+                          <span>{puzzle.label}</span>
+                        </Button>
+                      ))}
+                    </div>
+                  </TabsContent>
+
+                  <TabsContent value="media" className="m-0">
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                       <Button
-                        key={shape.type}
                         variant="outline"
-                        className="h-24 flex flex-col items-center justify-center gap-2 bg-[#F1F0FB] hover:bg-[#F1F0FB]/90"
-                        onClick={() => handleElementClick(shape.type)}
+                        className="h-24 flex flex-col items-center justify-center gap-2 bg-[#D3E4FD] hover:bg-[#D3E4FD]/90"
+                        onClick={() => handleElementClick('image')}
                       >
-                        <shape.icon className="h-8 w-8" />
-                        <span>{shape.label}</span>
+                        <Image className="h-8 w-8" />
+                        <span>{language === 'en' ? 'Upload Image' : 'העלאת תמונה'}</span>
                       </Button>
-                    ))}
-                  </div>
-                </TabsContent>
+                    </div>
+                  </TabsContent>
 
-                <TabsContent value="text" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                    {text.map((item) => (
-                      <Button
-                        key={item.type}
-                        variant="outline"
-                        className="h-24 flex flex-col items-center justify-center gap-2 bg-[#FEF7CD] hover:bg-[#FEF7CD]/90"
-                        onClick={() => handleElementClick(item.type)}
-                      >
-                        <item.icon className="h-8 w-8" />
-                        <span className={item.className}>{item.label}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="puzzles" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {puzzles.map((puzzle) => (
-                      <Button
-                        key={puzzle.type}
-                        variant="outline"
-                        className={cn(
-                          "h-24 flex flex-col items-center justify-center gap-2",
-                          puzzle.className,
-                          "hover:opacity-90"
-                        )}
-                        onClick={() => handleElementClick(puzzle.type)}
-                      >
-                        <puzzle.icon className="h-8 w-8" />
-                        <span>{puzzle.label}</span>
-                      </Button>
-                    ))}
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="media" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <Button
-                      variant="outline"
-                      className="h-24 flex flex-col items-center justify-center gap-2 bg-[#D3E4FD] hover:bg-[#D3E4FD]/90"
-                      onClick={() => handleElementClick('image')}
-                    >
-                      <Image className="h-8 w-8" />
-                      <span>{language === 'en' ? 'Upload Image' : 'העלאת תמונה'}</span>
-                    </Button>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="library" className="m-0">
-                  <LibraryView onClose={() => onOpenChange(false)} />
-                </TabsContent>
-              </div>
-            </ScrollArea>
+                  <TabsContent value="library" className="m-0">
+                    <LibraryView onClose={() => onOpenChange(false)} />
+                  </TabsContent>
+                </div>
+              </ScrollArea>
+            </div>
           </Tabs>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
-
