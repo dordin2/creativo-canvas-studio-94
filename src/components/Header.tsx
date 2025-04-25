@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
@@ -11,6 +12,7 @@ import LayersList from "./LayersList";
 import { useProject } from "@/context/ProjectContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+
 const Header = () => {
   const {
     canvasRef,
@@ -19,14 +21,18 @@ const Header = () => {
     canUndo,
     canRedo
   } = useDesignState();
+  
   const {
     t,
     language
   } = useLanguage();
+  
   const {
     projectId
   } = useProject();
+  
   const isMobile = useIsMobile();
+  
   const handleDownload = () => {
     if (!canvasRef) return;
     try {
@@ -61,9 +67,11 @@ const Header = () => {
       toast.error("Failed to download design. Please try again.");
     }
   };
+  
   const handleShare = () => {
     toast.info(t('toast.info.share'));
   };
+  
   if (isMobile) {
     return <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <div className="flex items-center">
@@ -120,6 +128,7 @@ const Header = () => {
         </div>
       </header>;
   }
+  
   return <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center gap-3">
         <div className="font-bold text-xl bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
@@ -155,10 +164,9 @@ const Header = () => {
               </div>
             </SheetContent>
           </Sheet>
-          
-          
         </div>
       </div>
     </header>;
 };
+
 export default Header;
