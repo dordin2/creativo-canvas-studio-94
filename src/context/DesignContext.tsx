@@ -56,6 +56,7 @@ export const DesignProvider = ({
   } | null>(null);
   const [hasInitialState, setHasInitialState] = useState<boolean>(false);
   const [hasChanges, setHasChanges] = useState<boolean>(false);
+  const [lastSavedStateIndex, setLastSavedStateIndex] = useState<number>(-1);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
@@ -240,6 +241,7 @@ export const DesignProvider = ({
       const newHistory = [JSON.parse(JSON.stringify(newCanvases))];
       setHistory(newHistory);
       setHistoryIndex(0);
+      setLastSavedStateIndex(0);
       return;
     }
 
@@ -259,7 +261,7 @@ export const DesignProvider = ({
     
     console.log('Added new state to history, total states:', newHistory.length);
   }, [history, historyIndex, hasInitialState]);
-
+  
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
     ? (canvases[activeCanvasIndex]?.elements || []) 
     : [];
@@ -630,8 +632,8 @@ export const DesignProvider = ({
       return;
     }
 
-    if (historyIndex <= 0) {
-      toast.info(t('toast.info.atInitialState'));
+    if (historyIndex <= lastSavedStateIndex) {
+      toast.info('Cannot undo past the last saved state');
       return;
     }
 
@@ -651,7 +653,7 @@ export const DesignProvider = ({
     setCanvases(previousState);
     setHistoryIndex(newIndex);
 
-    if (newIndex === 0) {
+    if (newIndex === lastSavedStateIndex) {
       setHasChanges(false);
     }
 
@@ -673,7 +675,57 @@ export const DesignProvider = ({
     }
 
     toast.success(t('toast.success.undo'));
-  }, [historyIndex, history, activeElement, activeCanvasIndex, hasChanges, t]);
+  }, [historyIndex, history, activeElement, activeCanvasIndex, hasChanges, lastSavedStateIndex, t]);
+
+  const redo = useCallback(() => {
+    if (historyIndex >= history.length - 1) {
+      toast.info(t('toast.info.noRedoAvailable'));
+      return;
+    }
+
+    const newIndex = historyIndex + 1;
+    const nextState = history[newIndex];
+
+    if (!nextState || nextState.length === 0) {
+      console.error('Invalid next state detected');
+      return;
+    }
+
+    setCanvases(nextState);
+    setHistoryIndex(newIndex);
+    setHasChanges(true);
+
+    if (activeElement) {
+      const activeCanvas = nextState[activeCanvasIndex];
+      if (activeCanvas) {
+        const elementStillExists = activeCanvas.elements.some(e => e.id === activeElement.id);
+        if (!elementStillExists) {
+          setActiveElement(null);
+        } else {
+          const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
+          if (updatedActiveElement) {
+            setActiveElement(updatedActiveElement);
+          }
+        }
+      } else {
+        setActiveElement(null);
+      }
+    }
+
+    toast.success(t('toast.success.redo'));
+  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
+
+  const handleProjectSave = async () => {
+    try {
+      await saveProject(canvases, activeCanvasIndex);
+      setLastSavedStateIndex(historyIndex);
+      setHasChanges(false);
+      toast.success('Project saved successfully');
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast.error('Failed to save project');
+    }
+  };
 
   useEffect(() => {
     if (history.length === 0 && canvases.length > 0 && !hasInitialState) {
@@ -706,7 +758,7 @@ export const DesignProvider = ({
     handleImageUpload,
     undo,
     redo,
-    canUndo: hasChanges && historyIndex > 0,
+    canUndo: hasChanges && historyIndex > lastSavedStateIndex,
     canRedo: historyIndex < history.length - 1,
     addCanvas,
     removeCanvas,
@@ -719,7 +771,8 @@ export const DesignProvider = ({
     removeFromInventory,
     setDraggedInventoryItem,
     handleItemCombination,
-    setCanvases
+    setCanvases,
+    saveProject: handleProjectSave
   };
 
   return (
