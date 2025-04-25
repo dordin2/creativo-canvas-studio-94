@@ -8,7 +8,7 @@ import SequencePuzzleProperties from "./SequencePuzzleProperties";
 import ClickSequencePuzzleProperties from "./ClickSequencePuzzleProperties";
 import SliderPuzzleProperties from "./SliderPuzzleProperties";
 import InteractionProperties from "./InteractionProperties";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import SmartSlider from "./SmartSlider";
 import { useEffect } from "react";
 
 interface ElementPropertiesProps {
@@ -55,27 +55,6 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
     };
   }, []);
   
-  // Common properties that appear in both tabs and non-tabs view
-  const renderCommonProperties = () => (
-    <>
-      {textElements.includes(element.type) && <TextProperties element={element} />}
-      
-      {shapeElements.includes(element.type) && <ShapeProperties element={element} />}
-      
-      {element.type === 'image' && <ImageProperties element={element} />}
-      
-      {element.type === 'puzzle' && <PuzzleProperties element={element} />}
-      
-      {element.type === 'sequencePuzzle' && <SequencePuzzleProperties element={element} />}
-      
-      {element.type === 'clickSequencePuzzle' && <ClickSequencePuzzleProperties element={element} />}
-      
-      {element.type === 'sliderPuzzle' && <SliderPuzzleProperties element={element} />}
-      
-      <LayerProperties element={element} />
-    </>
-  );
-  
   if (isInteractiveMode) {
     return (
       <div className="properties-panel p-4 space-y-6">
@@ -85,12 +64,12 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
     );
   }
 
-  return (
-    <div className="properties-panel p-4 space-y-6">
-      <h2 className="text-lg font-semibold mb-4">Properties</h2>
-      {renderCommonProperties()}
-    </div>
-  );
+  // In regular mode, only show SmartSlider for elements with size
+  if (element.size || element.style?.transform) {
+    return <SmartSlider element={element} />;
+  }
+
+  return null;
 };
 
 export default ElementProperties;
