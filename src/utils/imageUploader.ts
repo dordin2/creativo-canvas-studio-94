@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { DesignElement } from "@/types/designTypes";
 import { 
@@ -488,4 +487,70 @@ export const deleteImageFromCache = async (cacheKey: string): Promise<void> => {
   } catch (error) {
     console.error("Error deleting image from cache:", error);
   }
+};
+
+/**
+ * Process library images
+ */
+export const processLibraryImage = async (
+  imageUrl: string,
+  canvasWidth?: number,
+  canvasHeight?: number
+): Promise<Partial<DesignElement>> => {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    
+    img.onload = async () => {
+      try {
+        // Get original dimensions
+        const width = img.naturalWidth;
+        const height = img.naturalHeight;
+        
+        // Draw image to canvas to get data URL
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0);
+        
+        // Create thumbnail
+        const thumbnailDataUrl = await createThumbnail(canvas.toDataURL());
+        
+        // Calculate appropriate size based on canvas dimensions
+        const appropriateSize = calculateAppropriateImageSize(
+          width,
+          height,
+          canvasWidth || window.innerWidth * 0.7,
+          canvasHeight || window.innerHeight * 0.7
+        );
+        
+        resolve({
+          src: imageUrl,
+          dataUrl: canvas.toDataURL(),
+          thumbnailDataUrl,
+          size: appropriateSize,
+          originalSize: {
+            width,
+            height
+          }
+        });
+      } catch (error) {
+        console.error('Error processing library image:', error);
+        reject(error);
+      }
+    };
+    
+    img.onerror = () => {
+      reject(new Error('Failed to load image'));
+    };
+    
+    img.src = imageUrl;
+    img.crossOrigin = "anonymous"; // Enable CORS for Supabase storage URLs
+  });
 };
