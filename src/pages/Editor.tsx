@@ -389,9 +389,26 @@ const Editor = () => {
             </div>
           )}
         </div>
-        <Properties />
+        {!isGameMode && (
+          <Properties />
+        )}
       </div>
-      
+      {isGameMode && (
+        <>
+          <InventoryPanel />
+          <InventoryIcon />
+          <div className="absolute bottom-4 left-4 z-[100]">
+            <Button 
+              variant="secondary" 
+              className="shadow-md bg-white hover:bg-gray-100"
+              onClick={toggleGameMode}
+            >
+              <ChevronLeft className="mr-1" />
+              Exit Game Mode
+            </Button>
+          </div>
+        </>
+      )}
       {!isGameMode && !isMobile && (
         <FloatingAddButton />
       )}

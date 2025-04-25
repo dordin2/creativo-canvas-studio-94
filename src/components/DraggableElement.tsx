@@ -85,7 +85,7 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    if (isGameMode && isImageElement) {
+    if (isImageElement && isGameMode) {
       e.preventDefault();
       
       if (hasInteraction) {
@@ -103,7 +103,7 @@ const DraggableElement = ({ element, isActive, children }: {
     
     setActiveElement(element);
     
-    if (isEditing || isInteractiveMode) return;
+    if (isEditing) return;
     
     if (!isSequencePuzzleElement) {
       startDrag(e, element.position);
