@@ -28,11 +28,11 @@ const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({ className }) => {
       
       <ElementMenuDialog 
         open={isDialogOpen} 
-        onOpenChange={setIsDialogOpen}
-        designProviderAvailable={true}
+        onOpenChange={setIsDialogOpen} 
       />
     </>
   );
 };
 
 export default FloatingAddButton;
+

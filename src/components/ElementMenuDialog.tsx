@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import {
   Dialog,
@@ -8,48 +7,26 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDesignState } from "@/context/DesignContext";
+import { useLanguage } from "@/context/LanguageContext";
 import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, Image, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
+import { processImageUpload } from "@/utils/imageUploader";
 import { LibraryView } from "./library/LibraryView";
-import { useLanguage } from "@/context/LanguageContext";
-import { toast } from "sonner";
 
-// Add optional design-context dependent props
 interface ElementMenuDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onElementSelect?: (type: string, config?: any) => void;
-  onImageUpload?: (file: File) => void;
-  designProviderAvailable?: boolean;
 }
 
 export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
   open,
   onOpenChange,
-  onElementSelect,
-  onImageUpload,
-  designProviderAvailable = false,
 }) => {
+  const { addElement, handleImageUpload } = useDesignState();
   const { language } = useLanguage();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  
-  // Only try to import useDesignState if we're in a context where it's available
-  let designState = null;
-  let addElement = null;
-  let handleImageUpload = null;
-  
-  if (designProviderAvailable) {
-    try {
-      // Using dynamic import pattern to avoid the error
-      const { useDesignState } = require("@/context/DesignContext");
-      designState = useDesignState();
-      addElement = designState?.addElement;
-      handleImageUpload = designState?.handleImageUpload;
-    } catch (error) {
-      console.error("Failed to load DesignContext:", error);
-    }
-  }
 
   React.useEffect(() => {
     if (open) {
@@ -134,44 +111,18 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
   const handleImageUploadClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      if (onImageUpload) {
-        // Use the provided callback if available (outside design context)
-        onImageUpload(file);
-        onOpenChange(false);
-      } else if (designProviderAvailable && addElement && handleImageUpload) {
-        // Use design context if available
-        const newElement = addElement('image');
-        handleImageUpload(newElement.id, file);
-        onOpenChange(false);
-      } else {
-        toast.error("Image upload functionality not available");
-      }
+      const newElement = addElement('image');
+      handleImageUpload(newElement.id, file);
+      onOpenChange(false);
     }
   };
 
   const handleElementClick = (type: string, config?: any) => {
     if (type === 'image') {
       fileInputRef.current?.click();
-    } else if (onElementSelect) {
-      // Use the provided callback if available (outside design context)
-      onElementSelect(type, config);
-      onOpenChange(false);
-    } else if (designProviderAvailable && addElement) {
-      // Use design context if available
+    } else {
       addElement(type as any, config);
       onOpenChange(false);
-    } else {
-      toast.error("Element selection functionality not available");
-    }
-  };
-
-  const handleLibraryImageSelect = (image: any) => {
-    // This is used only outside of design context
-    if (onElementSelect) {
-      onElementSelect('image', { 
-        src: image.image_path,
-        name: image.name
-      });
     }
   };
 
@@ -291,10 +242,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value="library" className="m-0">
-                  <LibraryView 
-                    onClose={() => onOpenChange(false)} 
-                    onImageSelect={!designProviderAvailable ? handleLibraryImageSelect : undefined}
-                  />
+                  <LibraryView onClose={() => onOpenChange(false)} />
                 </TabsContent>
               </div>
             </Tabs>

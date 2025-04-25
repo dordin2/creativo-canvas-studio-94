@@ -506,6 +506,22 @@ export const processLibraryImage = async (
         const width = img.naturalWidth;
         const height = img.naturalHeight;
         
+        // Draw image to canvas to get data URL
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          reject(new Error('Could not get canvas context'));
+          return;
+        }
+        
+        ctx.drawImage(img, 0, 0);
+        
+        // Create thumbnail
+        const thumbnailDataUrl = await createThumbnail(canvas.toDataURL());
+        
         // Calculate appropriate size based on canvas dimensions
         const appropriateSize = calculateAppropriateImageSize(
           width,
@@ -514,28 +530,15 @@ export const processLibraryImage = async (
           canvasHeight || window.innerHeight * 0.7
         );
         
-        // Create thumbnail in background
-        createThumbnail(imageUrl).then(thumbnailDataUrl => {
-          resolve({
-            src: imageUrl,
-            thumbnailDataUrl,
-            size: appropriateSize,
-            originalSize: {
-              width,
-              height
-            }
-          });
-        }).catch(error => {
-          console.error('Thumbnail creation failed:', error);
-          // Still resolve with main image data even if thumbnail fails
-          resolve({
-            src: imageUrl,
-            size: appropriateSize,
-            originalSize: {
-              width,
-              height
-            }
-          });
+        resolve({
+          src: imageUrl,
+          dataUrl: canvas.toDataURL(),
+          thumbnailDataUrl,
+          size: appropriateSize,
+          originalSize: {
+            width,
+            height
+          }
         });
       } catch (error) {
         console.error('Error processing library image:', error);
