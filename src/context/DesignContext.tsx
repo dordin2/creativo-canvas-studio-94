@@ -30,6 +30,8 @@ interface DesignProviderProps {
   };
 }
 
+const MAX_HISTORY_LENGTH = 50;
+
 const isValidCanvasState = (canvases: Canvas[]): boolean => {
   if (!canvases || !Array.isArray(canvases) || canvases.length === 0) {
     return false;
@@ -41,7 +43,14 @@ const isValidCanvasState = (canvases: Canvas[]): boolean => {
     'id' in canvas && 
     'name' in canvas && 
     'elements' in canvas &&
-    Array.isArray(canvas.elements)
+    Array.isArray(canvas.elements) &&
+    canvas.elements.every(element => 
+      element && 
+      typeof element === 'object' &&
+      'id' in element &&
+      'type' in element &&
+      'position' in element
+    )
   );
 };
 
@@ -88,17 +97,22 @@ export const DesignProvider = ({
       setSavedInitialState(JSON.parse(JSON.stringify(newCanvases)));
       console.log("Initial history created with state:", newCanvases.length, "canvases");
     } else {
-      const currentHistoryState = history[historyIndex];
-      const isStateDifferent = !currentHistoryState || 
-        JSON.stringify(currentHistoryState) !== JSON.stringify(newCanvases);
+      const newHistory = history.slice(0, historyIndex + 1);
+      
+      const currentState = newHistory[newHistory.length - 1];
+      const isStateDifferent = !currentState || 
+        JSON.stringify(currentState) !== JSON.stringify(newCanvases);
       
       if (isStateDifferent) {
-        const newHistoryIndex = historyIndex + 1;
-        const newHistory = history.slice(0, newHistoryIndex);
         newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
+        
+        while (newHistory.length > MAX_HISTORY_LENGTH) {
+          newHistory.shift();
+        }
+        
         setHistory(newHistory);
-        setHistoryIndex(newHistoryIndex);
-        console.log("Added to history at index:", newHistoryIndex);
+        setHistoryIndex(Math.min(historyIndex + 1, MAX_HISTORY_LENGTH - 1));
+        console.log("Added to history at index:", historyIndex + 1);
       }
     }
   }, [history, historyIndex]);
@@ -112,7 +126,6 @@ export const DesignProvider = ({
     console.log("Fallback state exists:", fallback !== null);
 
     if (savedInitialState || fallback) {
-      // Deep clone to avoid reference issues
       const stateToUse = savedInitialState 
         ? JSON.parse(JSON.stringify(savedInitialState))
         : JSON.parse(JSON.stringify(fallback));
@@ -122,7 +135,6 @@ export const DesignProvider = ({
       setActiveElement(null);
       toast.info(t('toast.info.reachedInitialState'));
       
-      // Reset history to just contain this initial state
       setHistory([stateToUse]);
       setHistoryIndex(0);
     } else {
@@ -133,11 +145,31 @@ export const DesignProvider = ({
   
   const validateStateBeforeUndo = useCallback((state: Canvas[] | undefined): boolean => {
     if (!state) return false;
-    return isValidCanvasState(state);
+    
+    try {
+      if (!isValidCanvasState(state)) return false;
+      
+      return state.every(canvas => {
+        const elementIds = new Set(canvas.elements.map(el => el.id));
+        if (elementIds.size !== canvas.elements.length) return false;
+        
+        return canvas.elements.every(element => {
+          if (element.interaction?.canCombineWith) {
+            return element.interaction.canCombineWith.every(targetId => 
+              canvas.elements.some(el => el.id === targetId)
+            );
+          }
+          return true;
+        });
+      });
+    } catch (error) {
+      console.error("Error validating state:", error);
+      return false;
+    }
   }, []);
   
   const undo = useCallback(() => {
-    console.log("Undo called. Current history index:", historyIndex, "History length:", history.length);
+    console.log("Undo called. Current history index:", historyIndex);
     
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
@@ -145,7 +177,6 @@ export const DesignProvider = ({
       
       if (previousState && validateStateBeforeUndo(previousState)) {
         console.log("Valid previous state found at index:", newIndex);
-        // Deep clone to avoid reference issues
         const previousStateClone = JSON.parse(JSON.stringify(previousState));
         setCanvases(previousStateClone);
         setHistoryIndex(newIndex);
@@ -153,33 +184,27 @@ export const DesignProvider = ({
         if (activeElement) {
           const activeCanvas = previousStateClone[activeCanvasIndex];
           if (activeCanvas) {
-            const elementStillExists = activeCanvas.elements.some(e => e.id === activeElement.id);
-            if (!elementStillExists) {
-              setActiveElement(null);
-            } else {
-              const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
-              if (updatedActiveElement) {
-                setActiveElement(updatedActiveElement);
-              }
-            }
+            const updatedElement = activeCanvas.elements.find(e => e.id === activeElement.id);
+            setActiveElement(updatedElement || null);
           } else {
             setActiveElement(null);
           }
         }
         
-        if (newIndex === 0) {
-          toast.info(t('toast.info.reachedInitialState') || "Reached initial state");
-        } else {
-          toast.success(t('toast.success.undo'));
-        }
+        toast.success(newIndex === 0 ? t('toast.info.reachedInitialState') : t('toast.success.undo'));
       } else {
-        console.error("Invalid previous state, attempting to reset to initial state");
-        resetToInitialState();
+        console.error("Invalid previous state, attempting recovery");
+        if (savedInitialState && isValidCanvasState(savedInitialState)) {
+          resetToInitialState();
+        } else {
+          console.error("Could not recover state");
+          toast.error(t('toast.error.undoFailed'));
+        }
       }
     } else {
-      toast.info(t('toast.info.noMoreUndo') || "No more undo available");
+      toast.info(t('toast.info.noMoreUndo'));
     }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t, resetToInitialState, validateStateBeforeUndo]);
+  }, [historyIndex, history, activeElement, activeCanvasIndex, savedInitialState, t, resetToInitialState, validateStateBeforeUndo]);
   
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
@@ -194,11 +219,7 @@ export const DesignProvider = ({
           const activeCanvas = nextState[activeCanvasIndex];
           if (activeCanvas) {
             const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
-            if (updatedActiveElement) {
-              setActiveElement(updatedActiveElement);
-            } else {
-              setActiveElement(null);
-            }
+            setActiveElement(updatedActiveElement);
           } else {
             setActiveElement(null);
           }
