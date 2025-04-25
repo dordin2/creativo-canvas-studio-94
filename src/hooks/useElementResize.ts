@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 
 export const useElementResize = (element: DesignElement) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, updateElementWithoutHistory, commitToHistory } = useDesignState();
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
