@@ -49,6 +49,7 @@ const DraggableElement = ({ element, isActive, children }: {
     setShowInteractionPanel,
   } = useDesignState();
   
+  const { isInteractiveMode } = useInteractiveMode();
   const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
@@ -66,7 +67,6 @@ const DraggableElement = ({ element, isActive, children }: {
 
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
-  const { isInteractiveMode } = useInteractiveMode();
 
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
   const isSequencePuzzleElement = element.type === 'sequencePuzzle';
@@ -85,16 +85,15 @@ const DraggableElement = ({ element, isActive, children }: {
     if (e.button !== 0) return;
     e.stopPropagation();
     
-    if (isImageElement && isGameMode) {
-      e.preventDefault();
-      
-      if (hasInteraction) {
-        handleInteraction();
+    if (isGameMode && !isInteractiveMode) {
+      if (isImageElement) {
+        e.preventDefault();
+        if (hasInteraction) {
+          handleInteraction();
+        }
+        return;
       }
-      return;
-    }
-    
-    if (isGameMode) {
+      
       if (hasInteraction) {
         handleInteraction();
       }
