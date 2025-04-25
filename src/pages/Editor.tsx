@@ -311,7 +311,7 @@ const Editor = () => {
         <InventoryPanel />
         <InventoryIcon />
         
-        <div className="absolute bottom-4 left-4 z-[100] flex gap-2">
+        <div className="absolute bottom-4 left-4 z-[100]">
           <Button 
             variant="secondary" 
             className="shadow-md bg-white hover:bg-gray-100 px-2 py-1"
@@ -319,14 +319,6 @@ const Editor = () => {
           >
             <ChevronLeft className="mr-1 h-4 w-4" />
             <span className="text-sm">Exit</span>
-          </Button>
-          <Button 
-            variant="secondary" 
-            className="shadow-md bg-white hover:bg-gray-100 px-2 py-1"
-            onClick={goBackToProjects}
-          >
-            <ChevronLeft className="mr-1 h-4 w-4" />
-            <span className="text-sm">Projects</span>
           </Button>
         </div>
       </div>
@@ -392,30 +384,12 @@ const Editor = () => {
               <Canvas />
             </>
           ) : (
-            <div className="fixed-canvas-container relative">
+            <div className="fixed-canvas-container">
               <Canvas isFullscreen={true} />
-              <div className="absolute bottom-4 left-4 z-[100] flex gap-2">
-                <Button 
-                  variant="secondary" 
-                  className="shadow-md bg-white hover:bg-gray-100"
-                  onClick={toggleGameMode}
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Exit Game
-                </Button>
-                <Button 
-                  variant="secondary" 
-                  className="shadow-md bg-white hover:bg-gray-100"
-                  onClick={goBackToProjects}
-                >
-                  <ChevronLeft className="mr-2 h-4 w-4" />
-                  Back to Projects
-                </Button>
-              </div>
             </div>
           )}
         </div>
-        {!isGameMode && <Properties />}
+        <Properties />
       </div>
       
       {!isGameMode && !isMobile && (
