@@ -73,7 +73,10 @@ const Sidebar = () => {
           </div>
           
           {/* Puzzles Category */}
-          <PuzzleCategories />
+          <div>
+            <h3 className="text-sm font-medium mb-3 text-purple-700">{t('sidebar.puzzles')}</h3>
+            <PuzzleCategories />
+          </div>
         </TabsContent>
         
         <TabsContent value="text" className="flex-1 overflow-auto p-4">

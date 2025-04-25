@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
@@ -101,83 +100,69 @@ export const PuzzleCategories = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Basic Puzzles */}
-      <div>
-        <h3 className="text-sm font-medium mb-3 text-purple-700">{t('sidebar.basic.puzzles')}</h3>
-        <div className="grid grid-cols-1 gap-2">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="outline" className="h-14 flex flex-col gap-1 items-center justify-center w-full bg-[#E5DEFF] hover:bg-[#E5DEFF]/90">
-                <Lock className="h-5 w-5" />
-                <span className="text-xs">{t('sidebar.puzzle')}</span>
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-60 p-2">
-              <div className="grid gap-2">
-                <Button variant="outline" className="justify-start" onClick={handleImagePuzzleClick}>
-                  <Lock className="h-4 w-4 mr-2" />
-                  {t('sidebar.image.puzzle')}
-                </Button>
-                <Button variant="outline" className="justify-start" onClick={handleNumberPuzzleClick}>
-                  <Hash className="h-4 w-4 mr-2" />
-                  {t('sidebar.number.lock')}
-                </Button>
-                <Button variant="outline" className="justify-start" onClick={handleAlphabetPuzzleClick}>
-                  <Languages className="h-4 w-4 mr-2" />
-                  {t('sidebar.alphabet.lock')}
-                </Button>
-              </div>
-            </PopoverContent>
-          </Popover>
-        </div>
-      </div>
+    <div className="grid grid-cols-2 gap-2">
+      <Button 
+        variant="outline" 
+        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+        onClick={handleImagePuzzleClick}
+      >
+        <Lock className="h-5 w-5" />
+        <span className="text-xs">{language === 'en' ? 'Image Puzzle' : 'פאזל תמונה'}</span>
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+        onClick={handleNumberPuzzleClick}
+      >
+        <Hash className="h-5 w-5" />
+        <span className="text-xs">{language === 'en' ? 'Number Lock' : 'מנעול מספרים'}</span>
+      </Button>
+      
+      <Button 
+        variant="outline" 
+        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+        onClick={handleAlphabetPuzzleClick}
+      >
+        <Languages className="h-5 w-5" />
+        <span className="text-xs">{language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות'}</span>
+      </Button>
 
-      {/* Sequence Puzzles */}
-      <div>
-        <h3 className="text-sm font-medium mb-3 text-blue-700">{t('sidebar.sequence.puzzles')}</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <Button 
-            variant="outline" 
-            className="h-14 flex flex-col gap-1 items-center justify-center bg-[#D3E4FD] hover:bg-[#D3E4FD]/90"
-            onClick={handleSequencePuzzleClick}
-          >
-            <MoveHorizontal className="h-5 w-5" />
-            <span className="text-xs">{language === 'en' ? 'Sequence' : 'רצף'}</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="h-14 flex flex-col gap-1 items-center justify-center bg-[#F2FCE2] hover:bg-[#F2FCE2]/90"
-            onClick={handleClickSequencePuzzleClick}
-          >
-            <MousePointerClick className="h-5 w-5" />
-            <span className="text-xs">{language === 'en' ? 'Click' : 'קליקים'}</span>
-          </Button>
-        </div>
-      </div>
+      <Button 
+        variant="outline" 
+        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+        onClick={handleSequencePuzzleClick}
+      >
+        <MoveHorizontal className="h-5 w-5" />
+        <span className="text-xs">{language === 'en' ? 'Sequence' : 'רצף'}</span>
+      </Button>
 
-      {/* Slider Puzzles */}
-      <div>
-        <h3 className="text-sm font-medium mb-3 text-orange-700">{t('sidebar.slider.puzzles')}</h3>
-        <div className="grid grid-cols-2 gap-2">
-          <Button 
-            variant="outline" 
-            className="h-14 flex flex-col gap-1 items-center justify-center bg-[#FEC6A1] hover:bg-[#FEC6A1]/90"
-            onClick={handleHorizontalSliderPuzzleClick}
-          >
-            <SlidersHorizontal className="h-5 w-5" />
-            <span className="text-xs">{language === 'en' ? 'Horizontal' : 'אופקי'}</span>
-          </Button>
-          <Button 
-            variant="outline" 
-            className="h-14 flex flex-col gap-1 items-center justify-center bg-[#FFDEE2] hover:bg-[#FFDEE2]/90"
-            onClick={handleVerticalSliderPuzzleClick}
-          >
-            <SlidersVertical className="h-5 w-5" />
-            <span className="text-xs">{language === 'en' ? 'Vertical' : 'אנכי'}</span>
-          </Button>
-        </div>
-      </div>
+      <Button 
+        variant="outline" 
+        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+        onClick={handleClickSequencePuzzleClick}
+      >
+        <MousePointerClick className="h-5 w-5" />
+        <span className="text-xs">{language === 'en' ? 'Click' : 'קליקים'}</span>
+      </Button>
+
+      <Button 
+        variant="outline" 
+        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+        onClick={handleHorizontalSliderPuzzleClick}
+      >
+        <SlidersHorizontal className="h-5 w-5" />
+        <span className="text-xs">{language === 'en' ? 'H-Slider' : 'מחוון אופקי'}</span>
+      </Button>
+
+      <Button 
+        variant="outline" 
+        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+        onClick={handleVerticalSliderPuzzleClick}
+      >
+        <SlidersVertical className="h-5 w-5" />
+        <span className="text-xs">{language === 'en' ? 'V-Slider' : 'מחוון אנכי'}</span>
+      </Button>
     </div>
   );
 };
