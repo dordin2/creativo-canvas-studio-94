@@ -104,18 +104,36 @@ export const createNewElement = (
       
     case 'image':
       // If props includes size, use that; otherwise, use default
-      // Props will include size for uploaded images that have been scaled
       const initialSize = props?.size || { width: 200, height: 150 };
       
-      return {
+      const imageElement = {
         id: generateId(),
         type,
         position,
         size: initialSize,
-        originalSize: props?.originalSize || initialSize, // Store original dimensions
+        originalSize: props?.originalSize || initialSize,
         style: { transform: 'rotate(0deg)' },
         layer
       };
+
+      // Copy all image-specific properties if they exist in props
+      if (props?.dataUrl) imageElement.dataUrl = props.dataUrl;
+      if (props?.thumbnailDataUrl) imageElement.thumbnailDataUrl = props.thumbnailDataUrl;
+      if (props?.src) imageElement.src = props.src;
+      if (props?.cacheKey) imageElement.cacheKey = props.cacheKey;
+      if (props?.fileMetadata) imageElement.fileMetadata = props.fileMetadata;
+      if (props?.file) imageElement.file = props.file;
+      
+      console.log("ElementFactory - Creating new image element with properties:", {
+        hasDataUrl: !!props?.dataUrl,
+        hasThumbnail: !!props?.thumbnailDataUrl,
+        hasSrc: !!props?.src,
+        hasCacheKey: !!props?.cacheKey,
+        hasFileMetadata: !!props?.fileMetadata,
+        hasFile: !!props?.file
+      });
+      
+      return imageElement;
       
     case 'background':
       return {
