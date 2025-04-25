@@ -1,48 +1,22 @@
+
 import { Button } from "@/components/ui/button";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
-import { Lock, Hash, Languages, MoveHorizontal, MousePointerClick, SlidersHorizontal, SlidersVertical } from "lucide-react";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal } from "lucide-react";
 
 export const PuzzleCategories = () => {
   const { addElement } = useDesignState();
   const { t, language } = useLanguage();
 
   // Handle puzzle options
-  const handleImagePuzzleClick = () => {
+  const handleLockPuzzleClick = () => {
     addElement('puzzle', {
       puzzleConfig: {
-        name: language === 'en' ? 'Image Puzzle' : 'פאזל תמונה',
+        name: language === 'en' ? 'Lock Puzzle' : 'פאזל מנעול',
         type: 'image',
         placeholders: 3,
         images: [],
         solution: [0, 0, 0]
-      }
-    });
-  };
-
-  const handleNumberPuzzleClick = () => {
-    addElement('puzzle', {
-      puzzleConfig: {
-        name: language === 'en' ? 'Number Lock' : 'מנעול מספרים',
-        type: 'number',
-        placeholders: 3,
-        images: [],
-        solution: [0, 0, 0],
-        maxNumber: 9
-      }
-    });
-  };
-
-  const handleAlphabetPuzzleClick = () => {
-    addElement('puzzle', {
-      puzzleConfig: {
-        name: language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות',
-        type: 'alphabet',
-        placeholders: 3,
-        images: [],
-        solution: [0, 0, 0],
-        maxLetter: 'Z'
       }
     });
   };
@@ -71,28 +45,14 @@ export const PuzzleCategories = () => {
     });
   };
 
-  const handleHorizontalSliderPuzzleClick = () => {
+  const handleSliderPuzzleClick = () => {
     addElement('sliderPuzzle', {
-      name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
+      name: language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים',
       sliderPuzzleConfig: {
-        name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
+        name: language === 'en' ? 'Slider Puzzle' : 'פאזל מחוונים',
         orientation: 'horizontal',
         sliderCount: 3,
         solution: [5, 7, 3],
-        currentValues: [0, 0, 0],
-        maxValue: 10
-      }
-    });
-  };
-
-  const handleVerticalSliderPuzzleClick = () => {
-    addElement('sliderPuzzle', {
-      name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
-      sliderPuzzleConfig: {
-        name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
-        orientation: 'vertical',
-        sliderCount: 3,
-        solution: [8, 4, 6],
         currentValues: [0, 0, 0],
         maxValue: 10
       }
@@ -104,30 +64,12 @@ export const PuzzleCategories = () => {
       <Button 
         variant="outline" 
         className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
-        onClick={handleImagePuzzleClick}
+        onClick={handleLockPuzzleClick}
       >
         <Lock className="h-5 w-5" />
-        <span className="text-xs">{language === 'en' ? 'Image Puzzle' : 'פאזל תמונה'}</span>
+        <span className="text-xs">{language === 'en' ? 'Lock' : 'מנעול'}</span>
       </Button>
       
-      <Button 
-        variant="outline" 
-        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
-        onClick={handleNumberPuzzleClick}
-      >
-        <Hash className="h-5 w-5" />
-        <span className="text-xs">{language === 'en' ? 'Number Lock' : 'מנעול מספרים'}</span>
-      </Button>
-      
-      <Button 
-        variant="outline" 
-        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
-        onClick={handleAlphabetPuzzleClick}
-      >
-        <Languages className="h-5 w-5" />
-        <span className="text-xs">{language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות'}</span>
-      </Button>
-
       <Button 
         variant="outline" 
         className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
@@ -143,25 +85,16 @@ export const PuzzleCategories = () => {
         onClick={handleClickSequencePuzzleClick}
       >
         <MousePointerClick className="h-5 w-5" />
-        <span className="text-xs">{language === 'en' ? 'Click' : 'קליקים'}</span>
+        <span className="text-xs">{language === 'en' ? 'Clicks' : 'קליקים'}</span>
       </Button>
 
       <Button 
         variant="outline" 
         className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
-        onClick={handleHorizontalSliderPuzzleClick}
+        onClick={handleSliderPuzzleClick}
       >
         <SlidersHorizontal className="h-5 w-5" />
-        <span className="text-xs">{language === 'en' ? 'H-Slider' : 'מחוון אופקי'}</span>
-      </Button>
-
-      <Button 
-        variant="outline" 
-        className="h-14 flex flex-col gap-1 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
-        onClick={handleVerticalSliderPuzzleClick}
-      >
-        <SlidersVertical className="h-5 w-5" />
-        <span className="text-xs">{language === 'en' ? 'V-Slider' : 'מחוון אנכי'}</span>
+        <span className="text-xs">{language === 'en' ? 'Slider' : 'מחוון'}</span>
       </Button>
     </div>
   );
