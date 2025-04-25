@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -12,6 +11,7 @@ import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { isValidCanvas } from "@/utils/canvasValidation";
 
 const Play = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -91,8 +91,20 @@ const Play = () => {
             'canvases' in canvasData && 'activeCanvasIndex' in canvasData &&
             Array.isArray(canvasData.canvases)) {
           
-          setCanvases(canvasData.canvases as CanvasType[]);
-          setActiveCanvasIndex(canvasData.activeCanvasIndex as number);
+          const validatedCanvases = canvasData.canvases
+            .filter((canvas): canvas is CanvasType => isValidCanvas(canvas));
+          
+          if (validatedCanvases.length === 0) {
+            console.error("No valid canvases found in data");
+            throw new Error('No valid canvas data found');
+          }
+          
+          setCanvases(validatedCanvases);
+          setActiveCanvasIndex(
+            typeof canvasData.activeCanvasIndex === 'number' 
+              ? Math.min(canvasData.activeCanvasIndex, validatedCanvases.length - 1) 
+              : 0
+          );
         } else {
           console.error("Invalid canvas data structure:", canvasData);
           throw new Error('Invalid project data format');
