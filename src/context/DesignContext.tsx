@@ -75,6 +75,32 @@ export const DesignProvider = ({
   
   const [savedInitialState, setSavedInitialState] = useState<Canvas[] | null>(null);
   
+  const addToHistory = useCallback((newCanvases: Canvas[], isInitialLoad: boolean = false) => {
+    if (!isValidCanvasState(newCanvases)) {
+      console.error("Invalid canvas state detected, not adding to history");
+      return;
+    }
+    
+    if (isInitialLoad) {
+      const initialHistory = [JSON.parse(JSON.stringify(newCanvases))];
+      setHistory(initialHistory);
+      setHistoryIndex(0);
+      setSavedInitialState(JSON.parse(JSON.stringify(newCanvases)));
+    } else {
+      const currentHistoryState = history[historyIndex];
+      const isStateDifferent = !currentHistoryState || 
+        JSON.stringify(currentHistoryState) !== JSON.stringify(newCanvases);
+      
+      if (isStateDifferent) {
+        const newHistoryIndex = historyIndex + 1;
+        const newHistory = history.slice(0, newHistoryIndex);
+        newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
+        setHistory(newHistory);
+        setHistoryIndex(newHistoryIndex);
+      }
+    }
+  }, [history, historyIndex]);
+  
   const resetToInitialState = useCallback(() => {
     if (savedInitialState) {
       setCanvases(JSON.parse(JSON.stringify(savedInitialState)));
@@ -270,32 +296,6 @@ export const DesignProvider = ({
     }
   }, [canvases, initialLoadComplete, addToHistory]);
 
-  const addToHistory = useCallback((newCanvases: Canvas[], isInitialLoad: boolean = false) => {
-    if (!isValidCanvasState(newCanvases)) {
-      console.error("Invalid canvas state detected, not adding to history");
-      return;
-    }
-    
-    if (isInitialLoad) {
-      const initialHistory = [JSON.parse(JSON.stringify(newCanvases))];
-      setHistory(initialHistory);
-      setHistoryIndex(0);
-      setSavedInitialState(JSON.parse(JSON.stringify(newCanvases)));
-    } else {
-      const currentHistoryState = history[historyIndex];
-      const isStateDifferent = !currentHistoryState || 
-        JSON.stringify(currentHistoryState) !== JSON.stringify(newCanvases);
-      
-      if (isStateDifferent) {
-        const newHistoryIndex = historyIndex + 1;
-        const newHistory = history.slice(0, newHistoryIndex);
-        newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
-        setHistory(newHistory);
-        setHistoryIndex(newHistoryIndex);
-      }
-    }
-  }, [history, historyIndex]);
-  
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
     ? (canvases[activeCanvasIndex]?.elements || []) 
     : [];
