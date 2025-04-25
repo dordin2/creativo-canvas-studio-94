@@ -1,3 +1,4 @@
+
 import { DesignElement, FileMetadata } from "@/types/designTypes";
 
 /**
@@ -5,56 +6,71 @@ import { DesignElement, FileMetadata } from "@/types/designTypes";
  * Handles special cases like image data that can't be easily JSON serialized
  */
 export const prepareElementForDuplication = (element: DesignElement): Partial<DesignElement> => {
-  // Create a base deep copy through serialization/deserialization
-  const duplicate = JSON.parse(JSON.stringify(element));
+  // First handle image-specific data that needs special handling
+  let imageData = {};
   
-  // Handle special element types that require custom copying
   if (element.type === 'image') {
-    // Explicitly preserve the dataUrl - this is crucial for image duplication
-    if (element.dataUrl) {
-      duplicate.dataUrl = element.dataUrl;
-    }
+    console.log("ElementUtils - Preparing image data for duplication");
     
-    // Preserve the thumbnail dataUrl if it exists
-    if (element.thumbnailDataUrl) {
-      duplicate.thumbnailDataUrl = element.thumbnailDataUrl;
-    }
+    // Preserve image-specific data before JSON serialization
+    imageData = {
+      dataUrl: element.dataUrl,
+      thumbnailDataUrl: element.thumbnailDataUrl,
+      src: element.src,
+      cacheKey: element.cacheKey
+    };
     
-    // Preserve the external source URL if it exists
-    if (element.src) {
-      duplicate.src = element.src;
-    }
-    
-    // Preserve cache key if it exists
-    if (element.cacheKey) {
-      duplicate.cacheKey = element.cacheKey;
-    }
-    
-    // File objects can't be cloned via JSON, but we need to keep track that a file existed
-    // We'll store a reference to indicate that this was originally a file upload
     if (element.file) {
-      // We can't clone the file object, but we can keep its metadata
-      duplicate.fileMetadata = {
-        name: element.file.name,
-        type: element.file.type,
-        size: element.file.size,
-        lastModified: element.file.lastModified
+      imageData = {
+        ...imageData,
+        fileMetadata: {
+          name: element.file.name,
+          type: element.file.type,
+          size: element.file.size,
+          lastModified: element.file.lastModified
+        }
       };
     }
     
-    // Make sure original dimensions are preserved
     if (element.originalSize) {
-      duplicate.originalSize = { ...element.originalSize };
+      imageData = {
+        ...imageData,
+        originalSize: { ...element.originalSize }
+      };
     }
     
-    console.log("elementUtils - Image element duplicated with data:", {
-      dataUrl: duplicate.dataUrl ? "exists" : "missing",
-      dataUrlLength: duplicate.dataUrl ? duplicate.dataUrl.length : 0,
-      thumbnailExists: !!duplicate.thumbnailDataUrl,
-      src: duplicate.src,
-      cacheKey: duplicate.cacheKey,
-      fileMetadata: duplicate.fileMetadata,
-      originalSize: duplicate.originalSize
+    console.log("ElementUtils - Image data prepared:", {
+      hasDataUrl: !!element.dataUrl,
+      hasThumbnail: !!element.thumbnailDataUrl,
+      hasSrc: !!element.src,
+      hasCacheKey: !!element.cacheKey,
+      hasFileMetadata: !!element.file,
+      hasOriginalSize: !!element.originalSize
+    });
+  }
+  
+  // Create base duplicate through serialization (excluding image data)
+  const elementForSerialization = { ...element };
+  if (element.type === 'image') {
+    delete elementForSerialization.dataUrl;
+    delete elementForSerialization.thumbnailDataUrl;
+    delete elementForSerialization.file;
+  }
+  
+  // Create the duplicate through serialization
+  const duplicate = JSON.parse(JSON.stringify(elementForSerialization));
+  
+  // Restore image data if this was an image element
+  if (element.type === 'image') {
+    Object.assign(duplicate, imageData);
+    
+    console.log("ElementUtils - Final duplicate image data:", {
+      hasDataUrl: !!duplicate.dataUrl,
+      hasThumbnail: !!duplicate.thumbnailDataUrl,
+      hasSrc: !!duplicate.src,
+      hasCacheKey: !!duplicate.cacheKey,
+      hasFileMetadata: !!duplicate.fileMetadata,
+      hasOriginalSize: !!duplicate.originalSize
     });
   }
   
@@ -121,3 +137,4 @@ export const cloneImageElement = (element: DesignElement): Partial<DesignElement
   
   return clone;
 };
+
