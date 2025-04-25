@@ -20,7 +20,6 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   open,
   onOpenChange,
 }) => {
-  // Define preventZoom BEFORE useEffect to resolve the useState error
   const preventZoom = React.useCallback((e: WheelEvent) => {
     if (e.ctrlKey) {
       e.preventDefault();
@@ -44,11 +43,11 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed inset-0 w-screen h-screen max-w-none m-0 border-none rounded-none bg-white" style={{ transform: "none" }}>
-        <div className="flex flex-col h-full max-h-screen">
-          <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-50">
-            <DialogHeader className="flex flex-row items-center gap-4 w-full">
-              <DialogTitle className="text-xl sm:text-2xl text-canvas-purple font-bold">
+      <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden">
+        <div className="flex flex-col h-full">
+          <div className="flex items-center justify-between p-4 border-b">
+            <DialogHeader className="flex flex-row items-center gap-4">
+              <DialogTitle className="text-xl text-canvas-purple font-bold">
                 Library Elements
               </DialogTitle>
             </DialogHeader>

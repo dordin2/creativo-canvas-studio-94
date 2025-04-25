@@ -128,11 +128,11 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed inset-0 w-screen h-screen max-w-none p-0 m-0 overflow-hidden border-none rounded-none bg-white" style={{ transform: "none" }}>
+      <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden">
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-50">
-            <DialogHeader className="flex flex-row items-center gap-4 w-full">
-              <DialogTitle className="text-xl sm:text-2xl text-canvas-purple font-bold">
+          <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-50">
+            <DialogHeader className="flex flex-row items-center gap-4">
+              <DialogTitle className="text-xl text-canvas-purple font-bold">
                 {language === 'en' ? 'Add New Element' : 'הוספת אלמנט חדש'}
               </DialogTitle>
             </DialogHeader>
@@ -146,9 +146,9 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
             </DialogClose>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-            <Tabs defaultValue="shapes" className="w-full">
-              <TabsList className="w-full justify-start border-b rounded-none px-4 bg-transparent h-12">
+          <div className="flex-1 overflow-hidden">
+            <Tabs defaultValue="shapes" className="w-full h-full">
+              <TabsList className="w-full justify-start border-b rounded-none px-4 bg-transparent h-12 sticky top-[73px] z-40 bg-white">
                 <TabsTrigger value="shapes" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Shapes' : 'צורות'}
                 </TabsTrigger>
@@ -175,9 +175,9 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 onChange={handleImageUploadClick}
               />
 
-              <div className="p-4">
+              <div className="flex-1 overflow-auto">
                 <TabsContent value="shapes" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4">
                     {shapes.map((shape) => (
                       <Button
                         key={shape.type}
@@ -193,7 +193,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value="text" className="m-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4">
                     {text.map((item) => (
                       <Button
                         key={item.type}
@@ -209,7 +209,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value="puzzles" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4">
                     {puzzles.map((puzzle) => (
                       <Button
                         key={puzzle.type}
@@ -229,7 +229,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value="media" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4">
                     <Button
                       variant="outline"
                       className="h-24 flex flex-col items-center justify-center gap-2 bg-[#D3E4FD] hover:bg-[#D3E4FD]/90"
@@ -242,7 +242,9 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value="library" className="m-0">
-                  <LibraryView onClose={() => onOpenChange(false)} />
+                  <div className="p-4">
+                    <LibraryView onClose={() => onOpenChange(false)} />
+                  </div>
                 </TabsContent>
               </div>
             </Tabs>
