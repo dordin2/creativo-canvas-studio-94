@@ -374,15 +374,11 @@ const Editor = () => {
         <div className="flex-1 overflow-hidden flex flex-col relative z-1">
           {!isGameMode ? (
             <>
-              <div className="z-10 relative">
-                <CanvasTabs />
-              </div>
-              <div className="flex-1 relative z-1">
-                <Canvas />
-              </div>
+              <CanvasTabs />
+              <Canvas />
             </>
           ) : (
-            <div className="fixed-canvas-container z-1">
+            <div className="fixed-canvas-container">
               <Canvas isFullscreen={true} />
             </div>
           )}
