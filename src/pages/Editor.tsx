@@ -3,7 +3,6 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/Header";
-import Sidebar from "@/components/Sidebar";
 import Canvas from "@/components/Canvas";
 import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
@@ -372,11 +371,6 @@ const Editor = () => {
       )}
       {!isGameMode && <div className="z-30 relative"><Header /></div>}
       <div className={`flex flex-1 overflow-hidden relative ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
-        {!isGameMode && (
-          <div className="flex-shrink-0 w-64 z-20 relative">
-            <Sidebar />
-          </div>
-        )}
         <div className="flex-1 overflow-hidden flex flex-col relative z-1">
           {!isGameMode ? (
             <>
