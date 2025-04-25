@@ -21,10 +21,11 @@ import {
   ContextMenuItem,
   ContextMenuTrigger,
 } from "@/components/ui/context-menu";
-import { Copy, Trash2, Eye, EyeOff } from "lucide-react";
+import { Copy, Trash2, Eye, EyeOff, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { prepareElementForDuplication } from "@/utils/elementUtils";
-import { getImageFromCache } from "@/utils/imageUploader"; // Import from the correct file
+import { getImageFromCache } from "@/utils/imageUploader";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 const DraggableElement = ({ element, isActive, children }: {
   element: DesignElement;
@@ -61,9 +62,9 @@ const DraggableElement = ({ element, isActive, children }: {
   const [combinationPuzzleModal, setCombinationPuzzleModal] = useState(false);
   const [combinationMessage, setCombinationMessage] = useState('');
   const [imageLoaded, setImageLoaded] = useState(false);
-
   const { isResizing, handleResizeStart } = useElementResize(element);
   const { isRotating, handleRotateStart } = useElementRotation(element, elementRef);
+  const { isInteractiveMode } = useInteractiveMode();
 
   const textElementTypes = ['heading', 'subheading', 'paragraph'];
   const isSequencePuzzleElement = element.type === 'sequencePuzzle';
@@ -657,6 +658,15 @@ const DraggableElement = ({ element, isActive, children }: {
               <Trash2 className="h-4 w-4" />
               <span>Delete</span>
             </ContextMenuItem>
+            {isInteractiveMode && (
+              <ContextMenuItem 
+                className="flex items-center gap-2"
+                onClick={() => {}}
+              >
+                <Zap className="h-4 w-4" />
+                <span>Interactive</span>
+              </ContextMenuItem>
+            )}
           </ContextMenuContent>
         </ContextMenu>
       )}
