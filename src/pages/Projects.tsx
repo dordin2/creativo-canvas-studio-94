@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Plus, Folder, Clock, LogOut, UserCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Database } from "@/types/database";
+import { ElementMenuDialog } from "@/components/ElementMenuDialog";
 
 type Project = {
   id: string;
@@ -274,7 +275,6 @@ const Projects = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Add ElementMenuDialog for admins */}
       <ElementMenuDialog 
         open={libraryOpen} 
         onOpenChange={setLibraryOpen} 

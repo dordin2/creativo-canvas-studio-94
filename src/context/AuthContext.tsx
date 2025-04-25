@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,6 +10,7 @@ type AuthContextType = {
   user: User | null;
   profile: any | null;
   isLoading: boolean;
+  isAdmin: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -24,35 +24,35 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, currentSession) => {
+      async (event, currentSession) => {
         console.log("Auth state changed:", event);
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
-        // Fetch profile data when session changes
         if (currentSession?.user) {
-          // Use setTimeout to avoid potential Supabase deadlocks
           setTimeout(() => {
             loadUserProfile();
+            checkAdminStatus(currentSession.user.id);
           }, 0);
         } else {
           setProfile(null);
+          setIsAdmin(false);
         }
       }
     );
 
-    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       
       if (currentSession?.user) {
         loadUserProfile();
+        checkAdminStatus(currentSession.user.id);
       }
       setIsLoading(false);
     });
@@ -62,11 +62,28 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
+  const checkAdminStatus = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .rpc('is_admin');
+
+      if (error) {
+        console.error('Error checking admin status:', error);
+        setIsAdmin(false);
+        return;
+      }
+
+      setIsAdmin(data || false);
+    } catch (error) {
+      console.error('Unexpected error checking admin status:', error);
+      setIsAdmin(false);
+    }
+  };
+
   const loadUserProfile = async () => {
     try {
       if (!user) return;
       
-      // Use the correct table name that exists in the database schema
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -147,6 +164,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     user,
     profile,
     isLoading,
+    isAdmin,
     signIn,
     signUp,
     signOut,
