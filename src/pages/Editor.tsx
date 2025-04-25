@@ -378,7 +378,7 @@ const Editor = () => {
           {!isGameMode ? (
             <>
               <CanvasTabs />
-              {activeElement && !isGameMode && activeElement.size && (
+              {activeElement && !isGameMode && !isInteractiveMode && activeElement.size && (
                 <FloatingSmartSlider element={activeElement} />
               )}
               <Canvas />
