@@ -210,7 +210,7 @@ export const AdminLibraryView: React.FC<AdminLibraryViewProps> = () => {
   }
 
   return (
-    <div className="space-y-6 p-4">
+    <div className="space-y-6">
       <div className="space-y-4 border rounded-lg p-4">
         <h3 className="text-lg font-medium">העלאת תמונה חדשה לספרייה</h3>
         <div className="space-y-4">

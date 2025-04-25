@@ -7,6 +7,7 @@ import {
   DialogTitle,
   DialogClose,
 } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
 import { AdminLibraryView } from "./AdminLibraryView";
 
@@ -42,8 +43,8 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="fixed inset-0 w-screen h-screen max-w-none p-0 m-0 overflow-hidden border-none rounded-none bg-white" style={{ transform: "none" }}>
-        <div className="flex flex-col h-full">
+      <DialogContent className="fixed inset-0 w-screen h-screen max-w-none m-0 border-none rounded-none bg-white" style={{ transform: "none" }}>
+        <div className="flex flex-col h-full max-h-screen">
           <div className="flex items-center justify-between p-4 border-b shadow-sm bg-white sticky top-0 z-50">
             <DialogHeader className="flex flex-row items-center gap-4 w-full">
               <DialogTitle className="text-xl sm:text-2xl text-canvas-purple font-bold">
@@ -60,9 +61,11 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
             </DialogClose>
           </div>
 
-          <div className="flex-1 overflow-y-auto">
-            <AdminLibraryView onClose={() => onOpenChange(false)} />
-          </div>
+          <ScrollArea className="flex-1">
+            <div className="p-4">
+              <AdminLibraryView onClose={() => onOpenChange(false)} />
+            </div>
+          </ScrollArea>
         </div>
       </DialogContent>
     </Dialog>
