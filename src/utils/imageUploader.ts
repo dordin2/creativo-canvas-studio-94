@@ -554,3 +554,5 @@ export const processLibraryImage = async (
     img.crossOrigin = "anonymous"; // Enable CORS for Supabase storage URLs
   });
 };
+
+export { compressImageToWebP, createThumbnail };

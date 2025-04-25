@@ -1,4 +1,3 @@
-
 import { DesignElement, FileMetadata } from "@/types/designTypes";
 
 /**
@@ -96,3 +95,42 @@ export const cloneImageElement = (element: DesignElement): Partial<DesignElement
   
   return clone;
 };
+
+export const calculateAppropriateImageSize = (
+  originalWidth: number,
+  originalHeight: number,
+  canvasWidth: number = window.innerWidth * 0.7, // Approximate canvas width if not provided
+  canvasHeight: number = window.innerHeight * 0.7 // Approximate canvas height if not provided
+): { width: number; height: number } => {
+  const MAX_CANVAS_IMAGE_SIZE_PERCENT = 0.3;
+  // Calculate the maximum dimensions based on canvas size and our target percentage
+  const maxCanvasWidth = canvasWidth * MAX_CANVAS_IMAGE_SIZE_PERCENT;
+  const maxCanvasHeight = canvasHeight * MAX_CANVAS_IMAGE_SIZE_PERCENT;
+
+  // Start with original dimensions
+  let targetWidth = originalWidth;
+  let targetHeight = originalHeight;
+
+  // Always scale down to our target maximum canvas percentage, regardless of original size
+  // This ensures consistency in how images appear when first uploaded
+  const widthRatio = maxCanvasWidth / targetWidth;
+  const heightRatio = maxCanvasHeight / targetHeight;
+
+  // Use the smaller ratio to ensure the image fits within constraints
+  const ratio = Math.min(widthRatio, heightRatio);
+
+  // Apply the scaling
+  targetWidth = Math.round(targetWidth * ratio);
+  targetHeight = Math.round(targetHeight * ratio);
+
+  console.log("elementUtils - Image scaled to fit canvas:", {
+    originalSize: `${originalWidth}x${originalHeight}`,
+    scaledSize: `${targetWidth}x${targetHeight}`,
+    scaleFactor: ratio.toFixed(2),
+    maxDimensions: `${maxCanvasWidth}x${maxCanvasHeight}`
+  });
+
+  return { width: targetWidth, height: targetHeight };
+};
+
+export { calculateAppropriateImageSize };
