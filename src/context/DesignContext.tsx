@@ -54,6 +54,8 @@ export const DesignProvider = ({
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
   } | null>(null);
+  const [hasInitialState, setHasInitialState] = useState<boolean>(false);
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
@@ -227,13 +229,37 @@ export const DesignProvider = ({
   };
   
   const addToHistory = useCallback((newCanvases: Canvas[]) => {
+    if (!newCanvases || newCanvases.length === 0) {
+      console.warn('Attempted to save invalid state to history');
+      return;
+    }
+
+    if (!hasInitialState) {
+      console.log('Setting initial state');
+      setHasInitialState(true);
+      const newHistory = [JSON.parse(JSON.stringify(newCanvases))];
+      setHistory(newHistory);
+      setHistoryIndex(0);
+      return;
+    }
+
+    const currentState = history[historyIndex];
+    if (JSON.stringify(currentState) === JSON.stringify(newCanvases)) {
+      console.log('No changes detected, skipping history addition');
+      return;
+    }
+
     const newHistoryIndex = historyIndex + 1;
     const newHistory = history.slice(0, newHistoryIndex);
     newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
+    
     setHistory(newHistory);
     setHistoryIndex(newHistoryIndex);
-  }, [history, historyIndex]);
-  
+    setHasChanges(true);
+    
+    console.log('Added new state to history, total states:', newHistory.length);
+  }, [history, historyIndex, hasInitialState]);
+
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
     ? (canvases[activeCanvasIndex]?.elements || []) 
     : [];
@@ -599,68 +625,63 @@ export const DesignProvider = ({
   };
   
   const undo = useCallback(() => {
-    if (historyIndex > 0) {
-      const newIndex = historyIndex - 1;
-      const previousState = history[newIndex];
-      setCanvases(previousState);
-      setHistoryIndex(newIndex);
-      
-      if (activeElement) {
-        const activeCanvas = previousState[activeCanvasIndex];
-        if (activeCanvas) {
-          const elementStillExists = activeCanvas.elements.some(e => e.id === activeElement.id);
-          if (!elementStillExists) {
-            setActiveElement(null);
-          } else {
-            const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
-            if (updatedActiveElement) {
-              setActiveElement(updatedActiveElement);
-            }
-          }
-        } else {
-          setActiveElement(null);
-        }
-      }
-      
-      toast.success(t('toast.success.undo'));
-    } else {
-      toast.info(t('toast.info.noMoreUndo'));
+    if (!hasChanges) {
+      toast.info(t('toast.info.noChangesYet'));
+      return;
     }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
-  
-  const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const newIndex = historyIndex + 1;
-      const nextState = history[newIndex];
-      setCanvases(nextState);
-      setHistoryIndex(newIndex);
-      
-      if (activeElement) {
-        const activeCanvas = nextState[activeCanvasIndex];
-        if (activeCanvas) {
+
+    if (historyIndex <= 0) {
+      toast.info(t('toast.info.atInitialState'));
+      return;
+    }
+
+    if (history.length === 0 || !history[historyIndex - 1]) {
+      console.error('Invalid history state detected');
+      return;
+    }
+
+    const newIndex = historyIndex - 1;
+    const previousState = history[newIndex];
+
+    if (!previousState || previousState.length === 0) {
+      console.error('Invalid previous state detected');
+      return;
+    }
+
+    setCanvases(previousState);
+    setHistoryIndex(newIndex);
+
+    if (newIndex === 0) {
+      setHasChanges(false);
+    }
+
+    if (activeElement) {
+      const activeCanvas = previousState[activeCanvasIndex];
+      if (activeCanvas) {
+        const elementStillExists = activeCanvas.elements.some(e => e.id === activeElement.id);
+        if (!elementStillExists) {
+          setActiveElement(null);
+        } else {
           const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
           if (updatedActiveElement) {
             setActiveElement(updatedActiveElement);
-          } else {
-            setActiveElement(null);
           }
-        } else {
-          setActiveElement(null);
         }
+      } else {
+        setActiveElement(null);
       }
-      
-      toast.success(t('toast.success.redo'));
-    } else {
-      toast.info(t('toast.info.noMoreRedo'));
     }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
-  
+
+    toast.success(t('toast.success.undo'));
+  }, [historyIndex, history, activeElement, activeCanvasIndex, hasChanges, t]);
+
   useEffect(() => {
-    if (history.length === 0 && canvases.length > 0) {
+    if (history.length === 0 && canvases.length > 0 && !hasInitialState) {
+      console.log('Setting up initial history state');
       addToHistory(canvases);
     }
-  }, [canvases, history.length, addToHistory]);
-  
+  }, [canvases, history.length, addToHistory, hasInitialState]);
+
   const value = {
     canvases,
     activeCanvasIndex,
@@ -685,7 +706,7 @@ export const DesignProvider = ({
     handleImageUpload,
     undo,
     redo,
-    canUndo: historyIndex > 0,
+    canUndo: hasChanges && historyIndex > 0,
     canRedo: historyIndex < history.length - 1,
     addCanvas,
     removeCanvas,
@@ -700,7 +721,7 @@ export const DesignProvider = ({
     handleItemCombination,
     setCanvases
   };
-  
+
   return (
     <DesignContext.Provider value={value}>
       {children}
