@@ -76,7 +76,7 @@ const Header = () => {
     return <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <div className="flex items-center">
           <div className="font-bold text-lg bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
-            {t('app.title')}
+            creative room
           </div>
         </div>
         
@@ -132,7 +132,7 @@ const Header = () => {
   return <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center gap-3">
         <div className="font-bold text-xl bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
-          {t('app.title')}
+          creative room
         </div>
         <div className="h-6 w-px bg-gray-200 mx-1"></div>
         <LanguageSwitcher />
