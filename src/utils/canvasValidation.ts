@@ -1,5 +1,5 @@
 
-import { Canvas, DesignElement } from "@/types/designTypes";
+import { Canvas, DesignElement, Json } from "@/types/designTypes";
 
 export function isDesignElement(element: unknown): element is DesignElement {
   return (
