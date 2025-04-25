@@ -1,9 +1,9 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
 import { Loader2 } from "lucide-react";
 import { processLibraryImage } from "@/utils/imageUploader";
-import { toast } from "sonner";
 
 interface LibraryImage {
   id: string;
@@ -12,7 +12,7 @@ interface LibraryImage {
 }
 
 export const LibraryView = ({ onClose }: { onClose: () => void }) => {
-  const { addElement, canvasRef } = useDesignState();
+  const { addElement, canvasRef, updateElement } = useDesignState();
   
   const { data: images, isLoading } = useQuery({
     queryKey: ['library-images'],
@@ -27,37 +27,39 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
     }
   });
   
-  const handleImageClick = async (image: LibraryImage) => {
-    const loadingToast = toast.loading("Processing image...");
+  const handleImageClick = (image: LibraryImage) => {
+    // Get initial size based on canvas
+    const canvasDimensions = canvasRef ? {
+      width: canvasRef.clientWidth,
+      height: canvasRef.clientHeight
+    } : {
+      width: window.innerWidth * 0.7,
+      height: window.innerHeight * 0.7
+    };
     
-    try {
-      // Get canvas dimensions if available
-      const canvasDimensions = canvasRef ? {
-        width: canvasRef.clientWidth,
-        height: canvasRef.clientHeight
-      } : undefined;
-      
-      // Process the library image fully before adding to canvas
-      const processedImage = await processLibraryImage(
-        image.image_path,
-        canvasDimensions?.width,
-        canvasDimensions?.height
-      );
-      
-      // Add the fully processed image to canvas
-      addElement('image', {
-        ...processedImage,
-        name: image.name
-      });
-      
-      toast.dismiss(loadingToast);
-      toast.success("Image added to canvas");
-      onClose();
-    } catch (error) {
-      console.error('Error processing library image:', error);
-      toast.dismiss(loadingToast);
-      toast.error("Failed to process image");
-    }
+    // Add element immediately with the URL
+    const newElement = addElement('image', {
+      src: image.image_path,
+      name: image.name,
+      size: {
+        width: Math.round(canvasDimensions.width * 0.3),
+        height: Math.round(canvasDimensions.height * 0.3)
+      }
+    });
+    
+    // Process image in background
+    processLibraryImage(
+      image.image_path,
+      canvasDimensions.width,
+      canvasDimensions.height
+    ).then((processedImage) => {
+      // Update the element with processed data
+      updateElement(newElement.id, processedImage);
+    }).catch((error) => {
+      console.error('Background image processing failed:', error);
+    });
+    
+    onClose();
   };
   
   if (isLoading) {
