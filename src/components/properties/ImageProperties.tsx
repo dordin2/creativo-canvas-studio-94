@@ -1,4 +1,3 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
@@ -24,11 +23,10 @@ const ImageProperties = ({
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
   const [rotation, setRotation] = useState(getRotation(element));
   const [imageLoaded, setImageLoaded] = useState(false);
-  const [imageStats, setImageStats] = useState<{size: string, dimensions: string} | null>(null);
+  const [imageStats, setImageStats] = useState<{size: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
 
-  // Initialize scale value based on element's current size when component mounts
   useEffect(() => {
     if (element.originalSize && element.size) {
       const currentScale = Math.round((element.size.width / element.originalSize.width) * 100);
@@ -39,7 +37,6 @@ const ImageProperties = ({
   }, [element.id, element.originalSize, element.size, element]);
 
   useEffect(() => {
-    // Try to recover image from cache if we have a cache key but no dataUrl
     const loadImages = async () => {
       if (element.cacheKey) {
         if (!imageSrc) {
@@ -62,33 +59,18 @@ const ImageProperties = ({
     
     loadImages();
     
-    // Calculate image stats for display
     if (imageSrc || element.src) {
       const size = imageSrc ? 
         estimateDataUrlSize(imageSrc) :
         0;
       
-      let sizeStr = 'Unknown';
-      if (size > 0) {
-        sizeStr = size > 1024 * 1024 ? 
-          `${(size / (1024 * 1024)).toFixed(2)}MB` : 
-          `${(size / 1024).toFixed(2)}KB`;
-      } else if (element.file) {
-        sizeStr = element.file.size > 1024 * 1024 ? 
-          `${(element.file.size / (1024 * 1024)).toFixed(2)}MB` : 
-          `${(element.file.size / 1024).toFixed(2)}KB`;
-      }
-      
-      const dimensions = element.originalSize ? 
-        `${element.originalSize.width} × ${element.originalSize.height}px` :
-        'Unknown';
-      
       setImageStats({
-        size: sizeStr,
-        dimensions
+        size: size > 0 ? 
+          `${(size / (1024 * 1024)).toFixed(2)}MB` : 
+          `${(size / 1024).toFixed(2)}KB`
       });
     }
-  }, [element.id, element.cacheKey, imageSrc, thumbnailSrc, element.src, element.file, element.originalSize]);
+  }, [element.id, element.cacheKey, imageSrc, thumbnailSrc, element.src, element.file]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
@@ -105,13 +87,11 @@ const ImageProperties = ({
     const file = e.target.files[0];
     console.log("ImageProperties - Selected file:", file.name, file.type, file.size);
     
-    // Reset the image loaded state before loading new image
     setImageLoaded(false);
     
     handleImageUpload(element.id, file);
   };
   
-  // Directly open file dialog when clicking the button
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
@@ -132,7 +112,7 @@ const ImageProperties = ({
   };
   
   const handleRotationChange = (value: number[]) => {
-    if (isGameMode) return; // No rotation in game mode
+    if (isGameMode) return;
     
     const newRotation = Math.round(value[0]);
     setRotation(newRotation);
@@ -144,11 +124,9 @@ const ImageProperties = ({
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isGameMode) return;
     
-    // Parse input and handle non-numeric input
     const inputValue = e.target.value;
     const newRotation = parseInt(inputValue) || 0;
     
-    // Keep rotation between -360 and 360 degrees
     const boundedRotation = Math.max(-360, Math.min(360, newRotation));
     
     handleRotationChange([boundedRotation]);
@@ -159,7 +137,6 @@ const ImageProperties = ({
   };
   
   const renderImagePreview = () => {
-    // If we have a thumbnailSrc, use it until the full image is loaded
     const mainSrc = imageSrc || element.src;
     
     if (!mainSrc) {
@@ -217,10 +194,6 @@ const ImageProperties = ({
               <span>Size:</span>
               <span className="font-medium">{imageStats.size}</span>
             </div>
-            <div className="flex justify-between">
-              <span>Dimensions:</span>
-              <span className="font-medium">{imageStats.dimensions}</span>
-            </div>
           </div>
         )}
       </div>
@@ -235,9 +208,6 @@ const ImageProperties = ({
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>10%</span>
         <span>200%</span>
-      </div>
-      <div className="text-sm mt-2">
-        {element.size?.width} × {element.size?.height} px
       </div>
     </div>
       
