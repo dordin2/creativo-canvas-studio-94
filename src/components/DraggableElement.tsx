@@ -1,9 +1,15 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { useDraggable } from "@/hooks/useDraggable";
 import { useElementResize } from "@/hooks/useElementResize";
 import { useElementRotation } from "@/hooks/useElementRotation";
 import { getElementStyle, getRotation } from "@/utils/elementStyles";
+import { prepareElementForDuplication } from "@/utils/elementUtils";
+import { getImageFromCache } from "@/utils/imageStorageDB";
+import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+
 import ElementControls from "./element/ElementControls";
 import EditableText from "./element/EditableText";
 import PuzzleElement from "./element/PuzzleElement";
@@ -12,8 +18,21 @@ import SliderPuzzleElement from "./element/SliderPuzzleElement";
 import ClickSequencePuzzleElement from "./element/ClickSequencePuzzleElement";
 import InteractionMessageModal from "./element/InteractionMessageModal";
 import ElementProperties from "./properties/ElementProperties";
-import { Zap } from "lucide-react";
+
+import PuzzleModal from "./element/PuzzleModal";
+import SequencePuzzleModal from "./element/SequencePuzzleModal";
+import ClickSequencePuzzleModal from "./element/ClickSequencePuzzleModal";
+import SliderPuzzleModal from "./element/SliderPuzzleModal";
+
+import { Zap, Copy, Eye, EyeOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { 
+  ContextMenu,
+  ContextMenuTrigger,
+  ContextMenuContent,
+  ContextMenuItem 
+} from "@/components/ui/context-menu";
+
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 const DraggableElement = ({ element, isActive, children }: {
