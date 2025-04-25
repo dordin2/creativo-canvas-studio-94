@@ -3,7 +3,7 @@ import { useState } from "react";
 import { DesignElement } from "@/context/DesignContext";
 import { useDesignState } from "@/context/DesignContext";
 import { Slider } from "@/components/ui/slider";
-import { RotateCw } from "lucide-react";
+import { ZoomIn, RotateCw } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { getRotation } from "@/utils/elementStyles";
 
@@ -64,7 +64,11 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
           onPressedChange={setIsRotationMode}
           className="ml-2"
         >
-          <RotateCw className="h-4 w-4" />
+          {isRotationMode ? (
+            <RotateCw className="h-4 w-4" />
+          ) : (
+            <ZoomIn className="h-4 w-4" />
+          )}
         </Toggle>
         
         <div className="w-12 text-sm font-medium text-gray-600">
