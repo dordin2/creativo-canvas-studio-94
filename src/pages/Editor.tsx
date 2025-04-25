@@ -1,10 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Canvas from "@/components/Canvas";
-import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
 import { useDesignState } from "@/context/DesignContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
@@ -165,138 +164,6 @@ const Editor = () => {
     );
   }
 
-  if (isMobile && !isGameMode) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden">
-        <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
-          <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={goBackToProjects}
-              className="mr-1"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <h1 className="text-lg font-semibold text-canvas-purple truncate max-w-[160px]">{projectName}</h1>
-          </div>
-          <div className="flex gap-2">
-            <PaymentButton projectId={projectId} />
-            
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="outline" size="icon" className="bg-white p-2">
-                  <Menu className="h-4 w-4" />
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="px-4 pt-2 pb-8">
-                <div className="space-y-4 mt-4">
-                  <h3 className="font-medium text-lg">Project Options</h3>
-                  <div className="grid gap-2">
-                    <Button 
-                      onClick={toggleProjectVisibility}
-                      variant="outline"
-                      className="justify-start"
-                    >
-                      {isPublic ? (
-                        <Globe className="mr-2 h-4 w-4 text-green-500" />
-                      ) : (
-                        <Lock className="mr-2 h-4 w-4 text-red-500" />
-                      )}
-                      {isPublic ? 'Public' : 'Private'}
-                    </Button>
-                    <Button 
-                      onClick={handleShareGame}
-                      variant="outline"
-                      className="justify-start"
-                    >
-                      <Share2 className="mr-2 h-4 w-4" />
-                      Share Game
-                    </Button>
-                    <Button 
-                      onClick={handleSaveProject}
-                      className="bg-canvas-purple hover:bg-canvas-purple/90 justify-start"
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      Save Project
-                    </Button>
-                  </div>
-                </div>
-              </DrawerContent>
-            </Drawer>
-          </div>
-        </div>
-        
-        <Header />
-        
-        <div className="flex-1 overflow-hidden flex flex-col">
-          <div className="z-10 relative">
-            <CanvasTabs />
-          </div>
-          <div className="flex-1 relative z-1">
-            <Canvas />
-          </div>
-        </div>
-        
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around px-2 py-2 z-30">
-          <Drawer>
-            <DrawerTrigger asChild>
-              <Button variant="ghost" size="icon" className="aspect-square">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Add Elements" 
-                  className="h-6 w-6"
-                />
-                <span className="sr-only">Add Elements</span>
-              </Button>
-            </DrawerTrigger>
-            <DrawerContent className="px-4 pb-6">
-              <div className="mt-2">
-                <MobileSidebar 
-                  isOpen={showMobileSidebar} 
-                  onClose={() => setShowMobileSidebar(false)} 
-                />
-              </div>
-            </DrawerContent>
-          </Drawer>
-          
-          <Button variant="ghost" size="icon" className="aspect-square" onClick={toggleGameMode}>
-            <img 
-              src="/placeholder.svg" 
-              alt="Preview Game" 
-              className="h-6 w-6"
-            />
-            <span className="sr-only">Preview Game</span>
-          </Button>
-          
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="aspect-square" 
-            onClick={handleSaveProject}
-          >
-            <Save className="h-6 w-6 text-canvas-purple" />
-            <span className="sr-only">Save Project</span>
-          </Button>
-          
-          {activeElement && (
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="aspect-square">
-                  <Pencil className="h-6 w-6" />
-                  <span className="sr-only">Edit Properties</span>
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="px-0 pb-4">
-                <MobileProperties />
-              </DrawerContent>
-            </Drawer>
-          )}
-        </div>
-      </div>
-    );
-  }
-
   if (isMobile && isGameMode) {
     return (
       <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
@@ -371,6 +238,7 @@ const Editor = () => {
         </div>
       )}
       {!isGameMode && <div className="z-30 relative"><Header /></div>}
+      
       <div className={`flex flex-1 overflow-hidden relative ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
         <div className="flex-1 overflow-hidden flex flex-col relative z-1">
           {!isGameMode ? (
@@ -387,12 +255,8 @@ const Editor = () => {
             </div>
           )}
         </div>
-        {!isGameMode && (
-          <div className="flex-shrink-0 w-80 z-20 relative">
-            <Properties />
-          </div>
-        )}
       </div>
+
       {isGameMode && (
         <>
           <InventoryPanel />
