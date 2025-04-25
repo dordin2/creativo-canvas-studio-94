@@ -1,3 +1,4 @@
+
 import { CSSProperties } from "react";
 
 export type Json =
@@ -155,7 +156,6 @@ export interface DesignContextType {
   inventoryItems: InventoryItem[];
   showInventory: boolean;
   draggedInventoryItem: DesignElement | null;
-  showInteractionPanel: boolean;
   toggleGameMode: () => void;
   toggleInventory: () => void;
   setCanvasRef: (ref: HTMLDivElement) => void;
@@ -184,7 +184,6 @@ export interface DesignContextType {
   setDraggedInventoryItem: (element: DesignElement | null) => void;
   handleItemCombination: (inventoryItemId: string, targetElementId: string) => void;
   setCanvases: (canvases: Canvas[]) => void;
-  setShowInteractionPanel: (show: boolean) => void;
 }
 
 export const generateId = (): string => {

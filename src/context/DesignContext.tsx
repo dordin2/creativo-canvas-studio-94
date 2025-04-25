@@ -54,7 +54,6 @@ export const DesignProvider = ({
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
   } | null>(null);
-  const [showInteractionPanel, setShowInteractionPanel] = useState(false);
   const { t } = useLanguage();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
@@ -699,9 +698,7 @@ export const DesignProvider = ({
     removeFromInventory,
     setDraggedInventoryItem,
     handleItemCombination,
-    setCanvases,
-    showInteractionPanel,
-    setShowInteractionPanel,
+    setCanvases
   };
   
   return (
