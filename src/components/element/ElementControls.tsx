@@ -1,3 +1,4 @@
+
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { Trash2, Copy, Eye, EyeOff, Zap, Navigation } from "lucide-react";
 import ResizeHandles from "./ResizeHandles";
@@ -33,8 +34,8 @@ const ElementControls = ({
   const { updateElement, removeElement, addElement, canvases } = useDesignState();
   const { isInteractiveMode } = useInteractiveMode();
   
-  // Don't render controls at all if the element is hidden or it's the background
-  if ((!showControls && !isActive) || element.type === 'background' || element.isHidden) {
+  // Don't render controls if element is hidden, is background, or in interactive mode
+  if ((!showControls && !isActive) || element.type === 'background' || element.isHidden || isInteractiveMode) {
     return null;
   }
 

@@ -14,7 +14,7 @@ import { useEffect } from "react";
 
 interface ElementPropertiesProps {
   element: DesignElement;
-  isInteractiveMode?: boolean;  // Add optional isInteractiveMode prop
+  isInteractiveMode?: boolean;
 }
 
 const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProps) => {
@@ -79,6 +79,15 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
     </>
   );
   
+  if (isInteractiveMode) {
+    return (
+      <div className="properties-panel p-4 space-y-6">
+        <h2 className="text-lg font-semibold mb-4">Interaction Properties</h2>
+        <InteractionProperties element={element} />
+      </div>
+    );
+  }
+
   return (
     <div className="properties-panel p-4 space-y-6">
       <h2 className="text-lg font-semibold mb-4">Properties</h2>

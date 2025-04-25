@@ -12,10 +12,12 @@ const Properties = () => {
     return <NoElementSelected />;
   }
   
-  return <ElementProperties 
-    element={activeElement} 
-    isInteractiveMode={isInteractiveMode} 
-  />;
+  return (
+    <ElementProperties 
+      element={activeElement} 
+      isInteractiveMode={isInteractiveMode} 
+    />
+  );
 };
 
 export default Properties;
