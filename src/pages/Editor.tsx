@@ -34,7 +34,8 @@ const Editor = () => {
     canvases, 
     activeCanvasIndex, 
     setCanvases: updateCanvases,
-    activeElement
+    activeElement,
+    resetToInitialState
   } = useDesignState();
   const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
   const isMobile = useIsMobile();
@@ -84,16 +85,36 @@ const Editor = () => {
             activeCanvasIndex: jsonData.activeCanvasIndex as number
           };
           
-          updateCanvases(canvasData.canvases);
+          const isValid = canvasData.canvases && 
+                          Array.isArray(canvasData.canvases) && 
+                          canvasData.canvases.length > 0 &&
+                          canvasData.canvases.every(canvas => 
+                            canvas && 'id' in canvas && 'elements' in canvas
+                          );
+          
+          if (isValid) {
+            updateCanvases(JSON.parse(JSON.stringify(canvasData.canvases)));
+            console.log("Canvas data loaded successfully with", 
+              canvasData.canvases.length, "canvases");
+          } else {
+            console.error("Invalid canvas data structure:", jsonData);
+            toast.error('Invalid project data format');
+            updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
+                            name: "Canvas 1", elements: [] }]);
+          }
         } else {
           console.error("Invalid canvas data structure:", jsonData);
           toast.error('Invalid project data format');
+          updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
+                          name: "Canvas 1", elements: [] }]);
         }
       }
       
     } catch (error) {
       console.error('Error loading project data:', error);
       toast.error('Failed to load project data');
+      updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
+                      name: "Canvas 1", elements: [] }]);
     } finally {
       setIsLoading(false);
     }
