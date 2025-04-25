@@ -1,4 +1,5 @@
-import React, { useRef } from "react";
+
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -7,6 +8,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, Image, X } from "lucide-react";
@@ -128,9 +130,9 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden">
+      <DialogContent className="max-w-[800px] w-[800px] max-h-[800px] h-[800px] p-0 gap-0 overflow-hidden">
         <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b sticky top-0 bg-white z-50">
+          <div className="flex items-center justify-between p-4 border-b">
             <DialogHeader className="flex flex-row items-center gap-4">
               <DialogTitle className="text-xl text-canvas-purple font-bold">
                 {language === 'en' ? 'Add New Element' : 'הוספת אלמנט חדש'}
@@ -146,9 +148,9 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
             </DialogClose>
           </div>
 
-          <div className="flex-1 overflow-hidden">
-            <Tabs defaultValue="shapes" className="w-full h-full">
-              <TabsList className="w-full justify-start border-b rounded-none px-4 bg-transparent h-12 sticky top-[73px] z-40 bg-white">
+          <Tabs defaultValue="shapes" className="flex-1">
+            <div className="border-b bg-white">
+              <TabsList className="w-full justify-center h-12 bg-transparent">
                 <TabsTrigger value="shapes" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Shapes' : 'צורות'}
                 </TabsTrigger>
@@ -165,19 +167,21 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                   {language === 'en' ? 'Library' : 'ספרייה'}
                 </TabsTrigger>
               </TabsList>
+            </div>
 
-              <input
-                type="file"
-                id="image-upload"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageUploadClick}
-              />
+            <input
+              type="file"
+              id="image-upload"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageUploadClick}
+            />
 
-              <div className="flex-1 overflow-auto">
+            <ScrollArea className="flex-1">
+              <div className="p-6">
                 <TabsContent value="shapes" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {shapes.map((shape) => (
                       <Button
                         key={shape.type}
@@ -193,7 +197,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value="text" className="m-0">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {text.map((item) => (
                       <Button
                         key={item.type}
@@ -209,7 +213,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value="puzzles" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     {puzzles.map((puzzle) => (
                       <Button
                         key={puzzle.type}
@@ -229,7 +233,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value="media" className="m-0">
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 p-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <Button
                       variant="outline"
                       className="h-24 flex flex-col items-center justify-center gap-2 bg-[#D3E4FD] hover:bg-[#D3E4FD]/90"
@@ -242,15 +246,14 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 </TabsContent>
 
                 <TabsContent value="library" className="m-0">
-                  <div className="p-4">
-                    <LibraryView onClose={() => onOpenChange(false)} />
-                  </div>
+                  <LibraryView onClose={() => onOpenChange(false)} />
                 </TabsContent>
               </div>
-            </Tabs>
-          </div>
+            </ScrollArea>
+          </Tabs>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+
