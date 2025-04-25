@@ -3,7 +3,13 @@ import { HexColorPicker } from "react-colorful";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { 
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { Bold, Italic, Underline } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
@@ -12,7 +18,7 @@ import { getRotation } from "@/utils/elementStyles";
 import { Slider } from "@/components/ui/slider";
 
 const TextProperties = ({ element }: { element: DesignElement }) => {
-  const { updateElementWithoutHistory, commitToHistory, isGameMode } = useDesignState();
+  const { updateElement, isGameMode } = useDesignState();
   const [rotation, setRotation] = useState(getRotation(element));
 
   useEffect(() => {
@@ -20,30 +26,27 @@ const TextProperties = ({ element }: { element: DesignElement }) => {
   }, [element]);
 
   const handleColorChange = (newColor: string) => {
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       style: { ...element.style, color: newColor }
     });
-    commitToHistory();
   };
 
   const handleTextChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    updateElementWithoutHistory(element.id, { content: e.target.value });
-    commitToHistory();
+    updateElement(element.id, { content: e.target.value });
   };
 
   const handleFontSizeChange = (value: string) => {
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       style: { ...element.style, fontSize: `${value}px` }
     });
-    commitToHistory();
   };
 
   const handleRotationChange = (value: number[]) => {
-    if (isGameMode) return;
+    if (isGameMode) return; // No rotation in game mode
     
     const newRotation = Math.round(value[0]);
     setRotation(newRotation);
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       style: { ...element.style, transform: `rotate(${newRotation}deg)` }
     });
   };
@@ -51,27 +54,23 @@ const TextProperties = ({ element }: { element: DesignElement }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isGameMode) return;
     
+    // Parse input and handle non-numeric input
     const inputValue = e.target.value;
     const newRotation = parseInt(inputValue) || 0;
     
+    // Keep rotation between -360 and 360 degrees
     const boundedRotation = Math.max(-360, Math.min(360, newRotation));
     
     handleRotationChange([boundedRotation]);
-    commitToHistory();
-  };
-
-  const handleRotationCommit = () => {
-    commitToHistory();
   };
 
   const toggleTextStyle = (style: 'fontWeight' | 'textDecoration' | 'fontStyle', value: string) => {
     const currentStyle = element.style?.[style];
     const newValue = currentStyle === value ? 'normal' : value;
     
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       style: { ...element.style, [style]: newValue }
     });
-    commitToHistory();
   };
 
   const isStyleActive = (style: 'fontWeight' | 'textDecoration' | 'fontStyle', value: string): boolean => {
@@ -187,7 +186,6 @@ const TextProperties = ({ element }: { element: DesignElement }) => {
             max={180}
             step={1}
             onValueChange={handleRotationChange}
-            onValueCommit={handleRotationCommit}
             disabled={isGameMode}
             className="my-4"
           />

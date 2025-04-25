@@ -1,4 +1,3 @@
-
 import { DesignElement } from "@/types/designTypes";
 import { HexColorPicker } from "react-colorful";
 import { Label } from "@/components/ui/label";
@@ -9,7 +8,7 @@ import { useState, useEffect } from "react";
 import { getRotation } from "@/utils/elementStyles";
 
 const ShapeProperties = ({ element }: { element: DesignElement }) => {
-  const { updateElementWithoutHistory, commitToHistory, isGameMode } = useDesignState();
+  const { updateElement, isGameMode } = useDesignState();
   const [rotation, setRotation] = useState(getRotation(element));
 
   useEffect(() => {
@@ -17,18 +16,17 @@ const ShapeProperties = ({ element }: { element: DesignElement }) => {
   }, [element]);
 
   const handleColorChange = (newColor: string) => {
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       style: { ...element.style, backgroundColor: newColor }
     });
-    commitToHistory();
   };
 
   const handleRotationChange = (value: number[]) => {
-    if (isGameMode) return;
+    if (isGameMode) return; // No rotation in game mode
     
     const newRotation = Math.round(value[0]);
     setRotation(newRotation);
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       style: { ...element.style, transform: `rotate(${newRotation}deg)` }
     });
   };
@@ -36,17 +34,14 @@ const ShapeProperties = ({ element }: { element: DesignElement }) => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (isGameMode) return;
     
+    // Parse input and handle non-numeric input
     const inputValue = e.target.value;
     const newRotation = parseInt(inputValue) || 0;
     
+    // Keep rotation between -360 and 360 degrees
     const boundedRotation = Math.max(-360, Math.min(360, newRotation));
     
     handleRotationChange([boundedRotation]);
-    commitToHistory();
-  };
-
-  const handleRotationCommit = () => {
-    commitToHistory();
   };
 
   return (
@@ -73,7 +68,6 @@ const ShapeProperties = ({ element }: { element: DesignElement }) => {
             max={180}
             step={1}
             onValueChange={handleRotationChange}
-            onValueCommit={handleRotationCommit}
             disabled={isGameMode}
             className="my-4"
           />

@@ -12,7 +12,7 @@ interface FloatingSmartSliderProps {
 }
 
 const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
-  const { updateElementWithoutHistory, commitToHistory } = useDesignState();
+  const { updateElement } = useDesignState();
   const [isRotationMode, setIsRotationMode] = useState(false);
   
   const calculateScale = () => {
@@ -30,7 +30,7 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
     const newWidth = Math.round(element.originalSize.width * scaleFactor);
     const newHeight = Math.round(element.originalSize.height * scaleFactor);
     
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       size: {
         width: newWidth,
         height: newHeight
@@ -40,13 +40,9 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
   
   const handleRotationChange = (value: number[]) => {
     const newRotation = Math.round(value[0]);
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       style: { ...element.style, transform: `rotate(${newRotation}deg)` }
     });
-  };
-
-  const handleValueCommit = () => {
-    commitToHistory();
   };
   
   return (
@@ -59,7 +55,6 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
             max={isRotationMode ? 180 : 200}
             step={1}
             onValueChange={isRotationMode ? handleRotationChange : handleScaleChange}
-            onValueCommit={handleValueCommit}
             className="w-full"
           />
         </div>
