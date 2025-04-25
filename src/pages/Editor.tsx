@@ -34,9 +34,7 @@ const Editor = () => {
     canvases, 
     activeCanvasIndex, 
     setCanvases: updateCanvases,
-    activeElement,
-    resetToInitialState,
-    projectLoadingComplete
+    activeElement
   } = useDesignState();
   const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
   const isMobile = useIsMobile();
@@ -86,50 +84,16 @@ const Editor = () => {
             activeCanvasIndex: jsonData.activeCanvasIndex as number
           };
           
-          const isValid = canvasData.canvases && 
-                          Array.isArray(canvasData.canvases) && 
-                          canvasData.canvases.length > 0 &&
-                          canvasData.canvases.every(canvas => 
-                            canvas && 'id' in canvas && 'elements' in canvas
-                          );
-          
-          if (isValid) {
-            const processedCanvases = JSON.parse(JSON.stringify(canvasData.canvases));
-            updateCanvases(processedCanvases);
-            console.log("Canvas data loaded successfully with", 
-              canvasData.canvases.length, "canvases");
-              
-            // Signal that project loading is now complete
-            setTimeout(() => {
-              projectLoadingComplete();
-            }, 100);
-          } else {
-            console.error("Invalid canvas data structure:", jsonData);
-            toast.error('Invalid project data format');
-            updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
-                            name: "Canvas 1", elements: [] }]);
-            projectLoadingComplete();
-          }
+          updateCanvases(canvasData.canvases);
         } else {
           console.error("Invalid canvas data structure:", jsonData);
           toast.error('Invalid project data format');
-          updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
-                          name: "Canvas 1", elements: [] }]);
-          projectLoadingComplete();
         }
-      } else {
-        // No data found, initialize with empty canvas
-        updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
-                        name: "Canvas 1", elements: [] }]);
-        projectLoadingComplete();
       }
       
     } catch (error) {
       console.error('Error loading project data:', error);
       toast.error('Failed to load project data');
-      updateCanvases([{ id: Math.random().toString(36).substring(2, 9), 
-                      name: "Canvas 1", elements: [] }]);
-      projectLoadingComplete();
     } finally {
       setIsLoading(false);
     }

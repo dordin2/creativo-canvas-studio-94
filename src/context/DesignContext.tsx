@@ -30,47 +30,23 @@ interface DesignProviderProps {
   };
 }
 
-const MAX_HISTORY_LENGTH = 50;
-
-const isValidCanvasState = (canvases: Canvas[]): boolean => {
-  if (!canvases || !Array.isArray(canvases) || canvases.length === 0) {
-    return false;
-  }
-  
-  return canvases.every(canvas => 
-    canvas && 
-    typeof canvas === 'object' &&
-    'id' in canvas && 
-    'name' in canvas && 
-    'elements' in canvas &&
-    Array.isArray(canvas.elements) &&
-    canvas.elements.every(element => 
-      element && 
-      typeof element === 'object' &&
-      'id' in element &&
-      'type' in element &&
-      'position' in element
-    )
-  );
-};
-
 export const DesignProvider = ({ 
   children, 
-  initialState: providedInitialState = {} 
+  initialState = {} 
 }: DesignProviderProps) => {
   const [canvases, setCanvases] = useState<Canvas[]>(
-    providedInitialState.canvases || [
+    initialState.canvases || [
       { id: generateId(), name: "Canvas 1", elements: [] }
     ]
   );
   const [activeCanvasIndex, setActiveCanvasIndex] = useState<number>(
-    providedInitialState.activeCanvasIndex !== undefined ? providedInitialState.activeCanvasIndex : 0
+    initialState.activeCanvasIndex !== undefined ? initialState.activeCanvasIndex : 0
   );
   const [activeElement, setActiveElement] = useState<DesignElement | null>(null);
   const [canvasRef, setCanvasRefState] = useState<HTMLDivElement | null>(null);
   const [history, setHistory] = useState<Canvas[][]>([]);
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
-  const [isGameMode, setIsGameMode] = useState<boolean>(providedInitialState.isGameMode || false);
+  const [isGameMode, setIsGameMode] = useState<boolean>(initialState.isGameMode || false);
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [showInventory, setShowInventory] = useState<boolean>(false);
   const [draggedInventoryItem, setDraggedInventoryItem] = useState<DesignElement | null>(null);
@@ -78,167 +54,7 @@ export const DesignProvider = ({
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
   } | null>(null);
-  const [initialLoadComplete, setInitialLoadComplete] = useState<boolean>(false);
-  const [initialState, setInitialState] = useState<Canvas[] | null>(null);
-  const [savedInitialState, setSavedInitialState] = useState<Canvas[] | null>(null);
-  const [projectLoaded, setProjectLoaded] = useState<boolean>(false);
   const { t } = useLanguage();
-  
-  const addToHistory = useCallback((newCanvases: Canvas[], isInitialLoad: boolean = false) => {
-    if (!isValidCanvasState(newCanvases)) {
-      console.error("Invalid canvas state detected, not adding to history");
-      return;
-    }
-    
-    if (isInitialLoad) {
-      const initialHistory = [JSON.parse(JSON.stringify(newCanvases))];
-      setHistory(initialHistory);
-      setHistoryIndex(0);
-      setSavedInitialState(JSON.parse(JSON.stringify(newCanvases)));
-      console.log("Initial history created with state:", newCanvases.length, "canvases");
-    } else {
-      const newHistory = history.slice(0, historyIndex + 1);
-      
-      const currentState = newHistory[newHistory.length - 1];
-      const isStateDifferent = !currentState || 
-        JSON.stringify(currentState) !== JSON.stringify(newCanvases);
-      
-      if (isStateDifferent) {
-        newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
-        
-        while (newHistory.length > MAX_HISTORY_LENGTH) {
-          newHistory.shift();
-        }
-        
-        setHistory(newHistory);
-        setHistoryIndex(Math.min(historyIndex + 1, MAX_HISTORY_LENGTH - 1));
-        console.log("Added to history at index:", historyIndex + 1);
-      }
-    }
-  }, [history, historyIndex]);
-  
-  const resetToInitialState = useCallback(() => {
-    console.log("Attempting to reset to initial state");
-    console.log("Saved initial state exists:", savedInitialState !== null);
-    console.log("History length:", history.length);
-    
-    const fallback = history[0] ? JSON.parse(JSON.stringify(history[0])) : null;
-    console.log("Fallback state exists:", fallback !== null);
-
-    if (savedInitialState || fallback) {
-      const stateToUse = savedInitialState 
-        ? JSON.parse(JSON.stringify(savedInitialState))
-        : JSON.parse(JSON.stringify(fallback));
-      
-      console.log("Resetting to state with", stateToUse.length, "canvases");
-      setCanvases(stateToUse);
-      setActiveElement(null);
-      toast.info(t('toast.info.reachedInitialState'));
-      
-      setHistory([stateToUse]);
-      setHistoryIndex(0);
-    } else {
-      console.error("Could not find any valid initial state to reset to");
-      toast.error("Could not restore initial state");
-    }
-  }, [savedInitialState, history, t]);
-  
-  const validateStateBeforeUndo = useCallback((state: Canvas[] | undefined): boolean => {
-    if (!state) return false;
-    
-    try {
-      if (!isValidCanvasState(state)) return false;
-      
-      return state.every(canvas => {
-        const elementIds = new Set(canvas.elements.map(el => el.id));
-        if (elementIds.size !== canvas.elements.length) return false;
-        
-        return canvas.elements.every(element => {
-          if (element.interaction?.canCombineWith) {
-            return element.interaction.canCombineWith.every(targetId => 
-              canvas.elements.some(el => el.id === targetId)
-            );
-          }
-          return true;
-        });
-      });
-    } catch (error) {
-      console.error("Error validating state:", error);
-      return false;
-    }
-  }, []);
-  
-  const undo = useCallback(() => {
-    console.log("Undo called. Current history index:", historyIndex);
-    
-    if (historyIndex > 0) {
-      const newIndex = historyIndex - 1;
-      const previousState = history[newIndex];
-      
-      if (previousState && validateStateBeforeUndo(previousState)) {
-        console.log("Valid previous state found at index:", newIndex);
-        const previousStateClone = JSON.parse(JSON.stringify(previousState));
-        setCanvases(previousStateClone);
-        setHistoryIndex(newIndex);
-        
-        if (activeElement) {
-          const activeCanvas = previousStateClone[activeCanvasIndex];
-          if (activeCanvas) {
-            const updatedElement = activeCanvas.elements.find(e => e.id === activeElement.id);
-            setActiveElement(updatedElement || null);
-          } else {
-            setActiveElement(null);
-          }
-        }
-        
-        toast.success(newIndex === 0 ? t('toast.info.reachedInitialState') : t('toast.success.undo'));
-      } else {
-        console.error("Invalid previous state, attempting recovery");
-        if (savedInitialState && isValidCanvasState(savedInitialState)) {
-          resetToInitialState();
-        } else {
-          console.error("Could not recover state");
-          toast.error(t('toast.error.undoFailed'));
-        }
-      }
-    } else {
-      toast.info(t('toast.info.noMoreUndo'));
-    }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, savedInitialState, t, resetToInitialState, validateStateBeforeUndo]);
-  
-  const redo = useCallback(() => {
-    if (historyIndex < history.length - 1) {
-      const newIndex = historyIndex + 1;
-      const nextState = history[newIndex];
-      
-      if (nextState && isValidCanvasState(nextState)) {
-        setCanvases(nextState);
-        setHistoryIndex(newIndex);
-        
-        if (activeElement) {
-          const activeCanvas = nextState[activeCanvasIndex];
-          if (activeCanvas) {
-            const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
-            setActiveElement(updatedActiveElement);
-          } else {
-            setActiveElement(null);
-          }
-        }
-        
-        toast.success(t('toast.success.redo') || "Redo successful");
-      } else {
-        toast.error(t('toast.error.cannotRedo') || "Cannot redo: next state is invalid");
-      }
-    } else {
-      toast.info(t('toast.info.noMoreRedo') || "No more redo available");
-    }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
-
-  useEffect(() => {
-    if (canvases.length > 0 && !initialState) {
-      setInitialState(JSON.parse(JSON.stringify(canvases)));
-    }
-  }, [canvases, initialState]);
   
   const setCanvasRef = (ref: HTMLDivElement) => {
     setCanvasRefState(ref);
@@ -410,14 +226,14 @@ export const DesignProvider = ({
     return canvas.elements.find(el => el.id === elementId) || null;
   };
   
-  useEffect(() => {
-    if (!initialLoadComplete && canvases.length > 0 && savedInitialState === null) {
-      setSavedInitialState(JSON.parse(JSON.stringify(canvases)));
-      addToHistory(canvases, true);
-      setInitialLoadComplete(true);
-    }
-  }, [canvases, initialLoadComplete, addToHistory]);
-
+  const addToHistory = useCallback((newCanvases: Canvas[]) => {
+    const newHistoryIndex = historyIndex + 1;
+    const newHistory = history.slice(0, newHistoryIndex);
+    newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
+    setHistory(newHistory);
+    setHistoryIndex(newHistoryIndex);
+  }, [history, historyIndex]);
+  
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
     ? (canvases[activeCanvasIndex]?.elements || []) 
     : [];
@@ -443,11 +259,7 @@ export const DesignProvider = ({
   }, [canvases, activeCanvasIndex, activeElement]);
   
   const commitToHistory = useCallback(() => {
-    if (isValidCanvasState(canvases)) {
-      addToHistory(canvases);
-    } else {
-      console.error("Cannot commit invalid state to history");
-    }
+    addToHistory(canvases);
   }, [canvases, addToHistory]);
   
   const handleImageUpload = (id: string, file: File) => {
@@ -786,52 +598,68 @@ export const DesignProvider = ({
     toast.success(t('toast.success.reorderCanvas') || "Canvas order updated");
   };
   
-  useEffect(() => {
-    if (!initialLoadComplete && canvases.length > 0) {
-      console.log("Initializing history with loaded state");
-      addToHistory(canvases, true);
-    }
-  }, [canvases, initialLoadComplete, addToHistory]);
-  
-  useEffect(() => {
-    if (initialLoadComplete && !isValidCanvasState(canvases)) {
-      console.error("Invalid canvas state detected, attempting recovery");
-      if (initialState && isValidCanvasState(initialState)) {
-        setCanvases(JSON.parse(JSON.stringify(initialState)));
-        toast.warning(t('toast.warning.stateRecovery') || "Recovered from invalid state");
-      } else if (history.length > 0) {
-        const lastGoodState = [...history].reverse().find(isValidCanvasState);
-        if (lastGoodState) {
-          setCanvases(lastGoodState);
-          toast.warning(t('toast.warning.stateRecovery') || "Recovered from last valid state");
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      const previousState = history[newIndex];
+      setCanvases(previousState);
+      setHistoryIndex(newIndex);
+      
+      if (activeElement) {
+        const activeCanvas = previousState[activeCanvasIndex];
+        if (activeCanvas) {
+          const elementStillExists = activeCanvas.elements.some(e => e.id === activeElement.id);
+          if (!elementStillExists) {
+            setActiveElement(null);
+          } else {
+            const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
+            if (updatedActiveElement) {
+              setActiveElement(updatedActiveElement);
+            }
+          }
+        } else {
+          setActiveElement(null);
         }
       }
+      
+      toast.success(t('toast.success.undo'));
+    } else {
+      toast.info(t('toast.info.noMoreUndo'));
     }
-  }, [canvases, initialState, history, initialLoadComplete, t]);
+  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
+  
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const newIndex = historyIndex + 1;
+      const nextState = history[newIndex];
+      setCanvases(nextState);
+      setHistoryIndex(newIndex);
+      
+      if (activeElement) {
+        const activeCanvas = nextState[activeCanvasIndex];
+        if (activeCanvas) {
+          const updatedActiveElement = activeCanvas.elements.find(e => e.id === activeElement.id);
+          if (updatedActiveElement) {
+            setActiveElement(updatedActiveElement);
+          } else {
+            setActiveElement(null);
+          }
+        } else {
+          setActiveElement(null);
+        }
+      }
+      
+      toast.success(t('toast.success.redo'));
+    } else {
+      toast.info(t('toast.info.noMoreRedo'));
+    }
+  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
   useEffect(() => {
-    if (projectLoaded && canvases.length > 0 && !initialLoadComplete) {
-      console.log("Project loaded, initializing history and saving initial state");
-      const initialCanvasState = JSON.parse(JSON.stringify(canvases));
-      setSavedInitialState(initialCanvasState);
-      addToHistory(canvases, true);
-      setInitialLoadComplete(true);
+    if (history.length === 0 && canvases.length > 0) {
+      addToHistory(canvases);
     }
-  }, [projectLoaded, canvases, initialLoadComplete, addToHistory]);
-  
-  useEffect(() => {
-    if (!initialLoadComplete && canvases.length > 0 && savedInitialState === null && projectLoaded) {
-      console.log("Initializing history with loaded state for the first time");
-      setSavedInitialState(JSON.parse(JSON.stringify(canvases)));
-      addToHistory(canvases, true);
-      setInitialLoadComplete(true);
-    }
-  }, [canvases, initialLoadComplete, addToHistory, savedInitialState, projectLoaded]);
-  
-  const projectLoadingComplete = () => {
-    console.log("Project loading completed");
-    setProjectLoaded(true);
-  };
+  }, [canvases, history.length, addToHistory]);
   
   const value = {
     canvases,
@@ -870,9 +698,7 @@ export const DesignProvider = ({
     removeFromInventory,
     setDraggedInventoryItem,
     handleItemCombination,
-    setCanvases,
-    resetToInitialState,
-    projectLoadingComplete
+    setCanvases
   };
   
   return (
