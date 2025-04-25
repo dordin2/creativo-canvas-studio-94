@@ -18,82 +18,73 @@ import { PaymentButton } from "@/components/PaymentButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileSidebar from "@/components/MobileSidebar";
 import MobileProperties from "@/components/MobileProperties";
-import { 
-  Drawer,
-  DrawerContent,
-  DrawerTrigger,
-} from "@/components/ui/drawer";
+import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import FloatingAddButton from "@/components/FloatingAddButton";
 import FloatingSmartSlider from "@/components/FloatingSmartSlider";
-
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
-  const { projectId } = useParams<{ projectId: string }>();
+  const {
+    projectId
+  } = useParams<{
+    projectId: string;
+  }>();
   const navigate = useNavigate();
-  const { 
-    isGameMode, 
-    toggleGameMode, 
-    canvases, 
-    activeCanvasIndex, 
+  const {
+    isGameMode,
+    toggleGameMode,
+    canvases,
+    activeCanvasIndex,
     setCanvases: updateCanvases,
     activeElement
   } = useDesignState();
-  const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
+  const {
+    projectName,
+    saveProject,
+    isPublic,
+    toggleProjectVisibility
+  } = useProject();
   const isMobile = useIsMobile();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
-  const { isInteractiveMode } = useInteractiveMode();
-
+  const {
+    isInteractiveMode
+  } = useInteractiveMode();
   useEffect(() => {
     if (!projectId) {
       navigate('/');
       return;
     }
-    
     loadProjectData();
   }, [projectId]);
-
   useEffect(() => {
     if (isMobile && activeElement) {
       setShowMobileProperties(true);
     }
   }, [activeElement, isMobile]);
-
   const loadProjectData = async () => {
     try {
       setIsLoading(true);
-      
-      const { data, error } = await supabase
-        .from('project_canvases')
-        .select('canvas_data')
-        .eq('project_id', projectId)
-        .maybeSingle();
-      
+      const {
+        data,
+        error
+      } = await supabase.from('project_canvases').select('canvas_data').eq('project_id', projectId).maybeSingle();
       if (error) {
         throw error;
       }
-      
       if (data && data.canvas_data) {
         console.log("Loaded project data:", data.canvas_data);
-        
         const jsonData = data.canvas_data as Json;
-        
-        if (typeof jsonData === 'object' && jsonData !== null && 
-            'canvases' in jsonData && 'activeCanvasIndex' in jsonData &&
-            Array.isArray(jsonData.canvases)) {
-          
+        if (typeof jsonData === 'object' && jsonData !== null && 'canvases' in jsonData && 'activeCanvasIndex' in jsonData && Array.isArray(jsonData.canvases)) {
           const canvasData = {
             canvases: jsonData.canvases as unknown as CanvasType[],
             activeCanvasIndex: jsonData.activeCanvasIndex as number
           };
-          
           updateCanvases(canvasData.canvases);
         } else {
           console.error("Invalid canvas data structure:", jsonData);
           toast.error('Invalid project data format');
         }
       }
-      
     } catch (error) {
       console.error('Error loading project data:', error);
       toast.error('Failed to load project data');
@@ -101,7 +92,6 @@ const Editor = () => {
       setIsLoading(false);
     }
   };
-
   const handleSaveProject = async () => {
     try {
       await saveProject(canvases, activeCanvasIndex);
@@ -110,39 +100,30 @@ const Editor = () => {
       toast.error('Failed to save project');
     }
   };
-
   const handleShareGame = () => {
     const shareUrl = `${window.location.origin}/play/${projectId}`;
-    
     if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl)
-        .then(() => {
-          toast.success('Game link copied to clipboard!');
-        })
-        .catch((err) => {
-          console.error('Failed to copy link:', err);
-          promptManualCopy(shareUrl);
-        });
+      navigator.clipboard.writeText(shareUrl).then(() => {
+        toast.success('Game link copied to clipboard!');
+      }).catch(err => {
+        console.error('Failed to copy link:', err);
+        promptManualCopy(shareUrl);
+      });
     } else {
       promptManualCopy(shareUrl);
     }
   };
-
   const promptManualCopy = (url: string) => {
-    toast.info(
-      <div>
+    toast.info(<div>
         <p>Copy this link to share your game:</p>
         <div className="p-2 bg-gray-100 rounded mt-2 select-all">
           {url}
         </div>
-      </div>
-    );
+      </div>);
   };
-
   const goBackToProjects = () => {
     navigate('/');
   };
-
   const handleFloatingAdd = () => {
     const tab = document.querySelector('[data-state="active"][role="tab"]:not([aria-controls*="background"])');
     if (tab && typeof (tab as HTMLElement).click === "function") {
@@ -150,34 +131,28 @@ const Editor = () => {
     }
     const sidebar = document.querySelector(".sidebar-panel");
     if (sidebar && typeof sidebar.scrollIntoView === "function") {
-      sidebar.scrollIntoView({ behavior: "smooth", block: "nearest", inline: "nearest" });
+      sidebar.scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
+        inline: "nearest"
+      });
     }
   };
-
   if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white">
+    return <div className="min-h-screen flex items-center justify-center bg-white">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-canvas-purple mb-4">
             CreativoCanvas
           </h1>
           <div className="w-12 h-12 border-4 border-canvas-purple border-t-transparent rounded-full animate-spin mx-auto"></div>
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (isMobile && !isGameMode) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden">
+    return <div className="flex flex-col h-screen overflow-hidden">
         <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
           <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={goBackToProjects}
-              className="mr-1"
-            >
+            <Button variant="ghost" size="icon" onClick={goBackToProjects} className="mr-1">
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-lg font-semibold text-canvas-purple truncate max-w-[160px]">{projectName}</h1>
@@ -195,30 +170,15 @@ const Editor = () => {
                 <div className="space-y-4 mt-4">
                   <h3 className="font-medium text-lg">Project Options</h3>
                   <div className="grid gap-2">
-                    <Button 
-                      onClick={toggleProjectVisibility}
-                      variant="outline"
-                      className="justify-start"
-                    >
-                      {isPublic ? (
-                        <Globe className="mr-2 h-4 w-4 text-green-500" />
-                      ) : (
-                        <Lock className="mr-2 h-4 w-4 text-red-500" />
-                      )}
+                    <Button onClick={toggleProjectVisibility} variant="outline" className="justify-start">
+                      {isPublic ? <Globe className="mr-2 h-4 w-4 text-green-500" /> : <Lock className="mr-2 h-4 w-4 text-red-500" />}
                       {isPublic ? 'Public' : 'Private'}
                     </Button>
-                    <Button 
-                      onClick={handleShareGame}
-                      variant="outline"
-                      className="justify-start"
-                    >
+                    <Button onClick={handleShareGame} variant="outline" className="justify-start">
                       <Share2 className="mr-2 h-4 w-4" />
                       Share Game
                     </Button>
-                    <Button 
-                      onClick={handleSaveProject}
-                      className="bg-canvas-purple hover:bg-canvas-purple/90 justify-start"
-                    >
+                    <Button onClick={handleSaveProject} className="bg-canvas-purple hover:bg-canvas-purple/90 justify-start">
                       <Save className="mr-2 h-4 w-4" />
                       Save Project
                     </Button>
@@ -244,45 +204,28 @@ const Editor = () => {
           <Drawer>
             <DrawerTrigger asChild>
               <Button variant="ghost" size="icon" className="aspect-square">
-                <img 
-                  src="/placeholder.svg" 
-                  alt="Add Elements" 
-                  className="h-6 w-6"
-                />
+                <img src="/placeholder.svg" alt="Add Elements" className="h-6 w-6" />
                 <span className="sr-only">Add Elements</span>
               </Button>
             </DrawerTrigger>
             <DrawerContent className="px-4 pb-6">
               <div className="mt-2">
-                <MobileSidebar 
-                  isOpen={showMobileSidebar} 
-                  onClose={() => setShowMobileSidebar(false)} 
-                />
+                <MobileSidebar isOpen={showMobileSidebar} onClose={() => setShowMobileSidebar(false)} />
               </div>
             </DrawerContent>
           </Drawer>
           
           <Button variant="ghost" size="icon" className="aspect-square" onClick={toggleGameMode}>
-            <img 
-              src="/placeholder.svg" 
-              alt="Preview Game" 
-              className="h-6 w-6"
-            />
+            <img src="/placeholder.svg" alt="Preview Game" className="h-6 w-6" />
             <span className="sr-only">Preview Game</span>
           </Button>
           
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            className="aspect-square" 
-            onClick={handleSaveProject}
-          >
+          <Button variant="ghost" size="icon" className="aspect-square" onClick={handleSaveProject}>
             <Save className="h-6 w-6 text-canvas-purple" />
             <span className="sr-only">Save Project</span>
           </Button>
           
-          {activeElement && (
-            <Drawer>
+          {activeElement && <Drawer>
               <DrawerTrigger asChild>
                 <Button variant="ghost" size="icon" className="aspect-square">
                   <Pencil className="h-6 w-6" />
@@ -292,16 +235,12 @@ const Editor = () => {
               <DrawerContent className="px-0 pb-4">
                 <MobileProperties />
               </DrawerContent>
-            </Drawer>
-          )}
+            </Drawer>}
         </div>
-      </div>
-    );
+      </div>;
   }
-
   if (isMobile && isGameMode) {
-    return (
-      <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
+    return <div className="flex flex-col h-screen overflow-hidden p-0 m-0">
         <div className="flex-1 overflow-hidden h-screen w-screen p-0 m-0">
           <div className="fixed-canvas-container">
             <Canvas isFullscreen={true} isMobileView={true} />
@@ -312,29 +251,17 @@ const Editor = () => {
         <InventoryIcon />
         
         <div className="absolute bottom-4 left-4 z-[100]">
-          <Button 
-            variant="secondary" 
-            className="shadow-md bg-white hover:bg-gray-100 px-2 py-1"
-            onClick={toggleGameMode}
-          >
+          <Button variant="secondary" className="shadow-md bg-white hover:bg-gray-100 px-2 py-1" onClick={toggleGameMode}>
             <ChevronLeft className="mr-1 h-4 w-4" />
             <span className="text-sm">Exit</span>
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
-      {!isGameMode && (
-        <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
+  return <div className={`flex flex-col h-screen overflow-hidden ${isGameMode ? 'p-0 m-0' : ''}`}>
+      {!isGameMode && <div className="bg-white border-b border-gray-200 py-2 px-4 flex items-center justify-between z-30 relative">
           <div className="flex items-center">
-            <Button 
-              variant="ghost" 
-              onClick={goBackToProjects}
-              className="mr-2"
-            >
+            <Button variant="ghost" onClick={goBackToProjects} className="mr-2">
               <ChevronLeft className="mr-1" />
               Back to Projects
             </Button>
@@ -342,80 +269,44 @@ const Editor = () => {
           </div>
           <div className="flex gap-2">
             <PaymentButton projectId={projectId} />
-            <Button 
-              onClick={toggleProjectVisibility}
-              variant="outline"
-              className="bg-white hover:bg-gray-50"
-            >
-              {isPublic ? (
-                <Globe className="mr-2 h-4 w-4 text-green-500" />
-              ) : (
-                <Lock className="mr-2 h-4 w-4 text-red-500" />
-              )}
+            <Button onClick={toggleProjectVisibility} variant="outline" className="bg-white hover:bg-gray-50">
+              {isPublic ? <Globe className="mr-2 h-4 w-4 text-green-500" /> : <Lock className="mr-2 h-4 w-4 text-red-500" />}
               {isPublic ? 'Public' : 'Private'}
             </Button>
-            <Button 
-              onClick={handleShareGame}
-              variant="outline"
-              className="bg-white hover:bg-gray-50"
-            >
+            <Button onClick={handleShareGame} variant="outline" className="bg-white hover:bg-gray-50">
               <Share2 className="mr-2 h-4 w-4" />
               Share Game
             </Button>
-            <Button 
-              onClick={handleSaveProject}
-              className="bg-canvas-purple hover:bg-canvas-purple/90"
-            >
+            <Button onClick={handleSaveProject} className="bg-canvas-purple hover:bg-canvas-purple/90">
               <Save className="mr-2 h-4 w-4" />
               Save Project
             </Button>
           </div>
-        </div>
-      )}
+        </div>}
       {!isGameMode && <div className="z-30 relative"><Header /></div>}
       <div className={`flex flex-1 overflow-hidden relative ${isGameMode ? 'h-screen w-screen p-0 m-0' : ''}`}>
         <div className="flex-1 overflow-hidden flex flex-col relative z-1">
-          {!isGameMode ? (
-            <>
+          {!isGameMode ? <>
               <CanvasTabs />
-              {activeElement && !isGameMode && !isInteractiveMode && activeElement.size && (
-                <FloatingSmartSlider element={activeElement} />
-              )}
+              {activeElement && !isGameMode && !isInteractiveMode && activeElement.size && <FloatingSmartSlider element={activeElement} />}
               <Canvas />
-            </>
-          ) : (
-            <div className="fixed-canvas-container">
+            </> : <div className="fixed-canvas-container">
               <Canvas isFullscreen={true} />
-            </div>
-          )}
+            </div>}
         </div>
-        {!isGameMode && isInteractiveMode && (
-          <div className="flex-shrink-0 w-80 z-20 relative">
-            <Properties />
-          </div>
-        )}
+        {!isGameMode && isInteractiveMode}
       </div>
-      {isGameMode && (
-        <>
+      {isGameMode && <>
           <InventoryPanel />
           <InventoryIcon />
           <div className="absolute bottom-4 left-4 z-[100]">
-            <Button 
-              variant="secondary" 
-              className="shadow-md bg-white hover:bg-gray-100"
-              onClick={toggleGameMode}
-            >
+            <Button variant="secondary" className="shadow-md bg-white hover:bg-gray-100" onClick={toggleGameMode}>
               <ChevronLeft className="mr-1" />
               Exit Game Mode
             </Button>
           </div>
-        </>
-      )}
-      {!isGameMode && !isMobile && (
-        <FloatingAddButton />
-      )}
-    </div>
-  );
+        </>}
+      {!isGameMode && !isMobile && <FloatingAddButton />}
+    </div>;
 };
-
 export default Editor;
