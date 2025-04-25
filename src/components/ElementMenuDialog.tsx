@@ -107,20 +107,20 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     }
   ];
 
-  const handleElementClick = (type: string, config?: any) => {
-    if (type === 'image') {
-      fileInputRef.current?.click();
-    } else {
-      addElement(type as any, config);
-      onOpenChange(false);
-    }
-  };
-
   const handleImageUploadClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
       const newElement = addElement('image');
       handleImageUpload(newElement.id, file);
+      onOpenChange(false);
+    }
+  };
+
+  const handleElementClick = (type: string, config?: any) => {
+    if (type === 'image') {
+      fileInputRef.current?.click();
+    } else {
+      addElement(type as any, config);
       onOpenChange(false);
     }
   };

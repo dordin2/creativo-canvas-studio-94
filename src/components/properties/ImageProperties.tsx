@@ -111,6 +111,7 @@ const ImageProperties = ({
     handleImageUpload(element.id, file);
   };
   
+  // Directly open file dialog when clicking the button
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
@@ -195,80 +196,80 @@ const ImageProperties = ({
   };
   
   return <div className="space-y-4">
-      <div>
-        <Label>Upload Image</Label>
-        <div className="mt-2 flex flex-col gap-2">
-          <input type="file" ref={fileInputRef} onChange={handleImageFileSelect} accept="image/*" className="hidden" />
-          <Button variant="outline" onClick={triggerFileInput} className="w-full flex items-center justify-center">
-            <Upload className="h-4 w-4 mr-2" />
-            {element.file ? "Change Image" : "Choose Image"}
-          </Button>
-          {element.file && <p className="text-xs text-muted-foreground">
-              {element.file.name}
-          </p>}
-          {element.fileMetadata && !element.file && <p className="text-xs text-muted-foreground">
-              {element.fileMetadata.name} (duplicated)
-          </p>}
-          
-          {imageStats && (
-            <div className="text-xs text-muted-foreground mt-1">
-              <div className="flex justify-between">
-                <span>Size:</span>
-                <span className="font-medium">{imageStats.size}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Dimensions:</span>
-                <span className="font-medium">{imageStats.dimensions}</span>
-              </div>
+    <div>
+      <Label>Image</Label>
+      <div className="mt-2 flex flex-col gap-2">
+        <input type="file" ref={fileInputRef} onChange={handleImageFileSelect} accept="image/*" className="hidden" />
+        <Button variant="outline" onClick={triggerFileInput} className="w-full flex items-center justify-center gap-2">
+          <Upload className="h-4 w-4" />
+          {element.file ? "Change Image" : "Choose Image"}
+        </Button>
+        {element.file && <p className="text-xs text-muted-foreground">
+          {element.file.name}
+        </p>}
+        {element.fileMetadata && !element.file && <p className="text-xs text-muted-foreground">
+          {element.fileMetadata.name} (duplicated)
+        </p>}
+        
+        {imageStats && (
+          <div className="text-xs text-muted-foreground mt-1">
+            <div className="flex justify-between">
+              <span>Size:</span>
+              <span className="font-medium">{imageStats.size}</span>
             </div>
-          )}
-        </div>
-      </div>
-      
-      <div className="mt-4">
-        <div className="flex items-center justify-between mb-2">
-          <Label>Resize Image</Label>
-          <span className="text-sm font-medium">{scaleValue}%</span>
-        </div>
-        <Slider value={[scaleValue]} min={10} max={200} step={1} onValueChange={handleImageResize} className="mb-2" />
-        <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>10%</span>
-          <span>200%</span>
-        </div>
-        <div className="text-sm mt-2">
-          {element.size?.width} × {element.size?.height} px
-        </div>
-      </div>
-      
-      {renderImagePreview()}
-      
-      <div className="space-y-4">
-        <Label>Rotation</Label>
-        <div className="space-y-2">
-          <Slider
-            value={[rotation]}
-            min={-180}
-            max={180}
-            step={1}
-            onValueChange={handleRotationChange}
-            disabled={isGameMode}
-            className="my-4"
-          />
-          <div className="flex gap-4 items-center">
-            <Input 
-              type="number" 
-              value={rotation}
-              onChange={handleInputChange}
-              min={-360}
-              max={360}
-              className="w-24"
-              disabled={isGameMode}
-            />
-            <span className="text-sm">degrees</span>
+            <div className="flex justify-between">
+              <span>Dimensions:</span>
+              <span className="font-medium">{imageStats.dimensions}</span>
+            </div>
           </div>
+        )}
+      </div>
+    </div>
+      
+    <div className="mt-4">
+      <div className="flex items-center justify-between mb-2">
+        <Label>Resize Image</Label>
+        <span className="text-sm font-medium">{scaleValue}%</span>
+      </div>
+      <Slider value={[scaleValue]} min={10} max={200} step={1} onValueChange={handleImageResize} className="mb-2" />
+      <div className="flex items-center justify-between text-xs text-muted-foreground">
+        <span>10%</span>
+        <span>200%</span>
+      </div>
+      <div className="text-sm mt-2">
+        {element.size?.width} × {element.size?.height} px
+      </div>
+    </div>
+      
+    {renderImagePreview()}
+      
+    <div className="space-y-4">
+      <Label>Rotation</Label>
+      <div className="space-y-2">
+        <Slider
+          value={[rotation]}
+          min={-180}
+          max={180}
+          step={1}
+          onValueChange={handleRotationChange}
+          disabled={isGameMode}
+          className="my-4"
+        />
+        <div className="flex gap-4 items-center">
+          <Input 
+            type="number" 
+            value={rotation}
+            onChange={handleInputChange}
+            min={-360}
+            max={360}
+            className="w-24"
+            disabled={isGameMode}
+          />
+          <span className="text-sm">degrees</span>
         </div>
       </div>
-    </div>;
+    </div>
+  </div>;
 };
 
 export default ImageProperties;
