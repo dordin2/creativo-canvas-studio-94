@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from "react";
 import {
   Dialog,
@@ -10,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, Image, X, Palette } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
@@ -27,6 +29,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
 }) => {
   const { addElement, handleImageUpload } = useDesignState();
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -150,12 +153,17 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     onOpenChange(false);
   };
 
+  const gridColumnsClass = isMobile ? 'grid-cols-2' : 'sm:grid-cols-4';
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-[800px] w-[800px] max-h-[800px] h-[800px] p-0 gap-0 overflow-hidden">
+      <DialogContent className={cn(
+        "max-h-[90vh] p-0 gap-0 overflow-hidden",
+        isMobile ? "w-[95vw] max-w-full" : "max-w-[800px] w-[800px]"
+      )}>
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
-            <DialogHeader className="flex flex-row items-center gap-4">
+            <DialogHeader className="flex flex-row items-center gap-2">
               <DialogTitle className="text-xl text-canvas-purple font-bold">
                 {language === 'en' ? 'Add New Element' : 'הוספת אלמנט חדש'}
               </DialogTitle>
@@ -165,14 +173,17 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                 className="text-gray-700 hover:text-canvas-purple transition-colors"
                 aria-label={language === 'en' ? 'Close menu' : 'סגור תפריט'}
               >
-                <X size={28} />
+                <X size={24} />
               </button>
             </DialogClose>
           </div>
 
           <Tabs defaultValue="shapes" className="flex-1 flex flex-col">
-            <div className="border-b bg-white">
-              <TabsList className="w-full justify-center h-12 bg-transparent gap-4">
+            <div className="border-b bg-white overflow-x-auto">
+              <TabsList className={cn(
+                "w-full justify-start h-12 bg-transparent px-2",
+                isMobile ? "flex-wrap" : "justify-center gap-4"
+              )}>
                 <TabsTrigger value="shapes" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Shapes' : 'צורות'}
                 </TabsTrigger>
@@ -205,17 +216,20 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
 
             <div className="flex-1 overflow-hidden">
               <ScrollArea className="h-full">
-                <div className="p-6">
+                <div className="p-4 pb-12">
                   <TabsContent value="shapes" className="m-0">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className={`grid ${gridColumnsClass} gap-3`}>
                       {shapes.map((shape) => (
                         <Button
                           key={shape.type}
                           variant="outline"
-                          className="h-24 flex flex-col items-center justify-center gap-2 bg-[#F1F0FB] hover:bg-[#F1F0FB]/90"
+                          className={cn(
+                            "flex flex-col items-center justify-center gap-2 bg-[#F1F0FB] hover:bg-[#F1F0FB]/90",
+                            isMobile ? "h-20" : "h-24"
+                          )}
                           onClick={() => handleElementClick(shape.type)}
                         >
-                          <shape.icon className="h-8 w-8" />
+                          <shape.icon className="h-6 w-6" />
                           <span>{shape.label}</span>
                         </Button>
                       ))}
@@ -223,15 +237,18 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                   </TabsContent>
 
                   <TabsContent value="text" className="m-0">
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className={`grid ${isMobile ? 'grid-cols-1' : 'sm:grid-cols-3'} gap-3`}>
                       {text.map((item) => (
                         <Button
                           key={item.type}
                           variant="outline"
-                          className="h-24 flex flex-col items-center justify-center gap-2 bg-[#FEF7CD] hover:bg-[#FEF7CD]/90"
+                          className={cn(
+                            "flex flex-col items-center justify-center gap-2 bg-[#FEF7CD] hover:bg-[#FEF7CD]/90",
+                            isMobile ? "h-20" : "h-24"
+                          )}
                           onClick={() => handleElementClick(item.type)}
                         >
-                          <item.icon className="h-8 w-8" />
+                          <item.icon className="h-6 w-6" />
                           <span className={item.className}>{item.label}</span>
                         </Button>
                       ))}
@@ -239,19 +256,20 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                   </TabsContent>
 
                   <TabsContent value="puzzles" className="m-0">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className={`grid ${gridColumnsClass} gap-3`}>
                       {puzzles.map((puzzle) => (
                         <Button
                           key={puzzle.type}
                           variant="outline"
                           className={cn(
-                            "h-24 flex flex-col items-center justify-center gap-2",
+                            "flex flex-col items-center justify-center gap-2",
                             puzzle.className,
-                            "hover:opacity-90"
+                            "hover:opacity-90",
+                            isMobile ? "h-20" : "h-24"
                           )}
                           onClick={() => handleElementClick(puzzle.type)}
                         >
-                          <puzzle.icon className="h-8 w-8" />
+                          <puzzle.icon className="h-6 w-6" />
                           <span>{puzzle.label}</span>
                         </Button>
                       ))}
@@ -259,34 +277,40 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                   </TabsContent>
 
                   <TabsContent value="media" className="m-0">
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                    <div className={`grid ${gridColumnsClass} gap-3`}>
                       <Button
                         variant="outline"
-                        className="h-24 flex flex-col items-center justify-center gap-2 bg-[#D3E4FD] hover:bg-[#D3E4FD]/90"
+                        className={cn(
+                          "flex flex-col items-center justify-center gap-2 bg-[#D3E4FD] hover:bg-[#D3E4FD]/90",
+                          isMobile ? "h-20" : "h-24"
+                        )}
                         onClick={() => handleElementClick('image')}
                       >
-                        <Image className="h-8 w-8" />
+                        <Image className="h-6 w-6" />
                         <span>{language === 'en' ? 'Upload Image' : 'העלאת תמונה'}</span>
                       </Button>
                     </div>
                   </TabsContent>
 
                   <TabsContent value="backgrounds" className="m-0">
-                    <div className="space-y-6">
+                    <div className="space-y-5">
                       <div>
                         <h3 className="text-sm font-medium mb-3">
                           {language === 'en' ? 'Solid Colors' : 'צבעים אחידים'}
                         </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className={`grid ${gridColumnsClass} gap-3`}>
                           {solidColors.map((item) => (
                             <Button
                               key={item.color}
                               variant="outline"
-                              className="h-24 flex flex-col items-center justify-center gap-2 hover:opacity-90"
+                              className={cn(
+                                "flex flex-col items-center justify-center gap-2 hover:opacity-90",
+                                isMobile ? "h-16" : "h-24"
+                              )}
                               style={{ backgroundColor: item.color }}
                               onClick={() => handleBackgroundClick({ color: item.color })}
                             >
-                              <span className="text-sm text-gray-600">{item.label}</span>
+                              <span className="text-xs text-gray-600">{item.label}</span>
                             </Button>
                           ))}
                         </div>
@@ -296,16 +320,19 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
                         <h3 className="text-sm font-medium mb-3">
                           {language === 'en' ? 'Gradients' : 'גרדיאנטים'}
                         </h3>
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div className={`grid ${isMobile ? 'grid-cols-1' : 'sm:grid-cols-4'} gap-3`}>
                           {gradients.map((item) => (
                             <Button
                               key={item.gradient}
                               variant="outline"
-                              className="h-24 flex flex-col items-center justify-center gap-2 hover:opacity-90"
+                              className={cn(
+                                "flex flex-col items-center justify-center gap-2 hover:opacity-90",
+                                isMobile ? "h-16" : "h-24"
+                              )}
                               style={{ background: item.gradient }}
                               onClick={() => handleBackgroundClick({ gradient: item.gradient })}
                             >
-                              <span className="text-sm text-white text-shadow">{item.label}</span>
+                              <span className="text-xs text-white text-shadow">{item.label}</span>
                             </Button>
                           ))}
                         </div>

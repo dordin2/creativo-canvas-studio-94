@@ -135,6 +135,35 @@
     z-index: 1000;
     min-width: 250px;
   }
+  
+  /* Better tabs display on mobile */
+  .mobile-tabs-list {
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    padding: 0 0.5rem;
+    scrollbar-width: none; /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+  }
+  
+  .mobile-tabs-list::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
+  }
+  
+  /* Better element dialog for mobile */
+  .element-dialog-mobile {
+    padding: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    max-height: 90vh !important;
+  }
+  
+  /* Enhance mobile touch targets */
+  .mobile-button {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem;
+  }
 }
 
 /* Dialog styles to prevent zoom affecting size */
@@ -172,4 +201,21 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Text shadow for better readability on gradient backgrounds */
+.text-shadow {
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Tab overflow handling for mobile */
+.tabs-container-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.tabs-container-scroll::-webkit-scrollbar {
+  display: none;
 }

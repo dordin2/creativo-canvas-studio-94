@@ -10,6 +10,8 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
 import { AdminLibraryView } from "./AdminLibraryView";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { cn } from "@/lib/utils";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -20,6 +22,8 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   open,
   onOpenChange,
 }) => {
+  const isMobile = useIsMobile();
+  
   const preventZoom = React.useCallback((e: WheelEvent) => {
     if (e.ctrlKey) {
       e.preventDefault();
@@ -43,7 +47,10 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-[90vw] max-h-[85vh] overflow-hidden">
+      <DialogContent className={cn(
+        "max-h-[85vh] overflow-hidden",
+        isMobile ? "w-[95vw] max-w-full" : "max-w-4xl w-[90vw]"
+      )}>
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
             <DialogHeader className="flex flex-row items-center gap-4">
@@ -56,7 +63,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
                 className="text-gray-700 hover:text-canvas-purple transition-colors"
                 aria-label="Close menu"
               >
-                <X size={28} />
+                <X size={24} />
               </button>
             </DialogClose>
           </div>
