@@ -214,7 +214,8 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
               onChange={handleImageUploadClick}
             />
 
-            <div className="flex-1 overflow-hidden">
+            {/* Fixed height container for tab content */}
+            <div className="flex-1 overflow-hidden" style={{ height: "500px" }}>
               <ScrollArea className="h-full">
                 <div className="p-4 pb-12">
                   <TabsContent value="shapes" className="m-0">

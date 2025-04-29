@@ -48,9 +48,9 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
-        "max-h-[85vh] overflow-hidden",
+        "p-0 gap-0 overflow-hidden",
         isMobile ? "w-[95vw] max-w-full" : "max-w-4xl w-[90vw]"
-      )}>
+      )} style={{ height: "600px" }}>
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
             <DialogHeader className="flex flex-row items-center gap-4">
