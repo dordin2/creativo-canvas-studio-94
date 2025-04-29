@@ -41,3 +41,10 @@ export const getClientCoordinates = (event: TouchEvent | MouseEvent): { clientX:
   
   return { clientX: 0, clientY: 0 };
 };
+
+// Add function to prevent default scrolling during drag operations
+export const preventDefaultTouchAction = (event: TouchEvent): void => {
+  if (event.cancelable) {
+    event.preventDefault();
+  }
+};

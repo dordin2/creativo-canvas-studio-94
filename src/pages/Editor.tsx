@@ -295,6 +295,9 @@ const Editor = () => {
             </Drawer>
           )}
         </div>
+
+        {/* Add the FloatingAddButton for mobile */}
+        <FloatingAddButton className="bottom-20 right-4 z-50" />
       </div>
     );
   }
