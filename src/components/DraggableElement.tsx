@@ -47,7 +47,7 @@ const DraggableElement = ({ element, isActive, children }: {
     handleItemCombination
   } = useDesignState();
   
-  const { startDrag, isDragging: isDraggingFromHook } = useDraggable(element.id);
+  const { startDrag, isDragging: isDraggingFromHook, isMobile } = useDraggable(element.id);
   const elementRef = useRef<HTMLDivElement>(null);
   const textInputRef = useRef<HTMLInputElement | HTMLTextAreaElement | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -108,6 +108,38 @@ const DraggableElement = ({ element, isActive, children }: {
     }
     
     setStartPos({ x: e.clientX, y: e.clientY });
+  };
+  
+  // Add touch events for mobile
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.stopPropagation();
+    
+    if (isImageElement && isGameMode) {
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
+    }
+    
+    if (isGameMode) {
+      if (hasInteraction) {
+        handleInteraction();
+      }
+      return;
+    }
+    
+    setActiveElement(element);
+    
+    if (isEditing) return;
+    
+    if (!isSequencePuzzleElement) {
+      startDrag(e, element.position);
+      setIsDragging(true);
+    }
+    
+    if (e.touches[0]) {
+      setStartPos({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    }
   };
 
   const handleTextDoubleClick = (e: React.MouseEvent) => {
@@ -554,6 +586,7 @@ const DraggableElement = ({ element, isActive, children }: {
       className={`canvas-element ${isDropTarget ? 'drop-target' : ''} ${isGameMode && isImageElement ? 'game-mode-image' : ''}`}
       style={combinedStyle}
       onMouseDown={handleMouseDown}
+      onTouchStart={handleTouchStart}
       onDoubleClick={isGameMode ? undefined : handleTextDoubleClick}
       onClick={isGameMode && hasInteraction ? () => handleInteraction() : undefined}
       draggable={isGameMode && isImageElement ? false : undefined}

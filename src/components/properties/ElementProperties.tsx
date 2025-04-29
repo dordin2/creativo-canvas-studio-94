@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Settings, X } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface ElementPropertiesProps {
   element: DesignElement;
@@ -25,6 +26,7 @@ interface ElementPropertiesProps {
 const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProps) => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { language } = useLanguage();
+  const isMobile = useIsMobile();
   const textElements = ['heading', 'subheading', 'paragraph'];
   const shapeElements = ['rectangle', 'circle', 'triangle', 'line'];
   const puzzleElements = ['puzzle', 'sequencePuzzle', 'clickSequencePuzzle', 'sliderPuzzle'];
@@ -51,6 +53,19 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
         overflow: hidden;
         box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       }
+      
+      /* Add mobile-specific touch styles */
+      @media (pointer: coarse) {
+        .canvas-element {
+          touch-action: none;
+        }
+      }
+      
+      /* Prevent scrolling when dragging elements */
+      body.element-dragging {
+        overflow: hidden;
+        touch-action: none;
+      }
     `;
     
     // Only add if it doesn't exist yet
@@ -68,7 +83,7 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
       <>
         <Button
           variant="outline"
-          className="fixed top-4 right-4 z-50"
+          className={`fixed ${isMobile ? 'bottom-4' : 'top-4'} right-4 z-50`}
           onClick={() => setIsDialogOpen(true)}
         >
           <Settings className="h-4 w-4 mr-2" />
@@ -76,7 +91,7 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
         </Button>
 
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogContent className="max-w-[800px] w-[800px] max-h-[800px] h-[800px] p-0 gap-0 overflow-hidden">
+          <DialogContent className={`${isMobile ? 'w-[95%]' : 'max-w-[800px] w-[800px]'} max-h-[800px] h-[800px] p-0 gap-0 overflow-hidden`}>
             <div className="flex flex-col h-full">
               <div className="flex items-center justify-between p-4 border-b">
                 <DialogHeader className="flex flex-row items-center gap-4">

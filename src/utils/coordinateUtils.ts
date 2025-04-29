@@ -25,3 +25,19 @@ export const getCanvasScale = (container: HTMLElement | null): number => {
   const matrix = new DOMMatrix(transform);
   return matrix.m11; // Get horizontal scale factor (for uniform scale, m11 == m22)
 };
+
+export const getClientCoordinates = (event: TouchEvent | MouseEvent): { clientX: number, clientY: number } => {
+  if ('touches' in event && event.touches.length > 0) {
+    return {
+      clientX: event.touches[0].clientX,
+      clientY: event.touches[0].clientY
+    };
+  } else if ('clientX' in event) {
+    return {
+      clientX: event.clientX,
+      clientY: event.clientY
+    };
+  }
+  
+  return { clientX: 0, clientY: 0 };
+};
