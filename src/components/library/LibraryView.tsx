@@ -49,6 +49,7 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
         name: image.name
       });
       
+      // Process image in background for higher quality
       processLibraryImageInBackground(
         image.image_path,
         newElement,

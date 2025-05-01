@@ -16,6 +16,8 @@ const ImageProperties = ({
 }) => {
   const {
     updateElement,
+    updateElementWithoutHistory,
+    commitToHistory,
     handleImageUpload,
     isGameMode
   } = useDesignState();
@@ -26,6 +28,8 @@ const ImageProperties = ({
   const [imageStats, setImageStats] = useState<{size: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
+  const [isResizing, setIsResizing] = useState(false);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (element.originalSize && element.size) {
@@ -98,17 +102,39 @@ const ImageProperties = ({
   
   const handleImageResize = (value: number[]) => {
     if (!element.originalSize) return;
+    
     const scalePercentage = value[0];
     setScaleValue(scalePercentage);
+    setIsResizing(true);
+    
     const scaleFactor = scalePercentage / 100;
     const newWidth = Math.round(element.originalSize.width * scaleFactor);
     const newHeight = Math.round(element.originalSize.height * scaleFactor);
-    updateElement(element.id, {
+    
+    // Clear any existing timeout
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+    
+    // Update without history while slider is being dragged
+    updateElementWithoutHistory(element.id, {
       size: {
         width: newWidth,
         height: newHeight
       }
     });
+    
+    // Commit the resize after a delay
+    resizeTimeoutRef.current = setTimeout(() => {
+      updateElement(element.id, {
+        size: {
+          width: newWidth,
+          height: newHeight
+        }
+      });
+      setIsResizing(false);
+      commitToHistory();
+    }, 300);
   };
   
   const handleRotationChange = (value: number[]) => {
@@ -134,6 +160,23 @@ const ImageProperties = ({
   
   const handleImageLoad = () => {
     setImageLoaded(true);
+    
+    // Ensure size is properly set when image loads
+    if (element.originalSize && element.size && !isResizing) {
+      const scaleFactor = scaleValue / 100;
+      const newWidth = Math.round(element.originalSize.width * scaleFactor);
+      const newHeight = Math.round(element.originalSize.height * scaleFactor);
+      
+      // Only update if dimensions have changed
+      if (newWidth !== element.size.width || newHeight !== element.size.height) {
+        updateElement(element.id, {
+          size: {
+            width: newWidth,
+            height: newHeight
+          }
+        });
+      }
+    }
   };
   
   const renderImagePreview = () => {

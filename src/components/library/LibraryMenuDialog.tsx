@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,6 +12,8 @@ import { X } from "lucide-react";
 import { AdminLibraryView } from "./AdminLibraryView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { useDesignState } from "@/context/DesignContext";
+import { LibraryView } from "./LibraryView";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -23,6 +25,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   onOpenChange,
 }) => {
   const isMobile = useIsMobile();
+  const { activeElement } = useDesignState();
   
   const preventZoom = React.useCallback((e: WheelEvent) => {
     if (e.ctrlKey) {
@@ -30,7 +33,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
     }
   }, []);
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
       document.addEventListener("wheel", preventZoom, { passive: false });
@@ -70,7 +73,8 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
           <ScrollArea className="flex-1">
             <div className="p-4">
-              <AdminLibraryView onClose={() => onOpenChange(false)} />
+              {/* Using appropriate library view component */}
+              <LibraryView onClose={() => onOpenChange(false)} />
             </div>
           </ScrollArea>
         </div>

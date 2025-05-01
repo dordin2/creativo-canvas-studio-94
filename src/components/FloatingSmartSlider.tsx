@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { DesignElement } from "@/context/DesignContext";
 import { useDesignState } from "@/context/DesignContext";
 import { Slider } from "@/components/ui/slider";
@@ -12,10 +12,17 @@ interface FloatingSmartSliderProps {
 }
 
 const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, updateElementWithoutHistory, commitToHistory } = useDesignState();
   const [isRotationMode, setIsRotationMode] = useState(false);
+  const [scaleValue, setScaleValue] = useState(() => calculateScale());
+  const [isResizing, setIsResizing] = useState(false);
+  const [resizeTimeout, setResizeTimeout] = useState<NodeJS.Timeout | null>(null);
   
-  const calculateScale = () => {
+  useEffect(() => {
+    setScaleValue(calculateScale());
+  }, [element.size, element.originalSize]);
+  
+  function calculateScale() {
     if (element.originalSize && element.size) {
       return Math.round((element.size.width / element.originalSize.width) * 100);
     }
@@ -26,16 +33,39 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
     if (!element.originalSize) return;
     
     const scalePercentage = value[0];
+    setScaleValue(scalePercentage);
+    setIsResizing(true);
+    
+    // Clear any existing timeout
+    if (resizeTimeout) {
+      clearTimeout(resizeTimeout);
+    }
+    
     const scaleFactor = scalePercentage / 100;
     const newWidth = Math.round(element.originalSize.width * scaleFactor);
     const newHeight = Math.round(element.originalSize.height * scaleFactor);
     
-    updateElement(element.id, {
+    // Update without history while dragging the slider
+    updateElementWithoutHistory(element.id, {
       size: {
         width: newWidth,
         height: newHeight
       }
     });
+    
+    // Set a timeout to commit the change to history and update the final size
+    const timeout = setTimeout(() => {
+      updateElement(element.id, {
+        size: {
+          width: newWidth,
+          height: newHeight
+        }
+      });
+      setIsResizing(false);
+      commitToHistory();
+    }, 300);
+    
+    setResizeTimeout(timeout);
   };
   
   const handleRotationChange = (value: number[]) => {
@@ -50,7 +80,7 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
       <div className="flex items-center gap-4 p-3 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
         <div className="flex-1">
           <Slider 
-            value={[isRotationMode ? getRotation(element) : calculateScale()]}
+            value={[isRotationMode ? getRotation(element) : scaleValue]}
             min={isRotationMode ? -180 : 10}
             max={isRotationMode ? 180 : 200}
             step={1}
@@ -72,7 +102,7 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
         </Toggle>
         
         <div className="w-12 text-sm font-medium text-gray-600">
-          {isRotationMode ? `${getRotation(element)}°` : `${calculateScale()}%`}
+          {isRotationMode ? `${getRotation(element)}°` : `${scaleValue}%`}
         </div>
       </div>
     </div>
