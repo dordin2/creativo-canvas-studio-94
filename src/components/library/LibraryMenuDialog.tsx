@@ -1,5 +1,5 @@
 
-import React, { Suspense } from "react";
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
-import { LibraryView } from "./LibraryView";
+import { AdminLibraryView } from "./AdminLibraryView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -70,13 +70,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
           <ScrollArea className="flex-1">
             <div className="p-4">
-              <Suspense fallback={
-                <div className="flex justify-center items-center p-8">
-                  <div className="animate-pulse bg-gray-200 rounded-lg w-full h-64"></div>
-                </div>
-              }>
-                <LibraryView onClose={() => onOpenChange(false)} />
-              </Suspense>
+              <AdminLibraryView onClose={() => onOpenChange(false)} />
             </div>
           </ScrollArea>
         </div>
