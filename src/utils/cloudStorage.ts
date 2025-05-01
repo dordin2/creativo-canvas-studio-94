@@ -156,8 +156,8 @@ export const getImageFromCloud = async (
     }
 
     // First check local memory cache
-    const cachedImage = getImageFromCache(`cloud_${element.id}`);
-    const cachedThumbnail = getImageFromCache(`cloud_${element.id}_thumbnail`, true);
+    const cachedImage = await getImageFromCache(`cloud_${element.id}`);
+    const cachedThumbnail = await getImageFromCache(`cloud_${element.id}_thumbnail`, true);
     
     if (cachedImage && cachedThumbnail) {
       return {

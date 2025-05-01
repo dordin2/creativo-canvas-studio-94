@@ -1,3 +1,4 @@
+
 import React from "react";
 import {
   Dialog,
@@ -13,6 +14,7 @@ import { AdminLibraryView } from "./AdminLibraryView";
 import { LibraryView } from "./LibraryView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { DesignProvider } from "@/context/DesignContext";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -47,6 +49,13 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
     };
   }, [open, preventZoom]);
 
+  // Define an empty initial state for the DesignProvider
+  const emptyInitialState = {
+    canvases: [],
+    activeCanvasIndex: 0,
+    isGameMode: false
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
@@ -78,12 +87,14 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
               </TabsList>
               
               <ScrollArea className="flex-1">
-                <TabsContent value="library" className="p-4 h-full">
-                  <LibraryView onClose={() => onOpenChange(false)} />
-                </TabsContent>
-                <TabsContent value="uploads" className="p-4 h-full">
-                  <AdminLibraryView onClose={() => onOpenChange(false)} />
-                </TabsContent>
+                <DesignProvider initialState={emptyInitialState}>
+                  <TabsContent value="library" className="p-4 h-full">
+                    <LibraryView onClose={() => onOpenChange(false)} />
+                  </TabsContent>
+                  <TabsContent value="uploads" className="p-4 h-full">
+                    <AdminLibraryView onClose={() => onOpenChange(false)} />
+                  </TabsContent>
+                </DesignProvider>
               </ScrollArea>
             </Tabs>
           </div>
