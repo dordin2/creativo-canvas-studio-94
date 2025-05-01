@@ -12,6 +12,7 @@ import { X } from "lucide-react";
 import { AdminLibraryView } from "./AdminLibraryView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { DesignProvider } from "@/context/DesignContext";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -49,8 +50,10 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
         "p-0 gap-0 overflow-hidden",
-        isMobile ? "w-[95vw] max-w-full" : "max-w-4xl w-[90vw]"
-      )} style={{ height: "600px" }}>
+        isMobile 
+          ? "w-[95vw] max-w-full max-h-[85vh]" 
+          : "max-w-4xl w-[90vw] max-h-[85vh]"
+      )}>
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
             <DialogHeader className="flex flex-row items-center gap-4">
@@ -70,7 +73,9 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
           <ScrollArea className="flex-1">
             <div className="p-4">
-              <AdminLibraryView onClose={() => onOpenChange(false)} />
+              <DesignProvider>
+                <AdminLibraryView onClose={() => onOpenChange(false)} />
+              </DesignProvider>
             </div>
           </ScrollArea>
         </div>
