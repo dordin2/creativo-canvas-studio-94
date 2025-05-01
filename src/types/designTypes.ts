@@ -1,150 +1,76 @@
-
-import { CSSProperties } from "react";
-
-export type Json =
-  | string
-  | number
-  | boolean
-  | null
-  | { [key: string]: Json | undefined }
-  | Json[]
+import React from "react";
 
 export type ElementType =
-  | 'rectangle'
-  | 'circle'
-  | 'triangle'
-  | 'line'
-  | 'heading'
-  | 'subheading'
-  | 'paragraph'
-  | 'image'
-  | 'background'
-  | 'puzzle'
-  | 'sequencePuzzle'
-  | 'clickSequencePuzzle'
-  | 'sliderPuzzle';
+  | "text"
+  | "image"
+  | "rectangle"
+  | "circle"
+  | "triangle"
+  | "line"
+  | "arrow"
+  | "pencil"
+  | "selector"
+  | "background";
 
-export type PuzzleType = 'image' | 'number' | 'alphabet';
-export type SliderOrientation = 'horizontal' | 'vertical';
-export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation' | 'addToInventory' | 'combinable';
-export type MessagePosition = 'bottom' | 'top';
-export type CombinationResultType = 'message' | 'sound' | 'puzzle' | 'canvasNavigation';
-export type StorageType = 'local' | 'cloud';
-
-export interface PuzzleConfig {
-  name: string;
-  type: PuzzleType;
-  placeholders: number;
-  images: string[];
-  solution: number[];
-  maxNumber?: number;
-  maxLetter?: string;
-}
-
-export interface SequencePuzzleConfig {
-  name: string;
-  images: string[];
-  solution: number[];
-  currentOrder: number[];
-}
-
-export interface ClickSequencePuzzleConfig {
-  name: string;
-  images: string[];
-  solution: number[];
-  clickedIndices: number[];
-}
-
-export interface SliderPuzzleConfig {
-  name: string;
-  orientation: SliderOrientation;
-  sliderCount: number;
-  solution: number[];
-  currentValues: number[];
-  maxValue: number;
-}
-
-export interface CombinationResult {
-  type: CombinationResultType;
+export type InteractionType = {
+  canCombineWith?: string[];
   message?: string;
-  messagePosition?: MessagePosition;
-  sound?: string;
+  combinationResult?: CombinationResultType;
+};
+
+export type CombinationResultType = {
+  type: "message" | "sound" | "canvasNavigation" | "puzzle";
+  message?: string;
   soundUrl?: string;
   targetCanvasId?: string;
-  puzzleType?: ElementType;
-  puzzleConfig?: PuzzleConfig;
-  sequencePuzzleConfig?: SequencePuzzleConfig;
-  clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
-  sliderPuzzleConfig?: SliderPuzzleConfig;
+};
+
+export interface Position {
+  x: number;
+  y: number;
 }
 
-export interface InteractionConfig {
-  type: InteractionType;
-  puzzleType?: ElementType;
-  puzzleConfig?: PuzzleConfig;
-  sequencePuzzleConfig?: SequencePuzzleConfig;
-  clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
-  sliderPuzzleConfig?: SliderPuzzleConfig;
-  message?: string;
-  messagePosition?: MessagePosition;
-  sound?: string;
-  soundUrl?: string;
-  targetCanvasId?: string;
-  canCombineWith?: string[]; // IDs of items that can be combined with this element
-  combinationResult?: CombinationResult;
-}
-
-export interface FileMetadata {
-  name: string;
-  type: string;
-  size: number;
-  lastModified: number;
+export interface Size {
+  width: number;
+  height: number;
 }
 
 export interface CloudStorage {
   path: string;
-  thumbnailPath?: string;
-  url?: string;
-  thumbnailUrl?: string;
+  thumbnailPath: string;
+  url: string;
+  thumbnailUrl: string;
   userId?: string;
-  storageId?: string;
+  storageId?: number;
 }
 
 export interface DesignElement {
   id: string;
   type: ElementType;
-  position: {
-    x: number;
-    y: number;
-  };
-  size?: {
-    width: number;
-    height: number;
-  };
-  style?: Record<string, string | number>;
-  content?: string;
-  src?: string;
-  dataUrl?: string;
-  thumbnailDataUrl?: string; // Added for optimized image previews
-  file?: File;
-  cacheKey?: string;
-  fileMetadata?: FileMetadata;
-  originalSize?: {
-    width: number;
-    height: number;
-  };
-  puzzle?: PuzzleConfig;
-  puzzleConfig?: PuzzleConfig;
-  sequencePuzzleConfig?: SequencePuzzleConfig;
-  clickSequencePuzzleConfig?: ClickSequencePuzzleConfig;
-  sliderPuzzleConfig?: SliderPuzzleConfig;
-  layer: number;
-  isHidden?: boolean;
   name?: string;
-  interaction?: InteractionConfig;
+  position: Position;
+  size: Size;
+  layer: number;
+  style?: React.CSSProperties;
+  isHidden?: boolean;
+  isLocked?: boolean;
   inInventory?: boolean;
+  isLoading?: boolean; // Add loading state for images during processing
+  dataUrl?: string;
+  src?: string;
+  file?: File;
+  fileMetadata?: {
+    name: string;
+    type: string;
+    size: number;
+    lastModified: number;
+  };
+  originalSize?: Size;
+  cacheKey?: string;
+  thumbnailDataUrl?: string;
+  storageType?: "local" | "cloud";
   cloudStorage?: CloudStorage;
-  storageType?: StorageType;
+  interaction?: InteractionType;
 }
 
 export interface Canvas {
@@ -173,7 +99,10 @@ export interface DesignContextType {
   setCanvasRef: (ref: HTMLDivElement) => void;
   addElement: (type: ElementType, props?: any) => DesignElement;
   updateElement: (id: string, updates: Partial<DesignElement>) => void;
-  updateElementWithoutHistory: (id: string, updates: Partial<DesignElement>) => void;
+  updateElementWithoutHistory: (
+    id: string,
+    updates: Partial<DesignElement>
+  ) => void;
   commitToHistory: () => void;
   removeElement: (id: string) => void;
   setActiveElement: (element: DesignElement | null) => void;
@@ -193,11 +122,14 @@ export interface DesignContextType {
   moveElementToCanvas: (elementId: string, targetCanvasIndex: number) => void;
   addToInventory: (elementId: string) => void;
   removeFromInventory: (elementId: string) => void;
-  setDraggedInventoryItem: (element: DesignElement | null) => void;
-  handleItemCombination: (inventoryItemId: string, targetElementId: string) => void;
+  setDraggedInventoryItem: (item: DesignElement | null) => void;
+  handleItemCombination: (
+    inventoryItemId: string,
+    targetElementId: string
+  ) => void;
   setCanvases: (canvases: Canvas[]) => void;
 }
 
 export const generateId = (): string => {
-  return Math.random().toString(36).substring(2, 11);
+  return crypto.randomUUID();
 };

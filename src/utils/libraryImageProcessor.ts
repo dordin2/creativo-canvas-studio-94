@@ -105,6 +105,12 @@ export const processLibraryImageInBackground = async (
     onUpdate({
       dataUrl: processedDataUrl,
       thumbnailDataUrl,
+      fileMetadata: {
+        name: element.name || 'library-image',
+        type: 'image/webp',
+        size: processedDataUrl.length,
+        lastModified: new Date().getTime()
+      },
       // If this is from the library, we know it's already in cloud storage
       storageType: 'cloud',
       cloudStorage: element.cloudStorage || {
