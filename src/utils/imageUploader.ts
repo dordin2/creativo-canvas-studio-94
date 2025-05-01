@@ -91,112 +91,8 @@ class ImageMemoryCache {
 const memoryCache = new ImageMemoryCache();
 
 /**
- * Compresses an image to WebP format with the specified quality using a Web Worker
+ * Compresses an image to WebP format with the specified quality
  */
-async function compressImageInWorker(
-  imageDataUrl: string,
-  quality: number = IMAGE_QUALITY, 
-  maxWidth: number = MAX_DIMENSION,
-  maxHeight: number = MAX_DIMENSION
-): Promise<{ dataUrl: string; width: number; height: number }> {
-  return new Promise((resolve, reject) => {
-    const worker = new Worker(
-      URL.createObjectURL(
-        new Blob([`
-          self.onmessage = function(e) {
-            const { imageDataUrl, quality, maxWidth, maxHeight } = e.data;
-            
-            const img = new Image();
-            img.onload = function() {
-              // Calculate scaled dimensions while maintaining aspect ratio
-              let targetWidth = img.width;
-              let targetHeight = img.height;
-              
-              if (targetWidth > maxWidth || targetHeight > maxHeight) {
-                if (targetWidth / targetHeight > maxWidth / maxHeight) {
-                  // Width constrained
-                  targetHeight = Math.round((targetHeight / targetWidth) * maxWidth);
-                  targetWidth = maxWidth;
-                } else {
-                  // Height constrained
-                  targetWidth = Math.round((targetWidth / targetHeight) * maxHeight);
-                  targetHeight = maxHeight;
-                }
-              }
-              
-              const canvas = new OffscreenCanvas(targetWidth, targetHeight);
-              const ctx = canvas.getContext('2d');
-              
-              // Draw image on canvas
-              ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
-              
-              // Convert to proper format
-              canvas.convertToBlob({ type: 'image/webp', quality: quality })
-                .then(blob => {
-                  const reader = new FileReader();
-                  reader.onloadend = () => {
-                    self.postMessage({ 
-                      dataUrl: reader.result,
-                      width: targetWidth,
-                      height: targetHeight
-                    });
-                  };
-                  reader.readAsDataURL(blob);
-                })
-                .catch(err => {
-                  // Fallback to JPEG if WebP fails
-                  canvas.convertToBlob({ type: 'image/jpeg', quality: quality })
-                    .then(blob => {
-                      const reader = new FileReader();
-                      reader.onloadend = () => {
-                        self.postMessage({ 
-                          dataUrl: reader.result,
-                          width: targetWidth,
-                          height: targetHeight
-                        });
-                      };
-                      reader.readAsDataURL(blob);
-                    })
-                    .catch(err => {
-                      self.postMessage({ error: err.message });
-                    });
-                });
-            };
-            
-            img.onerror = function() {
-              self.postMessage({ error: 'Failed to load image for compression' });
-            };
-            
-            img.src = imageDataUrl;
-          };
-        `], 
-        { type: 'application/javascript' }
-      )
-    ));
-    
-    worker.onmessage = (e) => {
-      if (e.data.error) {
-        reject(new Error(e.data.error));
-      } else {
-        resolve({
-          dataUrl: e.data.dataUrl as string,
-          width: e.data.width as number,
-          height: e.data.height as number
-        });
-      }
-      worker.terminate();
-    };
-    
-    worker.onerror = (err) => {
-      reject(err);
-      worker.terminate();
-    };
-    
-    worker.postMessage({ imageDataUrl, quality, maxWidth, maxHeight });
-  });
-}
-
-// Fallback compression function if Web Workers are not supported
 async function compressImageToWebP(
   imageDataUrl: string, 
   quality: number = IMAGE_QUALITY,
@@ -335,15 +231,6 @@ async function createThumbnail(imageDataUrl: string): Promise<string> {
   });
 }
 
-// Determine if the browser supports Web Workers
-const WEB_WORKERS_SUPPORTED = typeof Worker !== 'undefined' 
-  && typeof OffscreenCanvas !== 'undefined';
-
-// Choose the appropriate compression function
-const compressImage = WEB_WORKERS_SUPPORTED 
-  ? compressImageInWorker 
-  : compressImageToWebP;
-
 /**
  * Calculates a scaled size for an image that's appropriate for the canvas dimensions
  * This ensures large images don't immediately take up the whole canvas on upload
@@ -398,44 +285,21 @@ export const processImageUpload = (
   // Show loading toast
   const loadingToast = toast.loading("Processing image...");
   
-  // Create a thumbnail immediately for quick display
-  const quickPreviewUrl = URL.createObjectURL(file);
-  
-  // Processing start time for performance metrics
-  const startTime = performance.now();
-  
   const reader = new FileReader();
   reader.onload = async (e) => {
     if (e.target?.result) {
       try {
         const originalDataUrl = e.target.result as string;
         
-        // Create quick thumbnail asynchronously for instant feedback
-        createThumbnail(originalDataUrl)
-          .then(thumbnailDataUrl => {
-            // Generate unique cache key
-            const cacheKey = `img_${file.name}_${Date.now()}_${file.size}`;
-            // Store thumbnail for immediate use
-            memoryCache.set(`${cacheKey}_thumbnail`, thumbnailDataUrl, true);
-            
-            // Return quick preview with thumbnail
-            onSuccess({ 
-              thumbnailDataUrl,
-              src: quickPreviewUrl,
-              file: file,
-              cacheKey,
-            });
-          })
-          .catch(console.error);
-        
-        // Start full image processing in parallel
+        // Compress image to WebP/JPEG
         const { dataUrl: compressedDataUrl, width, height } = 
-          await compressImage(originalDataUrl);
+          await compressImageToWebP(originalDataUrl);
         
-        // Create proper thumbnail for final version
+        // Create thumbnail for lightweight previews
         const thumbnailDataUrl = await createThumbnail(compressedDataUrl);
         
         // Calculate an appropriate display size based on canvas dimensions
+        // We ensure this is always applied, regardless of image size
         const appropriateSize = calculateAppropriateImageSize(
           width, 
           height, 
@@ -471,9 +335,6 @@ export const processImageUpload = (
           }
         );
         
-        // Processing end time for performance metrics
-        const endTime = performance.now();
-        
         // Log compression results
         const originalSize = Math.round(originalDataUrl.length / 1024);
         const compressedSize = Math.round(compressedDataUrl.length / 1024);
@@ -485,14 +346,13 @@ export const processImageUpload = (
           compressionRatio: `${compressionRatio}%`,
           spaceReduction: `${originalSize - compressedSize}KB (${100 - compressionRatio}%)`,
           originalDimensions: `${width}x${height}px`,
-          displayDimensions: `${appropriateSize.width}x${appropriateSize.height}px`,
-          processingTime: `${Math.round(endTime - startTime)}ms`
+          displayDimensions: `${appropriateSize.width}x${appropriateSize.height}px`
         });
         
         // Clear loading toast
         toast.dismiss(loadingToast);
         
-        // Return processed image data - update the element that already has the thumbnail
+        // Return processed image data
         onSuccess({ 
           dataUrl: compressedDataUrl, 
           thumbnailDataUrl, 
@@ -505,9 +365,6 @@ export const processImageUpload = (
             height
           }
         });
-        
-        // Revoke the temporary object URL
-        URL.revokeObjectURL(quickPreviewUrl);
         
         // Run pruning operation in background to manage storage size
         pruneImageStorage().catch(err => {
@@ -698,4 +555,4 @@ export const processLibraryImage = async (
   });
 };
 
-export { compressImage, createThumbnail };
+export { compressImageToWebP, createThumbnail };
