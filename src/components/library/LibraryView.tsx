@@ -9,7 +9,6 @@ import {
 } from "@/utils/libraryImageProcessor";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
-import { calculateAppropriateImageSize } from "@/utils/elementUtils";
 
 interface LibraryImage {
   id: string;
@@ -36,22 +35,21 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
   
   const handleImageClick = async (image: LibraryImage) => {
     try {
-      // Get canvas dimensions for appropriate sizing
       const canvasDimensions = canvasRef ? {
         width: canvasRef.clientWidth,
         height: canvasRef.clientHeight
       } : undefined;
       
-      // Initial basic data to show something immediately
-      const img = new Image();
-      img.src = image.image_path;
+      const initialData = await getInitialLibraryImageData(
+        image.image_path,
+        canvasDimensions?.width,
+        canvasDimensions?.height
+      );
       
-      // Create a temporary element with basic info
-      const elementId = crypto.randomUUID();
-      const initialElement = addElement('image', {
-        name: image.name,
+      const newElement = addElement('image', {
+        ...initialData,
         src: image.image_path,
-        cacheKey: `library_${elementId}`,
+        name: image.name,
         storageType: 'cloud',
         cloudStorage: {
           url: image.image_path,
@@ -59,48 +57,15 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
             `https://dmwwgrbleohkopoqupzo.supabase.co/storage/v1/object/public/`,
             ''
           )
-        },
-        isLoading: true, // Add loading state to show loading indicator
+        }
       });
-
-      // Start processing in the background
-      // Process the image like we do with uploaded images
-      img.onload = async () => {
-        // Get original dimensions
-        const width = img.naturalWidth;
-        const height = img.naturalHeight;
-        
-        // Calculate appropriate size based on canvas dimensions
-        const appropriateSize = calculateAppropriateImageSize(
-          width,
-          height,
-          canvasDimensions?.width,
-          canvasDimensions?.height
-        );
-        
-        // Update element with proper size info immediately
-        updateElement(initialElement.id, {
-          size: appropriateSize,
-          originalSize: { width, height },
-        });
-
-        // Process image in background and update with full data when ready
-        processLibraryImageInBackground(
-          image.image_path,
-          initialElement,
-          (updates) => updateElement(initialElement.id, {
-            ...updates,
-            isLoading: false // Remove loading state when processing is complete
-          })
-        );
-      };
       
-      img.onerror = () => {
-        console.error("Error loading library image:", image.image_path);
-        updateElement(initialElement.id, { isLoading: false });
-      };
+      processLibraryImageInBackground(
+        image.image_path,
+        newElement,
+        (updates) => updateElement(newElement.id, updates)
+      );
       
-      // Close the dialog
       onClose();
     } catch (error) {
       console.error('Error processing library image:', error);
