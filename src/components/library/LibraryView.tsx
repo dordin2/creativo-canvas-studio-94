@@ -31,8 +31,22 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
       return data as LibraryImage[];
     },
     staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
-    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
+    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes (formerly cacheTime)
   });
+  
+  // Pre-load visible images
+  useEffect(() => {
+    if (!images) return;
+    
+    // Only preload the first 6 images to improve initial load performance
+    const imagesToPreload = images.slice(0, 6);
+    
+    imagesToPreload.forEach(image => {
+      const img = new Image();
+      img.src = image.image_path;
+      img.onload = () => handleImageLoad(image.id);
+    });
+  }, [images]);
   
   const handleImageClick = async (image: LibraryImage) => {
     try {
