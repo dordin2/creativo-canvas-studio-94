@@ -7,7 +7,7 @@ import {
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
 } from "@/utils/libraryImageProcessor";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface LibraryImage {
   id: string;
@@ -17,7 +17,7 @@ interface LibraryImage {
 
 export const LibraryView = ({ onClose }: { onClose: () => void }) => {
   const { addElement, updateElement, canvasRef } = useDesignState();
-  const [loadingImageId, setLoadingImageId] = useState<string | null>(null);
+  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   
   const { data: images, isLoading } = useQuery({
     queryKey: ['library-images'],
@@ -29,13 +29,13 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
         
       if (error) throw error;
       return data as LibraryImage[];
-    }
+    },
+    staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
+    cacheTime: 10 * 60 * 1000, // Keep in cache for 10 minutes
   });
   
   const handleImageClick = async (image: LibraryImage) => {
     try {
-      setLoadingImageId(image.id);
-      
       const canvasDimensions = canvasRef ? {
         width: canvasRef.clientWidth,
         height: canvasRef.clientHeight
@@ -50,28 +50,27 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
       const newElement = addElement('image', {
         ...initialData,
         src: image.image_path,
-        name: image.name,
-        loading: true // Use loading instead of isImageLoading to match type definition
+        name: image.name
       });
       
-      // Process image in background for higher quality
       processLibraryImageInBackground(
         image.image_path,
         newElement,
-        (updates) => {
-          updateElement(newElement.id, {
-            ...updates,
-            loading: false // Clear loading state when done
-          });
-          setLoadingImageId(null);
-        }
+        (updates) => updateElement(newElement.id, updates)
       );
       
       onClose();
     } catch (error) {
       console.error('Error processing library image:', error);
-      setLoadingImageId(null);
     }
+  };
+
+  const handleImageLoad = (id: string) => {
+    setLoadedImages(prev => {
+      const updated = new Set(prev);
+      updated.add(id);
+      return updated;
+    });
   };
   
   if (isLoading) {
@@ -97,17 +96,22 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
           key={image.id}
           onClick={() => handleImageClick(image)}
           className="aspect-square relative group overflow-hidden rounded-lg border hover:border-primary transition-colors"
-          disabled={loadingImageId === image.id}
         >
-          {loadingImageId === image.id && (
-            <div className="absolute inset-0 bg-black/20 flex items-center justify-center z-10">
-              <Loader2 className="w-5 h-5 animate-spin text-white" />
+          {/* Low-quality thumbnail placeholder */}
+          {!loadedImages.has(image.id) && (
+            <div className="absolute inset-0 flex items-center justify-center bg-gray-200 animate-pulse">
+              <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
             </div>
           )}
+          
           <img
             src={image.image_path}
             alt={image.name}
-            className={`w-full h-full object-cover group-hover:opacity-90 transition-opacity ${loadingImageId === image.id ? 'opacity-70' : ''}`}
+            className={`w-full h-full object-cover group-hover:opacity-90 transition-opacity ${
+              loadedImages.has(image.id) ? 'opacity-100' : 'opacity-0'
+            }`}
+            loading="lazy" 
+            onLoad={() => handleImageLoad(image.id)}
           />
         </button>
       ))}

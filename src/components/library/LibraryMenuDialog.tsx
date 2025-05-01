@@ -1,5 +1,5 @@
 
-import React, { useEffect } from "react";
+import React, { Suspense } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,11 +9,9 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
-import { AdminLibraryView } from "./AdminLibraryView";
+import { LibraryView } from "./LibraryView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { LibraryView } from "./LibraryView";
-import { DesignProvider } from "@/context/DesignContext";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -32,7 +30,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
     }
   }, []);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
       document.addEventListener("wheel", preventZoom, { passive: false });
@@ -72,10 +70,13 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
           <ScrollArea className="flex-1">
             <div className="p-4">
-              {/* Wrap LibraryView in DesignProvider */}
-              <DesignProvider>
+              <Suspense fallback={
+                <div className="flex justify-center items-center p-8">
+                  <div className="animate-pulse bg-gray-200 rounded-lg w-full h-64"></div>
+                </div>
+              }>
                 <LibraryView onClose={() => onOpenChange(false)} />
-              </DesignProvider>
+              </Suspense>
             </div>
           </ScrollArea>
         </div>

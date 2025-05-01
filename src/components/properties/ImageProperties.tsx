@@ -1,11 +1,10 @@
-
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Upload, Image as ImageIcon } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { getImageFromCache, estimateDataUrlSize } from "@/utils/imageUploader";
 import { getRotation } from "@/utils/elementStyles";
@@ -17,12 +16,9 @@ const ImageProperties = ({
 }) => {
   const {
     updateElement,
-    updateElementWithoutHistory,
-    commitToHistory,
     handleImageUpload,
     isGameMode
   } = useDesignState();
-  
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [scaleValue, setScaleValue] = useState(100); // Default scale is 100%
   const [rotation, setRotation] = useState(getRotation(element));
@@ -30,8 +26,6 @@ const ImageProperties = ({
   const [imageStats, setImageStats] = useState<{size: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
-  const [isResizing, setIsResizing] = useState(false);
-  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (element.originalSize && element.size) {
@@ -83,8 +77,7 @@ const ImageProperties = ({
     updateElement(element.id, {
       src: url,
       dataUrl: undefined,
-      file: undefined,
-      isImageLoading: true
+      file: undefined
     });
     setImageSrc(url);
   };
@@ -96,11 +89,6 @@ const ImageProperties = ({
     
     setImageLoaded(false);
     
-    // Set element to loading state
-    updateElementWithoutHistory(element.id, {
-      isImageLoading: true
-    });
-    
     handleImageUpload(element.id, file);
   };
   
@@ -110,53 +98,17 @@ const ImageProperties = ({
   
   const handleImageResize = (value: number[]) => {
     if (!element.originalSize) return;
-    
     const scalePercentage = value[0];
     setScaleValue(scalePercentage);
-    setIsResizing(true);
-    
     const scaleFactor = scalePercentage / 100;
     const newWidth = Math.round(element.originalSize.width * scaleFactor);
     const newHeight = Math.round(element.originalSize.height * scaleFactor);
-    
-    // Clear any existing timeout
-    if (resizeTimeoutRef.current) {
-      clearTimeout(resizeTimeoutRef.current);
-    }
-    
-    // Update without history while slider is being dragged
-    updateElementWithoutHistory(element.id, {
+    updateElement(element.id, {
       size: {
         width: newWidth,
         height: newHeight
-      },
-      style: {
-        ...element.style,
-        willChange: 'transform, width, height'
       }
     });
-    
-    // Commit the resize after a delay
-    resizeTimeoutRef.current = setTimeout(() => {
-      updateElement(element.id, {
-        size: {
-          width: newWidth,
-          height: newHeight
-        },
-        style: {
-          ...element.style,
-          willChange: 'auto'
-        },
-        isImageLoading: false
-      });
-      setIsResizing(false);
-      commitToHistory();
-      
-      // Force a rerender after a small delay to ensure the frame is properly sized
-      setTimeout(() => {
-        updateElementWithoutHistory(element.id, {});
-      }, 100);
-    }, 300);
   };
   
   const handleRotationChange = (value: number[]) => {
@@ -182,33 +134,6 @@ const ImageProperties = ({
   
   const handleImageLoad = () => {
     setImageLoaded(true);
-    
-    // Update loading state on the element
-    updateElementWithoutHistory(element.id, {
-      isImageLoading: false
-    });
-    
-    // Ensure size is properly set when image loads
-    if (element.originalSize && element.size && !isResizing) {
-      const scaleFactor = scaleValue / 100;
-      const newWidth = Math.round(element.originalSize.width * scaleFactor);
-      const newHeight = Math.round(element.originalSize.height * scaleFactor);
-      
-      // Only update if dimensions have changed
-      if (newWidth !== element.size.width || newHeight !== element.size.height) {
-        updateElement(element.id, {
-          size: {
-            width: newWidth,
-            height: newHeight
-          }
-        });
-      }
-    }
-    
-    // Force a rerender after a small delay to ensure the frame is properly sized
-    setTimeout(() => {
-      updateElementWithoutHistory(element.id, {});
-    }, 50);
   };
   
   const renderImagePreview = () => {
@@ -232,14 +157,6 @@ const ImageProperties = ({
             className="w-full h-32 object-contain blur-[2px]" 
           />
         )}
-        
-        {/* Loading indicator */}
-        {element.isImageLoading && (
-          <div className="absolute inset-0 flex items-center justify-center bg-black/10 z-10">
-            <Loader2 className="w-6 h-6 animate-spin text-primary" />
-          </div>
-        )}
-        
         <img 
           src={mainSrc} 
           alt="Preview" 
@@ -249,28 +166,18 @@ const ImageProperties = ({
             console.error("Image failed to load:", mainSrc ? "src exists" : "no src");
             e.currentTarget.src = "/placeholder.svg";
             setImageLoaded(true);
-            updateElementWithoutHistory(element.id, { isImageLoading: false });
           }}
         />
       </div>
     );
   };
   
-  useEffect(() => {
-    // Clean up timeouts when component unmounts
-    return () => {
-      if (resizeTimeoutRef.current) {
-        clearTimeout(resizeTimeoutRef.current);
-      }
-    };
-  }, []);
-  
   return <div className="space-y-4">
     <div>
       <Label>Image</Label>
       <div className="mt-2 flex flex-col gap-2">
         <input type="file" ref={fileInputRef} onChange={handleImageFileSelect} accept="image/*" className="hidden" />
-        <Button variant="outline" onClick={triggerFileInput} className="w-full flex items-center justify-center gap-2" disabled={element.isImageLoading}>
+        <Button variant="outline" onClick={triggerFileInput} className="w-full flex items-center justify-center gap-2">
           <Upload className="h-4 w-4" />
           {element.file ? "Change Image" : "Choose Image"}
         </Button>
@@ -297,15 +204,7 @@ const ImageProperties = ({
         <Label>Resize Image</Label>
         <span className="text-sm font-medium">{scaleValue}%</span>
       </div>
-      <Slider 
-        value={[scaleValue]} 
-        min={10} 
-        max={200} 
-        step={1} 
-        onValueChange={handleImageResize} 
-        className="mb-2"
-        disabled={element.isImageLoading} 
-      />
+      <Slider value={[scaleValue]} min={10} max={200} step={1} onValueChange={handleImageResize} className="mb-2" />
       <div className="flex items-center justify-between text-xs text-muted-foreground">
         <span>10%</span>
         <span>200%</span>
@@ -323,7 +222,7 @@ const ImageProperties = ({
           max={180}
           step={1}
           onValueChange={handleRotationChange}
-          disabled={isGameMode || element.isImageLoading}
+          disabled={isGameMode}
           className="my-4"
         />
         <div className="flex gap-4 items-center">
@@ -334,7 +233,7 @@ const ImageProperties = ({
             min={-360}
             max={360}
             className="w-24"
-            disabled={isGameMode || element.isImageLoading}
+            disabled={isGameMode}
           />
           <span className="text-sm">degrees</span>
         </div>
