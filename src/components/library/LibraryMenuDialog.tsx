@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { Suspense, lazy } from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,10 +8,14 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X } from "lucide-react";
-import { AdminLibraryView } from "./AdminLibraryView";
+import { X, Loader2 } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+
+// Lazy load the LibraryView component
+const LibraryView = lazy(() => import("./LibraryView").then(module => ({
+  default: module.LibraryView
+})));
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -70,7 +74,14 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
           <ScrollArea className="flex-1">
             <div className="p-4">
-              <AdminLibraryView onClose={() => onOpenChange(false)} />
+              <Suspense fallback={
+                <div className="flex justify-center items-center p-8">
+                  <Loader2 className="w-8 h-8 animate-spin text-canvas-purple" />
+                  <p className="ml-2 text-muted-foreground">Loading library...</p>
+                </div>
+              }>
+                <LibraryView onClose={() => onOpenChange(false)} />
+              </Suspense>
             </div>
           </ScrollArea>
         </div>
