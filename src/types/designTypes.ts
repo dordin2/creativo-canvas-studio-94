@@ -29,6 +29,7 @@ export type SliderOrientation = 'horizontal' | 'vertical';
 export type InteractionType = 'none' | 'puzzle' | 'message' | 'sound' | 'canvasNavigation' | 'addToInventory' | 'combinable';
 export type MessagePosition = 'bottom' | 'top';
 export type CombinationResultType = 'message' | 'sound' | 'puzzle' | 'canvasNavigation';
+export type StorageType = 'local' | 'cloud';
 
 export interface PuzzleConfig {
   name: string;
@@ -100,6 +101,15 @@ export interface FileMetadata {
   lastModified: number;
 }
 
+export interface CloudStorage {
+  path: string;
+  thumbnailPath?: string;
+  url?: string;
+  thumbnailUrl?: string;
+  userId?: string;
+  storageId?: string;
+}
+
 export interface DesignElement {
   id: string;
   type: ElementType;
@@ -133,6 +143,8 @@ export interface DesignElement {
   name?: string;
   interaction?: InteractionConfig;
   inInventory?: boolean;
+  cloudStorage?: CloudStorage;
+  storageType?: StorageType;
 }
 
 export interface Canvas {

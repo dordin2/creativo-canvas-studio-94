@@ -6,10 +6,14 @@ import {
   DialogHeader,
   DialogTitle,
   DialogClose,
+  DialogTabs,
+  DialogTab
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
 import { AdminLibraryView } from "./AdminLibraryView";
+import { LibraryView } from "./LibraryView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +27,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   onOpenChange,
 }) => {
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = React.useState("library");
   
   const preventZoom = React.useCallback((e: WheelEvent) => {
     if (e.ctrlKey) {
@@ -68,11 +73,23 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
             </DialogClose>
           </div>
 
-          <ScrollArea className="flex-1">
-            <div className="p-4">
-              <AdminLibraryView onClose={() => onOpenChange(false)} />
-            </div>
-          </ScrollArea>
+          <div className="flex-1 flex flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+              <TabsList className="border-b mx-4">
+                <TabsTrigger value="library">Public Library</TabsTrigger>
+                <TabsTrigger value="uploads">Your Uploads</TabsTrigger>
+              </TabsList>
+              
+              <ScrollArea className="flex-1">
+                <TabsContent value="library" className="p-4 h-full">
+                  <LibraryView onClose={() => onOpenChange(false)} />
+                </TabsContent>
+                <TabsContent value="uploads" className="p-4 h-full">
+                  <AdminLibraryView onClose={() => onOpenChange(false)} />
+                </TabsContent>
+              </ScrollArea>
+            </Tabs>
+          </div>
         </div>
       </DialogContent>
     </Dialog>

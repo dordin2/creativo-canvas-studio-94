@@ -172,6 +172,45 @@ export type Database = {
         }
         Relationships: []
       }
+      user_images: {
+        Row: {
+          created_at: string
+          element_id: string | null
+          file_size: number | null
+          height: number | null
+          id: string
+          original_filename: string | null
+          storage_path: string
+          thumbnail_path: string | null
+          user_id: string
+          width: number | null
+        }
+        Insert: {
+          created_at?: string
+          element_id?: string | null
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          original_filename?: string | null
+          storage_path: string
+          thumbnail_path?: string | null
+          user_id: string
+          width?: number | null
+        }
+        Update: {
+          created_at?: string
+          element_id?: string | null
+          file_size?: number | null
+          height?: number | null
+          id?: string
+          original_filename?: string | null
+          storage_path?: string
+          thumbnail_path?: string | null
+          user_id?: string
+          width?: number | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string | null

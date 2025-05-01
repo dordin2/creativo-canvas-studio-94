@@ -2,11 +2,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
-import { Loader2 } from "lucide-react";
+import { Loader2, Cloud } from "lucide-react";
 import { 
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
 } from "@/utils/libraryImageProcessor";
+import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 interface LibraryImage {
   id: string;
@@ -16,6 +18,7 @@ interface LibraryImage {
 
 export const LibraryView = ({ onClose }: { onClose: () => void }) => {
   const { addElement, updateElement, canvasRef } = useDesignState();
+  const { user } = useAuth();
   
   const { data: images, isLoading } = useQuery({
     queryKey: ['library-images'],
@@ -46,7 +49,15 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
       const newElement = addElement('image', {
         ...initialData,
         src: image.image_path,
-        name: image.name
+        name: image.name,
+        storageType: 'cloud',
+        cloudStorage: {
+          url: image.image_path,
+          path: image.image_path.replace(
+            `https://dmwwgrbleohkopoqupzo.supabase.co/storage/v1/object/public/`,
+            ''
+          )
+        }
       });
       
       processLibraryImageInBackground(
@@ -90,6 +101,9 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
             alt={image.name}
             className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
           />
+          <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
+            <Cloud className="w-3 h-3 text-white" />
+          </div>
         </button>
       ))}
     </div>

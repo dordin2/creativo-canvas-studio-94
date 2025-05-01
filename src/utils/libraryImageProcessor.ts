@@ -104,7 +104,16 @@ export const processLibraryImageInBackground = async (
     // Update the element with processed data
     onUpdate({
       dataUrl: processedDataUrl,
-      thumbnailDataUrl
+      thumbnailDataUrl,
+      // If this is from the library, we know it's already in cloud storage
+      storageType: 'cloud',
+      cloudStorage: element.cloudStorage || {
+        url: imageUrl,
+        path: imageUrl.replace(
+          `https://dmwwgrbleohkopoqupzo.supabase.co/storage/v1/object/public/`,
+          ''
+        )
+      }
     });
     
   } catch (error) {

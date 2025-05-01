@@ -1,5 +1,6 @@
 import { toast } from "sonner";
 import { DesignElement } from "@/types/designTypes";
+import { uploadImageToCloud, getImageFromCloud, canUseCloudStorage } from "@/utils/cloudStorage";
 import { 
   saveImageToStorage, 
   getImageFromStorage, 
@@ -271,12 +272,12 @@ function calculateAppropriateImageSize(
   return { width: targetWidth, height: targetHeight };
 }
 
-export const processImageUpload = (
+export const processImageUpload = async (
   file: File, 
   onSuccess: (data: Partial<DesignElement>) => void,
   canvasWidth?: number,
   canvasHeight?: number
-): void => {
+): Promise<void> => {
   if (!file.type.startsWith('image/')) {
     toast.error("Please upload a valid image file");
     return;
@@ -285,107 +286,146 @@ export const processImageUpload = (
   // Show loading toast
   const loadingToast = toast.loading("Processing image...");
   
-  const reader = new FileReader();
-  reader.onload = async (e) => {
-    if (e.target?.result) {
-      try {
-        const originalDataUrl = e.target.result as string;
-        
-        // Compress image to WebP/JPEG
-        const { dataUrl: compressedDataUrl, width, height } = 
-          await compressImageToWebP(originalDataUrl);
-        
-        // Create thumbnail for lightweight previews
-        const thumbnailDataUrl = await createThumbnail(compressedDataUrl);
-        
-        // Calculate an appropriate display size based on canvas dimensions
-        // We ensure this is always applied, regardless of image size
-        const appropriateSize = calculateAppropriateImageSize(
-          width, 
-          height, 
-          canvasWidth || window.innerWidth * 0.7, 
-          canvasHeight || window.innerHeight * 0.7
-        );
-        
-        // Generate unique cache key
-        const cacheKey = `img_${file.name}_${Date.now()}_${file.size}`;
-        
-        // Store in memory cache for immediate access
-        memoryCache.set(cacheKey, compressedDataUrl);
-        memoryCache.set(`${cacheKey}_thumbnail`, thumbnailDataUrl, true);
-        
-        // Store in IndexedDB for persistent storage
-        const elementId = `temp_${cacheKey}`; // Temporary ID until element is created
-        await saveImageToStorage(
-          elementId,
-          compressedDataUrl,
-          thumbnailDataUrl,
-          {
-            fileMetadata: {
-              name: file.name,
-              type: file.type,
-              size: file.size,
-              lastModified: file.lastModified
-            },
-            originalSize: {  
-              width,
-              height
-            },
-            cacheKey
-          }
-        );
-        
-        // Log compression results
-        const originalSize = Math.round(originalDataUrl.length / 1024);
-        const compressedSize = Math.round(compressedDataUrl.length / 1024);
-        const compressionRatio = Math.round((compressedSize / originalSize) * 100);
-        
-        console.log("imageUploader - Compression results:", {
-          originalSize: `${originalSize}KB`,
-          compressedSize: `${compressedSize}KB`,
-          compressionRatio: `${compressionRatio}%`,
-          spaceReduction: `${originalSize - compressedSize}KB (${100 - compressionRatio}%)`,
-          originalDimensions: `${width}x${height}px`,
-          displayDimensions: `${appropriateSize.width}x${appropriateSize.height}px`
-        });
-        
-        // Clear loading toast
-        toast.dismiss(loadingToast);
-        
-        // Return processed image data
-        onSuccess({ 
-          dataUrl: compressedDataUrl, 
-          thumbnailDataUrl, 
-          src: undefined, 
-          file: file, 
-          cacheKey, 
-          size: appropriateSize,  // Use the appropriate scaled size
-          originalSize: {  
-            width,
-            height
-          }
-        });
-        
-        // Run pruning operation in background to manage storage size
-        pruneImageStorage().catch(err => {
-          console.error("Failed to prune image storage:", err);
-        });
-        
-        toast.success("Image optimized and uploaded");
-      } catch (error) {
-        console.error("Image processing error:", error);
-        toast.dismiss(loadingToast);
-        toast.error("Failed to optimize image");
+  try {
+    const reader = new FileReader();
+    
+    // Read the file as data URL
+    const originalDataUrl = await new Promise<string>((resolve, reject) => {
+      reader.onload = (e) => {
+        if (e.target?.result) {
+          resolve(e.target.result as string);
+        } else {
+          reject(new Error("Failed to read file"));
+        }
+      };
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+    
+    // Compress image to WebP/JPEG
+    const { dataUrl: compressedDataUrl, width, height } = 
+      await compressImageToWebP(originalDataUrl);
+    
+    // Create thumbnail for lightweight previews
+    const thumbnailDataUrl = await createThumbnail(compressedDataUrl);
+    
+    // Calculate an appropriate display size based on canvas dimensions
+    // We ensure this is always applied, regardless of image size
+    const appropriateSize = calculateAppropriateImageSize(
+      width, 
+      height, 
+      canvasWidth || window.innerWidth * 0.7, 
+      canvasHeight || window.innerHeight * 0.7
+    );
+    
+    // Generate unique cache key
+    const cacheKey = `img_${file.name}_${Date.now()}_${file.size}`;
+    
+    // Store in memory cache for immediate access
+    memoryCache.set(cacheKey, compressedDataUrl);
+    memoryCache.set(`${cacheKey}_thumbnail`, thumbnailDataUrl, true);
+    
+    // Check if we can use cloud storage
+    const useCloudStorage = await canUseCloudStorage();
+    
+    // Temporary element ID until the real one is created
+    const elementId = `temp_${cacheKey}`;
+    
+    // Create the element data with local storage properties
+    const elementData: Partial<DesignElement> = {
+      dataUrl: compressedDataUrl, 
+      thumbnailDataUrl, 
+      src: undefined, 
+      file: file, 
+      cacheKey, 
+      size: appropriateSize,  // Use the appropriate scaled size
+      originalSize: {  
+        width,
+        height
+      },
+      storageType: 'local' // Default to local storage
+    };
+    
+    // Log compression results
+    const originalSize = Math.round(originalDataUrl.length / 1024);
+    const compressedSize = Math.round(compressedDataUrl.length / 1024);
+    const compressionRatio = Math.round((compressedSize / originalSize) * 100);
+    
+    console.log("imageUploader - Compression results:", {
+      originalSize: `${originalSize}KB`,
+      compressedSize: `${compressedSize}KB`,
+      compressionRatio: `${compressionRatio}%`,
+      spaceReduction: `${originalSize - compressedSize}KB (${100 - compressionRatio}%)`,
+      originalDimensions: `${width}x${height}px`,
+      displayDimensions: `${appropriateSize.width}x${appropriateSize.height}px`,
+      useCloudStorage: useCloudStorage
+    });
+    
+    // First store in local IndexedDB for backup
+    await saveImageToStorage(
+      elementId,
+      compressedDataUrl,
+      thumbnailDataUrl,
+      {
+        fileMetadata: {
+          name: file.name,
+          type: file.type,
+          size: file.size,
+          lastModified: file.lastModified
+        },
+        originalSize: {  
+          width,
+          height
+        },
+        cacheKey
       }
-    }
-  };
-  
-  reader.onerror = () => {
+    );
+    
+    // Immediately return data to show something while cloud upload processes
+    onSuccess(elementData);
     toast.dismiss(loadingToast);
-    toast.error("Failed to load image");
-  };
-  
-  reader.readAsDataURL(file);
+    
+    // Run pruning operation in background to manage storage size
+    pruneImageStorage().catch(err => {
+      console.error("Failed to prune image storage:", err);
+    });
+    
+    // If authenticated, upload to cloud storage
+    if (useCloudStorage) {
+      // Show a loading indicator for cloud upload
+      const cloudToast = toast.loading("Uploading to cloud storage...");
+      
+      try {
+        // We need the real element ID to create proper paths
+        // This will be updated once the parent component sets it
+        const cloudStorage = await uploadImageToCloud(compressedDataUrl, elementId);
+        
+        if (cloudStorage) {
+          // Update the element with cloud storage info
+          onSuccess({
+            cloudStorage,
+            storageType: 'cloud'
+          });
+          
+          toast.dismiss(cloudToast);
+          toast.success("Image uploaded to cloud storage");
+        } else {
+          toast.dismiss(cloudToast);
+          toast.error("Could not upload to cloud. Using local storage instead.");
+        }
+      } catch (error) {
+        console.error("Cloud upload error:", error);
+        toast.dismiss(cloudToast);
+        toast.error("Cloud upload failed. Using local storage.");
+      }
+    } else {
+      toast.success("Image processed and added");
+    }
+  } catch (error) {
+    console.error("Image processing error:", error);
+    toast.dismiss(loadingToast);
+    toast.error("Failed to process image");
+  }
 };
 
 /**
@@ -419,7 +459,7 @@ export const updateImageElementId = async (tempId: string, permanentId: string):
 };
 
 /**
- * Retrieves an image from storage (first tries memory cache, then IndexedDB)
+ * Retrieves an image from storage (first tries memory cache, then cloud, then IndexedDB)
  */
 export const getImageFromCache = async (
   cacheKey: string, 

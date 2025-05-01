@@ -1,13 +1,17 @@
+
 import { useRef, useState, useEffect } from "react";
 import { DesignElement } from "@/types/designTypes";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Image as ImageIcon } from "lucide-react";
+import { Upload, Image as ImageIcon, Cloud, CloudOff } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { getImageFromCache, estimateDataUrlSize } from "@/utils/imageUploader";
+import { getImageFromCloud, migrateImageToCloud, canUseCloudStorage } from "@/utils/cloudStorage";
 import { getRotation } from "@/utils/elementStyles";
+import { Badge } from "@/components/ui/badge";
+import { toast } from "sonner";
 
 const ImageProperties = ({
   element
@@ -26,6 +30,8 @@ const ImageProperties = ({
   const [imageStats, setImageStats] = useState<{size: string} | null>(null);
   const [imageSrc, setImageSrc] = useState<string | undefined>(element.dataUrl || element.src);
   const [thumbnailSrc, setThumbnailSrc] = useState<string | undefined>(element.thumbnailDataUrl);
+  const [canMigrateToCloud, setCanMigrateToCloud] = useState(false);
+  const [isMigratingToCloud, setIsMigratingToCloud] = useState(false);
 
   useEffect(() => {
     if (element.originalSize && element.size) {
@@ -38,6 +44,20 @@ const ImageProperties = ({
 
   useEffect(() => {
     const loadImages = async () => {
+      // First try to get from cloud storage if applicable
+      if (element.storageType === 'cloud' && element.cloudStorage) {
+        const cloudImages = await getImageFromCloud(element);
+        if (cloudImages.dataUrl) {
+          setImageSrc(cloudImages.dataUrl);
+          setImageLoaded(true);
+        }
+        if (cloudImages.thumbnailDataUrl) {
+          setThumbnailSrc(cloudImages.thumbnailDataUrl);
+        }
+        return;
+      }
+      
+      // Fall back to local storage
       if (element.cacheKey) {
         if (!imageSrc) {
           const cachedImage = await getImageFromCache(element.cacheKey);
@@ -70,7 +90,19 @@ const ImageProperties = ({
           `${(size / 1024).toFixed(2)}KB`
       });
     }
-  }, [element.id, element.cacheKey, imageSrc, thumbnailSrc, element.src, element.file]);
+    
+    // Check if we can migrate to cloud
+    const checkCloudMigration = async () => {
+      const canUse = await canUseCloudStorage();
+      setCanMigrateToCloud(
+        canUse && 
+        element.storageType !== 'cloud' && 
+        !!element.dataUrl
+      );
+    };
+    
+    checkCloudMigration();
+  }, [element.id, element.cacheKey, imageSrc, thumbnailSrc, element.src, element.file, element.cloudStorage, element.storageType, element.dataUrl]);
 
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value;
@@ -135,6 +167,31 @@ const ImageProperties = ({
   const handleImageLoad = () => {
     setImageLoaded(true);
   };
+
+  const handleMigrateToCloud = async () => {
+    setIsMigratingToCloud(true);
+    
+    try {
+      const migratedElement = await migrateImageToCloud(element);
+      
+      if (migratedElement) {
+        updateElement(element.id, {
+          cloudStorage: migratedElement.cloudStorage,
+          storageType: 'cloud'
+        });
+        
+        toast.success("Image migrated to cloud storage");
+        setCanMigrateToCloud(false);
+      } else {
+        toast.error("Failed to migrate to cloud storage");
+      }
+    } catch (error) {
+      console.error("Migration error:", error);
+      toast.error("Error migrating to cloud storage");
+    } finally {
+      setIsMigratingToCloud(false);
+    }
+  };
   
   const renderImagePreview = () => {
     const mainSrc = imageSrc || element.src;
@@ -168,6 +225,14 @@ const ImageProperties = ({
             setImageLoaded(true);
           }}
         />
+        {element.storageType === 'cloud' && (
+          <Badge 
+            variant="secondary" 
+            className="absolute bottom-2 right-2 bg-white/80"
+          >
+            <Cloud className="w-3 h-3 mr-1" /> Cloud
+          </Badge>
+        )}
       </div>
     );
   };
@@ -185,7 +250,7 @@ const ImageProperties = ({
           {element.file.name}
         </p>}
         {element.fileMetadata && !element.file && <p className="text-xs text-muted-foreground">
-          {element.fileMetadata.name} (duplicated)
+          {element.fileMetadata.name} {element.storageType === 'cloud' ? '(cloud)' : '(local)'}
         </p>}
         
         {imageStats && (
@@ -194,6 +259,22 @@ const ImageProperties = ({
               <span>Size:</span>
               <span className="font-medium">{imageStats.size}</span>
             </div>
+            {canMigrateToCloud && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="mt-2 w-full text-xs h-6 flex items-center gap-1" 
+                onClick={handleMigrateToCloud}
+                disabled={isMigratingToCloud}
+              >
+                {isMigratingToCloud ? (
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                ) : (
+                  <Cloud className="w-3 h-3 mr-1" />
+                )}
+                {isMigratingToCloud ? "Migrating..." : "Migrate to cloud storage"}
+              </Button>
+            )}
           </div>
         )}
       </div>
