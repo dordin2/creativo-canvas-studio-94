@@ -73,7 +73,6 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
           <ScrollArea className="flex-1">
             <div className="p-4">
-              {/* Using appropriate library view component */}
               <LibraryView onClose={() => onOpenChange(false)} />
             </div>
           </ScrollArea>

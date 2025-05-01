@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DesignElement } from "@/context/DesignContext";
 import { useDesignState } from "@/context/DesignContext";
 import { Slider } from "@/components/ui/slider";
@@ -16,7 +16,7 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
   const [isRotationMode, setIsRotationMode] = useState(false);
   const [scaleValue, setScaleValue] = useState(() => calculateScale());
   const [isResizing, setIsResizing] = useState(false);
-  const [resizeTimeout, setResizeTimeout] = useState<NodeJS.Timeout | null>(null);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     setScaleValue(calculateScale());
@@ -37,8 +37,8 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
     setIsResizing(true);
     
     // Clear any existing timeout
-    if (resizeTimeout) {
-      clearTimeout(resizeTimeout);
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
     }
     
     const scaleFactor = scalePercentage / 100;
@@ -50,22 +50,42 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
       size: {
         width: newWidth,
         height: newHeight
+      },
+      style: {
+        ...element.style,
+        willChange: 'transform, width, height'
       }
     });
     
     // Set a timeout to commit the change to history and update the final size
-    const timeout = setTimeout(() => {
+    resizeTimeoutRef.current = setTimeout(() => {
       updateElement(element.id, {
         size: {
           width: newWidth,
           height: newHeight
+        },
+        style: {
+          ...element.style,
+          willChange: 'auto'
         }
       });
       setIsResizing(false);
       commitToHistory();
+      
+      // Add a small delay to allow the image to fully update before final resize
+      setTimeout(() => {
+        if (element.type === 'image') {
+          const imageElement = document.querySelector(`#element-${element.id} img`) as HTMLImageElement;
+          if (imageElement && !imageElement.complete) {
+            // If image is not loaded yet, add a load event listener
+            imageElement.addEventListener('load', function onLoad() {
+              updateElementWithoutHistory(element.id, {});  // Trigger a rerender
+              imageElement.removeEventListener('load', onLoad);
+            });
+          }
+        }
+      }, 50);
     }, 300);
-    
-    setResizeTimeout(timeout);
   };
   
   const handleRotationChange = (value: number[]) => {
@@ -74,6 +94,15 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
       style: { ...element.style, transform: `rotate(${newRotation}deg)` }
     });
   };
+  
+  useEffect(() => {
+    // Cleanup function to clear timeouts when component unmounts
+    return () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
+    };
+  }, []);
   
   return (
     <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 min-w-[300px] animate-fade-in">
