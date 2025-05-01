@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Upload, Image as ImageIcon, Cloud, CloudOff } from "lucide-react";
+import { Upload, Image as ImageIcon, Cloud, CloudOff, Loader2 } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { getImageFromCache, estimateDataUrlSize } from "@/utils/imageUploader";
 import { getImageFromCloud, migrateImageToCloud, canUseCloudStorage } from "@/utils/cloudStorage";
