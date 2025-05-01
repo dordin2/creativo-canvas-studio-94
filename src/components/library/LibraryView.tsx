@@ -1,3 +1,4 @@
+
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
@@ -7,6 +8,7 @@ import {
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
 } from "@/utils/libraryImageProcessor";
+import { DesignProvider } from "@/context/DesignContext";
 
 interface LibraryImage {
   id: string;
@@ -14,7 +16,17 @@ interface LibraryImage {
   name: string;
 }
 
-export const LibraryView = ({ onClose }: { onClose: () => void }) => {
+// Wrapper component that provides the DesignProvider context
+const LibraryViewWithProvider = ({ onClose }: { onClose: () => void }) => {
+  return (
+    <DesignProvider>
+      <LibraryViewContent onClose={onClose} />
+    </DesignProvider>
+  );
+};
+
+// The actual content component that uses the context
+const LibraryViewContent = ({ onClose }: { onClose: () => void }) => {
   const { addElement, updateElement, canvasRef } = useDesignState();
   
   const { data: images, isLoading } = useQuery({
@@ -97,3 +109,6 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
     </ScrollArea>
   );
 };
+
+// Export the wrapped component
+export const LibraryView = LibraryViewWithProvider;

@@ -12,6 +12,7 @@ import { X } from "lucide-react";
 import { AdminLibraryView } from "./AdminLibraryView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { DesignProvider } from "@/context/DesignContext";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -72,7 +73,9 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
           <ScrollArea className="flex-1">
             <div className="p-4">
-              <AdminLibraryView onClose={() => onOpenChange(false)} />
+              <DesignProvider>
+                <AdminLibraryView onClose={() => onOpenChange(false)} />
+              </DesignProvider>
             </div>
           </ScrollArea>
         </div>
