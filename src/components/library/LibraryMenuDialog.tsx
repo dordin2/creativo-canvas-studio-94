@@ -12,8 +12,8 @@ import { X } from "lucide-react";
 import { AdminLibraryView } from "./AdminLibraryView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-import { useDesignState } from "@/context/DesignContext";
 import { LibraryView } from "./LibraryView";
+import { DesignProvider } from "@/context/DesignContext";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -25,7 +25,6 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   onOpenChange,
 }) => {
   const isMobile = useIsMobile();
-  const { activeElement } = useDesignState();
   
   const preventZoom = React.useCallback((e: WheelEvent) => {
     if (e.ctrlKey) {
@@ -73,7 +72,10 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
           <ScrollArea className="flex-1">
             <div className="p-4">
-              <LibraryView onClose={() => onOpenChange(false)} />
+              {/* Wrap LibraryView in DesignProvider */}
+              <DesignProvider>
+                <LibraryView onClose={() => onOpenChange(false)} />
+              </DesignProvider>
             </div>
           </ScrollArea>
         </div>

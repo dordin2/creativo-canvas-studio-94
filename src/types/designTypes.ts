@@ -133,6 +133,7 @@ export interface DesignElement {
   name?: string;
   interaction?: InteractionConfig;
   inInventory?: boolean;
+  loading?: boolean; // Added for tracking image loading state
 }
 
 export interface Canvas {

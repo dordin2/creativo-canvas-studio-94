@@ -51,7 +51,7 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
         ...initialData,
         src: image.image_path,
         name: image.name,
-        isImageLoading: true // Add loading state
+        loading: true // Use loading instead of isImageLoading to match type definition
       });
       
       // Process image in background for higher quality
@@ -61,7 +61,7 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
         (updates) => {
           updateElement(newElement.id, {
             ...updates,
-            isImageLoading: false // Clear loading state when done
+            loading: false // Clear loading state when done
           });
           setLoadingImageId(null);
         }
