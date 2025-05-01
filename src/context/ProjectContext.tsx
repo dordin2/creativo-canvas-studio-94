@@ -28,10 +28,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   
   useEffect(() => {
     if (projectId) {
-      // Performance timer start
-      const startTime = performance.now();
-      console.log("ProjectContext - Loading project data for:", projectId);
-      
       fetchProjectDetails();
     } else {
       setIsLoading(false);
@@ -47,12 +43,9 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     try {
       setIsLoading(true);
       
-      // First, quickly load just the basic project metadata
-      const startTime = performance.now();
-      
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
-        .select('name, is_public, user_id')
+        .select('*')
         .eq('id', projectId)
         .single();
         
@@ -61,9 +54,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       }
       
       if (projectData) {
-        const endTime = performance.now();
-        console.log(`ProjectContext - Project metadata loaded in ${Math.round(endTime - startTime)}ms`);
-        
         // Check if this is a private project and the user has access
         if (projectData.user_id && projectData.is_public === false && user?.id !== projectData.user_id) {
           toast.error("You don't have access to this project");
@@ -86,10 +76,6 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
   };
-  
-  // Debounce and batch save requests
-  let saveDebounceTimer: ReturnType<typeof setTimeout> | null = null;
-  let saveQueue: { canvases: Canvas[], activeCanvasIndex: number } | null = null;
   
   const toggleProjectVisibility = async () => {
     if (!projectId || !user) return;
@@ -118,107 +104,66 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const saveProject = async (canvases: Canvas[], activeCanvasIndex: number) => {
     if (!projectId) return;
     
-    // Store in save queue
-    saveQueue = { canvases, activeCanvasIndex };
-    
-    // If there's already a timer, clear it
-    if (saveDebounceTimer) {
-      clearTimeout(saveDebounceTimer);
-    }
-    
-    // Set a new timer to execute the save operation
-    saveDebounceTimer = setTimeout(async () => {
-      if (!saveQueue) return;
-      
-      try {
-        const saveStartTime = performance.now();
+    try {
+      // Update the project's updated_at timestamp
+      const { error: projectError } = await supabase
+        .from('projects')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', projectId);
         
-        // Update the project's updated_at timestamp
-        const { error: projectError } = await supabase
-          .from('projects')
-          .update({ updated_at: new Date().toISOString() })
-          .eq('id', projectId);
-          
-        if (projectError) {
-          throw projectError;
-        }
-        
-        // Check if canvas data already exists for this project
-        const { data: existingCanvas, error: fetchError } = await supabase
-          .from('project_canvases')
-          .select('id')
-          .eq('project_id', projectId)
-          .maybeSingle();
-          
-        if (fetchError) {
-          throw fetchError;
-        }
-        
-        // Optimize the JSON data before storing
-        // Strip any unnecessarily large or temporary data that doesn't need to be persisted
-        const optimizedCanvases = saveQueue.canvases.map(canvas => {
-          // Create a optimized copy of the canvas
-          const optimizedCanvas = {
-            ...canvas,
-            elements: canvas.elements.map(element => {
-              // For image elements, don't store full dataUrls in database
-              if (element.type === 'image') {
-                const { dataUrl, thumbnailDataUrl, ...rest } = element;
-                return {
-                  ...rest,
-                  // If the element has a src (URL to an image), we can restore it later
-                  // No need to store large data URLs in the database
-                };
-              }
-              return element;
-            })
-          };
-          return optimizedCanvas;
-        });
-        
-        // We need to serialize and stringify the canvas data properly
-        const canvasData = {
-          canvases: JSON.parse(JSON.stringify(optimizedCanvases)),
-          activeCanvasIndex: saveQueue.activeCanvasIndex
-        };
-        
-        if (existingCanvas) {
-          // Update existing canvas data
-          const { error: updateError } = await supabase
-            .from('project_canvases')
-            .update({ 
-              canvas_data: canvasData,
-              updated_at: new Date().toISOString()
-            })
-            .eq('id', existingCanvas.id);
-            
-          if (updateError) {
-            throw updateError;
-          }
-        } else {
-          // Create new canvas data
-          const { error: insertError } = await supabase
-            .from('project_canvases')
-            .insert([{ 
-              project_id: projectId,
-              canvas_data: canvasData
-            }]);
-            
-          if (insertError) {
-            throw insertError;
-          }
-        }
-        
-        const saveEndTime = performance.now();
-        console.log(`ProjectContext - Project saved in ${Math.round(saveEndTime - saveStartTime)}ms`);
-        
-        toast.success('Project saved successfully');
-        saveQueue = null;
-      } catch (error) {
-        console.error('Error saving project:', error);
-        toast.error('Failed to save project');
+      if (projectError) {
+        throw projectError;
       }
-    }, 2000); // Debounce for 2 seconds
+      
+      // Check if canvas data already exists for this project
+      const { data: existingCanvas, error: fetchError } = await supabase
+        .from('project_canvases')
+        .select('id')
+        .eq('project_id', projectId)
+        .maybeSingle();
+        
+      if (fetchError) {
+        throw fetchError;
+      }
+      
+      // We need to serialize and stringify the canvas data properly
+      const canvasData = {
+        canvases: JSON.parse(JSON.stringify(canvases)),
+        activeCanvasIndex
+      };
+      
+      if (existingCanvas) {
+        // Update existing canvas data
+        const { error: updateError } = await supabase
+          .from('project_canvases')
+          .update({ 
+            canvas_data: canvasData,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existingCanvas.id);
+          
+        if (updateError) {
+          throw updateError;
+        }
+      } else {
+        // Create new canvas data
+        const { error: insertError } = await supabase
+          .from('project_canvases')
+          .insert([{ 
+            project_id: projectId,
+            canvas_data: canvasData
+          }]);
+          
+        if (insertError) {
+          throw insertError;
+        }
+      }
+      
+      toast.success('Project saved successfully');
+    } catch (error) {
+      console.error('Error saving project:', error);
+      toast.error('Failed to save project');
+    }
   };
   
   const value = {

@@ -12,11 +12,26 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { Square, Type, Lock, MoveHorizontal, MousePointerClick, SlidersHorizontal, Circle, Triangle, Image, X, Palette } from "lucide-react";
+import { 
+  Square, 
+  Type, 
+  Image, 
+  X, 
+  Circle, 
+  Triangle,
+  Lock, 
+  Hash,
+  Languages,
+  MoveHorizontal,
+  MousePointerClick,
+  SlidersHorizontal,
+  SlidersVertical,
+  Palette
+} from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "@/lib/utils";
-import { processImageUpload } from "@/utils/imageUploader";
 import { LibraryView } from "./library/LibraryView";
+import { Drawer, DrawerContent, DrawerTrigger } from "./ui/drawer";
 
 interface ElementMenuDialogProps {
   open: boolean;
@@ -32,6 +47,12 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
   const isMobile = useIsMobile();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const preventZoom = React.useCallback((e: WheelEvent) => {
+    if (e.ctrlKey) {
+      e.preventDefault();
+    }
+  }, []);
+
   useEffect(() => {
     if (open) {
       document.body.style.overflow = "hidden";
@@ -45,72 +66,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
       document.body.style.overflow = "";
       document.removeEventListener("wheel", preventZoom);
     };
-  }, [open]);
-
-  const preventZoom = (e: WheelEvent) => {
-    if (e.ctrlKey) {
-      e.preventDefault();
-    }
-  };
-
-  const shapes = [
-    { icon: Square, label: language === 'en' ? 'Rectangle' : 'מלבן', type: 'rectangle' },
-    { icon: Circle, label: language === 'en' ? 'Circle' : 'עיגול', type: 'circle' },
-    { icon: Triangle, label: language === 'en' ? 'Triangle' : 'משולש', type: 'triangle' },
-    { 
-      icon: () => <div className="w-5 h-0.5 bg-current"></div>, 
-      label: language === 'en' ? 'Line' : 'קו', 
-      type: 'line' 
-    }
-  ];
-
-  const text = [
-    { 
-      icon: Type, 
-      label: language === 'en' ? 'Heading' : 'כותרת', 
-      type: 'heading',
-      className: 'text-lg font-bold'
-    },
-    { 
-      icon: Type, 
-      label: language === 'en' ? 'Subheading' : 'כותרת משנה', 
-      type: 'subheading',
-      className: 'text-base font-semibold'
-    },
-    { 
-      icon: Type, 
-      label: language === 'en' ? 'Paragraph' : 'פסקה', 
-      type: 'paragraph',
-      className: 'text-sm'
-    }
-  ];
-
-  const puzzles = [
-    { 
-      icon: Lock, 
-      label: language === 'en' ? 'Lock' : 'מנעול', 
-      type: 'puzzle',
-      className: 'bg-[#E5DEFF]'
-    },
-    { 
-      icon: MoveHorizontal, 
-      label: language === 'en' ? 'Sequence' : 'רצף', 
-      type: 'sequencePuzzle',
-      className: 'bg-[#E5DEFF]'
-    },
-    { 
-      icon: MousePointerClick, 
-      label: language === 'en' ? 'Clicks' : 'קלicks', 
-      type: 'clickSequencePuzzle',
-      className: 'bg-[#E5DEFF]'
-    },
-    { 
-      icon: SlidersHorizontal, 
-      label: language === 'en' ? 'Slider' : 'מחוון', 
-      type: 'sliderPuzzle',
-      className: 'bg-[#E5DEFF]'
-    }
-  ];
+  }, [open, preventZoom]);
 
   const handleImageUploadClick = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -130,6 +86,104 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     }
   };
 
+  // Handle puzzle options
+  const handleImagePuzzleClick = () => {
+    addElement('puzzle' as any, {
+      puzzleConfig: {
+        name: language === 'en' ? 'Image Puzzle' : 'פאזל תמונה',
+        type: 'image',
+        placeholders: 3,
+        images: [],
+        solution: [0, 0, 0]
+      }
+    });
+    onOpenChange(false);
+  };
+
+  const handleNumberPuzzleClick = () => {
+    addElement('puzzle' as any, {
+      puzzleConfig: {
+        name: language === 'en' ? 'Number Lock' : 'מנעול מספרים',
+        type: 'number',
+        placeholders: 3,
+        images: [],
+        solution: [0, 0, 0],
+        maxNumber: 9
+      }
+    });
+    onOpenChange(false);
+  };
+
+  const handleAlphabetPuzzleClick = () => {
+    addElement('puzzle' as any, {
+      puzzleConfig: {
+        name: language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות',
+        type: 'alphabet',
+        placeholders: 3,
+        images: [],
+        solution: [0, 0, 0],
+        maxLetter: 'Z'
+      }
+    });
+    onOpenChange(false);
+  };
+
+  const handleSequencePuzzleClick = () => {
+    addElement('sequencePuzzle' as any, {
+      name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
+      sequencePuzzleConfig: {
+        name: language === 'en' ? 'Sequence Puzzle' : 'פאזל רצף',
+        images: [],
+        solution: [],
+        currentOrder: []
+      }
+    });
+    onOpenChange(false);
+  };
+  
+  const handleClickSequencePuzzleClick = () => {
+    addElement('clickSequencePuzzle' as any, {
+      name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
+      clickSequencePuzzleConfig: {
+        name: language === 'en' ? 'Click Sequence Puzzle' : 'פאזל רצף קליקים',
+        images: [],
+        solution: [],
+        clickedIndices: []
+      }
+    });
+    onOpenChange(false);
+  };
+
+  const handleHorizontalSliderPuzzleClick = () => {
+    addElement('sliderPuzzle' as any, {
+      name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
+      sliderPuzzleConfig: {
+        name: language === 'en' ? 'Horizontal Slider Puzzle' : 'פאזל מחוונים אופקי',
+        orientation: 'horizontal',
+        sliderCount: 3,
+        solution: [5, 7, 3],
+        currentValues: [0, 0, 0],
+        maxValue: 10
+      }
+    });
+    onOpenChange(false);
+  };
+
+  const handleVerticalSliderPuzzleClick = () => {
+    addElement('sliderPuzzle' as any, {
+      name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
+      sliderPuzzleConfig: {
+        name: language === 'en' ? 'Vertical Slider Puzzle' : 'פאזל מחוונים אנכי',
+        orientation: 'vertical',
+        sliderCount: 3,
+        solution: [8, 4, 6],
+        currentValues: [0, 0, 0],
+        maxValue: 10
+      }
+    });
+    onOpenChange(false);
+  };
+
   const solidColors = [
     { color: '#F1F0FB', label: language === 'en' ? 'Soft Gray' : 'אפור בהיר' },
     { color: '#FEF7CD', label: language === 'en' ? 'Soft Yellow' : 'צהוב בהיר' },
@@ -137,8 +191,6 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     { color: '#D3E4FD', label: language === 'en' ? 'Soft Blue' : 'כחול בהיר' },
     { color: '#FFDEE2', label: language === 'en' ? 'Soft Pink' : 'ורוד בהיר' },
     { color: '#FDE1D3', label: language === 'en' ? 'Soft Peach' : 'אפרסק בהיר' },
-    { color: '#F2FCE2', label: language === 'en' ? 'Soft Green' : 'ירוק בהיר' },
-    { color: '#FFFFFF', label: language === 'en' ? 'Pure White' : 'לבן' },
   ];
 
   const gradients = [
@@ -153,8 +205,6 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
     onOpenChange(false);
   };
 
-  const gridColumnsClass = isMobile ? 'grid-cols-2' : 'sm:grid-cols-4';
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
@@ -165,7 +215,7 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
           <div className="flex items-center justify-between p-4 border-b">
             <DialogHeader className="flex flex-row items-center gap-2">
               <DialogTitle className="text-xl text-canvas-purple font-bold">
-                {language === 'en' ? 'Add New Element' : 'הוספת אלמנט חדש'}
+                {language === 'en' ? 'Add Element' : 'הוספת אלמנט'}
               </DialogTitle>
             </DialogHeader>
             <DialogClose asChild>
@@ -178,29 +228,20 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
             </DialogClose>
           </div>
 
-          <Tabs defaultValue="shapes" className="flex-1 flex flex-col">
+          <Tabs defaultValue="elements" className="flex-1 flex flex-col">
             <div className="border-b bg-white overflow-x-auto">
               <TabsList className={cn(
                 "w-full justify-start h-12 bg-transparent px-2",
-                isMobile ? "flex-wrap" : "justify-center gap-4"
+                isMobile ? "grid grid-cols-3" : "justify-center gap-4"
               )}>
-                <TabsTrigger value="shapes" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
-                  {language === 'en' ? 'Shapes' : 'צורות'}
+                <TabsTrigger value="elements" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
+                  {language === 'en' ? 'Elements' : 'אלמנטים'}
                 </TabsTrigger>
                 <TabsTrigger value="text" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
                   {language === 'en' ? 'Text' : 'טקסט'}
                 </TabsTrigger>
-                <TabsTrigger value="puzzles" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
-                  {language === 'en' ? 'Puzzles' : 'פאזלים'}
-                </TabsTrigger>
-                <TabsTrigger value="media" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
-                  {language === 'en' ? 'Media' : 'מדיה'}
-                </TabsTrigger>
-                <TabsTrigger value="backgrounds" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
-                  {language === 'en' ? 'Backgrounds' : 'רקעים'}
-                </TabsTrigger>
-                <TabsTrigger value="library" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
-                  {language === 'en' ? 'Library' : 'ספרייה'}
+                <TabsTrigger value="background" className="data-[state=active]:bg-transparent data-[state=active]:text-canvas-purple">
+                  {language === 'en' ? 'Background' : 'רקע'}
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -214,130 +255,235 @@ export const ElementMenuDialog: React.FC<ElementMenuDialogProps> = ({
               onChange={handleImageUploadClick}
             />
 
-            {/* Fixed height container for tab content */}
-            <div className="flex-1 overflow-hidden" style={{ height: "500px" }}>
+            <div className="flex-1 overflow-hidden">
               <ScrollArea className="h-full">
                 <div className="p-4 pb-12">
-                  <TabsContent value="shapes" className="m-0">
-                    <div className={`grid ${gridColumnsClass} gap-3`}>
-                      {shapes.map((shape) => (
-                        <Button
-                          key={shape.type}
-                          variant="outline"
-                          className={cn(
-                            "flex flex-col items-center justify-center gap-2 bg-[#F1F0FB] hover:bg-[#F1F0FB]/90",
-                            isMobile ? "h-20" : "h-24"
-                          )}
-                          onClick={() => handleElementClick(shape.type)}
-                        >
-                          <shape.icon className="h-6 w-6" />
-                          <span>{shape.label}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="text" className="m-0">
-                    <div className={`grid ${isMobile ? 'grid-cols-1' : 'sm:grid-cols-3'} gap-3`}>
-                      {text.map((item) => (
-                        <Button
-                          key={item.type}
-                          variant="outline"
-                          className={cn(
-                            "flex flex-col items-center justify-center gap-2 bg-[#FEF7CD] hover:bg-[#FEF7CD]/90",
-                            isMobile ? "h-20" : "h-24"
-                          )}
-                          onClick={() => handleElementClick(item.type)}
-                        >
-                          <item.icon className="h-6 w-6" />
-                          <span className={item.className}>{item.label}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="puzzles" className="m-0">
-                    <div className={`grid ${gridColumnsClass} gap-3`}>
-                      {puzzles.map((puzzle) => (
-                        <Button
-                          key={puzzle.type}
-                          variant="outline"
-                          className={cn(
-                            "flex flex-col items-center justify-center gap-2",
-                            puzzle.className,
-                            "hover:opacity-90",
-                            isMobile ? "h-20" : "h-24"
-                          )}
-                          onClick={() => handleElementClick(puzzle.type)}
-                        >
-                          <puzzle.icon className="h-6 w-6" />
-                          <span>{puzzle.label}</span>
-                        </Button>
-                      ))}
-                    </div>
-                  </TabsContent>
-
-                  <TabsContent value="media" className="m-0">
-                    <div className={`grid ${gridColumnsClass} gap-3`}>
+                  <TabsContent value="elements" className="m-0">
+                    <h3 className="text-sm font-medium mb-3">
+                      {language === 'en' ? 'Shapes' : 'צורות'}
+                    </h3>
+                    <div className={`grid ${isMobile ? 'grid-cols-2' : 'sm:grid-cols-4'} gap-3 mb-6`}>
                       <Button
                         variant="outline"
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-2 bg-[#D3E4FD] hover:bg-[#D3E4FD]/90",
-                          isMobile ? "h-20" : "h-24"
-                        )}
+                        className="h-16 flex flex-col gap-2 items-center justify-center bg-[#F1F0FB] hover:bg-[#F1F0FB]/90"
+                        onClick={() => handleElementClick('rectangle')}
+                      >
+                        <Square className="h-5 w-5" />
+                        <span className="text-xs">{language === 'en' ? 'Rectangle' : 'מלבן'}</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-16 flex flex-col gap-2 items-center justify-center bg-[#F1F0FB] hover:bg-[#F1F0FB]/90"
+                        onClick={() => handleElementClick('circle')}
+                      >
+                        <Circle className="h-5 w-5" />
+                        <span className="text-xs">{language === 'en' ? 'Circle' : 'עיגול'}</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-16 flex flex-col gap-2 items-center justify-center bg-[#F1F0FB] hover:bg-[#F1F0FB]/90"
+                        onClick={() => handleElementClick('triangle')}
+                      >
+                        <Triangle className="h-5 w-5" />
+                        <span className="text-xs">{language === 'en' ? 'Triangle' : 'משולש'}</span>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-16 flex flex-col gap-2 items-center justify-center bg-[#F1F0FB] hover:bg-[#F1F0FB]/90"
+                        onClick={() => handleElementClick('line')}
+                      >
+                        <div className="w-5 h-0.5 bg-current mb-1"></div>
+                        <span className="text-xs">{language === 'en' ? 'Line' : 'קו'}</span>
+                      </Button>
+                    </div>
+                    
+                    <h3 className="text-sm font-medium mb-3">
+                      {language === 'en' ? 'Media' : 'מדיה'}
+                    </h3>
+                    <div className={`grid ${isMobile ? 'grid-cols-2' : 'sm:grid-cols-4'} gap-3 mb-6`}>
+                      <Button
+                        variant="outline"
+                        className="h-16 flex flex-col gap-2 items-center justify-center bg-[#D3E4FD] hover:bg-[#D3E4FD]/90"
                         onClick={() => handleElementClick('image')}
                       >
-                        <Image className="h-6 w-6" />
-                        <span>{language === 'en' ? 'Upload Image' : 'העלאת תמונה'}</span>
+                        <Image className="h-5 w-5" />
+                        <span className="text-xs">{language === 'en' ? 'Image' : 'תמונה'}</span>
+                      </Button>
+                      
+                      <Drawer>
+                        <DrawerTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            className="h-16 flex flex-col gap-2 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+                          >
+                            <Lock className="h-5 w-5" />
+                            <span className="text-xs">{language === 'en' ? 'Lock Puzzle' : 'מנעול פאזל'}</span>
+                          </Button>
+                        </DrawerTrigger>
+                        <DrawerContent className="px-4 pb-8">
+                          <div className="grid gap-2 mt-6">
+                            <h3 className="text-lg font-medium mb-2">{language === 'en' ? 'Lock Puzzles' : 'פאזל מנעול'}</h3>
+                            <Button
+                              variant="outline" 
+                              className="justify-start"
+                              onClick={handleImagePuzzleClick}
+                            >
+                              <Image className="h-4 w-4 mr-2" />
+                              {language === 'en' ? 'Image Puzzle' : 'פאזל תמונה'}
+                            </Button>
+                            <Button
+                              variant="outline" 
+                              className="justify-start"
+                              onClick={handleNumberPuzzleClick}
+                            >
+                              <Hash className="h-4 w-4 mr-2" />
+                              {language === 'en' ? 'Number Lock' : 'מנעול מספרים'}
+                            </Button>
+                            <Button
+                              variant="outline" 
+                              className="justify-start"
+                              onClick={handleAlphabetPuzzleClick}
+                            >
+                              <Languages className="h-4 w-4 mr-2" />
+                              {language === 'en' ? 'Alphabet Lock' : 'מנעול אותיות'}
+                            </Button>
+                          </div>
+                        </DrawerContent>
+                      </Drawer>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="h-16 flex flex-col gap-2 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+                        onClick={handleSequencePuzzleClick}
+                      >
+                        <MoveHorizontal className="h-5 w-5 text-blue-600" />
+                        <span className="text-xs">{language === 'en' ? 'Sequence' : 'רצף'}</span>
+                      </Button>
+                      
+                      <Button 
+                        variant="outline" 
+                        className="h-16 flex flex-col gap-2 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+                        onClick={handleClickSequencePuzzleClick}
+                      >
+                        <MousePointerClick className="h-5 w-5 text-green-600" />
+                        <span className="text-xs">{language === 'en' ? 'Click Sequence' : 'רצף קליקים'}</span>
+                      </Button>
+                      
+                      <Drawer>
+                        <DrawerTrigger asChild>
+                          <Button 
+                            variant="outline"
+                            className="h-16 flex flex-col gap-2 items-center justify-center bg-[#E5DEFF] hover:bg-[#E5DEFF]/90"
+                          >
+                            <SlidersHorizontal className="h-5 w-5 text-purple-600" />
+                            <span className="text-xs">{language === 'en' ? 'Slider Puzzle' : 'מחוון פאזל'}</span>
+                          </Button>
+                        </DrawerTrigger>
+                        <DrawerContent className="px-4 pb-8">
+                          <div className="grid gap-2 mt-6">
+                            <h3 className="text-lg font-medium mb-2">{language === 'en' ? 'Slider Puzzles' : 'פאזל מחוונים'}</h3>
+                            <Button
+                              variant="outline" 
+                              className="justify-start"
+                              onClick={handleHorizontalSliderPuzzleClick}
+                            >
+                              <SlidersHorizontal className="h-4 w-4 mr-2 text-purple-600" />
+                              {language === 'en' ? 'Horizontal Sliders' : 'מחוונים אופקיים'}
+                            </Button>
+                            <Button
+                              variant="outline" 
+                              className="justify-start"
+                              onClick={handleVerticalSliderPuzzleClick}
+                            >
+                              <SlidersVertical className="h-4 w-4 mr-2 text-purple-600" />
+                              {language === 'en' ? 'Vertical Sliders' : 'מחוונים אנכיים'}
+                            </Button>
+                          </div>
+                        </DrawerContent>
+                      </Drawer>
+                    </div>
+                    
+                    <h3 className="text-sm font-medium mb-3">
+                      {language === 'en' ? 'Library' : 'ספרייה'}
+                    </h3>
+                    <div className="mb-4">
+                      <Button 
+                        variant="outline" 
+                        className="w-full h-12 justify-start"
+                        onClick={() => document.querySelector('[data-state="inactive"][value="library"]')?.dispatchEvent(new MouseEvent('click', { bubbles: true }))}
+                      >
+                        <LibraryView onClose={() => onOpenChange(false)} />
                       </Button>
                     </div>
                   </TabsContent>
 
-                  <TabsContent value="backgrounds" className="m-0">
-                    <div className="space-y-5">
-                      <div>
-                        <h3 className="text-sm font-medium mb-3">
-                          {language === 'en' ? 'Solid Colors' : 'צבעים אחידים'}
-                        </h3>
-                        <div className={`grid ${gridColumnsClass} gap-3`}>
-                          {solidColors.map((item) => (
-                            <Button
-                              key={item.color}
-                              variant="outline"
-                              className={cn(
-                                "flex flex-col items-center justify-center gap-2 hover:opacity-90",
-                                isMobile ? "h-16" : "h-24"
-                              )}
-                              style={{ backgroundColor: item.color }}
-                              onClick={() => handleBackgroundClick({ color: item.color })}
-                            >
-                              <span className="text-xs text-gray-600">{item.label}</span>
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
+                  <TabsContent value="text" className="m-0">
+                    <h3 className="text-sm font-medium mb-3">
+                      {language === 'en' ? 'Text Styles' : 'סגנונות טקסט'}
+                    </h3>
+                    <div className="flex flex-col gap-2">
+                      <Button 
+                        variant="outline" 
+                        className="justify-start h-14 bg-[#FEF7CD] hover:bg-[#FEF7CD]/90" 
+                        onClick={() => handleElementClick('heading')}
+                      >
+                        <Type className="h-4 w-4 mr-2" />
+                        <span className="text-lg font-bold">{language === 'en' ? 'Heading' : 'כותרת'}</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="justify-start h-14 bg-[#FEF7CD] hover:bg-[#FEF7CD]/90" 
+                        onClick={() => handleElementClick('subheading')}
+                      >
+                        <Type className="h-4 w-4 mr-2" />
+                        <span className="text-base font-semibold">{language === 'en' ? 'Subheading' : 'כותרת משנה'}</span>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        className="justify-start h-14 bg-[#FEF7CD] hover:bg-[#FEF7CD]/90" 
+                        onClick={() => handleElementClick('paragraph')}
+                      >
+                        <Type className="h-4 w-4 mr-2" />
+                        <span className="text-sm">{language === 'en' ? 'Paragraph' : 'פסקה'}</span>
+                      </Button>
+                    </div>
+                  </TabsContent>
 
-                      <div>
-                        <h3 className="text-sm font-medium mb-3">
-                          {language === 'en' ? 'Gradients' : 'גרדיאנטים'}
-                        </h3>
-                        <div className={`grid ${isMobile ? 'grid-cols-1' : 'sm:grid-cols-4'} gap-3`}>
-                          {gradients.map((item) => (
-                            <Button
-                              key={item.gradient}
-                              variant="outline"
-                              className={cn(
-                                "flex flex-col items-center justify-center gap-2 hover:opacity-90",
-                                isMobile ? "h-16" : "h-24"
-                              )}
-                              style={{ background: item.gradient }}
-                              onClick={() => handleBackgroundClick({ gradient: item.gradient })}
-                            >
-                              <span className="text-xs text-white text-shadow">{item.label}</span>
-                            </Button>
-                          ))}
-                        </div>
-                      </div>
+                  <TabsContent value="background" className="m-0">
+                    <h3 className="text-sm font-medium mb-3">
+                      {language === 'en' ? 'Solid Colors' : 'צבעים אחידים'}
+                    </h3>
+                    <div className={`grid ${isMobile ? 'grid-cols-3' : 'grid-cols-6'} gap-3 mb-6`}>
+                      {solidColors.map((item, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          className="h-16 p-0 flex flex-col items-center justify-end hover:opacity-90"
+                          style={{ backgroundColor: item.color }}
+                          onClick={() => handleBackgroundClick({ color: item.color })}
+                        >
+                          <div className="w-full bg-white bg-opacity-70 py-1 text-center">
+                            <span className="text-xs text-gray-700">{item.label}</span>
+                          </div>
+                        </Button>
+                      ))}
+                    </div>
+
+                    <h3 className="text-sm font-medium mb-3">
+                      {language === 'en' ? 'Gradients' : 'גרדיאנטים'}
+                    </h3>
+                    <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
+                      {gradients.map((item, index) => (
+                        <Button
+                          key={index}
+                          variant="outline"
+                          className="h-14 flex items-center justify-center hover:opacity-90 relative"
+                          style={{ background: item.gradient }}
+                          onClick={() => handleBackgroundClick({ gradient: item.gradient })}
+                        >
+                          <span className="text-sm text-white text-shadow">{item.label}</span>
+                        </Button>
+                      ))}
                     </div>
                   </TabsContent>
 

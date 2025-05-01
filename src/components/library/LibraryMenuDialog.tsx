@@ -1,5 +1,5 @@
 
-import React, { Suspense, lazy } from "react";
+import React from "react";
 import {
   Dialog,
   DialogContent,
@@ -8,14 +8,10 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { X, Loader2 } from "lucide-react";
+import { X } from "lucide-react";
+import { AdminLibraryView } from "./AdminLibraryView";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
-
-// Lazy load the LibraryView component
-const LibraryView = lazy(() => import("./LibraryView").then(module => ({
-  default: module.LibraryView
-})));
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -53,8 +49,10 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
         "p-0 gap-0 overflow-hidden",
-        isMobile ? "w-[95vw] max-w-full" : "max-w-4xl w-[90vw]"
-      )} style={{ height: "600px" }}>
+        isMobile 
+          ? "w-[95vw] max-w-full max-h-[85vh]" 
+          : "max-w-4xl w-[90vw] max-h-[85vh]"
+      )}>
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
             <DialogHeader className="flex flex-row items-center gap-4">
@@ -74,14 +72,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 
           <ScrollArea className="flex-1">
             <div className="p-4">
-              <Suspense fallback={
-                <div className="flex justify-center items-center p-8">
-                  <Loader2 className="w-8 h-8 animate-spin text-canvas-purple" />
-                  <p className="ml-2 text-muted-foreground">Loading library...</p>
-                </div>
-              }>
-                <LibraryView onClose={() => onOpenChange(false)} />
-              </Suspense>
+              <AdminLibraryView onClose={() => onOpenChange(false)} />
             </div>
           </ScrollArea>
         </div>

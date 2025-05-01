@@ -1,13 +1,12 @@
-
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
 import { Loader2 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { 
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
 } from "@/utils/libraryImageProcessor";
-import { useState, useEffect } from "react";
 
 interface LibraryImage {
   id: string;
@@ -17,7 +16,6 @@ interface LibraryImage {
 
 export const LibraryView = ({ onClose }: { onClose: () => void }) => {
   const { addElement, updateElement, canvasRef } = useDesignState();
-  const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set());
   
   const { data: images, isLoading } = useQuery({
     queryKey: ['library-images'],
@@ -29,24 +27,8 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
         
       if (error) throw error;
       return data as LibraryImage[];
-    },
-    staleTime: 5 * 60 * 1000, // Cache results for 5 minutes
-    gcTime: 10 * 60 * 1000, // Keep in cache for 10 minutes (formerly cacheTime)
+    }
   });
-  
-  // Pre-load visible images
-  useEffect(() => {
-    if (!images) return;
-    
-    // Only preload the first 6 images to improve initial load performance
-    const imagesToPreload = images.slice(0, 6);
-    
-    imagesToPreload.forEach(image => {
-      const img = new Image();
-      img.src = image.image_path;
-      img.onload = () => handleImageLoad(image.id);
-    });
-  }, [images]);
   
   const handleImageClick = async (image: LibraryImage) => {
     try {
@@ -78,14 +60,6 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
       console.error('Error processing library image:', error);
     }
   };
-
-  const handleImageLoad = (id: string) => {
-    setLoadedImages(prev => {
-      const updated = new Set(prev);
-      updated.add(id);
-      return updated;
-    });
-  };
   
   if (isLoading) {
     return (
@@ -104,31 +78,22 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-      {images?.map((image) => (
-        <button
-          key={image.id}
-          onClick={() => handleImageClick(image)}
-          className="aspect-square relative group overflow-hidden rounded-lg border hover:border-primary transition-colors"
-        >
-          {/* Low-quality thumbnail placeholder */}
-          {!loadedImages.has(image.id) && (
-            <div className="absolute inset-0 flex items-center justify-center bg-gray-200 animate-pulse">
-              <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" />
-            </div>
-          )}
-          
-          <img
-            src={image.image_path}
-            alt={image.name}
-            className={`w-full h-full object-cover group-hover:opacity-90 transition-opacity ${
-              loadedImages.has(image.id) ? 'opacity-100' : 'opacity-0'
-            }`}
-            loading="lazy" 
-            onLoad={() => handleImageLoad(image.id)}
-          />
-        </button>
-      ))}
-    </div>
+    <ScrollArea className="h-[500px] px-1">
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
+        {images?.map((image) => (
+          <button
+            key={image.id}
+            onClick={() => handleImageClick(image)}
+            className="aspect-square relative group overflow-hidden rounded-lg border hover:border-primary transition-colors"
+          >
+            <img
+              src={image.image_path}
+              alt={image.name}
+              className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+            />
+          </button>
+        ))}
+      </div>
+    </ScrollArea>
   );
 };
