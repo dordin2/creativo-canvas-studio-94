@@ -11,7 +11,7 @@ import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil } from "lucide-react";
+import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil, Code } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { PaymentButton } from "@/components/PaymentButton";
@@ -38,7 +38,7 @@ const Editor = () => {
     setCanvases: updateCanvases,
     activeElement
   } = useDesignState();
-  const { projectName, saveProject, isPublic, toggleProjectVisibility } = useProject();
+  const { projectName, saveProject, isPublic, toggleProjectVisibility, gameCode } = useProject();
   const isMobile = useIsMobile();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileProperties, setShowMobileProperties] = useState(false);
@@ -139,6 +139,27 @@ const Editor = () => {
     );
   };
 
+  const handleShowCode = () => {
+    if (!gameCode) {
+      toast.info(
+        <div>
+          <p>This project doesn't have a code yet.</p>
+          <p>Game codes are automatically generated when you share your game.</p>
+        </div>
+      );
+      return;
+    }
+    
+    toast.info(
+      <div>
+        <p>Game Code:</p>
+        <div className="p-2 bg-gray-100 rounded mt-2 select-all text-center font-mono text-lg">
+          {gameCode}
+        </div>
+      </div>
+    );
+  };
+
   const goBackToProjects = () => {
     navigate('/');
   };
@@ -206,6 +227,14 @@ const Editor = () => {
                         <Lock className="mr-2 h-4 w-4 text-red-500" />
                       )}
                       {isPublic ? 'Public' : 'Private'}
+                    </Button>
+                    <Button 
+                      onClick={handleShowCode}
+                      variant="outline"
+                      className="justify-start"
+                    >
+                      <Code className="mr-2 h-4 w-4" />
+                      Show Code
                     </Button>
                     <Button 
                       onClick={handleShareGame}
@@ -356,6 +385,14 @@ const Editor = () => {
                 <Lock className="mr-2 h-4 w-4 text-red-500" />
               )}
               {isPublic ? 'Public' : 'Private'}
+            </Button>
+            <Button 
+              onClick={handleShowCode}
+              variant="outline"
+              className="bg-white hover:bg-gray-50"
+            >
+              <Code className="mr-2 h-4 w-4" />
+              Show Code
             </Button>
             <Button 
               onClick={handleShareGame}

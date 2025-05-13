@@ -11,6 +11,7 @@ type ProjectContextType = {
   projectId: string | null;
   projectName: string;
   isPublic: boolean;
+  gameCode: string | null;
   isLoading: boolean;
   saveProject: (canvases: Canvas[], activeCanvasIndex: number) => Promise<void>;
   toggleProjectVisibility: () => Promise<void>;
@@ -22,6 +23,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const { projectId } = useParams<{ projectId: string }>();
   const [projectName, setProjectName] = useState<string>("");
   const [isPublic, setIsPublic] = useState<boolean>(false);
+  const [gameCode, setGameCode] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -63,6 +65,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
         
         setProjectName(projectData.name);
         setIsPublic(projectData.is_public || false);
+        setGameCode(projectData.game_code);
       } else {
         // If project not found, redirect to projects page
         toast.error('Project not found');
@@ -170,6 +173,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
     projectId,
     projectName,
     isPublic,
+    gameCode,
     isLoading,
     saveProject,
     toggleProjectVisibility
