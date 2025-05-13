@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { LogIn, UserPlus, GameController } from "lucide-react";
+import { LogIn, UserPlus, Gamepad } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/components/ui/use-toast";
 
@@ -247,7 +247,7 @@ const Auth = () => {
                     className="w-full bg-canvas-purple hover:bg-canvas-purple/90"
                     disabled={loading}
                   >
-                    <GameController className="mr-2 h-4 w-4" />
+                    <Gamepad className="mr-2 h-4 w-4" />
                     {loading ? "Accessing..." : "Enter Project"}
                   </Button>
                 </CardFooter>
