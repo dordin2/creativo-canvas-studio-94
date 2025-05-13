@@ -5,7 +5,7 @@ import Canvas from "@/components/Canvas";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { Maximize, Minimize } from "lucide-react";
+import { Maximize, Minimize, Home } from "lucide-react";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { DesignProvider } from "@/context/DesignContext";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -121,6 +121,10 @@ const Play = () => {
     }
   };
 
+  const handleBackToLogin = () => {
+    navigate('/auth');
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-white">
@@ -146,6 +150,17 @@ const Play = () => {
         <InventoryPanel />
         <InventoryIcon />
         
+        <div className={`absolute ${isMobile ? 'bottom-2 left-2' : 'bottom-4 left-4'} z-[100]`}>
+          <Button 
+            variant="secondary" 
+            className={`shadow-md bg-white hover:bg-gray-100 ${isMobile ? 'px-2 py-1 text-xs' : ''}`}
+            onClick={handleBackToLogin}
+          >
+            <Home className={isMobile ? "h-4 w-4" : "mr-1"} />
+            {!isMobile && 'Back to Login'}
+          </Button>
+        </div>
+
         <div className={`absolute ${isMobile ? 'bottom-2 right-2' : 'bottom-4 right-4'} z-[100]`}>
           <Button 
             variant="secondary" 
