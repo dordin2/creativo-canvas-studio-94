@@ -7,12 +7,15 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
-import { LogIn, UserPlus } from "lucide-react";
+import { LogIn, UserPlus, GameController } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/components/ui/use-toast";
 
 const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [projectCode, setProjectCode] = useState("");
   const [loading, setLoading] = useState(false);
   const { signIn, signUp, user } = useAuth();
   const navigate = useNavigate();
@@ -49,6 +52,56 @@ const Auth = () => {
     }
   };
   
+  const handleEnterCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!projectCode.trim()) {
+      toast({
+        title: "Error",
+        description: "Please enter a project code",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    setLoading(true);
+    
+    try {
+      // Find project with matching game code
+      const { data, error } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('game_code', projectCode.trim())
+        .maybeSingle();
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (!data) {
+        toast({
+          title: "Invalid Code",
+          description: "No project found with this code. Please check and try again.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Navigate to the project in play mode
+      navigate(`/play/${data.id}`);
+      
+    } catch (error) {
+      console.error('Error accessing project by code:', error);
+      toast({
+        title: "Error",
+        description: "An error occurred while accessing the project",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="max-w-md w-full space-y-8">
@@ -58,9 +111,10 @@ const Auth = () => {
         </div>
         
         <Tabs defaultValue="signin" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
+          <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="signin">Sign In</TabsTrigger>
             <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            <TabsTrigger value="code">Enter Code</TabsTrigger>
           </TabsList>
           
           <TabsContent value="signin">
@@ -159,6 +213,42 @@ const Auth = () => {
                   >
                     <UserPlus className="mr-2 h-4 w-4" />
                     {loading ? "Creating Account..." : "Create Account"}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          </TabsContent>
+          
+          <TabsContent value="code">
+            <Card>
+              <CardHeader>
+                <CardTitle>Enter Project Code</CardTitle>
+                <CardDescription>
+                  Access a project by entering its unique code
+                </CardDescription>
+              </CardHeader>
+              <form onSubmit={handleEnterCode}>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="project-code">Project Code</Label>
+                    <Input
+                      id="project-code"
+                      type="text"
+                      placeholder="Enter project code"
+                      value={projectCode}
+                      onChange={(e) => setProjectCode(e.target.value)}
+                      required
+                    />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button 
+                    type="submit" 
+                    className="w-full bg-canvas-purple hover:bg-canvas-purple/90"
+                    disabled={loading}
+                  >
+                    <GameController className="mr-2 h-4 w-4" />
+                    {loading ? "Accessing..." : "Enter Project"}
                   </Button>
                 </CardFooter>
               </form>
