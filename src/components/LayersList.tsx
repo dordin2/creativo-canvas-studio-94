@@ -53,10 +53,18 @@ const LayersList = () => {
   
   // Create an invisible element for the drag preview instead of using DOM manipulation
   const dragPreviewRef = useRef<HTMLDivElement | null>(null);
+  // Add refs for the layer items container and individual layer items
+  const layersContainerRef = useRef<HTMLDivElement>(null);
+  const layerItemsRef = useRef<(HTMLDivElement | null)[]>([]);
 
   const layerElements = [...elements]
     .filter(element => element.type !== 'background')
     .sort((a, b) => b.layer - a.layer);
+
+  // Reset the layer items ref array when the layer elements change
+  useEffect(() => {
+    layerItemsRef.current = layerItemsRef.current.slice(0, layerElements.length);
+  }, [layerElements.length]);
 
   const handleNameChange = (elementId: string, newName: string) => {
     updateElement(elementId, { name: newName });
@@ -105,6 +113,22 @@ const LayersList = () => {
     setSelectedElementId(elementId);
     setSelectedTargetCanvas('');
     setShowMoveDialog(true);
+  };
+
+  // Find the layer item index at a specific point on the screen
+  const findLayerItemAtPosition = (clientY: number): number => {
+    if (!layerItemsRef.current.length) return -1;
+    
+    for (let i = 0; i < layerItemsRef.current.length; i++) {
+      const item = layerItemsRef.current[i];
+      if (item) {
+        const rect = item.getBoundingClientRect();
+        if (clientY >= rect.top && clientY <= rect.bottom) {
+          return i;
+        }
+      }
+    }
+    return -1;
   };
 
   // Generate element thumbnail
@@ -230,6 +254,9 @@ const LayersList = () => {
 
   // Touch event handlers for mobile drag and drop
   const handleTouchStart = (e: React.TouchEvent, element: DesignElement, index: number) => {
+    // Prevent default to avoid scrolling interference
+    e.stopPropagation();
+    
     // Store the starting index
     setTouchStartIndex(index);
     setDraggedElement(element);
@@ -253,18 +280,26 @@ const LayersList = () => {
           <span class="text-sm font-medium whitespace-nowrap">${getElementName(element)}</span>
         </div>
       `;
-      
-      document.body.appendChild(preview);
     }
+    
+    // Set initial dragOverIndex to the same as touchStartIndex
+    setDragOverIndex(index);
   };
   
-  const handleTouchMove = (e: React.TouchEvent, index: number) => {
-    if (!draggedElement) return;
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!draggedElement || touchStartIndex === null) return;
     
     e.preventDefault(); // Prevent scrolling while dragging
     
     const touch = e.touches[0];
-    setDragOverIndex(index);
+    
+    // Find which layer item the touch is currently over
+    const itemIndex = findLayerItemAtPosition(touch.clientY);
+    
+    // Update the dragOverIndex if we found a valid item
+    if (itemIndex !== -1) {
+      setDragOverIndex(itemIndex);
+    }
     
     // Update the drag preview position
     if (dragPreviewRef.current) {
@@ -273,13 +308,13 @@ const LayersList = () => {
     }
   };
   
-  const handleTouchEnd = (e: React.TouchEvent, targetIndex: number) => {
+  const handleTouchEnd = (e: React.TouchEvent) => {
     // Hide the drag preview
     if (dragPreviewRef.current) {
       dragPreviewRef.current.style.display = 'none';
     }
     
-    if (!draggedElement || touchStartIndex === null) {
+    if (!draggedElement || touchStartIndex === null || dragOverIndex === null) {
       setDraggedElement(null);
       setTouchStartIndex(null);
       setDragOverIndex(null);
@@ -287,7 +322,7 @@ const LayersList = () => {
     }
     
     // Only process if we're actually changing the position
-    if (touchStartIndex !== targetIndex) {
+    if (touchStartIndex !== dragOverIndex) {
       // Get the current canvas elements
       const currentCanvas = canvases[activeCanvasIndex];
       if (!currentCanvas) return;
@@ -296,7 +331,7 @@ const LayersList = () => {
       const updatedElements = [...currentCanvas.elements];
       
       // Update the layers based on new order
-      const newElements = updateElementsOrder(updatedElements, touchStartIndex, targetIndex, layerElements);
+      const newElements = updateElementsOrder(updatedElements, touchStartIndex, dragOverIndex, layerElements);
       
       // Update the canvas with the new elements
       const updatedCanvases = [...canvases];
@@ -306,6 +341,7 @@ const LayersList = () => {
       };
       
       setCanvases(updatedCanvases);
+      console.log(`Reordered from ${touchStartIndex} to ${dragOverIndex}`);
     }
     
     // Reset drag state
@@ -446,13 +482,14 @@ const LayersList = () => {
         aria-hidden="true"
       ></div>
 
-      <div className="space-y-2 max-h-[300px] overflow-y-auto">
+      <div className="space-y-2 max-h-[300px] overflow-y-auto" ref={layersContainerRef}>
         {layerElements.length === 0 ? (
           <div className="text-sm text-gray-500 italic">No elements added yet</div>
         ) : (
           layerElements.map((element, index) => (
             <div 
               key={element.id}
+              ref={el => layerItemsRef.current[index] = el}
               className={`p-2 border rounded-md flex items-center justify-between ${
                 activeElement?.id === element.id ? "border-canvas-purple bg-purple-50" : "border-gray-200"
               } ${dragOverIndex === index ? "border-blue-500 bg-blue-50" : ""} 
@@ -466,8 +503,8 @@ const LayersList = () => {
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
               onTouchStart={isMobile ? (e) => handleTouchStart(e, element, index) : undefined}
-              onTouchMove={isMobile ? (e) => handleTouchMove(e, index) : undefined}
-              onTouchEnd={isMobile ? (e) => handleTouchEnd(e, index) : undefined}
+              onTouchMove={isMobile ? handleTouchMove : undefined}
+              onTouchEnd={isMobile ? handleTouchEnd : undefined}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
                 <div className={`${isMobile ? 'cursor-grab active:cursor-grabbing' : 'cursor-grab'} flex items-center justify-center`}>
