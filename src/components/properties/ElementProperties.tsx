@@ -1,4 +1,3 @@
-
 import { DesignElement } from "@/context/DesignContext";
 import TextProperties from "./TextProperties";
 import ShapeProperties from "./ShapeProperties";
@@ -83,7 +82,7 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
       <>
         <Button
           variant="outline"
-          className={`fixed ${isMobile ? 'bottom-4' : 'top-4'} right-4 z-50`}
+          className={`fixed ${isMobile ? 'bottom-4' : 'top-4'} left-4 z-50`}
           onClick={() => setIsDialogOpen(true)}
         >
           <Settings className="h-4 w-4 mr-2" />
