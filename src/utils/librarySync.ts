@@ -101,8 +101,6 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
     const totalChanges = missingInStorage.length + missingInDb.length;
     if (totalChanges > 0) {
       toast.success(`Library synchronized: ${missingInStorage.length} removed, ${missingInDb.length} added`);
-    } else {
-      toast.success('Library is already synchronized');
     }
     
     return true;

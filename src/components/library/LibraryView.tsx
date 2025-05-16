@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { syncLibraryWithStorage, verifyImageExists } from "@/utils/librarySync";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface LibraryImage {
   id: string;
@@ -19,7 +19,12 @@ interface LibraryImage {
   name: string;
 }
 
-export const LibraryView = ({ onClose }: { onClose: () => void }) => {
+interface LibraryViewProps {
+  onClose: () => void;
+  autoSync?: boolean;
+}
+
+export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => {
   const { addElement, updateElement, canvasRef } = useDesignState();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -55,7 +60,7 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
       
       return data as LibraryImage[];
     },
-    staleTime: 5 * 60 * 1000 // 5 minutes
+    staleTime: 0 // Always refetch when component mounts
   });
 
   const handleRefreshLibrary = async () => {

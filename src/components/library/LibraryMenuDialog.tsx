@@ -17,6 +17,9 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { DesignProvider } from "@/context/DesignContext";
 import { useAuth } from "@/context/AuthContext";
+import { syncLibraryWithStorage } from "@/utils/librarySync";
+import { useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -30,12 +33,34 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = React.useState("library");
   const { isAdmin } = useAuth();
+  const queryClient = useQueryClient();
+  const [isSyncing, setIsSyncing] = React.useState(false);
   
   const preventZoom = React.useCallback((e: WheelEvent) => {
     if (e.ctrlKey) {
       e.preventDefault();
     }
   }, []);
+
+  // Auto-sync when dialog opens
+  React.useEffect(() => {
+    if (open && !isSyncing) {
+      setIsSyncing(true);
+      syncLibraryWithStorage()
+        .then((success) => {
+          if (success) {
+            queryClient.invalidateQueries({ queryKey: ['library-images'] });
+          }
+        })
+        .catch((error) => {
+          console.error("Error syncing library:", error);
+          toast.error("Failed to synchronize library");
+        })
+        .finally(() => {
+          setIsSyncing(false);
+        });
+    }
+  }, [open, queryClient, isSyncing]);
 
   React.useEffect(() => {
     if (open) {
@@ -93,7 +118,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
               <ScrollArea className="flex-1">
                 <DesignProvider initialState={emptyInitialState}>
                   <TabsContent value="library" className="p-4 h-full">
-                    <LibraryView onClose={() => onOpenChange(false)} />
+                    <LibraryView onClose={() => onOpenChange(false)} autoSync={true} />
                   </TabsContent>
                   <TabsContent value="upload" className="p-4 h-full">
                     <PublicUploader />
