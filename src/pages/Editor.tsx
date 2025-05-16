@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Canvas from "@/components/Canvas";
-import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
 import { useDesignState } from "@/context/DesignContext";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
@@ -429,11 +428,6 @@ const Editor = () => {
             </div>
           )}
         </div>
-        {!isGameMode && isInteractiveMode && (
-          <div className="flex-shrink-0 w-80 z-20 relative">
-            <Properties />
-          </div>
-        )}
       </div>
       {isGameMode && (
         <>
