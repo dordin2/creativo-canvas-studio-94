@@ -52,6 +52,17 @@ export const updateElementsOrder = (
   // Create a copy of layer elements
   const updatedLayerElements = [...layerElements];
   
+  // Ensure indices are valid
+  if (sourceIndex < 0 || sourceIndex >= updatedLayerElements.length || 
+      targetIndex < 0 || targetIndex >= updatedLayerElements.length) {
+    console.error("Invalid source or target index for layer reordering", {
+      sourceIndex,
+      targetIndex,
+      layerCount: updatedLayerElements.length
+    });
+    return allElements;
+  }
+  
   // Remove the element from source position
   const [draggedItem] = updatedLayerElements.splice(sourceIndex, 1);
   
@@ -71,3 +82,4 @@ export const updateElementsOrder = (
   // Combine non-layer elements with newly ordered layer elements
   return [...nonLayerElements, ...reorderedElements];
 };
+

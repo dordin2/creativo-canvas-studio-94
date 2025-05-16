@@ -1,3 +1,4 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
@@ -49,6 +50,7 @@ const LayersList = () => {
   const [draggedElement, setDraggedElement] = useState<DesignElement | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
   const [touchStartIndex, setTouchStartIndex] = useState<number | null>(null);
+  const [isDraggingLayer, setIsDraggingLayer] = useState<boolean>(false);
   const isMobile = useIsMobile();
   
   // Create an invisible element for the drag preview instead of using DOM manipulation
@@ -65,6 +67,43 @@ const LayersList = () => {
   useEffect(() => {
     layerItemsRef.current = layerItemsRef.current.slice(0, layerElements.length);
   }, [layerElements.length]);
+
+  // Function to create and initialize drag preview
+  useEffect(() => {
+    // Create drag preview element if it doesn't exist
+    if (!dragPreviewRef.current) {
+      const preview = document.createElement('div');
+      preview.className = "fixed bg-white px-3 py-2 rounded-md shadow-lg border z-[9999] pointer-events-none items-center";
+      preview.style.display = 'none';
+      preview.setAttribute('aria-hidden', 'true');
+      document.body.appendChild(preview);
+      dragPreviewRef.current = preview;
+    }
+
+    // Clean up function
+    return () => {
+      if (dragPreviewRef.current && document.body.contains(dragPreviewRef.current)) {
+        document.body.removeChild(dragPreviewRef.current);
+      }
+    };
+  }, []);
+
+  // Apply temporary no-scroll class to layers container when dragging
+  useEffect(() => {
+    if (!layersContainerRef.current) return;
+    
+    if (isDraggingLayer) {
+      layersContainerRef.current.classList.add('overflow-hidden');
+    } else {
+      layersContainerRef.current.classList.remove('overflow-hidden');
+    }
+    
+    return () => {
+      if (layersContainerRef.current) {
+        layersContainerRef.current.classList.remove('overflow-hidden');
+      }
+    };
+  }, [isDraggingLayer]);
 
   const handleNameChange = (elementId: string, newName: string) => {
     updateElement(elementId, { name: newName });
@@ -255,7 +294,11 @@ const LayersList = () => {
   // Touch event handlers for mobile drag and drop
   const handleTouchStart = (e: React.TouchEvent, element: DesignElement, index: number) => {
     // Prevent default to avoid scrolling interference
+    e.preventDefault();
     e.stopPropagation();
+    
+    // Set dragging state to true
+    setIsDraggingLayer(true);
     
     // Store the starting index
     setTouchStartIndex(index);
@@ -299,6 +342,17 @@ const LayersList = () => {
     // Update the dragOverIndex if we found a valid item
     if (itemIndex !== -1) {
       setDragOverIndex(itemIndex);
+      
+      // Add visual indication for all layer items
+      layerItemsRef.current.forEach((item, idx) => {
+        if (!item) return;
+        
+        if (idx === itemIndex) {
+          item.classList.add('border-blue-500', 'bg-blue-50');
+        } else {
+          item.classList.remove('border-blue-500', 'bg-blue-50');
+        }
+      });
     }
     
     // Update the drag preview position
@@ -313,6 +367,16 @@ const LayersList = () => {
     if (dragPreviewRef.current) {
       dragPreviewRef.current.style.display = 'none';
     }
+    
+    // Reset the layer item highlights
+    layerItemsRef.current.forEach(item => {
+      if (item) {
+        item.classList.remove('border-blue-500', 'bg-blue-50');
+      }
+    });
+    
+    // Turn off dragging mode to re-enable scrolling
+    setIsDraggingLayer(false);
     
     if (!draggedElement || touchStartIndex === null || dragOverIndex === null) {
       setDraggedElement(null);
@@ -384,9 +448,6 @@ const LayersList = () => {
           <span class="text-sm font-medium whitespace-nowrap">${getElementName(element)}</span>
         </div>
       `;
-      
-      // Add the element to the document
-      document.body.appendChild(preview);
     }
   };
   
@@ -457,15 +518,6 @@ const LayersList = () => {
     setDraggedElement(null);
     setDragOverIndex(null);
   };
-
-  // Clean up touch event handlers
-  useEffect(() => {
-    return () => {
-      if (dragPreviewRef.current && document.body.contains(dragPreviewRef.current)) {
-        document.body.removeChild(dragPreviewRef.current);
-      }
-    };
-  }, []);
 
   return (
     <div className="border rounded-md p-4 mt-4">
@@ -685,3 +737,4 @@ const LayersList = () => {
 };
 
 export default LayersList;
+
