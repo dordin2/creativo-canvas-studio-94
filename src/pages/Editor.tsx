@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Canvas from "@/components/Canvas";
-import Properties from "@/components/Properties";
 import CanvasTabs from "@/components/CanvasTabs";
 import { useDesignState } from "@/context/DesignContext";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
@@ -18,6 +17,7 @@ import { PaymentButton } from "@/components/PaymentButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileSidebar from "@/components/MobileSidebar";
 import MobileProperties from "@/components/MobileProperties";
+import ElementProperties from "@/components/properties/ElementProperties";
 import { 
   Drawer,
   DrawerContent,
@@ -422,6 +422,10 @@ const Editor = () => {
                 <FloatingSmartSlider element={activeElement} />
               )}
               <Canvas />
+              {/* Show ElementProperties in interactive mode */}
+              {!isGameMode && isInteractiveMode && activeElement && (
+                <ElementProperties element={activeElement} isInteractiveMode={true} />
+              )}
             </>
           ) : (
             <div className="fixed-canvas-container">
@@ -429,11 +433,6 @@ const Editor = () => {
             </div>
           )}
         </div>
-        {!isGameMode && isInteractiveMode && (
-          <div className="flex-shrink-0 w-80 z-20 relative">
-            <Properties />
-          </div>
-        )}
       </div>
       {isGameMode && (
         <>
