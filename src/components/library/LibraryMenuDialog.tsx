@@ -12,9 +12,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
 import { AdminLibraryView } from "./AdminLibraryView";
 import { LibraryView } from "./LibraryView";
+import { PublicUploader } from "./PublicUploader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { DesignProvider } from "@/context/DesignContext";
+import { useAuth } from "@/context/AuthContext";
 
 interface LibraryMenuDialogProps {
   open: boolean;
@@ -27,6 +29,7 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
 }) => {
   const isMobile = useIsMobile();
   const [activeTab, setActiveTab] = React.useState("library");
+  const { isAdmin } = useAuth();
   
   const preventZoom = React.useCallback((e: WheelEvent) => {
     if (e.ctrlKey) {
@@ -82,8 +85,9 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
           <div className="flex-1 flex flex-col">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
               <TabsList className="border-b mx-4">
-                <TabsTrigger value="library">Public Library</TabsTrigger>
-                <TabsTrigger value="uploads">Your Uploads</TabsTrigger>
+                <TabsTrigger value="library">Browse Library</TabsTrigger>
+                <TabsTrigger value="upload">Upload</TabsTrigger>
+                {isAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
               </TabsList>
               
               <ScrollArea className="flex-1">
@@ -91,9 +95,14 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
                   <TabsContent value="library" className="p-4 h-full">
                     <LibraryView onClose={() => onOpenChange(false)} />
                   </TabsContent>
-                  <TabsContent value="uploads" className="p-4 h-full">
-                    <AdminLibraryView onClose={() => onOpenChange(false)} />
+                  <TabsContent value="upload" className="p-4 h-full">
+                    <PublicUploader />
                   </TabsContent>
+                  {isAdmin && (
+                    <TabsContent value="admin" className="p-4 h-full">
+                      <AdminLibraryView onClose={() => onOpenChange(false)} />
+                    </TabsContent>
+                  )}
                 </DesignProvider>
               </ScrollArea>
             </Tabs>

@@ -1,14 +1,17 @@
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
-import { Loader2, Cloud } from "lucide-react";
+import { Loader2, Cloud, RefreshCw, UploadCloud, AlertCircle } from "lucide-react";
 import { 
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
 } from "@/utils/libraryImageProcessor";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
+import { syncLibraryWithStorage, verifyImageExists } from "@/utils/librarySync";
+import { Button } from "@/components/ui/button";
+import { useState } from "react";
 
 interface LibraryImage {
   id: string;
@@ -19,8 +22,11 @@ interface LibraryImage {
 export const LibraryView = ({ onClose }: { onClose: () => void }) => {
   const { addElement, updateElement, canvasRef } = useDesignState();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
+  const [syncingLibrary, setSyncingLibrary] = useState(false);
+  const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
   
-  const { data: images, isLoading } = useQuery({
+  const { data: images, isLoading, isError } = useQuery({
     queryKey: ['library-images'],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,11 +35,45 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
         .order('created_at', { ascending: false });
         
       if (error) throw error;
+      
+      // Pre-check for broken images on load
+      if (data) {
+        const broken = new Set<string>();
+        for (const image of data) {
+          try {
+            const exists = await verifyImageExists(image.image_path);
+            if (!exists) {
+              broken.add(image.id);
+            }
+          } catch (e) {
+            console.error(`Error checking image ${image.id}:`, e);
+            broken.add(image.id);
+          }
+        }
+        setBrokenImages(broken);
+      }
+      
       return data as LibraryImage[];
-    }
+    },
+    staleTime: 5 * 60 * 1000 // 5 minutes
   });
+
+  const handleRefreshLibrary = async () => {
+    setSyncingLibrary(true);
+    try {
+      await syncLibraryWithStorage();
+      queryClient.invalidateQueries({ queryKey: ['library-images'] });
+    } finally {
+      setSyncingLibrary(false);
+    }
+  };
   
   const handleImageClick = async (image: LibraryImage) => {
+    // Don't allow clicking on broken images
+    if (brokenImages.has(image.id)) {
+      return;
+    }
+    
     try {
       const canvasDimensions = canvasRef ? {
         width: canvasRef.clientWidth,
@@ -72,7 +112,7 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
     }
   };
   
-  if (isLoading) {
+  if (isLoading || syncingLibrary) {
     return (
       <div className="flex justify-center items-center h-40">
         <Loader2 className="w-6 h-6 animate-spin" />
@@ -80,32 +120,86 @@ export const LibraryView = ({ onClose }: { onClose: () => void }) => {
     );
   }
   
+  if (isError) {
+    return (
+      <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-4">
+        <AlertCircle className="w-10 h-10 text-destructive" />
+        <p>Error loading library elements</p>
+        <Button onClick={handleRefreshLibrary}>Try Again</Button>
+      </div>
+    );
+  }
+  
   if (!images?.length) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        No images available in library
+      <div className="text-center py-8 flex flex-col items-center gap-4">
+        <div className="text-muted-foreground">
+          No images available in library
+        </div>
+        <Button onClick={handleRefreshLibrary} variant="outline" className="flex items-center gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Refresh Library
+        </Button>
       </div>
     );
   }
 
+  const validImages = images.filter(image => !brokenImages.has(image.id));
+
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-      {images?.map((image) => (
-        <button
-          key={image.id}
-          onClick={() => handleImageClick(image)}
-          className="aspect-square relative group overflow-hidden rounded-lg border hover:border-primary transition-colors"
+    <div className="space-y-4">
+      <div className="flex justify-end pb-2 border-b">
+        <Button
+          size="sm"
+          variant="outline" 
+          onClick={handleRefreshLibrary}
+          disabled={syncingLibrary || isLoading}
+          className="flex items-center gap-2"
         >
-          <img
-            src={image.image_path}
-            alt={image.name}
-            className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
-          />
-          <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
-            <Cloud className="w-3 h-3 text-white" />
-          </div>
-        </button>
-      ))}
+          <RefreshCw className={cn("w-4 h-4", syncingLibrary && "animate-spin")} />
+          Sync Library
+        </Button>
+      </div>
+      
+      {validImages.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          All images appear to be broken. Try syncing the library.
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
+          {images?.map((image) => (
+            <button
+              key={image.id}
+              onClick={() => handleImageClick(image)}
+              className={cn(
+                "aspect-square relative group overflow-hidden rounded-lg border transition-colors",
+                brokenImages.has(image.id)
+                  ? "opacity-40 cursor-not-allowed border-destructive" 
+                  : "hover:border-primary"
+              )}
+              disabled={brokenImages.has(image.id)}
+            >
+              {brokenImages.has(image.id) ? (
+                <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+                  <AlertCircle className="w-8 h-8 text-destructive" />
+                </div>
+              ) : null}
+              
+              <img
+                src={image.image_path}
+                alt={image.name}
+                className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                onError={() => {
+                  setBrokenImages(prev => new Set(prev).add(image.id));
+                }}
+              />
+              <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
+                <Cloud className="w-3 h-3 text-white" />
+              </div>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
