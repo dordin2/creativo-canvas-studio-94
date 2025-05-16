@@ -131,6 +131,9 @@ const CanvasTabs = () => {
                   onChange={(e) => setNewCanvasName(e.target.value)}
                   className="h-7 text-xs w-full"
                   autoFocus
+                  autoComplete="off"
+                  enterKeyHint="done"
+                  inputMode="text"
                   onBlur={() => handleNameChange(canvas.id, newCanvasName || canvas.name)}
                 />
               </form>
@@ -140,6 +143,29 @@ const CanvasTabs = () => {
                   e.stopPropagation();
                   setEditingCanvasId(canvas.id);
                   setNewCanvasName(canvas.name);
+                }}
+                onClick={(e) => {
+                  // For mobile - single tap action for edit when already active
+                  if (activeCanvasIndex === index) {
+                    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                    if (isMobile) {
+                      const doubleTapDelay = 300; // milliseconds
+                      const now = Date.now();
+                      
+                      // Store last tap time on the element itself using data attribute
+                      const lastTap = parseInt(e.currentTarget.getAttribute('data-last-tap') || '0');
+                      
+                      // If double tap detected
+                      if (now - lastTap < doubleTapDelay) {
+                        e.stopPropagation();
+                        setEditingCanvasId(canvas.id);
+                        setNewCanvasName(canvas.name);
+                      }
+                      
+                      // Update last tap time
+                      e.currentTarget.setAttribute('data-last-tap', now.toString());
+                    }
+                  }
                 }}
               >
                 {canvas.name}
