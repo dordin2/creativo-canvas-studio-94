@@ -10,7 +10,7 @@ import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import InventoryPanel from "@/components/inventory/InventoryPanel";
 import InventoryIcon from "@/components/inventory/InventoryIcon";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Pencil, Code } from "lucide-react";
+import { ChevronLeft, Save, Share2, Globe, Lock, Menu, Code } from "lucide-react";
 import { useProject } from "@/context/ProjectContext";
 import { Canvas as CanvasType, Json } from "@/types/designTypes";
 import { PaymentButton } from "@/components/PaymentButton";
@@ -23,6 +23,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import FloatingAddButton from "@/components/FloatingAddButton";
+import InteractiveModeToggle from "@/components/InteractiveModeToggle";
 
 const Editor = () => {
   const [isLoading, setIsLoading] = useState(true);
@@ -308,19 +309,8 @@ const Editor = () => {
             <span className="sr-only">Save Project</span>
           </Button>
           
-          {activeElement && (
-            <Drawer>
-              <DrawerTrigger asChild>
-                <Button variant="ghost" size="icon" className="aspect-square">
-                  <Pencil className="h-6 w-6" />
-                  <span className="sr-only">Edit Properties</span>
-                </Button>
-              </DrawerTrigger>
-              <DrawerContent className="px-0 pb-4">
-                <MobileProperties />
-              </DrawerContent>
-            </Drawer>
-          )}
+          {/* Replace Pencil button with InteractiveModeToggle */}
+          <InteractiveModeToggle />
         </div>
 
         {/* Add the FloatingAddButton for mobile */}
