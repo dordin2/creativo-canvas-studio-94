@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Download, Share, Undo, Redo, Layers, Menu, Settings } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
@@ -15,6 +16,7 @@ import { useState } from "react";
 import ElementProperties from "./properties/ElementProperties";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import FloatingSmartSlider from "./FloatingSmartSlider";
+
 const Header = () => {
   const {
     canvasRef,
@@ -24,18 +26,21 @@ const Header = () => {
     canRedo,
     activeElement
   } = useDesignState();
+  
   const {
     t,
     language
   } = useLanguage();
+  
   const {
     projectId
   } = useProject();
+  
   const isMobile = useIsMobile();
-  const {
-    isInteractiveMode
-  } = useInteractiveMode();
+  const { isInteractiveMode } = useInteractiveMode();
+  
   const [isElementPropertiesOpen, setIsElementPropertiesOpen] = useState(false);
+  
   const handleDownload = () => {
     if (!canvasRef) return;
     try {
@@ -70,29 +75,43 @@ const Header = () => {
       toast.error("Failed to download design. Please try again.");
     }
   };
+  
   const handleShare = () => {
     toast.info(t('toast.info.share'));
   };
-
+  
   // Element settings button - only show if an element is selected and in interactive mode
   const renderElementSettingsButton = () => {
     if (activeElement && isInteractiveMode) {
-      return <Button variant="outline" className={`hover:bg-gray-50`} onClick={() => setIsElementPropertiesOpen(true)}>
+      return (
+        <Button
+          variant="outline"
+          className={`hover:bg-gray-50`}
+          onClick={() => setIsElementPropertiesOpen(true)}
+        >
           <Settings className="h-4 w-4 mr-2" />
           {language === 'en' ? 'Element Settings' : 'הגדרות אלמנט'}
-        </Button>;
+        </Button>
+      );
     }
     return null;
   };
-
+  
   // Render element properties dialog when needed
   const renderElementProperties = () => {
     if (activeElement && isInteractiveMode) {
-      return <ElementProperties element={activeElement} isInteractiveMode={isInteractiveMode} isDialogOpen={isElementPropertiesOpen} setIsDialogOpen={setIsElementPropertiesOpen} />;
+      return (
+        <ElementProperties 
+          element={activeElement} 
+          isInteractiveMode={isInteractiveMode}
+          isDialogOpen={isElementPropertiesOpen}
+          setIsDialogOpen={setIsElementPropertiesOpen}
+        />
+      );
     }
     return null;
   };
-
+  
   // Render smart slider if an element is selected but NOT in interactive mode
   const renderSmartSlider = () => {
     if (activeElement && !isInteractiveMode && activeElement.size) {
@@ -100,6 +119,7 @@ const Header = () => {
     }
     return null;
   };
+  
   if (isMobile) {
     return <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <div className="flex items-center">
@@ -131,8 +151,14 @@ const Header = () => {
                     <Redo className="h-4 w-4 mr-2" />
                     {t('app.redo')}
                   </Button>
-                  
-                  
+                  <Button variant="outline" className="justify-start hover:bg-gray-50" onClick={handleShare}>
+                    <Share className="h-4 w-4 mr-2" />
+                    {t('app.share')}
+                  </Button>
+                  <Button variant="outline" className="justify-start hover:bg-gray-50" onClick={handleDownload}>
+                    <Download className="h-4 w-4 mr-2" />
+                    {t('app.download')}
+                  </Button>
                 </div>
                 
                 <div className="pt-2">
@@ -153,6 +179,7 @@ const Header = () => {
         {renderElementProperties()}
       </header>;
   }
+  
   return <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center gap-3">
         <div className="font-bold text-xl bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
@@ -195,4 +222,5 @@ const Header = () => {
       {renderElementProperties()}
     </header>;
 };
+
 export default Header;

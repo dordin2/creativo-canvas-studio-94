@@ -309,8 +309,8 @@ const Editor = () => {
             <span className="sr-only">Save Project</span>
           </Button>
           
-          {/* Interactive Mode Toggle for mobile navigation */}
-          <InteractiveModeToggle isMobileNavigation={true} />
+          {/* Replace Pencil button with InteractiveModeToggle */}
+          <InteractiveModeToggle />
         </div>
 
         {/* Add the FloatingAddButton for mobile */}
