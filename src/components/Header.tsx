@@ -132,10 +132,7 @@ const Header = () => {
                     {t('app.redo')}
                   </Button>
                   
-                  <Button variant="outline" className="justify-start hover:bg-gray-50" onClick={handleDownload}>
-                    <Download className="h-4 w-4 mr-2" />
-                    {t('app.download')}
-                  </Button>
+                  
                 </div>
                 
                 <div className="pt-2">
