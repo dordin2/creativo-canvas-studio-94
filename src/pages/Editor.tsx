@@ -309,7 +309,7 @@ const Editor = () => {
             <span className="sr-only">Save Project</span>
           </Button>
           
-          {/* Interactive Mode Toggle for mobile navigation */}
+          {/* Interactive Mode Toggle for mobile navigation - this will remain */}
           <InteractiveModeToggle isMobileNavigation={true} />
         </div>
 

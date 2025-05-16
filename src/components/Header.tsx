@@ -15,6 +15,7 @@ import { useState } from "react";
 import ElementProperties from "./properties/ElementProperties";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
 import FloatingSmartSlider from "./FloatingSmartSlider";
+
 const Header = () => {
   const {
     canvasRef,
@@ -112,7 +113,7 @@ const Header = () => {
           {renderElementSettingsButton()}
           {renderSmartSlider()}
           <GameModeToggle />
-          <InteractiveModeToggle />
+          <InteractiveModeToggle hideInMobileHeader={true} />
           <Drawer>
             <DrawerTrigger asChild>
               <Button variant="outline" size="icon" className="hover:bg-gray-50">

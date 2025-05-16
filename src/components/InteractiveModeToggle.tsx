@@ -7,10 +7,12 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 interface InteractiveModeToggleProps {
   isMobileNavigation?: boolean;
+  hideInMobileHeader?: boolean;
 }
 
 const InteractiveModeToggle = ({
-  isMobileNavigation
+  isMobileNavigation,
+  hideInMobileHeader
 }: InteractiveModeToggleProps = {}) => {
   const {
     isInteractiveMode,
@@ -18,6 +20,11 @@ const InteractiveModeToggle = ({
   } = useInteractiveMode();
   const isMobile = useIsMobile();
 
+  // Hide if we're in mobile header and hideInMobileHeader is true
+  if (isMobile && hideInMobileHeader && !isMobileNavigation) {
+    return null;
+  }
+  
   // For mobile navigation bar, we want a simpler button without tooltip
   if (isMobile && isMobileNavigation) {
     return <Button variant="ghost" size="icon" onClick={toggleInteractiveMode} className="aspect-square">
