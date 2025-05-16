@@ -1,4 +1,5 @@
 
+import { useState } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import NoElementSelected from "./NoElementSelected";
@@ -8,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 const MobileProperties = () => {
   const { activeElement, elements } = useDesignState();
   const { language } = useLanguage();
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   
   if (!activeElement) {
     return <NoElementSelected />;
@@ -29,7 +31,11 @@ const MobileProperties = () => {
       <Separator />
       
       <div className="pb-16">
-        <ElementProperties element={activeElement} />
+        <ElementProperties 
+          element={activeElement} 
+          isDialogOpen={isDialogOpen}
+          setIsDialogOpen={setIsDialogOpen}
+        />
       </div>
     </div>
   );
