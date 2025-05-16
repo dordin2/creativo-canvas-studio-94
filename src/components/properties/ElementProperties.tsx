@@ -83,7 +83,6 @@ const ElementProperties = ({ element, isInteractiveMode }: ElementPropertiesProp
     return null;
   }
 
-  // We'll now return just the button and dialog separately
   return (
     <>
       <Button

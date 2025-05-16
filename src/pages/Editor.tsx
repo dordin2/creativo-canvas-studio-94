@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Header from "@/components/Header";
 import Canvas from "@/components/Canvas";
-import Properties from "@/components/Properties";
+import ElementProperties from "@/components/properties/ElementProperties";
 import CanvasTabs from "@/components/CanvasTabs";
 import { useDesignState } from "@/context/DesignContext";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
@@ -327,6 +327,11 @@ const Editor = () => {
 
         {/* Add the FloatingAddButton for mobile */}
         <FloatingAddButton className="bottom-20 right-4 z-50" />
+        
+        {/* Always render ElementProperties in interactive mode */}
+        {activeElement && isInteractiveMode && (
+          <ElementProperties element={activeElement} isInteractiveMode={isInteractiveMode} />
+        )}
       </div>
     );
   }
@@ -429,11 +434,6 @@ const Editor = () => {
             </div>
           )}
         </div>
-        {!isGameMode && isInteractiveMode && (
-          <div className="flex-shrink-0 w-80 z-20 relative">
-            <Properties />
-          </div>
-        )}
       </div>
       {isGameMode && (
         <>
@@ -453,6 +453,11 @@ const Editor = () => {
       )}
       {!isGameMode && !isMobile && (
         <FloatingAddButton />
+      )}
+      
+      {/* Always render ElementProperties in interactive mode */}
+      {activeElement && !isGameMode && isInteractiveMode && (
+        <ElementProperties element={activeElement} isInteractiveMode={isInteractiveMode} />
       )}
     </div>
   );
