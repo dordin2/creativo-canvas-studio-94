@@ -17,7 +17,6 @@ import { PaymentButton } from "@/components/PaymentButton";
 import { useIsMobile } from "@/hooks/use-mobile";
 import MobileSidebar from "@/components/MobileSidebar";
 import MobileProperties from "@/components/MobileProperties";
-import ElementProperties from "@/components/properties/ElementProperties";
 import { 
   Drawer,
   DrawerContent,
@@ -422,10 +421,6 @@ const Editor = () => {
                 <FloatingSmartSlider element={activeElement} />
               )}
               <Canvas />
-              {/* Show ElementProperties in interactive mode */}
-              {!isGameMode && isInteractiveMode && activeElement && (
-                <ElementProperties element={activeElement} isInteractiveMode={true} />
-              )}
             </>
           ) : (
             <div className="fixed-canvas-container">
