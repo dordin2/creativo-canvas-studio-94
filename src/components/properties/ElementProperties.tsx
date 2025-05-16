@@ -85,7 +85,7 @@ const ElementProperties = ({ element, isInteractiveMode, isDialogOpen, setIsDial
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogContent className={`${isMobile ? 'w-[95%]' : 'max-w-[800px] w-[800px]'} max-h-[800px] h-[800px] p-0 gap-0 overflow-hidden`}>
+      <DialogContent className={`${isMobile ? 'w-[95%]' : 'max-w-[800px] w-[800px]'} max-h-[90vh] h-[800px] p-0 gap-0 overflow-hidden`}>
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between p-4 border-b">
             <DialogHeader className="flex flex-row items-center gap-4">
@@ -115,10 +115,10 @@ const ElementProperties = ({ element, isInteractiveMode, isDialogOpen, setIsDial
               </TabsList>
             </div>
 
-            <div className="flex-1 overflow-hidden">
-              <ScrollArea className="h-full">
+            <div className="flex-1 overflow-auto">
+              <ScrollArea className="h-full max-h-[calc(90vh-120px)]">
                 <div className="p-6">
-                  <TabsContent value="interactions" className="m-0">
+                  <TabsContent value="interactions" className="m-0 h-full">
                     <InteractionProperties element={element} />
                   </TabsContent>
                 </div>
