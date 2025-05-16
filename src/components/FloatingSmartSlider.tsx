@@ -9,9 +9,10 @@ import { getRotation } from "@/utils/elementStyles";
 
 interface FloatingSmartSliderProps {
   element: DesignElement;
+  className?: string;
 }
 
-const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
+const FloatingSmartSlider = ({ element, className = "" }: FloatingSmartSliderProps) => {
   const { updateElement } = useDesignState();
   const [isRotationMode, setIsRotationMode] = useState(false);
   
@@ -46,34 +47,32 @@ const FloatingSmartSlider = ({ element }: FloatingSmartSliderProps) => {
   };
   
   return (
-    <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 min-w-[300px] animate-fade-in">
-      <div className="flex items-center gap-4 p-3 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg">
-        <div className="flex-1">
-          <Slider 
-            value={[isRotationMode ? getRotation(element) : calculateScale()]}
-            min={isRotationMode ? -180 : 10}
-            max={isRotationMode ? 180 : 200}
-            step={1}
-            onValueChange={isRotationMode ? handleRotationChange : handleScaleChange}
-            className="w-full"
-          />
-        </div>
-        
-        <Toggle 
-          pressed={isRotationMode}
-          onPressedChange={setIsRotationMode}
-          className="ml-2"
-        >
-          {isRotationMode ? (
-            <RotateCw className="h-4 w-4" />
-          ) : (
-            <ZoomIn className="h-4 w-4" />
-          )}
-        </Toggle>
-        
-        <div className="w-12 text-sm font-medium text-gray-600">
-          {isRotationMode ? `${getRotation(element)}°` : `${calculateScale()}%`}
-        </div>
+    <div className={`flex items-center gap-4 p-3 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg ${className}`}>
+      <div className="flex-1 min-w-[200px]">
+        <Slider 
+          value={[isRotationMode ? getRotation(element) : calculateScale()]}
+          min={isRotationMode ? -180 : 10}
+          max={isRotationMode ? 180 : 200}
+          step={1}
+          onValueChange={isRotationMode ? handleRotationChange : handleScaleChange}
+          className="w-full"
+        />
+      </div>
+      
+      <Toggle 
+        pressed={isRotationMode}
+        onPressedChange={setIsRotationMode}
+        className="ml-2"
+      >
+        {isRotationMode ? (
+          <RotateCw className="h-4 w-4" />
+        ) : (
+          <ZoomIn className="h-4 w-4" />
+        )}
+      </Toggle>
+      
+      <div className="w-12 text-sm font-medium text-gray-600">
+        {isRotationMode ? `${getRotation(element)}°` : `${calculateScale()}%`}
       </div>
     </div>
   );

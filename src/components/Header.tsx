@@ -15,6 +15,7 @@ import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
 import { useState } from "react";
 import ElementProperties from "./properties/ElementProperties";
 import { useInteractiveMode } from "@/context/InteractiveModeContext";
+import FloatingSmartSlider from "./FloatingSmartSlider";
 
 const Header = () => {
   const {
@@ -111,6 +112,14 @@ const Header = () => {
     return null;
   };
   
+  // Render smart slider if an element is selected but NOT in interactive mode
+  const renderSmartSlider = () => {
+    if (activeElement && !isInteractiveMode && activeElement.size) {
+      return <FloatingSmartSlider element={activeElement} className="mx-4" />;
+    }
+    return null;
+  };
+  
   if (isMobile) {
     return <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <div className="flex items-center">
@@ -121,6 +130,7 @@ const Header = () => {
         
         <div className="flex items-center gap-2">
           {renderElementSettingsButton()}
+          {renderSmartSlider()}
           <GameModeToggle />
           <InteractiveModeToggle />
           <Drawer>
@@ -177,6 +187,7 @@ const Header = () => {
         </div>
         <div className="h-6 w-px bg-gray-200 mx-1"></div>
         <LanguageSwitcher />
+        {renderSmartSlider()}
         {renderElementSettingsButton()}
       </div>
       
