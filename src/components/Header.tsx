@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Download, Share, Undo, Redo, Layers, Menu } from "lucide-react";
+import { Download, Share, Undo, Redo, Layers, Menu, Settings } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useLanguage } from "@/context/LanguageContext";
 import { toast } from "sonner";
@@ -12,6 +12,9 @@ import LayersList from "./LayersList";
 import { useProject } from "@/context/ProjectContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Drawer, DrawerContent, DrawerTrigger } from "@/components/ui/drawer";
+import { useState } from "react";
+import ElementProperties from "./properties/ElementProperties";
+import { useInteractiveMode } from "@/context/InteractiveModeContext";
 
 const Header = () => {
   const {
@@ -19,7 +22,8 @@ const Header = () => {
     undo,
     redo,
     canUndo,
-    canRedo
+    canRedo,
+    activeElement
   } = useDesignState();
   
   const {
@@ -32,6 +36,9 @@ const Header = () => {
   } = useProject();
   
   const isMobile = useIsMobile();
+  const { isInteractiveMode } = useInteractiveMode();
+  
+  const [isElementPropertiesOpen, setIsElementPropertiesOpen] = useState(false);
   
   const handleDownload = () => {
     if (!canvasRef) return;
@@ -72,6 +79,38 @@ const Header = () => {
     toast.info(t('toast.info.share'));
   };
   
+  // Element settings button - only show if an element is selected and in interactive mode
+  const renderElementSettingsButton = () => {
+    if (activeElement && isInteractiveMode) {
+      return (
+        <Button
+          variant="outline"
+          className={`hover:bg-gray-50`}
+          onClick={() => setIsElementPropertiesOpen(true)}
+        >
+          <Settings className="h-4 w-4 mr-2" />
+          {language === 'en' ? 'Element Settings' : 'הגדרות אלמנט'}
+        </Button>
+      );
+    }
+    return null;
+  };
+  
+  // Render element properties dialog when needed
+  const renderElementProperties = () => {
+    if (activeElement && isInteractiveMode) {
+      return (
+        <ElementProperties 
+          element={activeElement} 
+          isInteractiveMode={isInteractiveMode}
+          isDialogOpen={isElementPropertiesOpen}
+          setIsDialogOpen={setIsElementPropertiesOpen}
+        />
+      );
+    }
+    return null;
+  };
+  
   if (isMobile) {
     return <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <div className="flex items-center">
@@ -81,6 +120,7 @@ const Header = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          {renderElementSettingsButton()}
           <GameModeToggle />
           <InteractiveModeToggle />
           <Drawer>
@@ -126,6 +166,7 @@ const Header = () => {
             </DrawerContent>
           </Drawer>
         </div>
+        {renderElementProperties()}
       </header>;
   }
   
@@ -136,6 +177,7 @@ const Header = () => {
         </div>
         <div className="h-6 w-px bg-gray-200 mx-1"></div>
         <LanguageSwitcher />
+        {renderElementSettingsButton()}
       </div>
       
       <div className="flex items-center gap-4">
@@ -166,6 +208,7 @@ const Header = () => {
           </Sheet>
         </div>
       </div>
+      {renderElementProperties()}
     </header>;
 };
 
