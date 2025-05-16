@@ -1,5 +1,4 @@
-
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import { Layers, Eye, EyeOff, Trash2, Copy, MoveRight, GripVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -26,6 +25,7 @@ import {
 import { DesignElement } from "@/types/designTypes"; // Added this import to fix the TypeScript errors
 import { prepareElementForDuplication } from "@/utils/elementUtils";
 import { updateElementsOrder } from "@/utils/layerUtils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const LayersList = () => {
   const { 
@@ -48,6 +48,8 @@ const LayersList = () => {
   const [selectedTargetCanvas, setSelectedTargetCanvas] = useState<string>('');
   const [draggedElement, setDraggedElement] = useState<DesignElement | null>(null);
   const [dragOverIndex, setDragOverIndex] = useState<number | null>(null);
+  const [touchStartIndex, setTouchStartIndex] = useState<number | null>(null);
+  const isMobile = useIsMobile();
   
   // Create an invisible element for the drag preview instead of using DOM manipulation
   const dragPreviewRef = useRef<HTMLDivElement | null>(null);
@@ -226,7 +228,93 @@ const LayersList = () => {
     }
   };
 
-  // Improved drag and drop handlers
+  // Touch event handlers for mobile drag and drop
+  const handleTouchStart = (e: React.TouchEvent, element: DesignElement, index: number) => {
+    // Store the starting index
+    setTouchStartIndex(index);
+    setDraggedElement(element);
+    
+    // Create a visible drag indicator for touch
+    if (dragPreviewRef.current) {
+      const preview = dragPreviewRef.current;
+      const touch = e.touches[0];
+      
+      preview.style.display = 'flex';
+      preview.style.top = `${touch.clientY + 15}px`;
+      preview.style.left = `${touch.clientX + 15}px`;
+      
+      preview.innerHTML = `
+        <div class="flex items-center gap-2 px-3 py-1.5 bg-white border rounded-md shadow-md">
+          <div class="w-6 h-6 flex-shrink-0 rounded-sm overflow-hidden" style="
+            ${element.type === 'circle' ? 'border-radius: 50%;' : ''}
+            ${element.type === 'image' && element.dataUrl ? `background-image: url(${element.dataUrl}); background-size: cover;` : ''}
+            ${element.type !== 'image' ? `background-color: ${element.style?.backgroundColor || '#8B5CF6'};` : ''}
+          "></div>
+          <span class="text-sm font-medium whitespace-nowrap">${getElementName(element)}</span>
+        </div>
+      `;
+      
+      document.body.appendChild(preview);
+    }
+  };
+  
+  const handleTouchMove = (e: React.TouchEvent, index: number) => {
+    if (!draggedElement) return;
+    
+    e.preventDefault(); // Prevent scrolling while dragging
+    
+    const touch = e.touches[0];
+    setDragOverIndex(index);
+    
+    // Update the drag preview position
+    if (dragPreviewRef.current) {
+      dragPreviewRef.current.style.top = `${touch.clientY + 15}px`;
+      dragPreviewRef.current.style.left = `${touch.clientX + 15}px`;
+    }
+  };
+  
+  const handleTouchEnd = (e: React.TouchEvent, targetIndex: number) => {
+    // Hide the drag preview
+    if (dragPreviewRef.current) {
+      dragPreviewRef.current.style.display = 'none';
+    }
+    
+    if (!draggedElement || touchStartIndex === null) {
+      setDraggedElement(null);
+      setTouchStartIndex(null);
+      setDragOverIndex(null);
+      return;
+    }
+    
+    // Only process if we're actually changing the position
+    if (touchStartIndex !== targetIndex) {
+      // Get the current canvas elements
+      const currentCanvas = canvases[activeCanvasIndex];
+      if (!currentCanvas) return;
+  
+      // Create a copy of the elements to work with
+      const updatedElements = [...currentCanvas.elements];
+      
+      // Update the layers based on new order
+      const newElements = updateElementsOrder(updatedElements, touchStartIndex, targetIndex, layerElements);
+      
+      // Update the canvas with the new elements
+      const updatedCanvases = [...canvases];
+      updatedCanvases[activeCanvasIndex] = {
+        ...currentCanvas,
+        elements: newElements
+      };
+      
+      setCanvases(updatedCanvases);
+    }
+    
+    // Reset drag state
+    setDraggedElement(null);
+    setTouchStartIndex(null);
+    setDragOverIndex(null);
+  };
+
+  // Improved drag and drop handlers for desktop
   const handleDragStart = (e: React.DragEvent, element: DesignElement, index: number) => {
     // Prevent the default drag ghost image
     const img = new Image();
@@ -334,6 +422,15 @@ const LayersList = () => {
     setDragOverIndex(null);
   };
 
+  // Clean up touch event handlers
+  useEffect(() => {
+    return () => {
+      if (dragPreviewRef.current && document.body.contains(dragPreviewRef.current)) {
+        document.body.removeChild(dragPreviewRef.current);
+      }
+    };
+  }, []);
+
   return (
     <div className="border rounded-md p-4 mt-4">
       <div className="flex items-center gap-2 mb-4">
@@ -362,15 +459,18 @@ const LayersList = () => {
               ${draggedElement?.id === element.id ? "opacity-50" : "opacity-100"}
               cursor-pointer ${element.isHidden ? "opacity-50" : ""}`}
               onClick={() => setActiveElement(element)}
-              draggable={true}
+              draggable={isMobile ? false : true}
               onDragStart={(e) => handleDragStart(e, element, index)}
               onDragOver={(e) => handleDragOver(e, index)}
               onDragLeave={handleDragLeave}
               onDrop={(e) => handleDrop(e, index)}
               onDragEnd={handleDragEnd}
+              onTouchStart={isMobile ? (e) => handleTouchStart(e, element, index) : undefined}
+              onTouchMove={isMobile ? (e) => handleTouchMove(e, index) : undefined}
+              onTouchEnd={isMobile ? (e) => handleTouchEnd(e, index) : undefined}
             >
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <div className="cursor-grab flex items-center justify-center">
+                <div className={`${isMobile ? 'cursor-grab active:cursor-grabbing' : 'cursor-grab'} flex items-center justify-center`}>
                   <GripVertical className="h-4 w-4 text-gray-400" />
                 </div>
                 
