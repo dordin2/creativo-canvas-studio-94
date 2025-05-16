@@ -1,11 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { DesignElement } from "@/context/DesignContext";
 import { useDesignState } from "@/context/DesignContext";
 import { Slider } from "@/components/ui/slider";
 import { ZoomIn, RotateCw } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { getRotation } from "@/utils/elementStyles";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface FloatingSmartSliderProps {
   element: DesignElement;
@@ -13,8 +14,12 @@ interface FloatingSmartSliderProps {
 }
 
 const FloatingSmartSlider = ({ element, className = "" }: FloatingSmartSliderProps) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, updateElementWithoutHistory } = useDesignState();
   const [isRotationMode, setIsRotationMode] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const sliderValueRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
+  const isMobile = useIsMobile();
   
   const calculateScale = () => {
     if (element.originalSize && element.size) {
@@ -23,27 +28,94 @@ const FloatingSmartSlider = ({ element, className = "" }: FloatingSmartSliderPro
     return 100;
   };
   
+  // Update the slider ref value
+  useEffect(() => {
+    sliderValueRef.current = isRotationMode ? getRotation(element) : calculateScale();
+  }, [element, isRotationMode]);
+
   const handleScaleChange = (value: number[]) => {
     if (!element.originalSize) return;
     
-    const scalePercentage = value[0];
-    const scaleFactor = scalePercentage / 100;
-    const newWidth = Math.round(element.originalSize.width * scaleFactor);
-    const newHeight = Math.round(element.originalSize.height * scaleFactor);
+    setIsDragging(true);
+    sliderValueRef.current = value[0];
     
-    updateElement(element.id, {
-      size: {
-        width: newWidth,
-        height: newHeight
-      }
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    animationFrameRef.current = requestAnimationFrame(() => {
+      const scalePercentage = value[0];
+      const scaleFactor = scalePercentage / 100;
+      const newWidth = Math.round(element.originalSize.width * scaleFactor);
+      const newHeight = Math.round(element.originalSize.height * scaleFactor);
+      
+      // Use the non-history version during dragging for better performance
+      updateElementWithoutHistory(element.id, {
+        size: {
+          width: newWidth,
+          height: newHeight
+        },
+        style: {
+          ...element.style,
+          willChange: 'width, height',
+        }
+      });
     });
   };
   
   const handleRotationChange = (value: number[]) => {
-    const newRotation = Math.round(value[0]);
-    updateElement(element.id, {
-      style: { ...element.style, transform: `rotate(${newRotation}deg)` }
+    setIsDragging(true);
+    sliderValueRef.current = value[0];
+    
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+    }
+    
+    animationFrameRef.current = requestAnimationFrame(() => {
+      const newRotation = Math.round(value[0]);
+      updateElementWithoutHistory(element.id, {
+        style: { 
+          ...element.style, 
+          transform: `rotate(${newRotation}deg)`,
+          willChange: 'transform',
+        }
+      });
     });
+  };
+  
+  const handleSliderCommit = () => {
+    setIsDragging(false);
+    
+    if (animationFrameRef.current) {
+      cancelAnimationFrame(animationFrameRef.current);
+      animationFrameRef.current = null;
+    }
+    
+    // Commit the final value to history
+    if (isRotationMode) {
+      updateElement(element.id, {
+        style: { 
+          ...element.style, 
+          transform: `rotate(${Math.round(sliderValueRef.current)}deg)`,
+          willChange: 'auto',
+        }
+      });
+    } else if (element.originalSize) {
+      const scaleFactor = sliderValueRef.current / 100;
+      const newWidth = Math.round(element.originalSize.width * scaleFactor);
+      const newHeight = Math.round(element.originalSize.height * scaleFactor);
+      
+      updateElement(element.id, {
+        size: {
+          width: newWidth,
+          height: newHeight
+        },
+        style: {
+          ...element.style,
+          willChange: 'auto',
+        }
+      });
+    }
   };
   
   return (
@@ -55,6 +127,7 @@ const FloatingSmartSlider = ({ element, className = "" }: FloatingSmartSliderPro
           max={isRotationMode ? 180 : 200}
           step={1}
           onValueChange={isRotationMode ? handleRotationChange : handleScaleChange}
+          onValueCommit={handleSliderCommit}
           className="w-full"
         />
       </div>
@@ -62,12 +135,12 @@ const FloatingSmartSlider = ({ element, className = "" }: FloatingSmartSliderPro
       <Toggle 
         pressed={isRotationMode}
         onPressedChange={setIsRotationMode}
-        className="ml-2"
+        className={`ml-2 ${isMobile ? 'h-10 w-10' : ''}`}
       >
         {isRotationMode ? (
-          <RotateCw className="h-4 w-4" />
+          <RotateCw className={`${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
         ) : (
-          <ZoomIn className="h-4 w-4" />
+          <ZoomIn className={`${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
         )}
       </Toggle>
       

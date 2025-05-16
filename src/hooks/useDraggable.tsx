@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
-import { viewportToCanvasCoordinates, getCanvasScale } from '@/utils/coordinateUtils';
+import { viewportToCanvasCoordinates, getCanvasScale, getClientCoordinates, preventDefaultTouchAction } from '@/utils/coordinateUtils';
 import { useIsMobile } from './use-mobile';
 
 interface Position {
@@ -19,6 +19,9 @@ export const useDraggable = (elementId: string) => {
   const mousePosition = useRef<Position>({ x: 0, y: 0 });
   const dragStartOffset = useRef<Position | null>(null);
   const isMobile = useIsMobile();
+  const lastUpdateTime = useRef<number>(0);
+  const velocity = useRef<Position>({ x: 0, y: 0 });
+  const lastPosition = useRef<Position | null>(null);
 
   const currentElement = elements.find(el => el.id === elementId);
   
@@ -117,47 +120,8 @@ export const useDraggable = (elementId: string) => {
         return;
       }
 
-      const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
-      if (!canvasContainer) return;
-
-      const canvasRect = canvasContainer.getBoundingClientRect();
-      const canvasScale = getCanvasScale(canvasContainer);
-
-      const currentPos = viewportToCanvasCoordinates(e.clientX, e.clientY, {
-        canvasScale,
-        canvasRect,
-      });
-
-      mousePosition.current = { x: e.clientX, y: e.clientY };
-
-      const startPos = viewportToCanvasCoordinates(startPosition.current.x, startPosition.current.y, {
-        canvasScale,
-        canvasRect,
-      });
-
-      const deltaX = currentPos.x - startPos.x;
-      const deltaY = currentPos.y - startPos.y;
-
-      if (!isDragStarted.current) {
-        isDragStarted.current = true;
-      }
-
-      if (animationFrame.current !== null) {
-        cancelAnimationFrame(animationFrame.current);
-      }
-
-      animationFrame.current = requestAnimationFrame(() => {
-        const newX = elementInitialPos.current!.x + (currentPos.x - startPos.x);
-        const newY = elementInitialPos.current!.y + (currentPos.y - startPos.y);
-
-        updateElementWithoutHistory(elementId, {
-          position: { x: newX, y: newY },
-          style: {
-            ...currentElement?.style,
-            willChange: 'transform',
-          },
-        });
-      });
+      e.preventDefault();
+      updateElementPosition(e.clientX, e.clientY);
     };
 
     const handleTouchMove = (e: TouchEvent) => {
@@ -171,27 +135,31 @@ export const useDraggable = (elementId: string) => {
         return;
 
       // Prevent default to avoid page scrolling while dragging
-      e.preventDefault();
+      preventDefaultTouchAction(e);
 
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
         return;
       }
 
+      const touch = e.touches[0];
+      updateElementPosition(touch.clientX, touch.clientY);
+    };
+
+    const updateElementPosition = (clientX: number, clientY: number) => {
       const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
       if (!canvasContainer) return;
 
       const canvasRect = canvasContainer.getBoundingClientRect();
       const canvasScale = getCanvasScale(canvasContainer);
-      
-      const touch = e.touches[0];
-      const currentPos = viewportToCanvasCoordinates(touch.clientX, touch.clientY, {
+
+      const currentPos = viewportToCanvasCoordinates(clientX, clientY, {
         canvasScale,
         canvasRect,
       });
 
-      mousePosition.current = { x: touch.clientX, y: touch.clientY };
+      mousePosition.current = { x: clientX, y: clientY };
 
-      const startPos = viewportToCanvasCoordinates(startPosition.current.x, startPosition.current.y, {
+      const startPos = viewportToCanvasCoordinates(startPosition.current!.x, startPosition.current!.y, {
         canvasScale,
         canvasRect,
       });
@@ -199,6 +167,20 @@ export const useDraggable = (elementId: string) => {
       if (!isDragStarted.current) {
         isDragStarted.current = true;
       }
+
+      // Calculate velocity for momentum
+      const now = performance.now();
+      const elapsed = now - lastUpdateTime.current;
+      
+      if (lastPosition.current && elapsed > 0) {
+        velocity.current = {
+          x: (currentPos.x - lastPosition.current.x) / elapsed * 16.67, // normalize to ~60fps
+          y: (currentPos.y - lastPosition.current.y) / elapsed * 16.67
+        };
+      }
+      
+      lastPosition.current = { x: currentPos.x, y: currentPos.y };
+      lastUpdateTime.current = now;
 
       if (animationFrame.current !== null) {
         cancelAnimationFrame(animationFrame.current);
@@ -234,14 +216,43 @@ export const useDraggable = (elementId: string) => {
             style: {
               ...currentElement.style,
               willChange: 'auto',
+              transition: 'none'
             },
           });
+          
+          // Apply slight momentum effect on touch end for natural feel
+          if (isMobile && lastPosition.current && Math.abs(velocity.current.x) + Math.abs(velocity.current.y) > 0.5) {
+            const momentumDistance = {
+              x: velocity.current.x * 5,
+              y: velocity.current.y * 5
+            };
+            
+            const finalX = currentElement.position.x + momentumDistance.x;
+            const finalY = currentElement.position.y + momentumDistance.y;
+            
+            // Apply momentum with animation
+            updateElementWithoutHistory(elementId, {
+              position: { x: finalX, y: finalY },
+              style: {
+                ...currentElement.style,
+                transition: 'transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+              },
+            });
+          }
         }
-        commitToHistory();
+        
+        // Short delay before committing to history to allow momentum animation to complete
+        setTimeout(() => {
+          commitToHistory();
+        }, isMobile ? 300 : 0);
+        
         isDragStarted.current = false;
       }
+      
       startPosition.current = null;
       elementInitialPos.current = null;
+      lastPosition.current = null;
+      velocity.current = { x: 0, y: 0 };
 
       if (animationFrame.current !== null) {
         cancelAnimationFrame(animationFrame.current);
@@ -283,6 +294,7 @@ export const useDraggable = (elementId: string) => {
     currentElement,
     isGameMode,
     isImageElement,
+    isMobile
   ]);
 
   const startDrag = (e: React.MouseEvent | React.TouchEvent, initialPosition: Position) => {
@@ -312,6 +324,9 @@ export const useDraggable = (elementId: string) => {
     startPosition.current = { x: clientX, y: clientY };
     elementInitialPos.current = initialPosition;
     isDragStarted.current = false; // Reset the drag started flag
+    lastUpdateTime.current = performance.now();
+    velocity.current = { x: 0, y: 0 };
+    lastPosition.current = null;
 
     const canvasContainer = document.querySelector('.canvas-container') as HTMLElement;
     if (canvasContainer) {
@@ -334,6 +349,7 @@ export const useDraggable = (elementId: string) => {
         style: {
           ...currentElement.style,
           willChange: 'transform',
+          transition: 'none'
         },
       });
     }

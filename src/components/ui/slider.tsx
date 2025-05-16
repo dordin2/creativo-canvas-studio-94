@@ -12,15 +12,15 @@ const Slider = React.forwardRef<
     ref={ref}
     className={cn(
       "relative flex w-full touch-none select-none items-center",
-      orientation === "vertical" && "h-full flex-col justify-center py-4", // Add padding for vertical sliders
+      orientation === "vertical" && "h-full flex-col justify-center py-4",
       className
     )}
     {...props}
   >
     <SliderPrimitive.Track 
       className={cn(
-        "relative h-2 w-full grow overflow-hidden rounded-full bg-secondary",
-        orientation === "vertical" && "h-full w-2"
+        "relative h-3 w-full grow overflow-hidden rounded-full bg-secondary",
+        orientation === "vertical" && "h-full w-3"
       )}
     >
       <SliderPrimitive.Range 
@@ -30,7 +30,7 @@ const Slider = React.forwardRef<
         )} 
       />
     </SliderPrimitive.Track>
-    <SliderPrimitive.Thumb className="block h-5 w-5 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 transition-transform" />
+    <SliderPrimitive.Thumb className="block h-6 w-6 rounded-full border-2 border-primary bg-background ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 hover:scale-110 active:scale-125 transition-transform touch-none" />
   </SliderPrimitive.Root>
 ))
 Slider.displayName = SliderPrimitive.Root.displayName

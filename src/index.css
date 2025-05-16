@@ -464,3 +464,21 @@ header {
   z-index: 1;
   isolation: isolate; /* Create stacking context */
 }
+
+/* Mobile touch feedback styles */
+.touch-active {
+  transform: scale(1.05);
+  transition: transform 0.2s ease-out;
+}
+
+.canvas-element {
+  touch-action: none; /* Prevent browser handling of all panning/zooming gestures */
+}
+
+.resize-handle {
+  touch-action: none;
+}
+
+.resize-handle-visible:active {
+  transform: scale(1.5) !important;
+}

@@ -14,13 +14,14 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
 
   const handleStyle: CSSProperties = {
     position: 'absolute',
-    width: '10px',
-    height: '10px',
+    width: '12px',  // Slightly larger for better touch targets
+    height: '12px',
     background: 'white',
     border: '2px solid #4F46E5',
     borderRadius: '50%',
     zIndex: 1001,
     pointerEvents: 'auto',
+    touchAction: 'none',  // Prevent browser handling of all panning/zooming gestures
   };
 
   const createResizeHandle = (position: string, cursorType: string, direction: string) => {
@@ -64,18 +65,19 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
     
     return (
       <div 
-        className={`resize-handle resize-handle-visible cursor-${cursorType}`}
+        className={`resize-handle resize-handle-visible cursor-${cursorType} active:scale-125 transition-transform`}
         style={{ 
           ...handleStyle, 
           ...positionStyle, 
           transform,
-          touchAction: 'none',
+          touchAction: 'none',  // Important for preventing scrolling during touch
         }}
         onMouseDown={(e) => onResizeStart(e, direction)}
         onTouchStart={(e) => {
           e.preventDefault();
           const touch = e.touches[0];
           
+          // Create a more optimized synthetic event that includes only what's needed
           const syntheticEvent = {
             clientX: touch.clientX,
             clientY: touch.clientY,
@@ -84,32 +86,6 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
             target: e.target,
             currentTarget: e.currentTarget,
             type: 'mousedown',
-            nativeEvent: e.nativeEvent,
-            persist: () => {},
-            altKey: false,
-            button: 0,
-            buttons: 1,
-            ctrlKey: false,
-            metaKey: false,
-            movementX: 0,
-            movementY: 0,
-            pageX: touch.pageX,
-            pageY: touch.pageY,
-            screenX: touch.screenX,
-            screenY: touch.screenY,
-            shiftKey: false,
-            view: window,
-            detail: 0,
-            pointerId: 0,
-            pointerType: 'touch',
-            bubbles: true,
-            cancelable: true,
-            getModifierState: () => false,
-            relatedTarget: null,
-            which: 1,
-            isPrimary: true,
-            layerX: 0,
-            layerY: 0,
           } as unknown as ReactMouseEvent<HTMLDivElement, MouseEvent>;
           
           onResizeStart(syntheticEvent, direction);
@@ -133,4 +109,3 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
 };
 
 export default ResizeHandles;
-

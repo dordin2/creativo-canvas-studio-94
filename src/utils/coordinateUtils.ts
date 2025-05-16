@@ -48,3 +48,34 @@ export const preventDefaultTouchAction = (event: TouchEvent): void => {
     event.preventDefault();
   }
 };
+
+// Calculate momentum for smooth touch interactions
+export const calculateMomentum = (
+  startPos: { x: number; y: number },
+  currentPos: { x: number; y: number },
+  duration: number
+): { x: number; y: number } => {
+  // Calculate velocity components
+  const velocityX = (currentPos.x - startPos.x) / Math.max(duration, 16);
+  const velocityY = (currentPos.y - startPos.y) / Math.max(duration, 16);
+  
+  // Apply momentum based on velocity
+  const momentumX = velocityX * 300; // Scale factor for momentum
+  const momentumY = velocityY * 300;
+  
+  return {
+    x: currentPos.x + momentumX,
+    y: currentPos.y + momentumY
+  };
+};
+
+// Implement touch feedback to enhance mobile experience
+export const applyTouchFeedback = (element: HTMLElement | null): void => {
+  if (!element) return;
+  
+  element.classList.add('touch-active');
+  
+  setTimeout(() => {
+    element.classList.remove('touch-active');
+  }, 150);
+};

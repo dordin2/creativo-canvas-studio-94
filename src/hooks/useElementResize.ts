@@ -1,14 +1,21 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
+import { getClientCoordinates } from "@/utils/coordinateUtils";
 
 export const useElementResize = (element: DesignElement) => {
-  const { updateElement } = useDesignState();
+  const { updateElement, updateElementWithoutHistory } = useDesignState();
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [startSize, setStartSize] = useState({ width: 0, height: 0 });
   const [startPosition, setStartPosition] = useState({ x: 0, y: 0 });
   const [originalAspectRatio, setOriginalAspectRatio] = useState<number | null>(null);
+  
+  // For smoother animations
+  const animationFrameRef = useRef<number | null>(null);
+  const lastUpdateTimeRef = useRef<number>(0);
+  const isMobileRef = useRef<boolean>(false);
 
   const handleResizeStart = (e: React.MouseEvent, direction: string) => {
     e.stopPropagation();
@@ -36,20 +43,49 @@ export const useElementResize = (element: DesignElement) => {
     } else {
       setOriginalAspectRatio(null);
     }
-  };
-
-  const updateElementSize = (newWidth: number, newHeight: number, newX: number, newY: number) => {
-    // Round values to eliminate sub-pixel rendering issues that cause jumping
-    updateElement(element.id, {
-      size: { 
-        width: Math.round(newWidth), 
-        height: Math.round(newHeight) 
-      },
-      position: { 
-        x: Math.round(newX), 
-        y: Math.round(newY) 
+    
+    // Detect if we're on mobile
+    isMobileRef.current = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    
+    // Set will-change for better performance during resize
+    updateElementWithoutHistory(element.id, {
+      style: {
+        ...element.style,
+        willChange: 'width, height, transform'
       }
     });
+  };
+
+  const updateElementSize = (newWidth: number, newHeight: number, newX: number, newY: number, commit = false) => {
+    // Round values to eliminate sub-pixel rendering issues that cause jumping
+    if (commit) {
+      updateElement(element.id, {
+        size: { 
+          width: Math.round(newWidth), 
+          height: Math.round(newHeight) 
+        },
+        position: { 
+          x: Math.round(newX), 
+          y: Math.round(newY) 
+        },
+        style: {
+          ...element.style,
+          willChange: 'auto'
+        }
+      });
+    } else {
+      // Use updateElementWithoutHistory during the resize for better performance
+      updateElementWithoutHistory(element.id, {
+        size: { 
+          width: Math.round(newWidth), 
+          height: Math.round(newHeight) 
+        },
+        position: { 
+          x: Math.round(newX), 
+          y: Math.round(newY) 
+        }
+      });
+    }
   };
 
   // Improved vector-based resize calculation for more consistent and smooth corner resizing
@@ -136,7 +172,7 @@ export const useElementResize = (element: DesignElement) => {
           newY = startPosition.y + (startSize.height - newHeight);
         }
       } else {
-        // Edge resize handling (unchanged logic)
+        // Edge resize handling
         switch (direction) {
           case 'e':
             newWidth = Math.max(20, startSize.width + deltaX);
@@ -156,7 +192,7 @@ export const useElementResize = (element: DesignElement) => {
       }
     }
     
-    // Ensure size is positive
+    // Ensure size is positive and apply minimum size constraints
     newWidth = Math.max(20, newWidth);
     newHeight = Math.max(20, newHeight);
     
@@ -164,10 +200,18 @@ export const useElementResize = (element: DesignElement) => {
   };
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isResizing && resizeDirection) {
-        const deltaX = e.clientX - startPos.x;
-        const deltaY = e.clientY - startPos.y;
+    if (!isResizing || !resizeDirection) return;
+
+    const handleMove = (e: MouseEvent | TouchEvent) => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+      
+      animationFrameRef.current = requestAnimationFrame(() => {
+        const coords = getClientCoordinates(e);
+        
+        const deltaX = coords.clientX - startPos.x;
+        const deltaY = coords.clientY - startPos.y;
         
         const isImage = element.type === 'image';
         const maintainAspectRatio = isImage || originalAspectRatio !== null;
@@ -180,24 +224,49 @@ export const useElementResize = (element: DesignElement) => {
           maintainAspectRatio
         );
         
-        // Apply the changes with consistent rounding
+        // Apply the changes
         updateElementSize(newWidth, newHeight, newX, newY);
-      }
+      });
     };
 
-    const handleMouseUp = () => {
+    const handleEnd = () => {
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+      
+      // Commit the final position to history
+      if (element.size && element.position) {
+        updateElementSize(
+          element.size.width, 
+          element.size.height, 
+          element.position.x, 
+          element.position.y,
+          true // commit to history
+        );
+      }
+      
       setIsResizing(false);
       setResizeDirection(null);
     };
 
-    if (isResizing) {
-      document.addEventListener("mousemove", handleMouseMove);
-      document.addEventListener("mouseup", handleMouseUp);
-    }
+    // Add both mouse and touch event listeners
+    document.addEventListener("mousemove", handleMove, { passive: false });
+    document.addEventListener("touchmove", handleMove, { passive: false });
+    document.addEventListener("mouseup", handleEnd);
+    document.addEventListener("touchend", handleEnd);
+    document.addEventListener("touchcancel", handleEnd);
 
     return () => {
-      document.removeEventListener("mousemove", handleMouseMove);
-      document.removeEventListener("mouseup", handleMouseUp);
+      document.removeEventListener("mousemove", handleMove);
+      document.removeEventListener("touchmove", handleMove);
+      document.removeEventListener("mouseup", handleEnd);
+      document.removeEventListener("touchend", handleEnd);
+      document.removeEventListener("touchcancel", handleEnd);
+      
+      if (animationFrameRef.current) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
     };
   }, [
     isResizing,
@@ -207,7 +276,8 @@ export const useElementResize = (element: DesignElement) => {
     resizeDirection, 
     element, 
     updateElement,
-    originalAspectRatio
+    originalAspectRatio,
+    updateElementWithoutHistory
   ]);
 
   return {
