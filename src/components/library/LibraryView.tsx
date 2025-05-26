@@ -152,8 +152,8 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
   const validImages = images.filter(image => !brokenImages.has(image.id));
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-end pb-2 border-b">
+    <div className="space-y-4 h-full flex flex-col">
+      <div className="flex justify-end pb-2 border-b flex-shrink-0">
         <Button
           size="sm"
           variant="outline" 
@@ -171,38 +171,40 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
           All images appear to be broken. Try syncing the library.
         </div>
       ) : (
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-          {images?.map((image) => (
-            <button
-              key={image.id}
-              onClick={() => handleImageClick(image)}
-              className={cn(
-                "aspect-square relative group overflow-hidden rounded-lg border transition-colors",
-                brokenImages.has(image.id)
-                  ? "opacity-40 cursor-not-allowed border-destructive" 
-                  : "hover:border-primary"
-              )}
-              disabled={brokenImages.has(image.id)}
-            >
-              {brokenImages.has(image.id) ? (
-                <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-                  <AlertCircle className="w-8 h-8 text-destructive" />
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
+            {images?.map((image) => (
+              <button
+                key={image.id}
+                onClick={() => handleImageClick(image)}
+                className={cn(
+                  "aspect-square relative group overflow-hidden rounded-lg border transition-colors",
+                  brokenImages.has(image.id)
+                    ? "opacity-40 cursor-not-allowed border-destructive" 
+                    : "hover:border-primary"
+                )}
+                disabled={brokenImages.has(image.id)}
+              >
+                {brokenImages.has(image.id) ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+                    <AlertCircle className="w-8 h-8 text-destructive" />
+                  </div>
+                ) : null}
+                
+                <img
+                  src={image.image_path}
+                  alt={image.name}
+                  className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                  onError={() => {
+                    setBrokenImages(prev => new Set(prev).add(image.id));
+                  }}
+                />
+                <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
+                  <Cloud className="w-3 h-3 text-white" />
                 </div>
-              ) : null}
-              
-              <img
-                src={image.image_path}
-                alt={image.name}
-                className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
-                onError={() => {
-                  setBrokenImages(prev => new Set(prev).add(image.id));
-                }}
-              />
-              <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
-                <Cloud className="w-3 h-3 text-white" />
-              </div>
-            </button>
-          ))}
+              </button>
+            ))}
+          </div>
         </div>
       )}
     </div>
