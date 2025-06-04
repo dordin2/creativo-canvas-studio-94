@@ -110,19 +110,36 @@ const Editor = () => {
     }
   };
 
-  const handleShareGame = () => {
+  const handleShareGame = async () => {
     const shareUrl = `${window.location.origin}/play/${projectId}`;
     
-    if (navigator.clipboard) {
-      navigator.clipboard.writeText(shareUrl)
-        .then(() => {
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(shareUrl);
+        toast.success('Game link copied to clipboard!');
+      } else {
+        // Fallback for browsers that don't support clipboard API
+        const textArea = document.createElement('textarea');
+        textArea.value = shareUrl;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
           toast.success('Game link copied to clipboard!');
-        })
-        .catch((err) => {
-          console.error('Failed to copy link:', err);
+        } catch (err) {
+          console.error('Fallback copy failed:', err);
           promptManualCopy(shareUrl);
-        });
-    } else {
+        }
+        
+        document.body.removeChild(textArea);
+      }
+    } catch (err) {
+      console.error('Failed to copy link:', err);
       promptManualCopy(shareUrl);
     }
   };

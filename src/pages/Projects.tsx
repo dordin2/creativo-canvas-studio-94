@@ -10,6 +10,7 @@ import { Plus, Folder, Clock, LogOut, UserCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Database } from "@/types/database";
 import { LibraryMenuDialog } from "@/components/library/LibraryMenuDialog";
+import { useGameModeToast } from "@/hooks/useGameModeToast";
 
 type Project = {
   id: string;
@@ -28,6 +29,7 @@ const Projects = () => {
   const [libraryOpen, setLibraryOpen] = useState(false);
   const navigate = useNavigate();
   const { user, profile, signOut, isLoading: authLoading, isAdmin } = useAuth();
+  const toast = useGameModeToast(false); // Always allow toasts in Projects page
   
   useEffect(() => {
     if (!authLoading) {

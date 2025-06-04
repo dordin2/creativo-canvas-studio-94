@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -6,6 +5,7 @@ import { toast } from "sonner";
 import { Canvas } from "@/types/designTypes";
 import { useAuth } from "@/context/AuthContext";
 import { Database } from "@/types/database";
+import { useGameModeToast } from "@/hooks/useGameModeToast";
 
 type ProjectContextType = {
   projectId: string | null;
@@ -27,6 +27,7 @@ export const ProjectProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const toast = useGameModeToast(false); // Always allow toasts in ProjectContext
   
   useEffect(() => {
     if (projectId) {
