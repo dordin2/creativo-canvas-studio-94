@@ -331,7 +331,8 @@ export const processImageUpload = async (
     // Temporary element ID until the real one is created
     const elementId = `temp_${cacheKey}`;
     
-    // Create the element data with local storage properties
+    // FIXED: Set originalSize to the appropriate scaled size instead of compressed size
+    // This ensures the slider works correctly from the start
     const elementData: Partial<DesignElement> = {
       dataUrl: compressedDataUrl, 
       thumbnailDataUrl, 
@@ -339,10 +340,7 @@ export const processImageUpload = async (
       file: file, 
       cacheKey, 
       size: appropriateSize,  // Use the appropriate scaled size
-      originalSize: {  
-        width,
-        height
-      },
+      originalSize: appropriateSize,  // FIXED: Use the same size as the display size
       storageType: 'local' // Default to local storage
     };
     
@@ -358,6 +356,7 @@ export const processImageUpload = async (
       spaceReduction: `${originalSize - compressedSize}KB (${100 - compressionRatio}%)`,
       originalDimensions: `${width}x${height}px`,
       displayDimensions: `${appropriateSize.width}x${appropriateSize.height}px`,
+      sliderWillShowCorrectScale: true,
       useCloudStorage: useCloudStorage
     });
     
@@ -373,10 +372,7 @@ export const processImageUpload = async (
           size: file.size,
           lastModified: file.lastModified
         },
-        originalSize: {  
-          width,
-          height
-        },
+        originalSize: appropriateSize,  // FIXED: Store the appropriate size
         cacheKey
       }
     );
@@ -575,10 +571,7 @@ export const processLibraryImage = async (
           dataUrl: canvas.toDataURL(),
           thumbnailDataUrl,
           size: appropriateSize,
-          originalSize: {
-            width,
-            height
-          }
+          originalSize: appropriateSize  // FIXED: Use appropriate size for consistency
         });
       } catch (error) {
         console.error('Error processing library image:', error);
