@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { useGameModeToast } from "@/hooks/useGameModeToast";
 import { 
@@ -102,7 +103,7 @@ export const DesignProvider = ({
     );
     
     if (itemExists) {
-      toast.info("This item is already in your inventory");
+      // Removed toast notification
       return;
     }
 
@@ -116,7 +117,7 @@ export const DesignProvider = ({
       inInventory: true 
     });
 
-    toast.success("Item added to inventory");
+    // Removed toast notification
   };
   
   const removeFromInventory = (elementId: string) => {
@@ -144,7 +145,7 @@ export const DesignProvider = ({
     
     setInventoryItems(prev => prev.filter(item => item.elementId !== elementId));
     
-    toast.success("Item removed from inventory");
+    // Removed toast notification
   };
   
   const handleItemCombination = (inventoryItemId: string, targetElementId: string) => {
@@ -158,7 +159,7 @@ export const DesignProvider = ({
     if (!targetElement) return;
     
     if (!targetElement.interaction?.canCombineWith?.includes(inventoryItemId)) {
-      toast.error("These items cannot be combined");
+      // Removed toast notification
       return;
     }
     
@@ -167,11 +168,7 @@ export const DesignProvider = ({
     if (combinationResult) {
       switch (combinationResult.type) {
         case 'message':
-          if (combinationResult.message) {
-            toast.success(combinationResult.message);
-          } else {
-            toast.success("Items combined successfully!");
-          }
+          // Removed toast notification
           break;
           
         case 'sound':
@@ -179,10 +176,10 @@ export const DesignProvider = ({
             const audio = new Audio(combinationResult.soundUrl);
             audio.play().catch(err => {
               console.error('Audio playback error:', err);
-              toast.error('Could not play sound');
+              // Removed toast notification
             });
           }
-          toast.success("Items combined successfully!");
+          // Removed toast notification
           break;
           
         case 'canvasNavigation':
@@ -193,25 +190,25 @@ export const DesignProvider = ({
             
             if (targetCanvasIndex !== -1) {
               setActiveCanvas(targetCanvasIndex);
-              toast.success(`Navigated to ${canvases[targetCanvasIndex].name}`);
+              // Removed toast notification
             } else {
-              toast.error('Target canvas not found');
+              // Removed toast notification
             }
           }
           break;
           
         case 'puzzle':
-          toast.info("Puzzle unlocked!");
+          // Removed toast notification
           break;
           
         default:
-          toast.success("Items combined successfully!");
+          // Removed toast notification
           break;
       }
     } else if (targetElement.interaction.message) {
-      toast.success(targetElement.interaction.message);
+      // Removed toast notification
     } else {
-      toast.success("Items combined successfully!");
+      // Removed toast notification
     }
     
     removeFromInventory(inventoryItemId);
@@ -282,7 +279,7 @@ export const DesignProvider = ({
   const addElement = (type: ElementType, props?: any): DesignElement => {
     if (!canvases || activeCanvasIndex < 0 || activeCanvasIndex >= canvases.length) {
       console.error("Invalid canvas state when trying to add element");
-      toast.error("Could not add element: invalid canvas state");
+      // Removed toast notification
       return createNewElement(type, { x: 0, y: 0 }, 0, props);
     }
     
@@ -301,7 +298,7 @@ export const DesignProvider = ({
           setCanvases(updatedCanvases);
           addToHistory(updatedCanvases);
           setActiveElement(newElement);
-          toast.success(`Added new ${type}`);
+          // Removed toast notification
           return newElement;
         }
       }
@@ -315,7 +312,7 @@ export const DesignProvider = ({
         setCanvases(updatedCanvases);
         addToHistory(updatedCanvases);
         setActiveElement(backgroundElement);
-        toast.success(`Added new ${type}`);
+        // Removed toast notification
         return backgroundElement;
       }
       
@@ -342,7 +339,7 @@ export const DesignProvider = ({
       addToHistory(updatedCanvases);
       setActiveElement(newElement);
       
-      toast.success(`Added new ${type}`);
+      // Removed toast notification
     }
     
     return newElement;
@@ -403,7 +400,7 @@ export const DesignProvider = ({
       setActiveElement({ ...activeElement, layer: newLayer });
     }
     
-    toast.success(`Updated layer to ${newLayer}`);
+    // Removed toast notification
   };
   
   const removeElement = (id: string) => {
@@ -440,12 +437,12 @@ export const DesignProvider = ({
     addToHistory(updatedCanvases);
     setActiveElement(null);
     
-    toast.success(t('toast.success.addCanvas') || "Added new canvas");
+    // Removed toast notification
   };
   
   const removeCanvas = (index: number) => {
     if (canvases.length <= 1) {
-      toast.error(t('toast.error.cannotRemoveLastCanvas') || "Cannot remove the last canvas");
+      // Removed toast notification
       return;
     }
     
@@ -462,7 +459,7 @@ export const DesignProvider = ({
     addToHistory(updatedCanvases);
     setActiveElement(null);
     
-    toast.success(t('toast.success.removeCanvas') || "Canvas removed");
+    // Removed toast notification
   };
   
   const setActiveCanvas = (index: number) => {
@@ -480,7 +477,7 @@ export const DesignProvider = ({
       updatedCanvases[canvasIndex].name = newName || updatedCanvases[canvasIndex].name;
       setCanvases(updatedCanvases);
       addToHistory(updatedCanvases);
-      toast.success(t('toast.success.updateCanvasName') || "Canvas name updated");
+      // Removed toast notification
     }
   };
   
@@ -516,7 +513,7 @@ export const DesignProvider = ({
     addToHistory(updatedCanvases);
     setActiveElement(null);
     
-    toast.success(t('toast.success.duplicateCanvas') || "Canvas duplicated");
+    // Removed toast notification
   };
   
   const moveElementToCanvas = useCallback((elementId: string, targetCanvasIndex: number) => {
@@ -564,7 +561,7 @@ export const DesignProvider = ({
       setActiveElement(null);
     }
     
-    toast.success(`Element moved to ${canvases[targetCanvasIndex].name}`);
+    // Removed toast notification
   }, [canvases, activeCanvasIndex, elements, activeElement]);
   
   const reorderCanvases = (sourceIndex: number, targetIndex: number) => {
@@ -596,7 +593,7 @@ export const DesignProvider = ({
     }
     
     addToHistory(updatedCanvases);
-    toast.success(t('toast.success.reorderCanvas') || "Canvas order updated");
+    // Removed toast notification
   };
   
   const undo = useCallback(() => {
@@ -623,9 +620,9 @@ export const DesignProvider = ({
         }
       }
       
-      toast.success(t('toast.success.undo'));
+      // Removed toast notification
     } else {
-      toast.info(t('toast.info.noMoreUndo'));
+      // Removed toast notification
     }
   }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
@@ -650,9 +647,9 @@ export const DesignProvider = ({
         }
       }
       
-      toast.success(t('toast.success.redo'));
+      // Removed toast notification
     } else {
-      toast.info(t('toast.info.noMoreRedo'));
+      // Removed toast notification
     }
   }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
