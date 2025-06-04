@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
@@ -25,7 +24,7 @@ interface LibraryViewProps {
 }
 
 export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => {
-  const { addElement, updateElement, canvasRef } = useDesignState();
+  const { addElement, updateElement, canvasRef, isGameMode } = useDesignState();
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [syncingLibrary, setSyncingLibrary] = useState(false);
