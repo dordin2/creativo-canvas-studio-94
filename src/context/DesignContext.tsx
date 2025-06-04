@@ -55,6 +55,7 @@ export const DesignProvider = ({
     inventoryItems: InventoryItem[]
   } | null>(null);
   const { t } = useLanguage();
+  const toast = useGameModeToast();
   
   const setCanvasRef = (ref: HTMLDivElement) => {
     setCanvasRefState(ref);
