@@ -1,5 +1,4 @@
 
-import { useDesignState } from "@/context/DesignContext";
 import { toast as sonnerToast } from "sonner";
 
 interface ToastFunction {
@@ -10,9 +9,7 @@ interface ToastFunction {
   warning: (message: string) => void;
 }
 
-export const useGameModeToast = (): ToastFunction => {
-  const { isGameMode } = useDesignState();
-
+export const useGameModeToast = (isGameMode?: boolean): ToastFunction => {
   const createToastFunction = (type: keyof typeof sonnerToast) => {
     return (message: string) => {
       if (!isGameMode) {
