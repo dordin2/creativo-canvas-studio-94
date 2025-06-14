@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useRef } from 'react';
 import { useDesignState } from '@/context/DesignContext';
 import { viewportToCanvasCoordinates, getCanvasScale, getClientCoordinates, preventDefaultTouchAction } from '@/utils/coordinateUtils';
@@ -10,7 +9,15 @@ interface Position {
 }
 
 export const useDraggable = (elementId: string) => {
-  const { updateElementWithoutHistory, commitToHistory, elements, draggedInventoryItem, handleItemCombination, isGameMode } = useDesignState();
+  const { 
+    updateElementWithoutHistory, 
+    commitToHistory, 
+    startTemporaryOperation,
+    elements, 
+    draggedInventoryItem, 
+    handleItemCombination, 
+    isGameMode 
+  } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
   const elementInitialPos = useRef<Position | null>(null);
@@ -134,7 +141,6 @@ export const useDraggable = (elementId: string) => {
       )
         return;
 
-      // Prevent default to avoid page scrolling while dragging
       preventDefaultTouchAction(e);
 
       if (isGameMode && isImageElement && !currentElement?.interaction?.type) {
@@ -166,15 +172,15 @@ export const useDraggable = (elementId: string) => {
 
       if (!isDragStarted.current) {
         isDragStarted.current = true;
+        startTemporaryOperation();
       }
 
-      // Calculate velocity for momentum
       const now = performance.now();
       const elapsed = now - lastUpdateTime.current;
       
       if (lastPosition.current && elapsed > 0) {
         velocity.current = {
-          x: (currentPos.x - lastPosition.current.x) / elapsed * 16.67, // normalize to ~60fps
+          x: (currentPos.x - lastPosition.current.x) / elapsed * 16.67,
           y: (currentPos.y - lastPosition.current.y) / elapsed * 16.67
         };
       }
@@ -220,7 +226,6 @@ export const useDraggable = (elementId: string) => {
             },
           });
           
-          // Apply slight momentum effect on touch end for natural feel
           if (isMobile && lastPosition.current && Math.abs(velocity.current.x) + Math.abs(velocity.current.y) > 0.5) {
             const momentumDistance = {
               x: velocity.current.x * 5,
@@ -230,7 +235,6 @@ export const useDraggable = (elementId: string) => {
             const finalX = currentElement.position.x + momentumDistance.x;
             const finalY = currentElement.position.y + momentumDistance.y;
             
-            // Apply momentum with animation
             updateElementWithoutHistory(elementId, {
               position: { x: finalX, y: finalY },
               style: {
@@ -241,7 +245,6 @@ export const useDraggable = (elementId: string) => {
           }
         }
         
-        // Short delay before committing to history to allow momentum animation to complete
         setTimeout(() => {
           commitToHistory();
         }, isMobile ? 300 : 0);
@@ -261,22 +264,16 @@ export const useDraggable = (elementId: string) => {
     };
 
     if (isDragging) {
-      // Mouse events
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
-      
-      // Touch events
       window.addEventListener('touchmove', handleTouchMove, { passive: false });
       window.addEventListener('touchend', handleTouchEnd);
       window.addEventListener('touchcancel', handleTouchEnd);
     }
 
     return () => {
-      // Mouse events
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
-      
-      // Touch events
       window.removeEventListener('touchmove', handleTouchMove);
       window.removeEventListener('touchend', handleTouchEnd);
       window.removeEventListener('touchcancel', handleTouchEnd);
@@ -291,6 +288,7 @@ export const useDraggable = (elementId: string) => {
     elementId,
     updateElementWithoutHistory,
     commitToHistory,
+    startTemporaryOperation,
     currentElement,
     isGameMode,
     isImageElement,
@@ -309,21 +307,18 @@ export const useDraggable = (elementId: string) => {
     e.stopPropagation();
     setIsDragging(true);
 
-    // Handle different event types
     let clientX, clientY;
     if ('touches' in e) {
-      // Touch event
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
     } else {
-      // Mouse event
       clientX = e.clientX;
       clientY = e.clientY;
     }
 
     startPosition.current = { x: clientX, y: clientY };
     elementInitialPos.current = initialPosition;
-    isDragStarted.current = false; // Reset the drag started flag
+    isDragStarted.current = false;
     lastUpdateTime.current = performance.now();
     velocity.current = { x: 0, y: 0 };
     lastPosition.current = null;

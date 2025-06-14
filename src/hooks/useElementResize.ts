@@ -1,10 +1,9 @@
-
 import { useState, useEffect, useRef } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { getClientCoordinates } from "@/utils/coordinateUtils";
 
 export const useElementResize = (element: DesignElement) => {
-  const { updateElement, updateElementWithoutHistory } = useDesignState();
+  const { updateElement, updateElementWithoutHistory, commitToHistory, startTemporaryOperation } = useDesignState();
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
@@ -16,6 +15,7 @@ export const useElementResize = (element: DesignElement) => {
   const animationFrameRef = useRef<number | null>(null);
   const lastUpdateTimeRef = useRef<number>(0);
   const isMobileRef = useRef<boolean>(false);
+  const resizeStarted = useRef<boolean>(false);
 
   const handleResizeStart = (e: React.MouseEvent, direction: string) => {
     e.stopPropagation();
@@ -46,6 +46,7 @@ export const useElementResize = (element: DesignElement) => {
     
     // Detect if we're on mobile
     isMobileRef.current = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    resizeStarted.current = false;
     
     // Set will-change for better performance during resize
     updateElementWithoutHistory(element.id, {
@@ -57,7 +58,11 @@ export const useElementResize = (element: DesignElement) => {
   };
 
   const updateElementSize = (newWidth: number, newHeight: number, newX: number, newY: number, commit = false) => {
-    // Round values to eliminate sub-pixel rendering issues that cause jumping
+    if (!resizeStarted.current) {
+      resizeStarted.current = true;
+      startTemporaryOperation();
+    }
+
     if (commit) {
       updateElement(element.id, {
         size: { 
@@ -235,19 +240,16 @@ export const useElementResize = (element: DesignElement) => {
         animationFrameRef.current = null;
       }
       
-      // Commit the final position to history
+      // Commit the final state to history
       if (element.size && element.position) {
-        updateElementSize(
-          element.size.width, 
-          element.size.height, 
-          element.position.x, 
-          element.position.y,
-          true // commit to history
-        );
+        setTimeout(() => {
+          commitToHistory();
+        }, 0);
       }
       
       setIsResizing(false);
       setResizeDirection(null);
+      resizeStarted.current = false;
     };
 
     // Add both mouse and touch event listeners
@@ -277,7 +279,9 @@ export const useElementResize = (element: DesignElement) => {
     element, 
     updateElement,
     originalAspectRatio,
-    updateElementWithoutHistory
+    updateElementWithoutHistory,
+    commitToHistory,
+    startTemporaryOperation
   ]);
 
   return {

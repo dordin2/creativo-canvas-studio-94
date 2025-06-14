@@ -89,7 +89,7 @@ export interface InteractionConfig {
   sound?: string;
   soundUrl?: string;
   targetCanvasId?: string;
-  canCombineWith?: string[]; // IDs of items that can be combined with this element
+  canCombineWith?: string[];
   combinationResult?: CombinationResult;
 }
 
@@ -174,6 +174,7 @@ export interface DesignContextType {
   updateElement: (id: string, updates: Partial<DesignElement>) => void;
   updateElementWithoutHistory: (id: string, updates: Partial<DesignElement>) => void;
   commitToHistory: () => void;
+  startTemporaryOperation: () => void;
   removeElement: (id: string) => void;
   setActiveElement: (element: DesignElement | null) => void;
   updateElementLayer: (id: string, newLayer: number) => void;

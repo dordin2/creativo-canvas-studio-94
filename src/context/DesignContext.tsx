@@ -55,6 +55,7 @@ export const DesignProvider = ({
     inventoryItems: InventoryItem[]
   } | null>(null);
   const [historyInitialized, setHistoryInitialized] = useState<boolean>(false);
+  const [isTemporaryOperation, setIsTemporaryOperation] = useState<boolean>(false);
   const { t } = useLanguage();
   const toast = useGameModeToast(isGameMode);
   
@@ -103,7 +104,6 @@ export const DesignProvider = ({
     );
     
     if (itemExists) {
-      // Removed toast notification
       return;
     }
 
@@ -116,8 +116,6 @@ export const DesignProvider = ({
       isHidden: true, 
       inInventory: true 
     });
-
-    // Removed toast notification
   };
   
   const removeFromInventory = (elementId: string) => {
@@ -144,8 +142,6 @@ export const DesignProvider = ({
     setCanvases(updatedCanvases);
     
     setInventoryItems(prev => prev.filter(item => item.elementId !== elementId));
-    
-    // Removed toast notification
   };
   
   const handleItemCombination = (inventoryItemId: string, targetElementId: string) => {
@@ -159,7 +155,6 @@ export const DesignProvider = ({
     if (!targetElement) return;
     
     if (!targetElement.interaction?.canCombineWith?.includes(inventoryItemId)) {
-      // Removed toast notification
       return;
     }
     
@@ -168,7 +163,6 @@ export const DesignProvider = ({
     if (combinationResult) {
       switch (combinationResult.type) {
         case 'message':
-          // Removed toast notification
           break;
           
         case 'sound':
@@ -176,10 +170,8 @@ export const DesignProvider = ({
             const audio = new Audio(combinationResult.soundUrl);
             audio.play().catch(err => {
               console.error('Audio playback error:', err);
-              // Removed toast notification
             });
           }
-          // Removed toast notification
           break;
           
         case 'canvasNavigation':
@@ -190,25 +182,16 @@ export const DesignProvider = ({
             
             if (targetCanvasIndex !== -1) {
               setActiveCanvas(targetCanvasIndex);
-              // Removed toast notification
-            } else {
-              // Removed toast notification
             }
           }
           break;
           
         case 'puzzle':
-          // Removed toast notification
           break;
           
         default:
-          // Removed toast notification
           break;
       }
-    } else if (targetElement.interaction.message) {
-      // Removed toast notification
-    } else {
-      // Removed toast notification
     }
     
     removeFromInventory(inventoryItemId);
@@ -225,12 +208,38 @@ export const DesignProvider = ({
   };
   
   const addToHistory = useCallback((newCanvases: Canvas[]) => {
-    const newHistoryIndex = historyIndex + 1;
-    const newHistory = history.slice(0, newHistoryIndex);
-    newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
-    setHistory(newHistory);
-    setHistoryIndex(newHistoryIndex);
-  }, [history, historyIndex]);
+    // Don't add to history if we're in a temporary operation
+    if (isTemporaryOperation) return;
+    
+    // Check if the new state is actually different from the current state
+    const currentState = history[historyIndex];
+    if (currentState) {
+      try {
+        const currentStateStr = JSON.stringify(currentState);
+        const newStateStr = JSON.stringify(newCanvases);
+        if (currentStateStr === newStateStr) {
+          return; // No changes, don't add to history
+        }
+      } catch (e) {
+        // If comparison fails, proceed with adding to history
+        console.warn('History comparison failed:', e);
+      }
+    }
+    
+    setHistory(prevHistory => {
+      setHistoryIndex(prevIndex => {
+        const newIndex = prevIndex + 1;
+        const newHistory = prevHistory.slice(0, newIndex);
+        newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
+        return newIndex;
+      });
+      
+      const newIndex = historyIndex + 1;
+      const newHistory = prevHistory.slice(0, newIndex);
+      newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
+      return newHistory;
+    });
+  }, [historyIndex, isTemporaryOperation]);
   
   const resetHistory = useCallback((newCanvases: Canvas[]) => {
     const newHistory = [JSON.parse(JSON.stringify(newCanvases))];
@@ -263,7 +272,12 @@ export const DesignProvider = ({
     }
   }, [canvases, activeCanvasIndex, activeElement]);
   
+  const startTemporaryOperation = useCallback(() => {
+    setIsTemporaryOperation(true);
+  }, []);
+  
   const commitToHistory = useCallback(() => {
+    setIsTemporaryOperation(false);
     addToHistory(canvases);
   }, [canvases, addToHistory]);
   
@@ -286,7 +300,6 @@ export const DesignProvider = ({
   const addElement = (type: ElementType, props?: any): DesignElement => {
     if (!canvases || activeCanvasIndex < 0 || activeCanvasIndex >= canvases.length) {
       console.error("Invalid canvas state when trying to add element");
-      // Removed toast notification
       return createNewElement(type, { x: 0, y: 0 }, 0, props);
     }
     
@@ -305,7 +318,6 @@ export const DesignProvider = ({
           setCanvases(updatedCanvases);
           addToHistory(updatedCanvases);
           setActiveElement(newElement);
-          // Removed toast notification
           return newElement;
         }
       }
@@ -319,7 +331,6 @@ export const DesignProvider = ({
         setCanvases(updatedCanvases);
         addToHistory(updatedCanvases);
         setActiveElement(backgroundElement);
-        // Removed toast notification
         return backgroundElement;
       }
       
@@ -345,8 +356,6 @@ export const DesignProvider = ({
       setCanvases(updatedCanvases);
       addToHistory(updatedCanvases);
       setActiveElement(newElement);
-      
-      // Removed toast notification
     }
     
     return newElement;
@@ -406,8 +415,6 @@ export const DesignProvider = ({
     if (activeElement && activeElement.id === id) {
       setActiveElement({ ...activeElement, layer: newLayer });
     }
-    
-    // Removed toast notification
   };
   
   const removeElement = (id: string) => {
@@ -443,13 +450,10 @@ export const DesignProvider = ({
     setActiveCanvasIndex(updatedCanvases.length - 1);
     addToHistory(updatedCanvases);
     setActiveElement(null);
-    
-    // Removed toast notification
   };
   
   const removeCanvas = (index: number) => {
     if (canvases.length <= 1) {
-      // Removed toast notification
       return;
     }
     
@@ -465,8 +469,6 @@ export const DesignProvider = ({
     
     addToHistory(updatedCanvases);
     setActiveElement(null);
-    
-    // Removed toast notification
   };
   
   const setActiveCanvas = (index: number) => {
@@ -484,7 +486,6 @@ export const DesignProvider = ({
       updatedCanvases[canvasIndex].name = newName || updatedCanvases[canvasIndex].name;
       setCanvases(updatedCanvases);
       addToHistory(updatedCanvases);
-      // Removed toast notification
     }
   };
   
@@ -519,8 +520,6 @@ export const DesignProvider = ({
     setActiveCanvasIndex(index + 1);
     addToHistory(updatedCanvases);
     setActiveElement(null);
-    
-    // Removed toast notification
   };
   
   const moveElementToCanvas = useCallback((elementId: string, targetCanvasIndex: number) => {
@@ -567,8 +566,6 @@ export const DesignProvider = ({
     if (activeElement && activeElement.id === elementId) {
       setActiveElement(null);
     }
-    
-    // Removed toast notification
   }, [canvases, activeCanvasIndex, elements, activeElement]);
   
   const reorderCanvases = (sourceIndex: number, targetIndex: number) => {
@@ -600,14 +597,14 @@ export const DesignProvider = ({
     }
     
     addToHistory(updatedCanvases);
-    // Removed toast notification
   };
   
   const undo = useCallback(() => {
     if (historyIndex > 0) {
       const newIndex = historyIndex - 1;
       const previousState = history[newIndex];
-      setCanvases(previousState);
+      
+      setCanvases(JSON.parse(JSON.stringify(previousState)));
       setHistoryIndex(newIndex);
       
       if (activeElement) {
@@ -626,18 +623,15 @@ export const DesignProvider = ({
           setActiveElement(null);
         }
       }
-      
-      // Removed toast notification
-    } else {
-      // Removed toast notification
     }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
+  }, [historyIndex, history, activeElement, activeCanvasIndex]);
   
   const redo = useCallback(() => {
     if (historyIndex < history.length - 1) {
       const newIndex = historyIndex + 1;
       const nextState = history[newIndex];
-      setCanvases(nextState);
+      
+      setCanvases(JSON.parse(JSON.stringify(nextState)));
       setHistoryIndex(newIndex);
       
       if (activeElement) {
@@ -653,12 +647,8 @@ export const DesignProvider = ({
           setActiveElement(null);
         }
       }
-      
-      // Removed toast notification
-    } else {
-      // Removed toast notification
     }
-  }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
+  }, [historyIndex, history, activeElement, activeCanvasIndex]);
   
   // Modified useEffect to prevent conflict with resetHistory
   useEffect(() => {
@@ -685,6 +675,7 @@ export const DesignProvider = ({
     updateElement,
     updateElementWithoutHistory,
     commitToHistory,
+    startTemporaryOperation,
     removeElement,
     setActiveElement,
     updateElementLayer,
