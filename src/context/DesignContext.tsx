@@ -236,6 +236,31 @@ export const DesignProvider = ({
     setHistoryIndex(prevIndex => prevIndex + 1);
   }, [historyIndex, isTemporaryOperation]);
   
+  const addToHistoryDirect = useCallback((newCanvases: Canvas[]) => {
+    // Always add to history regardless of temporary operation flag
+    const currentState = history[historyIndex];
+    if (currentState) {
+      try {
+        const currentStateStr = JSON.stringify(currentState);
+        const newStateStr = JSON.stringify(newCanvases);
+        if (currentStateStr === newStateStr) {
+          return; // No changes, don't add to history
+        }
+      } catch (e) {
+        console.warn('History comparison failed:', e);
+      }
+    }
+    
+    setHistory(prevHistory => {
+      const newIndex = historyIndex + 1;
+      const newHistory = prevHistory.slice(0, newIndex);
+      newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
+      return newHistory;
+    });
+    
+    setHistoryIndex(prevIndex => prevIndex + 1);
+  }, [historyIndex, history]);
+  
   const resetHistory = useCallback((newCanvases: Canvas[]) => {
     const newHistory = [JSON.parse(JSON.stringify(newCanvases))];
     setHistory(newHistory);
@@ -272,9 +297,10 @@ export const DesignProvider = ({
   }, []);
   
   const commitToHistory = useCallback(() => {
+    // Add current state to history BEFORE resetting the flag
+    addToHistoryDirect(canvases);
     setIsTemporaryOperation(false);
-    addToHistory(canvases);
-  }, [canvases, addToHistory]);
+  }, [canvases, addToHistoryDirect]);
   
   const handleImageUpload = (id: string, file: File) => {
     const canvasDimensions = canvasRef ? {
