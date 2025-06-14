@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, ReactNode, useCallback, useEffect } from "react";
 import { useGameModeToast } from "@/hooks/useGameModeToast";
 import { 
@@ -231,6 +230,12 @@ export const DesignProvider = ({
     setHistory(newHistory);
     setHistoryIndex(newHistoryIndex);
   }, [history, historyIndex]);
+  
+  const resetHistory = useCallback((newCanvases: Canvas[]) => {
+    const newHistory = [JSON.parse(JSON.stringify(newCanvases))];
+    setHistory(newHistory);
+    setHistoryIndex(0);
+  }, []);
   
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
     ? (canvases[activeCanvasIndex]?.elements || []) 
@@ -696,7 +701,8 @@ export const DesignProvider = ({
     removeFromInventory,
     setDraggedInventoryItem,
     handleItemCombination,
-    setCanvases
+    setCanvases,
+    resetHistory
   };
   
   return (

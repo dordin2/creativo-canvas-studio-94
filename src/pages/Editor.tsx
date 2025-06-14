@@ -35,7 +35,8 @@ const Editor = () => {
     canvases, 
     activeCanvasIndex, 
     setCanvases: updateCanvases,
-    activeElement
+    activeElement,
+    resetHistory
   } = useDesignState();
   const { projectName, saveProject, isPublic, toggleProjectVisibility, gameCode } = useProject();
   const isMobile = useIsMobile();
@@ -87,6 +88,8 @@ const Editor = () => {
           };
           
           updateCanvases(canvasData.canvases);
+          // Reset history with the loaded canvases to prevent undo issues
+          resetHistory(canvasData.canvases);
         } else {
           console.error("Invalid canvas data structure:", jsonData);
           toast.error('Invalid project data format');
