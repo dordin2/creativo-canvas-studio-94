@@ -227,18 +227,13 @@ export const DesignProvider = ({
     }
     
     setHistory(prevHistory => {
-      setHistoryIndex(prevIndex => {
-        const newIndex = prevIndex + 1;
-        const newHistory = prevHistory.slice(0, newIndex);
-        newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
-        return newIndex;
-      });
-      
       const newIndex = historyIndex + 1;
       const newHistory = prevHistory.slice(0, newIndex);
       newHistory.push(JSON.parse(JSON.stringify(newCanvases)));
       return newHistory;
     });
+    
+    setHistoryIndex(prevIndex => prevIndex + 1);
   }, [historyIndex, isTemporaryOperation]);
   
   const resetHistory = useCallback((newCanvases: Canvas[]) => {
