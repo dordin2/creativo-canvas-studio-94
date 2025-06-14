@@ -54,6 +54,7 @@ export const DesignProvider = ({
     canvases: Canvas[],
     inventoryItems: InventoryItem[]
   } | null>(null);
+  const [historyInitialized, setHistoryInitialized] = useState<boolean>(false);
   const { t } = useLanguage();
   const toast = useGameModeToast(isGameMode);
   
@@ -235,6 +236,7 @@ export const DesignProvider = ({
     const newHistory = [JSON.parse(JSON.stringify(newCanvases))];
     setHistory(newHistory);
     setHistoryIndex(0);
+    setHistoryInitialized(true);
   }, []);
   
   const elements = activeCanvasIndex >= 0 && activeCanvasIndex < canvases.length 
@@ -658,11 +660,13 @@ export const DesignProvider = ({
     }
   }, [historyIndex, history, activeElement, activeCanvasIndex, t]);
   
+  // Modified useEffect to prevent conflict with resetHistory
   useEffect(() => {
-    if (history.length === 0 && canvases.length > 0) {
+    if (history.length === 0 && canvases.length > 0 && !historyInitialized) {
       addToHistory(canvases);
+      setHistoryInitialized(true);
     }
-  }, [canvases, history.length, addToHistory]);
+  }, [canvases, history.length, addToHistory, historyInitialized]);
   
   const value = {
     canvases,
