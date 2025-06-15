@@ -458,7 +458,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           translate: '-50% -50%',
           width: 'fit-content',
           height: 'fit-content',
-          zIndex: 10
+          zIndex: 1
         }}>
           <div
             ref={containerRef}

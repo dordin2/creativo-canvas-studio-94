@@ -1,4 +1,3 @@
-
 import { useDesignState } from "@/context/DesignContext";
 import { Button } from "@/components/ui/button";
 import { Plus, X, Copy, ArrowLeft, ArrowRight, Move } from "lucide-react";
@@ -90,6 +89,7 @@ const CanvasTabs = () => {
     <div 
       className={`flex items-center gap-1 p-2 overflow-x-auto ${language === 'he' ? 'rtl' : 'ltr'}`}
       ref={tabsRef}
+      style={{ zIndex: 20 }}
     >
       {canvases.map((canvas, index) => (
         <div 
