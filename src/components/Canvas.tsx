@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { useDesignState } from "@/context/DesignContext";
 import DraggableElement from "./DraggableElement";
 import { Minus, Plus, RotateCcw, Maximize, Minimize } from "lucide-react";
@@ -31,8 +31,11 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   });
   const [isDraggingOver, setIsDraggingOver] = useState(false);
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [userSetZoom, setUserSetZoom] = useState(false);
+  const [autoZoomEnabled, setAutoZoomEnabled] = useState(true);
   const parentRef = useRef<HTMLDivElement>(null);
   const [isFullscreenActive, setIsFullscreenActive] = useState(false);
+  const resizeTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
     if (canvasRef === null && containerRef.current) {
@@ -40,34 +43,56 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     }
   }, [canvasRef, setCanvasRef]);
   
-  useEffect(() => {
-    const handleResize = () => {
+  const calculateOptimalZoom = useCallback(() => {
+    if (!containerRef.current || !parentRef.current) return 1;
+    
+    const parentWidth = parentRef.current.clientWidth;
+    const parentHeight = parentRef.current.clientHeight;
+    
+    const canvasWidth = FIXED_CANVAS_WIDTH;
+    const canvasHeight = FIXED_CANVAS_HEIGHT;
+    
+    if (isMobileView && isGameMode) {
+      const scaleX = parentWidth / canvasWidth;
+      const scaleY = parentHeight / canvasHeight;
+      return Math.min(scaleX, scaleY);
+    } else {
+      const scaleX = (parentWidth - 40) / canvasWidth;
+      const scaleY = (parentHeight - 40) / canvasHeight;
+      return Math.min(scaleX, scaleY, 1);
+    }
+  }, [isMobileView, isGameMode]);
+  
+  const handleResize = useCallback(() => {
+    // Clear previous timeout to debounce resize events
+    if (resizeTimeoutRef.current) {
+      clearTimeout(resizeTimeoutRef.current);
+    }
+    
+    resizeTimeoutRef.current = setTimeout(() => {
       if (containerRef.current && parentRef.current) {
-        const parentWidth = parentRef.current.clientWidth;
-        const parentHeight = parentRef.current.clientHeight;
+        const newOptimalZoom = calculateOptimalZoom();
         
-        const canvasWidth = FIXED_CANVAS_WIDTH;
-        const canvasHeight = FIXED_CANVAS_HEIGHT;
-        
-        if (isMobileView && isGameMode) {
-          const scaleX = parentWidth / canvasWidth;
-          const scaleY = parentHeight / canvasHeight;
-          const scale = Math.min(scaleX, scaleY);
-          setZoomLevel(scale);
-        } else {
-          const scaleX = (parentWidth - 40) / canvasWidth;
-          const scaleY = (parentHeight - 40) / canvasHeight;
-          const scale = Math.min(scaleX, scaleY, 1);
+        // Only update zoom if auto zoom is enabled and user hasn't manually set zoom
+        if (autoZoomEnabled && !userSetZoom) {
+          // Only update if there's a significant change (more than 5%)
+          const currentZoom = zoomLevel;
+          const zoomDifference = Math.abs(newOptimalZoom - currentZoom) / currentZoom;
           
-          if (!isGameMode) {
-            setZoomLevel(scale);
+          if (zoomDifference > 0.05) {
+            setZoomLevel(newOptimalZoom);
           }
+        } else if (isGameMode && (isMobileView || isFullscreen)) {
+          // In game mode, always adjust for mobile/fullscreen
+          setZoomLevel(newOptimalZoom);
         }
         
-        setCanvasDimensions({ width: canvasWidth, height: canvasHeight });
+        setCanvasDimensions({ width: FIXED_CANVAS_WIDTH, height: FIXED_CANVAS_HEIGHT });
       }
-    };
-    
+    }, 100); // 100ms debounce
+  }, [calculateOptimalZoom, autoZoomEnabled, userSetZoom, zoomLevel, isGameMode, isMobileView, isFullscreen]);
+  
+  useEffect(() => {
     handleResize();
     
     const resizeObserver = new ResizeObserver(() => {
@@ -81,11 +106,20 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     window.addEventListener("resize", handleResize);
     
     return () => {
+      if (resizeTimeoutRef.current) {
+        clearTimeout(resizeTimeoutRef.current);
+      }
       if (parentRef.current) {
         resizeObserver.unobserve(parentRef.current);
       }
       window.removeEventListener("resize", handleResize);
     };
+  }, [handleResize]);
+  
+  // Reset user zoom flag when switching modes
+  useEffect(() => {
+    setUserSetZoom(false);
+    setAutoZoomEnabled(true);
   }, [isGameMode, isMobileView]);
   
   useEffect(() => {
@@ -113,15 +147,23 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   };
   
   const handleZoomIn = () => {
-    setZoomLevel(prevZoom => Math.min(prevZoom + 0.1, 3));
+    const newZoom = Math.min(zoomLevel + 0.1, 3);
+    setZoomLevel(newZoom);
+    setUserSetZoom(true);
+    setAutoZoomEnabled(false);
   };
   
   const handleZoomOut = () => {
-    setZoomLevel(prevZoom => Math.max(prevZoom - 0.1, 0.5));
+    const newZoom = Math.max(zoomLevel - 0.1, 0.5);
+    setZoomLevel(newZoom);
+    setUserSetZoom(true);
+    setAutoZoomEnabled(false);
   };
   
   const handleResetZoom = () => {
     setZoomLevel(1);
+    setUserSetZoom(true);
+    setAutoZoomEnabled(false);
   };
   
   const handleCanvasClick = (e: React.MouseEvent) => {
