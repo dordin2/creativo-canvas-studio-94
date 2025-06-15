@@ -458,7 +458,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
           translate: '-50% -50%',
           width: 'fit-content',
           height: 'fit-content',
-          zIndex: 1
+          zIndex: 10
         }}>
           <div
             ref={containerRef}
@@ -479,7 +479,7 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
         </div>
         
         {!isGameMode && (
-          <div className="zoom-controls">
+          <div className="zoom-controls" style={{ zIndex: 5 }}>
             <button onClick={handleZoomOut} title="Zoom Out">
               <Minus size={16} />
             </button>
