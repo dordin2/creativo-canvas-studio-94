@@ -16,7 +16,8 @@ export const useDraggable = (elementId: string) => {
     elements, 
     draggedInventoryItem, 
     handleItemCombination, 
-    isGameMode 
+    isGameMode,
+    setUserInteraction
   } = useDesignState();
   const [isDragging, setIsDragging] = useState(false);
   const startPosition = useRef<Position | null>(null);
@@ -36,6 +37,11 @@ export const useDraggable = (elementId: string) => {
   const isSequencePuzzleElement = currentElement?.type === 'sequencePuzzle';
   const isSliderPuzzleElement = currentElement?.type === 'sliderPuzzle';
   const isImageElement = currentElement?.type === 'image';
+
+  // Signal user interaction when dragging starts/stops
+  useEffect(() => {
+    setUserInteraction(isDragging);
+  }, [isDragging, setUserInteraction]);
 
   useEffect(() => {
     if (!currentElement) return;

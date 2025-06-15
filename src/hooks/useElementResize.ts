@@ -3,7 +3,13 @@ import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { getClientCoordinates } from "@/utils/coordinateUtils";
 
 export const useElementResize = (element: DesignElement) => {
-  const { updateElement, updateElementWithoutHistory, commitToHistory, startTemporaryOperation } = useDesignState();
+  const { 
+    updateElement, 
+    updateElementWithoutHistory, 
+    commitToHistory, 
+    startTemporaryOperation,
+    setUserInteraction
+  } = useDesignState();
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
@@ -16,6 +22,11 @@ export const useElementResize = (element: DesignElement) => {
   const lastUpdateTimeRef = useRef<number>(0);
   const isMobileRef = useRef<boolean>(false);
   const resizeStarted = useRef<boolean>(false);
+
+  // Signal user interaction when resizing starts/stops
+  useEffect(() => {
+    setUserInteraction(isResizing);
+  }, [isResizing, setUserInteraction]);
 
   const handleResizeStart = (e: React.MouseEvent, direction: string) => {
     e.stopPropagation();

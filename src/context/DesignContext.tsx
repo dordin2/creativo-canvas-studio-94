@@ -56,12 +56,25 @@ export const DesignProvider = ({
   } | null>(null);
   const [historyInitialized, setHistoryInitialized] = useState<boolean>(false);
   const [isTemporaryOperation, setIsTemporaryOperation] = useState<boolean>(false);
+  
+  // User interaction state for zoom control
+  const [isUserInteracting, setIsUserInteracting] = useState<boolean>(false);
+  const [userSetZoom, setUserSetZoom] = useState<boolean>(false);
+  
   const { t } = useLanguage();
   const toast = useGameModeToast(isGameMode);
   
   const setCanvasRef = (ref: HTMLDivElement) => {
     setCanvasRefState(ref);
   };
+  
+  const setUserInteraction = useCallback((interacting: boolean) => {
+    setIsUserInteracting(interacting);
+  }, []);
+  
+  const setManualZoom = useCallback((isManual: boolean) => {
+    setUserSetZoom(isManual);
+  }, []);
   
   const toggleGameMode = () => {
     if (isGameMode) {
@@ -689,6 +702,8 @@ export const DesignProvider = ({
     inventoryItems,
     showInventory,
     draggedInventoryItem,
+    isUserInteracting,
+    userSetZoom,
     toggleGameMode,
     toggleInventory,
     setCanvasRef,
@@ -718,7 +733,9 @@ export const DesignProvider = ({
     setDraggedInventoryItem,
     handleItemCombination,
     setCanvases,
-    resetHistory
+    resetHistory,
+    setUserInteraction,
+    setManualZoom
   };
   
   return (

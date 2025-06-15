@@ -1,16 +1,26 @@
-
 import { useState, useEffect, useRef } from "react";
 import { DesignElement, useDesignState } from "@/context/DesignContext";
 import { getRotation } from "@/utils/elementStyles";
 
 export const useElementRotation = (element: DesignElement, elementRef: React.RefObject<HTMLDivElement>) => {
-  const { updateElement, updateElementWithoutHistory, commitToHistory, startTemporaryOperation } = useDesignState();
+  const { 
+    updateElement, 
+    updateElementWithoutHistory, 
+    commitToHistory, 
+    startTemporaryOperation,
+    setUserInteraction
+  } = useDesignState();
   const [isRotating, setIsRotating] = useState(false);
   const [centerPos, setCenterPos] = useState({ x: 0, y: 0 });
   const [startAngle, setStartAngle] = useState(0);
   const lastRotation = useRef(getRotation(element));
   const lastMouseAngle = useRef(0);
   const rotationStarted = useRef(false);
+
+  // Signal user interaction when rotating starts/stops
+  useEffect(() => {
+    setUserInteraction(isRotating);
+  }, [isRotating, setUserInteraction]);
 
   const handleRotateStart = (e: React.MouseEvent) => {
     e.stopPropagation();
