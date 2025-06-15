@@ -1,9 +1,12 @@
+
 import { DesignElement } from "@/types/designTypes";
 import { HexColorPicker } from "react-colorful";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useDesignState } from "@/context/DesignContext";
 import { Slider } from "@/components/ui/slider";
+import { Button } from "@/components/ui/button";
+import { RotateCcw } from "lucide-react";
 import { useState, useEffect } from "react";
 import { getRotation } from "@/utils/elementStyles";
 
@@ -44,6 +47,12 @@ const ShapeProperties = ({ element }: { element: DesignElement }) => {
     handleRotationChange([boundedRotation]);
   };
 
+  const handleResetRotation = () => {
+    if (isGameMode) return;
+    
+    handleRotationChange([0]);
+  };
+
   return (
     <div className="space-y-4">
       <div>
@@ -71,7 +80,7 @@ const ShapeProperties = ({ element }: { element: DesignElement }) => {
             disabled={isGameMode}
             className="my-4"
           />
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-2 items-center">
             <Input 
               type="number" 
               value={rotation}
@@ -82,6 +91,16 @@ const ShapeProperties = ({ element }: { element: DesignElement }) => {
               disabled={isGameMode}
             />
             <span className="text-sm">degrees</span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleResetRotation}
+              disabled={isGameMode}
+              className="h-10 w-10 flex-shrink-0"
+              title="Reset rotation to 0°"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>

@@ -3,7 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { DesignElement } from "@/context/DesignContext";
 import { useDesignState } from "@/context/DesignContext";
 import { Slider } from "@/components/ui/slider";
-import { ZoomIn, RotateCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ZoomIn, RotateCw, RotateCcw } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { getRotation } from "@/utils/elementStyles";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -117,6 +118,18 @@ const FloatingSmartSlider = ({ element, className = "" }: FloatingSmartSliderPro
       });
     }
   };
+
+  const handleResetRotation = () => {
+    if (!isRotationMode) return;
+    
+    updateElement(element.id, {
+      style: { 
+        ...element.style, 
+        transform: 'rotate(0deg)',
+        willChange: 'auto',
+      }
+    });
+  };
   
   return (
     <div className={`flex items-center gap-4 p-3 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg ${className}`}>
@@ -143,6 +156,18 @@ const FloatingSmartSlider = ({ element, className = "" }: FloatingSmartSliderPro
           <ZoomIn className={`${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
         )}
       </Toggle>
+
+      {isRotationMode && (
+        <Button
+          variant="outline"
+          size="icon"
+          onClick={handleResetRotation}
+          className={`flex-shrink-0 ${isMobile ? 'h-10 w-10' : 'h-8 w-8'}`}
+          title="Reset rotation to 0°"
+        >
+          <RotateCcw className={`${isMobile ? 'h-5 w-5' : 'h-4 w-4'}`} />
+        </Button>
+      )}
       
       <div className="w-12 text-sm font-medium text-gray-600">
         {isRotationMode ? `${getRotation(element)}°` : `${calculateScale()}%`}

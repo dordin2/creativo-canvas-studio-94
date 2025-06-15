@@ -1,8 +1,10 @@
+
 import { DesignElement } from "@/types/designTypes";
 import { HexColorPicker } from "react-colorful";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { 
   Select,
   SelectContent,
@@ -11,7 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Bold, Italic, Underline } from "lucide-react";
+import { Bold, Italic, Underline, RotateCcw } from "lucide-react";
 import { useDesignState } from "@/context/DesignContext";
 import { useState, useEffect } from "react";
 import { getRotation } from "@/utils/elementStyles";
@@ -62,6 +64,12 @@ const TextProperties = ({ element }: { element: DesignElement }) => {
     const boundedRotation = Math.max(-360, Math.min(360, newRotation));
     
     handleRotationChange([boundedRotation]);
+  };
+
+  const handleResetRotation = () => {
+    if (isGameMode) return;
+    
+    handleRotationChange([0]);
   };
 
   const toggleTextStyle = (style: 'fontWeight' | 'textDecoration' | 'fontStyle', value: string) => {
@@ -189,7 +197,7 @@ const TextProperties = ({ element }: { element: DesignElement }) => {
             disabled={isGameMode}
             className="my-4"
           />
-          <div className="flex gap-4 items-center">
+          <div className="flex gap-2 items-center">
             <Input 
               type="number" 
               value={rotation}
@@ -200,6 +208,16 @@ const TextProperties = ({ element }: { element: DesignElement }) => {
               disabled={isGameMode}
             />
             <span className="text-sm">degrees</span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleResetRotation}
+              disabled={isGameMode}
+              className="h-10 w-10 flex-shrink-0"
+              title="Reset rotation to 0°"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
           </div>
         </div>
       </div>
