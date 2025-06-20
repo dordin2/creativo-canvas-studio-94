@@ -11,7 +11,8 @@ interface StorageItem {
   metadata: Record<string, any>;
 }
 
-interface LibraryElement {
+// Extended interface that includes the new fields that may not be in the auto-generated types yet
+interface ExtendedLibraryElement {
   id: string;
   name: string;
   image_path: string;
@@ -52,9 +53,12 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
       return false;
     }
 
+    // Cast to our extended interface to handle the new fields
+    const extendedLibraryElements = libraryElements as ExtendedLibraryElement[];
+
     // Step 3: Find missing files (in DB but not in storage)
     const storageFileNames = storageFiles.map(file => file.name);
-    const missingInStorage = libraryElements.filter(element => {
+    const missingInStorage = extendedLibraryElements.filter(element => {
       const fileName = element.file_name || element.image_path?.split('/').pop() || '';
       return fileName && !storageFileNames.includes(fileName);
     });
@@ -72,7 +76,7 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
     }
 
     // Step 5: Find files in storage that aren't in the DB
-    const dbFileNames = libraryElements
+    const dbFileNames = extendedLibraryElements
       .map(element => element.file_name || element.image_path?.split('/').pop() || '')
       .filter(Boolean);
     

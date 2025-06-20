@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
@@ -12,7 +11,8 @@ import { syncLibraryWithStorage, verifyImageExists } from "@/utils/librarySync";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 
-interface LibraryImage {
+// Extended interface that includes the new fields that may not be in the auto-generated types yet
+interface ExtendedLibraryImage {
   id: string;
   image_path: string;
   name: string;
@@ -44,10 +44,13 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         
       if (error) throw error;
       
+      // Cast to our extended interface to handle the new fields
+      const extendedData = data as ExtendedLibraryImage[];
+      
       // Pre-check for broken images on load
-      if (data) {
+      if (extendedData) {
         const broken = new Set<string>();
-        for (const image of data) {
+        for (const image of extendedData) {
           try {
             const fileName = image.file_name || image.image_path?.split('/').pop() || '';
             if (fileName) {
@@ -64,7 +67,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         setBrokenImages(broken);
       }
       
-      return data as LibraryImage[];
+      return extendedData;
     },
     staleTime: 0 // Always refetch when component mounts
   });
@@ -79,7 +82,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     }
   };
   
-  const handleImageClick = async (image: LibraryImage) => {
+  const handleImageClick = async (image: ExtendedLibraryImage) => {
     // Don't allow clicking on broken images
     if (brokenImages.has(image.id)) {
       return;
