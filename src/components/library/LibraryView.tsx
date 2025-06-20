@@ -16,8 +16,11 @@ interface LibraryImage {
   id: string;
   image_path: string;
   name: string;
-  file_name: string;
+  file_name?: string;
   description?: string;
+  category?: string;
+  created_at?: string;
+  created_by?: string;
 }
 
 interface LibraryViewProps {
@@ -46,8 +49,9 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         const broken = new Set<string>();
         for (const image of data) {
           try {
-            if (image.file_name) {
-              const exists = await verifyImageExists(image.file_name);
+            const fileName = image.file_name || image.image_path?.split('/').pop() || '';
+            if (fileName) {
+              const exists = await verifyImageExists(fileName);
               if (!exists) {
                 broken.add(image.id);
               }
@@ -82,10 +86,18 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     }
     
     try {
+      // Get filename - prefer file_name field, fallback to extracting from image_path
+      const fileName = image.file_name || image.image_path?.split('/').pop() || '';
+      
+      if (!fileName) {
+        console.error('No filename available for image:', image);
+        return;
+      }
+      
       // Generate the correct URL for the new library bucket
       const { data: urlData } = supabase.storage
         .from('library')
-        .getPublicUrl(image.file_name);
+        .getPublicUrl(fileName);
       
       const imageUrl = urlData.publicUrl;
       
@@ -107,7 +119,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         storageType: 'cloud',
         cloudStorage: {
           url: imageUrl,
-          path: `library/${image.file_name}`
+          path: `library/${fileName}`
         }
       });
       
@@ -180,10 +192,17 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
             {images?.map((image) => {
+              // Get filename - prefer file_name field, fallback to extracting from image_path
+              const fileName = image.file_name || image.image_path?.split('/').pop() || '';
+              
+              if (!fileName) {
+                return null; // Skip images without valid filenames
+              }
+              
               // Generate the correct URL for display
               const { data: urlData } = supabase.storage
                 .from('library')
-                .getPublicUrl(image.file_name);
+                .getPublicUrl(fileName);
               
               const displayUrl = urlData.publicUrl;
               

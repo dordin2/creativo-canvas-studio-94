@@ -15,9 +15,10 @@ interface LibraryElement {
   id: string;
   name: string;
   image_path: string;
-  file_name: string;
+  file_name?: string;
   description?: string;
-  created_at: string;
+  category?: string;
+  created_at?: string;
   created_by?: string;
 }
 
@@ -54,7 +55,8 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
     // Step 3: Find missing files (in DB but not in storage)
     const storageFileNames = storageFiles.map(file => file.name);
     const missingInStorage = libraryElements.filter(element => {
-      return element.file_name && !storageFileNames.includes(element.file_name);
+      const fileName = element.file_name || element.image_path?.split('/').pop() || '';
+      return fileName && !storageFileNames.includes(fileName);
     });
 
     // Step 4: Delete entries for missing files
@@ -71,7 +73,7 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
 
     // Step 5: Find files in storage that aren't in the DB
     const dbFileNames = libraryElements
-      .map(element => element.file_name)
+      .map(element => element.file_name || element.image_path?.split('/').pop() || '')
       .filter(Boolean);
     
     const missingInDb = storageFiles.filter(file => 
