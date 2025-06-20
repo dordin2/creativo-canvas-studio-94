@@ -1,7 +1,8 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
-import { Loader2, Cloud, RefreshCw, UploadCloud, AlertCircle } from "lucide-react";
+import { Loader2, Cloud, AlertCircle } from "lucide-react";
 import { 
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
@@ -9,7 +10,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { syncLibraryWithStorage, verifyImageExists } from "@/utils/librarySync";
-import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 
 interface LibraryImage {
@@ -27,8 +27,21 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
   const { addElement, updateElement, canvasRef, isGameMode } = useDesignState();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [syncingLibrary, setSyncingLibrary] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
+  
+  // Auto-sync when component mounts
+  useEffect(() => {
+    const performAutoSync = async () => {
+      try {
+        await syncLibraryWithStorage();
+        queryClient.invalidateQueries({ queryKey: ['library-images'] });
+      } catch (error) {
+        console.error('Auto-sync failed:', error);
+      }
+    };
+
+    performAutoSync();
+  }, [queryClient]);
   
   const { data: images, isLoading, isError } = useQuery({
     queryKey: ['library-images'],
@@ -61,16 +74,6 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     },
     staleTime: 0 // Always refetch when component mounts
   });
-
-  const handleRefreshLibrary = async () => {
-    setSyncingLibrary(true);
-    try {
-      await syncLibraryWithStorage();
-      queryClient.invalidateQueries({ queryKey: ['library-images'] });
-    } finally {
-      setSyncingLibrary(false);
-    }
-  };
   
   const handleImageClick = async (image: LibraryImage) => {
     // Don't allow clicking on broken images
@@ -116,7 +119,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     }
   };
   
-  if (isLoading || syncingLibrary) {
+  if (isLoading) {
     return (
       <div className="flex justify-center items-center h-40">
         <Loader2 className="w-6 h-6 animate-spin" />
@@ -129,7 +132,6 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
       <div className="text-center py-8 text-muted-foreground flex flex-col items-center gap-4">
         <AlertCircle className="w-10 h-10 text-destructive" />
         <p>Error loading library elements</p>
-        <Button onClick={handleRefreshLibrary}>Try Again</Button>
       </div>
     );
   }
@@ -140,10 +142,6 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         <div className="text-muted-foreground">
           No images available in library
         </div>
-        <Button onClick={handleRefreshLibrary} variant="outline" className="flex items-center gap-2">
-          <RefreshCw className="w-4 h-4" />
-          Refresh Library
-        </Button>
       </div>
     );
   }
@@ -152,22 +150,9 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
 
   return (
     <div className="space-y-4 h-full flex flex-col">
-      <div className="flex justify-end pb-2 border-b flex-shrink-0">
-        <Button
-          size="sm"
-          variant="outline" 
-          onClick={handleRefreshLibrary}
-          disabled={syncingLibrary || isLoading}
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className={cn("w-4 h-4", syncingLibrary && "animate-spin")} />
-          Sync Library
-        </Button>
-      </div>
-      
       {validImages.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          All images appear to be broken. Try syncing the library.
+          All images appear to be broken. Try refreshing the page.
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
