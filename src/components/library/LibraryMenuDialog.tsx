@@ -7,12 +7,16 @@ import {
   DialogTitle,
   DialogClose
 } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { X } from "lucide-react";
+import { AdminLibraryView } from "./AdminLibraryView";
 import { LibraryView } from "./LibraryView";
+import { PublicUploader } from "./PublicUploader";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { DesignProvider } from "@/context/DesignContext";
+import { useAuth } from "@/context/AuthContext";
 import { syncLibraryWithStorage } from "@/utils/librarySync";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -27,6 +31,8 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   onOpenChange,
 }) => {
   const isMobile = useIsMobile();
+  const [activeTab, setActiveTab] = React.useState("library");
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const [isSyncing, setIsSyncing] = React.useState(false);
   
@@ -102,13 +108,29 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
           </div>
 
           <div className="flex-1 flex flex-col">
-            <ScrollArea className="flex-1">
-              <DesignProvider initialState={emptyInitialState}>
-                <div className="p-4 h-full">
-                  <LibraryView onClose={() => onOpenChange(false)} autoSync={true} />
-                </div>
-              </DesignProvider>
-            </ScrollArea>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+              <TabsList className="border-b mx-4">
+                <TabsTrigger value="library">Browse Library</TabsTrigger>
+                <TabsTrigger value="upload">Upload</TabsTrigger>
+                {isAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
+              </TabsList>
+              
+              <ScrollArea className="flex-1">
+                <DesignProvider initialState={emptyInitialState}>
+                  <TabsContent value="library" className="p-4 h-full">
+                    <LibraryView onClose={() => onOpenChange(false)} autoSync={true} />
+                  </TabsContent>
+                  <TabsContent value="upload" className="p-4 h-full">
+                    <PublicUploader />
+                  </TabsContent>
+                  {isAdmin && (
+                    <TabsContent value="admin" className="p-4 h-full">
+                      <AdminLibraryView onClose={() => onOpenChange(false)} />
+                    </TabsContent>
+                  )}
+                </DesignProvider>
+              </ScrollArea>
+            </Tabs>
           </div>
         </div>
       </DialogContent>

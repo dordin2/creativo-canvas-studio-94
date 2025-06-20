@@ -1,28 +1,21 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
-import { Loader2, Cloud, RefreshCw, AlertCircle } from "lucide-react";
+import { Loader2, Cloud, RefreshCw, UploadCloud, AlertCircle } from "lucide-react";
 import { 
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
 } from "@/utils/libraryImageProcessor";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 import { syncLibraryWithStorage, verifyImageExists } from "@/utils/librarySync";
 import { Button } from "@/components/ui/button";
-import { UploadExampleButton } from "./UploadExampleButton";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-// Basic interface that works with existing columns
 interface LibraryImage {
   id: string;
   image_path: string;
   name: string;
-  file_name?: string;
-  description?: string;
-  category?: string;
-  created_at?: string;
-  created_by?: string;
 }
 
 interface LibraryViewProps {
@@ -32,6 +25,7 @@ interface LibraryViewProps {
 
 export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => {
   const { addElement, updateElement, canvasRef, isGameMode } = useDesignState();
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [syncingLibrary, setSyncingLibrary] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
@@ -39,83 +33,79 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
   const { data: images, isLoading, isError } = useQuery({
     queryKey: ['library-images'],
     queryFn: async () => {
-      console.log('Fetching library images...');
       const { data, error } = await supabase
         .from('library_elements')
         .select('*')
         .order('created_at', { ascending: false });
         
-      if (error) {
-        console.error('Error fetching library images:', error);
-        throw error;
-      }
+      if (error) throw error;
       
-      console.log('Fetched library images:', data?.length || 0, data);
+      // Pre-check for broken images on load
+      if (data) {
+        const broken = new Set<string>();
+        for (const image of data) {
+          try {
+            const exists = await verifyImageExists(image.image_path);
+            if (!exists) {
+              broken.add(image.id);
+            }
+          } catch (e) {
+            console.error(`Error checking image ${image.id}:`, e);
+            broken.add(image.id);
+          }
+        }
+        setBrokenImages(broken);
+      }
       
       return data as LibraryImage[];
     },
-    staleTime: 0
+    staleTime: 0 // Always refetch when component mounts
   });
 
   const handleRefreshLibrary = async () => {
-    console.log('Manual library refresh triggered');
     setSyncingLibrary(true);
     try {
-      const success = await syncLibraryWithStorage();
-      if (success) {
-        queryClient.invalidateQueries({ queryKey: ['library-images'] });
-      }
+      await syncLibraryWithStorage();
+      queryClient.invalidateQueries({ queryKey: ['library-images'] });
     } finally {
       setSyncingLibrary(false);
     }
   };
   
   const handleImageClick = async (image: LibraryImage) => {
+    // Don't allow clicking on broken images
     if (brokenImages.has(image.id)) {
       return;
     }
     
     try {
-      // Get filename - prefer file_name field, fallback to extracting from image_path
-      const fileName = image.file_name || image.image_path?.split('/').pop() || '';
-      
-      if (!fileName) {
-        console.error('No filename available for image:', image);
-        return;
-      }
-      
-      // Generate the correct URL for the library bucket
-      const { data: urlData } = supabase.storage
-        .from('library')
-        .getPublicUrl(fileName);
-      
-      const imageUrl = urlData.publicUrl;
-      console.log('Adding library image to canvas:', fileName, imageUrl);
-      
       const canvasDimensions = canvasRef ? {
         width: canvasRef.clientWidth,
         height: canvasRef.clientHeight
       } : undefined;
       
       const initialData = await getInitialLibraryImageData(
-        imageUrl,
+        image.image_path,
         canvasDimensions?.width,
         canvasDimensions?.height
       );
       
       const newElement = addElement('image', {
         ...initialData,
-        src: imageUrl,
+        src: image.image_path,
         name: image.name,
         storageType: 'cloud',
         cloudStorage: {
-          url: imageUrl,
-          path: `library/${fileName}`
+          url: image.image_path,
+          path: image.image_path.replace(
+            `https://dmwwgrbleohkopoqupzo.supabase.co/storage/v1/object/public/`,
+            ''
+          )
         }
       });
       
       processLibraryImageInBackground(
-        imageUrl,
+        image.image_path,
         newElement,
         (updates) => updateElement(newElement.id, updates)
       );
@@ -148,23 +138,21 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     return (
       <div className="text-center py-8 flex flex-col items-center gap-4">
         <div className="text-muted-foreground">
-          No images available in library. Try uploading an image to the library bucket.
+          No images available in library
         </div>
-        <div className="flex gap-2">
-          <Button onClick={handleRefreshLibrary} variant="outline" className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" />
-            Refresh Library
-          </Button>
-          <UploadExampleButton />
-        </div>
+        <Button onClick={handleRefreshLibrary} variant="outline" className="flex items-center gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Refresh Library
+        </Button>
       </div>
     );
   }
 
+  const validImages = images.filter(image => !brokenImages.has(image.id));
+
   return (
     <div className="space-y-4 h-full flex flex-col">
-      <div className="flex justify-between items-center pb-2 border-b flex-shrink-0">
-        <UploadExampleButton />
+      <div className="flex justify-end pb-2 border-b flex-shrink-0">
         <Button
           size="sm"
           variant="outline" 
@@ -177,57 +165,47 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         </Button>
       </div>
       
-      <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-          {images?.map((image) => {
-            // Get filename - prefer file_name field, fallback to extracting from image_path
-            const fileName = image.file_name || image.image_path?.split('/').pop() || '';
-            
-            if (!fileName) {
-              console.log('Skipping image without filename:', image);
-              return null;
-            }
-            
-            // Generate the correct URL for display
-            const { data: urlData } = supabase.storage
-              .from('library')
-              .getPublicUrl(fileName);
-            
-            const displayUrl = urlData.publicUrl;
-            console.log('Rendering image:', image.name, 'with URL:', displayUrl);
-            
-            return (
+      {validImages.length === 0 ? (
+        <div className="text-center py-8 text-muted-foreground">
+          All images appear to be broken. Try syncing the library.
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
+            {images?.map((image) => (
               <button
                 key={image.id}
                 onClick={() => handleImageClick(image)}
-                className="aspect-square relative group overflow-hidden rounded-lg border hover:border-primary transition-colors"
+                className={cn(
+                  "aspect-square relative group overflow-hidden rounded-lg border transition-colors",
+                  brokenImages.has(image.id)
+                    ? "opacity-40 cursor-not-allowed border-destructive" 
+                    : "hover:border-primary"
+                )}
+                disabled={brokenImages.has(image.id)}
               >
+                {brokenImages.has(image.id) ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+                    <AlertCircle className="w-8 h-8 text-destructive" />
+                  </div>
+                ) : null}
+                
                 <img
-                  src={displayUrl}
+                  src={image.image_path}
                   alt={image.name}
                   className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
                   onError={() => {
-                    console.log('Image failed to load:', fileName, displayUrl);
                     setBrokenImages(prev => new Set(prev).add(image.id));
-                  }}
-                  onLoad={() => {
-                    console.log('Image loaded successfully:', fileName);
                   }}
                 />
                 <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
                   <Cloud className="w-3 h-3 text-white" />
                 </div>
-                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs">
-                  <div className="font-medium truncate">{image.name}</div>
-                  {image.description && (
-                    <div className="text-gray-300 truncate">{image.description}</div>
-                  )}
-                </div>
               </button>
-            );
-          })}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 };

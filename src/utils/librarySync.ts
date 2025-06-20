@@ -11,29 +11,25 @@ interface StorageItem {
   metadata: Record<string, any>;
 }
 
-// Basic interface that works with existing columns
 interface LibraryElement {
   id: string;
   name: string;
   image_path: string;
-  file_name?: string;
-  description?: string;
-  category?: string;
-  created_at?: string;
+  created_at: string;
   created_by?: string;
 }
 
 /**
- * Synchronizes the library_elements table with actual files in the library storage bucket
+ * Synchronizes the library_elements table with actual files in storage
+ * - Removes database entries for files that don't exist in storage
+ * - Updates database with files that exist in storage but not in database
  */
 export const syncLibraryWithStorage = async (): Promise<boolean> => {
   try {
-    console.log('Starting library sync...');
-    
-    // Step 1: Get all files from the library storage bucket
+    // Step 1: Get all files from storage
     const { data: storageFiles, error: storageError } = await supabase
       .storage
-      .from('library')
+      .from('library_elements')
       .list();
     
     if (storageError) {
@@ -41,8 +37,6 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
       toast.error('Failed to fetch storage files');
       return false;
     }
-
-    console.log('Found storage files:', storageFiles?.length || 0);
 
     // Step 2: Get all entries from library_elements table
     const { data: libraryElements, error: dbError } = await supabase
@@ -55,22 +49,15 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
       return false;
     }
 
-    console.log('Found library elements in DB:', libraryElements?.length || 0);
-
-    const typedLibraryElements = libraryElements as LibraryElement[];
-
     // Step 3: Find missing files (in DB but not in storage)
-    const storageFileNames = storageFiles?.map(file => file.name) || [];
-    const missingInStorage = typedLibraryElements.filter(element => {
-      const fileName = element.file_name || element.image_path?.split('/').pop() || '';
+    const storageFileNames = storageFiles.map(file => file.name);
+    const missingInStorage = libraryElements.filter(element => {
+      const fileName = element.image_path.split('/').pop();
       return fileName && !storageFileNames.includes(fileName);
     });
 
-    console.log('Files missing from storage:', missingInStorage.length);
-
     // Step 4: Delete entries for missing files
     for (const element of missingInStorage) {
-      console.log('Deleting DB entry for missing file:', element.file_name || element.name);
       const { error } = await supabase
         .from('library_elements')
         .delete()
@@ -82,80 +69,30 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
     }
 
     // Step 5: Find files in storage that aren't in the DB
-    const dbFileNames = typedLibraryElements
-      .map(element => element.file_name || element.image_path?.split('/').pop() || '')
-      .filter(Boolean);
+    const dbFilePaths = libraryElements.map(element => {
+      return element.image_path.split('/').pop();
+    });
     
-    const missingInDb = storageFiles?.filter(file => 
-      !dbFileNames.includes(file.name) && 
-      (file.name.toLowerCase().endsWith('.png') || 
-       file.name.toLowerCase().endsWith('.jpg') || 
-       file.name.toLowerCase().endsWith('.jpeg') ||
-       file.name.toLowerCase().endsWith('.gif') ||
-       file.name.toLowerCase().endsWith('.webp'))
-    ) || [];
-
-    console.log('Files missing from DB:', missingInDb.length);
+    const missingInDb = storageFiles.filter(file => 
+      !dbFilePaths.includes(file.name)
+    );
 
     // Step 6: Add entries for files that exist in storage but not in DB
     for (const file of missingInDb) {
-      console.log('Adding DB entry for file:', file.name);
-      
       const { data: urlData } = supabase.storage
-        .from('library')
+        .from('library_elements')
         .getPublicUrl(file.name);
 
       if (urlData) {
-        // Create a display name from filename
-        const displayName = file.name
-          .replace(/\.[^/.]+$/, '') // Remove extension
-          .replace(/[-_]/g, ' ') // Replace dashes and underscores with spaces
-          .replace(/\b\w/g, l => l.toUpperCase()); // Capitalize first letter of each word
-
-        // Start with basic required fields
-        const insertData: any = {
-          name: displayName,
-          image_path: urlData.publicUrl
-        };
-
-        // Try to add optional fields if they exist in the table
-        try {
-          insertData.file_name = file.name;
-          insertData.description = `File synced from storage: ${file.name}`;
-          insertData.category = 'synced';
-        } catch (e) {
-          console.log('Adding basic fields only, optional columns may not exist');
-        }
-
-        console.log('Inserting entry for file:', file.name, 'with data:', insertData);
-
         const { error } = await supabase
           .from('library_elements')
-          .insert(insertData);
+          .insert({
+            name: file.name.substring(0, 50),
+            image_path: urlData.publicUrl,
+          });
         
         if (error) {
           console.error(`Error inserting entry for ${file.name}:`, error);
-          
-          // If the error is about missing columns, try with just basic fields
-          if (error.message.includes('column') && error.message.includes('does not exist')) {
-            console.log('Retrying with basic fields only...');
-            const basicInsertData = {
-              name: displayName,
-              image_path: urlData.publicUrl
-            };
-            
-            const { error: retryError } = await supabase
-              .from('library_elements')
-              .insert(basicInsertData);
-              
-            if (retryError) {
-              console.error(`Failed to insert even basic entry for ${file.name}:`, retryError);
-            } else {
-              console.log(`Successfully added basic DB entry for ${file.name}`);
-            }
-          }
-        } else {
-          console.log(`Successfully added DB entry for ${file.name}`);
         }
       }
     }
@@ -164,9 +101,6 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
     const totalChanges = missingInStorage.length + missingInDb.length;
     if (totalChanges > 0) {
       toast.success(`Library synchronized: ${missingInStorage.length} removed, ${missingInDb.length} added`);
-      console.log(`Sync complete: ${missingInStorage.length} removed, ${missingInDb.length} added`);
-    } else {
-      console.log('Library already in sync');
     }
     
     return true;
@@ -178,16 +112,20 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
 };
 
 /**
- * Checks if an image still exists in the library storage bucket
+ * Checks if an image still exists in storage
  */
-export const verifyImageExists = async (fileName: string): Promise<boolean> => {
+export const verifyImageExists = async (imagePath: string): Promise<boolean> => {
   try {
+    if (!imagePath) return false;
+    
+    // Extract the file name from the path
+    const fileName = imagePath.split('/').pop();
     if (!fileName) return false;
     
-    // Check if the file exists in the library storage bucket
+    // Check if the file exists in storage
     const { data, error } = await supabase
       .storage
-      .from('library')
+      .from('library_elements')
       .list('', {
         search: fileName
       });
