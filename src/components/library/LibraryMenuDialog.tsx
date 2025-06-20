@@ -87,53 +87,56 @@ export const LibraryMenuDialog: React.FC<LibraryMenuDialogProps> = ({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className={cn(
-        "p-0 gap-0 overflow-hidden",
-        isMobile ? "w-[95vw] max-w-full" : "max-w-4xl w-[90vw]"
-      )} style={{ height: "600px" }}>
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between p-4 border-b">
-            <DialogHeader className="flex flex-row items-center gap-4">
-              <DialogTitle className="text-xl text-canvas-purple font-bold">
-                Library Elements
-              </DialogTitle>
-            </DialogHeader>
-            <DialogClose asChild>
-              <button
-                className="text-gray-700 hover:text-canvas-purple transition-colors"
-                aria-label="Close menu"
-              >
-                <X size={24} />
-              </button>
-            </DialogClose>
-          </div>
+        "p-0 gap-0 overflow-hidden flex flex-col",
+        isMobile ? "w-[95vw] max-w-full h-[90vh]" : "max-w-4xl w-[90vw] h-[80vh]"
+      )}>
+        <div className="flex items-center justify-between p-4 border-b flex-shrink-0">
+          <DialogHeader className="flex flex-row items-center gap-4">
+            <DialogTitle className="text-xl text-canvas-purple font-bold">
+              Library Elements
+            </DialogTitle>
+          </DialogHeader>
+          <DialogClose asChild>
+            <button
+              className="text-gray-700 hover:text-canvas-purple transition-colors"
+              aria-label="Close menu"
+            >
+              <X size={24} />
+            </button>
+          </DialogClose>
+        </div>
 
-          <div className="flex-1 flex flex-col">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-              <TabsList className="border-b mx-4">
-                <TabsTrigger value="library">Browse Library</TabsTrigger>
-                <TabsTrigger value="upload">Upload</TabsTrigger>
-                {isAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
-              </TabsList>
-              
-              <ScrollArea className="flex-1">
-                <DesignProvider initialState={emptyInitialState}>
-                  <TabsContent value="library" className="p-4 h-full">
-                    <LibraryView onClose={() => onOpenChange(false)} autoSync={true} />
+        <div className="flex-1 flex flex-col min-h-0">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+            <TabsList className="border-b mx-4 flex-shrink-0">
+              <TabsTrigger value="library">Browse Library</TabsTrigger>
+              <TabsTrigger value="upload">Upload</TabsTrigger>
+              {isAdmin && <TabsTrigger value="admin">Admin</TabsTrigger>}
+            </TabsList>
+            
+            <div className="flex-1 min-h-0">
+              <DesignProvider initialState={emptyInitialState}>
+                <TabsContent value="library" className="h-full m-0">
+                  <LibraryView onClose={() => onOpenChange(false)} autoSync={true} />
+                </TabsContent>
+                <TabsContent value="upload" className="h-full m-0">
+                  <ScrollArea className="h-full">
+                    <div className="p-4">
+                      <PublicUploader />
+                    </div>
+                  </ScrollArea>
+                </TabsContent>
+                {isAdmin && (
+                  <TabsContent value="admin" className="h-full m-0">
+                    <AdminLibraryView onClose={() => onOpenChange(false)} />
                   </TabsContent>
-                  <TabsContent value="upload" className="p-4 h-full">
-                    <PublicUploader />
-                  </TabsContent>
-                  {isAdmin && (
-                    <TabsContent value="admin" className="p-4 h-full">
-                      <AdminLibraryView onClose={() => onOpenChange(false)} />
-                    </TabsContent>
-                  )}
-                </DesignProvider>
-              </ScrollArea>
-            </Tabs>
-          </div>
+                )}
+              </DesignProvider>
+            </div>
+          </Tabs>
         </div>
       </DialogContent>
     </Dialog>
   );
 };
+

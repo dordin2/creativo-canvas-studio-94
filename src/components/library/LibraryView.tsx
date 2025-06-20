@@ -1,4 +1,5 @@
 
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
@@ -149,13 +150,13 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
   const validImages = images.filter(image => !brokenImages.has(image.id));
 
   return (
-    <div className="space-y-4 h-full flex flex-col">
+    <div className="h-full w-full">
       {validImages.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
           All images appear to be broken. Try refreshing the page.
         </div>
       ) : (
-        <div className="flex-1 overflow-y-auto">
+        <div className="h-full overflow-y-auto overscroll-contain">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
             {images?.map((image) => (
               <button
@@ -194,3 +195,4 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     </div>
   );
 };
+
