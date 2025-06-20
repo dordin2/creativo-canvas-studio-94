@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
@@ -12,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { UploadExampleButton } from "./UploadExampleButton";
 import { useState } from "react";
 
-// Extended interface that includes the new fields that may not be in the auto-generated types yet
-interface ExtendedLibraryImage {
+// Basic interface that works with existing columns
+interface LibraryImage {
   id: string;
   image_path: string;
   name: string;
@@ -49,35 +50,11 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         throw error;
       }
       
-      console.log('Fetched library images:', data?.length || 0);
+      console.log('Fetched library images:', data?.length || 0, data);
       
-      // Cast to our extended interface to handle the new fields
-      const extendedData = data as ExtendedLibraryImage[];
-      
-      // Pre-check for broken images on load
-      if (extendedData) {
-        const broken = new Set<string>();
-        for (const image of extendedData) {
-          try {
-            const fileName = image.file_name || image.image_path?.split('/').pop() || '';
-            if (fileName) {
-              const exists = await verifyImageExists(fileName);
-              if (!exists) {
-                console.log(`Image ${fileName} not found in storage`);
-                broken.add(image.id);
-              }
-            }
-          } catch (e) {
-            console.error(`Error checking image ${image.id}:`, e);
-            broken.add(image.id);
-          }
-        }
-        setBrokenImages(broken);
-      }
-      
-      return extendedData;
+      return data as LibraryImage[];
     },
-    staleTime: 0 // Always refetch when component mounts
+    staleTime: 0
   });
 
   const handleRefreshLibrary = async () => {
@@ -93,8 +70,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     }
   };
   
-  const handleImageClick = async (image: ExtendedLibraryImage) => {
-    // Don't allow clicking on broken images
+  const handleImageClick = async (image: LibraryImage) => {
     if (brokenImages.has(image.id)) {
       return;
     }
@@ -108,7 +84,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         return;
       }
       
-      // Generate the correct URL for the new library bucket
+      // Generate the correct URL for the library bucket
       const { data: urlData } = supabase.storage
         .from('library')
         .getPublicUrl(fileName);
@@ -185,8 +161,6 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     );
   }
 
-  const validImages = images.filter(image => !brokenImages.has(image.id));
-
   return (
     <div className="space-y-4 h-full flex flex-col">
       <div className="flex justify-between items-center pb-2 border-b flex-shrink-0">
@@ -203,73 +177,57 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         </Button>
       </div>
       
-      {validImages.length === 0 ? (
-        <div className="text-center py-8 text-muted-foreground">
-          {images.length > 0 
-            ? "All images appear to be broken. Try syncing the library."
-            : "No valid images found. Upload images to the library bucket and sync."
-          }
-        </div>
-      ) : (
-        <div className="flex-1 overflow-y-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-            {images?.map((image) => {
-              // Get filename - prefer file_name field, fallback to extracting from image_path
-              const fileName = image.file_name || image.image_path?.split('/').pop() || '';
-              
-              if (!fileName) {
-                return null;
-              }
-              
-              // Generate the correct URL for display
-              const { data: urlData } = supabase.storage
-                .from('library')
-                .getPublicUrl(fileName);
-              
-              const displayUrl = urlData.publicUrl;
-              
-              return (
-                <button
-                  key={image.id}
-                  onClick={() => handleImageClick(image)}
-                  className={cn(
-                    "aspect-square relative group overflow-hidden rounded-lg border transition-colors",
-                    brokenImages.has(image.id)
-                      ? "opacity-40 cursor-not-allowed border-destructive" 
-                      : "hover:border-primary"
+      <div className="flex-1 overflow-y-auto">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
+          {images?.map((image) => {
+            // Get filename - prefer file_name field, fallback to extracting from image_path
+            const fileName = image.file_name || image.image_path?.split('/').pop() || '';
+            
+            if (!fileName) {
+              console.log('Skipping image without filename:', image);
+              return null;
+            }
+            
+            // Generate the correct URL for display
+            const { data: urlData } = supabase.storage
+              .from('library')
+              .getPublicUrl(fileName);
+            
+            const displayUrl = urlData.publicUrl;
+            console.log('Rendering image:', image.name, 'with URL:', displayUrl);
+            
+            return (
+              <button
+                key={image.id}
+                onClick={() => handleImageClick(image)}
+                className="aspect-square relative group overflow-hidden rounded-lg border hover:border-primary transition-colors"
+              >
+                <img
+                  src={displayUrl}
+                  alt={image.name}
+                  className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                  onError={() => {
+                    console.log('Image failed to load:', fileName, displayUrl);
+                    setBrokenImages(prev => new Set(prev).add(image.id));
+                  }}
+                  onLoad={() => {
+                    console.log('Image loaded successfully:', fileName);
+                  }}
+                />
+                <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
+                  <Cloud className="w-3 h-3 text-white" />
+                </div>
+                <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs">
+                  <div className="font-medium truncate">{image.name}</div>
+                  {image.description && (
+                    <div className="text-gray-300 truncate">{image.description}</div>
                   )}
-                  disabled={brokenImages.has(image.id)}
-                >
-                  {brokenImages.has(image.id) ? (
-                    <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-                      <AlertCircle className="w-8 h-8 text-destructive" />
-                    </div>
-                  ) : null}
-                  
-                  <img
-                    src={displayUrl}
-                    alt={image.name}
-                    className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
-                    onError={() => {
-                      console.log('Image failed to load:', fileName);
-                      setBrokenImages(prev => new Set(prev).add(image.id));
-                    }}
-                  />
-                  <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
-                    <Cloud className="w-3 h-3 text-white" />
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs">
-                    <div className="font-medium truncate">{image.name}</div>
-                    {image.description && (
-                      <div className="text-gray-300 truncate">{image.description}</div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                </div>
+              </button>
+            );
+          })}
         </div>
-      )}
+      </div>
     </div>
   );
 };

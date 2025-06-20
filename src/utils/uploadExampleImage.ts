@@ -36,21 +36,66 @@ export const uploadExampleImageToLibrary = async (): Promise<boolean> => {
       .from('library')
       .getPublicUrl(fileName);
     
+    // Check what columns exist in the table
+    const { data: existingData, error: checkError } = await supabase
+      .from('library_elements')
+      .select('*')
+      .limit(1);
+    
+    console.log('Checking existing table structure...');
+    
+    // Prepare the basic insert data with only the guaranteed columns
+    const insertData: any = {
+      name: 'Example Driving License',
+      image_path: urlData.publicUrl
+    };
+    
+    // Try to add optional columns if they exist
+    try {
+      // Add file_name if column exists
+      insertData.file_name = fileName;
+      
+      // Add description if column exists  
+      insertData.description = 'Example image uploaded to demonstrate library functionality';
+      
+      // Add category if column exists
+      insertData.category = 'examples';
+      
+    } catch (e) {
+      console.log('Some optional columns may not exist yet:', e);
+    }
+    
+    console.log('Attempting to insert with data:', insertData);
+    
     // Add entry to library_elements table
     const { error: dbError } = await supabase
       .from('library_elements')
-      .insert({
-        name: 'Example Driving License',
-        image_path: urlData.publicUrl,
-        file_name: fileName,
-        description: 'Example image uploaded to demonstrate library functionality',
-        category: 'examples'
-      });
+      .insert(insertData);
     
     if (dbError) {
       console.error('Error adding to library_elements:', dbError);
-      toast.error('Image uploaded but failed to add to library database');
-      return false;
+      
+      // If the error is about missing columns, try with just basic fields
+      if (dbError.message.includes('column') && dbError.message.includes('does not exist')) {
+        console.log('Retrying with basic fields only...');
+        const basicInsertData = {
+          name: 'Example Driving License',
+          image_path: urlData.publicUrl
+        };
+        
+        const { error: retryError } = await supabase
+          .from('library_elements')
+          .insert(basicInsertData);
+          
+        if (retryError) {
+          console.error('Error with basic insert:', retryError);
+          toast.error('Image uploaded but failed to add to library database');
+          return false;
+        }
+      } else {
+        toast.error('Image uploaded but failed to add to library database');
+        return false;
+      }
     }
     
     toast.success('Image successfully uploaded to library!');

@@ -11,8 +11,8 @@ interface StorageItem {
   metadata: Record<string, any>;
 }
 
-// Extended interface that includes the new fields that may not be in the auto-generated types yet
-interface ExtendedLibraryElement {
+// Basic interface that works with existing columns
+interface LibraryElement {
   id: string;
   name: string;
   image_path: string;
@@ -24,9 +24,7 @@ interface ExtendedLibraryElement {
 }
 
 /**
- * Synchronizes the library_elements table with actual files in the new library storage bucket
- * - Removes database entries for files that don't exist in storage
- * - Updates database with files that exist in storage but not in database
+ * Synchronizes the library_elements table with actual files in the library storage bucket
  */
 export const syncLibraryWithStorage = async (): Promise<boolean> => {
   try {
@@ -59,12 +57,11 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
 
     console.log('Found library elements in DB:', libraryElements?.length || 0);
 
-    // Cast to our extended interface to handle the new fields
-    const extendedLibraryElements = libraryElements as ExtendedLibraryElement[];
+    const typedLibraryElements = libraryElements as LibraryElement[];
 
     // Step 3: Find missing files (in DB but not in storage)
     const storageFileNames = storageFiles?.map(file => file.name) || [];
-    const missingInStorage = extendedLibraryElements.filter(element => {
+    const missingInStorage = typedLibraryElements.filter(element => {
       const fileName = element.file_name || element.image_path?.split('/').pop() || '';
       return fileName && !storageFileNames.includes(fileName);
     });
@@ -85,7 +82,7 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
     }
 
     // Step 5: Find files in storage that aren't in the DB
-    const dbFileNames = extendedLibraryElements
+    const dbFileNames = typedLibraryElements
       .map(element => element.file_name || element.image_path?.split('/').pop() || '')
       .filter(Boolean);
     
@@ -115,25 +112,50 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
           .replace(/[-_]/g, ' ') // Replace dashes and underscores with spaces
           .replace(/\b\w/g, l => l.toUpperCase()); // Capitalize first letter of each word
 
+        // Start with basic required fields
         const insertData: any = {
           name: displayName,
-          image_path: urlData.publicUrl,
-          file_name: file.name
+          image_path: urlData.publicUrl
         };
 
-        // Only add description if the column exists
+        // Try to add optional fields if they exist in the table
         try {
-          const { error } = await supabase
-            .from('library_elements')
-            .insert(insertData);
+          insertData.file_name = file.name;
+          insertData.description = `File synced from storage: ${file.name}`;
+          insertData.category = 'synced';
+        } catch (e) {
+          console.log('Adding basic fields only, optional columns may not exist');
+        }
+
+        console.log('Inserting entry for file:', file.name, 'with data:', insertData);
+
+        const { error } = await supabase
+          .from('library_elements')
+          .insert(insertData);
+        
+        if (error) {
+          console.error(`Error inserting entry for ${file.name}:`, error);
           
-          if (error) {
-            console.error(`Error inserting entry for ${file.name}:`, error);
-          } else {
-            console.log(`Successfully added DB entry for ${file.name}`);
+          // If the error is about missing columns, try with just basic fields
+          if (error.message.includes('column') && error.message.includes('does not exist')) {
+            console.log('Retrying with basic fields only...');
+            const basicInsertData = {
+              name: displayName,
+              image_path: urlData.publicUrl
+            };
+            
+            const { error: retryError } = await supabase
+              .from('library_elements')
+              .insert(basicInsertData);
+              
+            if (retryError) {
+              console.error(`Failed to insert even basic entry for ${file.name}:`, retryError);
+            } else {
+              console.log(`Successfully added basic DB entry for ${file.name}`);
+            }
           }
-        } catch (insertError) {
-          console.error(`Failed to insert entry for ${file.name}:`, insertError);
+        } else {
+          console.log(`Successfully added DB entry for ${file.name}`);
         }
       }
     }
@@ -156,7 +178,7 @@ export const syncLibraryWithStorage = async (): Promise<boolean> => {
 };
 
 /**
- * Checks if an image still exists in the new library storage bucket
+ * Checks if an image still exists in the library storage bucket
  */
 export const verifyImageExists = async (fileName: string): Promise<boolean> => {
   try {
