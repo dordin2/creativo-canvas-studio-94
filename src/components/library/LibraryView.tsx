@@ -1,21 +1,23 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
-import { Loader2, Cloud, RefreshCw, UploadCloud, AlertCircle } from "lucide-react";
+import { Loader2, Cloud, RefreshCw, AlertCircle } from "lucide-react";
 import { 
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
 } from "@/utils/libraryImageProcessor";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/context/AuthContext";
 import { syncLibraryWithStorage, verifyImageExists } from "@/utils/librarySync";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 interface LibraryImage {
   id: string;
   image_path: string;
   name: string;
+  file_name: string;
+  description?: string;
 }
 
 interface LibraryViewProps {
@@ -25,7 +27,6 @@ interface LibraryViewProps {
 
 export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => {
   const { addElement, updateElement, canvasRef, isGameMode } = useDesignState();
-  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [syncingLibrary, setSyncingLibrary] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
@@ -45,9 +46,11 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         const broken = new Set<string>();
         for (const image of data) {
           try {
-            const exists = await verifyImageExists(image.image_path);
-            if (!exists) {
-              broken.add(image.id);
+            if (image.file_name) {
+              const exists = await verifyImageExists(image.file_name);
+              if (!exists) {
+                broken.add(image.id);
+              }
             }
           } catch (e) {
             console.error(`Error checking image ${image.id}:`, e);
@@ -79,33 +82,37 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     }
     
     try {
+      // Generate the correct URL for the new library bucket
+      const { data: urlData } = supabase.storage
+        .from('library')
+        .getPublicUrl(image.file_name);
+      
+      const imageUrl = urlData.publicUrl;
+      
       const canvasDimensions = canvasRef ? {
         width: canvasRef.clientWidth,
         height: canvasRef.clientHeight
       } : undefined;
       
       const initialData = await getInitialLibraryImageData(
-        image.image_path,
+        imageUrl,
         canvasDimensions?.width,
         canvasDimensions?.height
       );
       
       const newElement = addElement('image', {
         ...initialData,
-        src: image.image_path,
+        src: imageUrl,
         name: image.name,
         storageType: 'cloud',
         cloudStorage: {
-          url: image.image_path,
-          path: image.image_path.replace(
-            `https://dmwwgrbleohkopoqupzo.supabase.co/storage/v1/object/public/`,
-            ''
-          )
+          url: imageUrl,
+          path: `library/${image.file_name}`
         }
       });
       
       processLibraryImageInBackground(
-        image.image_path,
+        imageUrl,
         newElement,
         (updates) => updateElement(newElement.id, updates)
       );
@@ -172,37 +179,52 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
       ) : (
         <div className="flex-1 overflow-y-auto">
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 p-4">
-            {images?.map((image) => (
-              <button
-                key={image.id}
-                onClick={() => handleImageClick(image)}
-                className={cn(
-                  "aspect-square relative group overflow-hidden rounded-lg border transition-colors",
-                  brokenImages.has(image.id)
-                    ? "opacity-40 cursor-not-allowed border-destructive" 
-                    : "hover:border-primary"
-                )}
-                disabled={brokenImages.has(image.id)}
-              >
-                {brokenImages.has(image.id) ? (
-                  <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
-                    <AlertCircle className="w-8 h-8 text-destructive" />
+            {images?.map((image) => {
+              // Generate the correct URL for display
+              const { data: urlData } = supabase.storage
+                .from('library')
+                .getPublicUrl(image.file_name);
+              
+              const displayUrl = urlData.publicUrl;
+              
+              return (
+                <button
+                  key={image.id}
+                  onClick={() => handleImageClick(image)}
+                  className={cn(
+                    "aspect-square relative group overflow-hidden rounded-lg border transition-colors",
+                    brokenImages.has(image.id)
+                      ? "opacity-40 cursor-not-allowed border-destructive" 
+                      : "hover:border-primary"
+                  )}
+                  disabled={brokenImages.has(image.id)}
+                >
+                  {brokenImages.has(image.id) ? (
+                    <div className="absolute inset-0 flex items-center justify-center bg-muted/30">
+                      <AlertCircle className="w-8 h-8 text-destructive" />
+                    </div>
+                  ) : null}
+                  
+                  <img
+                    src={displayUrl}
+                    alt={image.name}
+                    className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
+                    onError={() => {
+                      setBrokenImages(prev => new Set(prev).add(image.id));
+                    }}
+                  />
+                  <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
+                    <Cloud className="w-3 h-3 text-white" />
                   </div>
-                ) : null}
-                
-                <img
-                  src={image.image_path}
-                  alt={image.name}
-                  className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
-                  onError={() => {
-                    setBrokenImages(prev => new Set(prev).add(image.id));
-                  }}
-                />
-                <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
-                  <Cloud className="w-3 h-3 text-white" />
-                </div>
-              </button>
-            ))}
+                  <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/70 to-transparent text-white text-xs">
+                    <div className="font-medium truncate">{image.name}</div>
+                    {image.description && (
+                      <div className="text-gray-300 truncate">{image.description}</div>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       )}
