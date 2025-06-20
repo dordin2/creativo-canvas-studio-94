@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
-import { Loader2, Cloud, RefreshCw, UploadCloud, AlertCircle, ArrowRightLeft } from "lucide-react";
+import { Loader2, Cloud, RefreshCw, UploadCloud, AlertCircle } from "lucide-react";
 import { 
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
@@ -9,7 +9,6 @@ import {
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/context/AuthContext";
 import { syncLibraryWithStorage, verifyImageExists } from "@/utils/librarySync";
-import { migrateExistingLibraryImages, checkMigrationNeeded } from "@/utils/migrateLibraryImages";
 import { Button } from "@/components/ui/button";
 import { useState, useEffect } from "react";
 
@@ -30,8 +29,6 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
   const queryClient = useQueryClient();
   const [syncingLibrary, setSyncingLibrary] = useState(false);
   const [brokenImages, setBrokenImages] = useState<Set<string>>(new Set());
-  const [isMigrating, setIsMigrating] = useState(false);
-  const [migrationNeeded, setMigrationNeeded] = useState(0);
   
   const { data: images, isLoading, isError } = useQuery({
     queryKey: ['library-images'],
@@ -65,15 +62,6 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     staleTime: 0 // Always refetch when component mounts
   });
 
-  // Check if migration is needed
-  useEffect(() => {
-    const checkMigration = async () => {
-      const needed = await checkMigrationNeeded();
-      setMigrationNeeded(needed);
-    };
-    checkMigration();
-  }, [images]);
-
   const handleRefreshLibrary = async () => {
     setSyncingLibrary(true);
     try {
@@ -81,19 +69,6 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
       queryClient.invalidateQueries({ queryKey: ['library-images'] });
     } finally {
       setSyncingLibrary(false);
-    }
-  };
-
-  const handleMigrateImages = async () => {
-    setIsMigrating(true);
-    try {
-      const success = await migrateExistingLibraryImages();
-      if (success) {
-        queryClient.invalidateQueries({ queryKey: ['library-images'] });
-        setMigrationNeeded(0);
-      }
-    } finally {
-      setIsMigrating(false);
     }
   };
   
@@ -177,32 +152,17 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
 
   return (
     <div className="space-y-4 h-full flex flex-col">
-      <div className="flex justify-between items-center pb-2 border-b flex-shrink-0">
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline" 
-            onClick={handleRefreshLibrary}
-            disabled={syncingLibrary || isLoading}
-            className="flex items-center gap-2"
-          >
-            <RefreshCw className={cn("w-4 h-4", syncingLibrary && "animate-spin")} />
-            Sync Library
-          </Button>
-          
-          {migrationNeeded > 0 && (
-            <Button
-              size="sm"
-              variant="default"
-              onClick={handleMigrateImages}
-              disabled={isMigrating}
-              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
-            >
-              <ArrowRightLeft className={cn("w-4 h-4", isMigrating && "animate-spin")} />
-              {isMigrating ? 'Migrating...' : `Migrate ${migrationNeeded} images`}
-            </Button>
-          )}
-        </div>
+      <div className="flex justify-end pb-2 border-b flex-shrink-0">
+        <Button
+          size="sm"
+          variant="outline" 
+          onClick={handleRefreshLibrary}
+          disabled={syncingLibrary || isLoading}
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className={cn("w-4 h-4", syncingLibrary && "animate-spin")} />
+          Sync Library
+        </Button>
       </div>
       
       {validImages.length === 0 ? (
@@ -239,11 +199,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
                   }}
                 />
                 <div className="absolute bottom-1 right-1 bg-black/50 p-1 rounded-md opacity-70 group-hover:opacity-100">
-                  {image.image_path.includes('user_uploads') ? (
-                    <Cloud className="w-3 h-3 text-green-400" />
-                  ) : (
-                    <Cloud className="w-3 h-3 text-white" />
-                  )}
+                  <Cloud className="w-3 h-3 text-white" />
                 </div>
               </button>
             ))}

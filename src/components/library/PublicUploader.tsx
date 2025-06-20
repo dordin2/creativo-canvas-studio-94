@@ -103,38 +103,17 @@ export function PublicUploader() {
         .getPublicUrl(safeFileName);
 
       // Insert metadata into library_elements
-      const { data: insertData, error: insertError } = await supabase
+      const { error: insertError } = await supabase
         .from('library_elements')
         .insert({
           name: imageName,
           image_path: urlData.publicUrl,
           created_by: user?.id || null
-        })
-        .select()
-        .single();
+        });
 
       if (insertError) throw insertError;
 
-      // Trigger image processing to move to user_uploads
-      try {
-        const { error: processError } = await supabase.functions.invoke('process-library-image', {
-          body: {
-            imagePath: urlData.publicUrl,
-            libraryElementId: insertData.id
-          }
-        });
-
-        if (processError) {
-          console.warn('Image processing failed:', processError);
-          toast.success('Image uploaded but processing failed - will be processed later');
-        } else {
-          toast.success('Image uploaded and processed successfully');
-        }
-      } catch (processError) {
-        console.warn('Failed to trigger image processing:', processError);
-        toast.success('Image uploaded but processing failed - will be processed later');
-      }
-
+      toast.success('Image uploaded successfully');
       queryClient.invalidateQueries({ queryKey: ['library-images'] });
       setImageFile(null);
       setImageName('');
