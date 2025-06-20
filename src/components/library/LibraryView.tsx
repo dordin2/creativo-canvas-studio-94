@@ -1,8 +1,7 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
-import { Loader2, Cloud, RefreshCw, UploadCloud, AlertCircle, Migrate } from "lucide-react";
+import { Loader2, Cloud, RefreshCw, UploadCloud, AlertCircle, ArrowRightLeft } from "lucide-react";
 import { 
   getInitialLibraryImageData, 
   processLibraryImageInBackground 
@@ -199,7 +198,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
               disabled={isMigrating}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700"
             >
-              <Migrate className={cn("w-4 h-4", isMigrating && "animate-spin")} />
+              <ArrowRightLeft className={cn("w-4 h-4", isMigrating && "animate-spin")} />
               {isMigrating ? 'Migrating...' : `Migrate ${migrationNeeded} images`}
             </Button>
           )}
