@@ -1,4 +1,3 @@
-
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
@@ -10,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { syncLibraryWithStorage, verifyImageExists } from "@/utils/librarySync";
 import { Button } from "@/components/ui/button";
+import { UploadExampleButton } from "./UploadExampleButton";
 import { useState } from "react";
 
 // Extended interface that includes the new fields that may not be in the auto-generated types yet
@@ -174,10 +174,13 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         <div className="text-muted-foreground">
           No images available in library. Try uploading an image to the library bucket.
         </div>
-        <Button onClick={handleRefreshLibrary} variant="outline" className="flex items-center gap-2">
-          <RefreshCw className="w-4 h-4" />
-          Refresh Library
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={handleRefreshLibrary} variant="outline" className="flex items-center gap-2">
+            <RefreshCw className="w-4 h-4" />
+            Refresh Library
+          </Button>
+          <UploadExampleButton />
+        </div>
       </div>
     );
   }
@@ -186,7 +189,8 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
 
   return (
     <div className="space-y-4 h-full flex flex-col">
-      <div className="flex justify-end pb-2 border-b flex-shrink-0">
+      <div className="flex justify-between items-center pb-2 border-b flex-shrink-0">
+        <UploadExampleButton />
         <Button
           size="sm"
           variant="outline" 
@@ -214,7 +218,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
               const fileName = image.file_name || image.image_path?.split('/').pop() || '';
               
               if (!fileName) {
-                return null; // Skip images without valid filenames
+                return null;
               }
               
               // Generate the correct URL for display
