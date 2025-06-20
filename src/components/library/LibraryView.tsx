@@ -1,3 +1,4 @@
+
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useDesignState } from "@/context/DesignContext";
@@ -37,12 +38,18 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
   const { data: images, isLoading, isError } = useQuery({
     queryKey: ['library-images'],
     queryFn: async () => {
+      console.log('Fetching library images...');
       const { data, error } = await supabase
         .from('library_elements')
         .select('*')
         .order('created_at', { ascending: false });
         
-      if (error) throw error;
+      if (error) {
+        console.error('Error fetching library images:', error);
+        throw error;
+      }
+      
+      console.log('Fetched library images:', data?.length || 0);
       
       // Cast to our extended interface to handle the new fields
       const extendedData = data as ExtendedLibraryImage[];
@@ -56,6 +63,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
             if (fileName) {
               const exists = await verifyImageExists(fileName);
               if (!exists) {
+                console.log(`Image ${fileName} not found in storage`);
                 broken.add(image.id);
               }
             }
@@ -73,10 +81,13 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
   });
 
   const handleRefreshLibrary = async () => {
+    console.log('Manual library refresh triggered');
     setSyncingLibrary(true);
     try {
-      await syncLibraryWithStorage();
-      queryClient.invalidateQueries({ queryKey: ['library-images'] });
+      const success = await syncLibraryWithStorage();
+      if (success) {
+        queryClient.invalidateQueries({ queryKey: ['library-images'] });
+      }
     } finally {
       setSyncingLibrary(false);
     }
@@ -103,6 +114,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
         .getPublicUrl(fileName);
       
       const imageUrl = urlData.publicUrl;
+      console.log('Adding library image to canvas:', fileName, imageUrl);
       
       const canvasDimensions = canvasRef ? {
         width: canvasRef.clientWidth,
@@ -160,7 +172,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
     return (
       <div className="text-center py-8 flex flex-col items-center gap-4">
         <div className="text-muted-foreground">
-          No images available in library
+          No images available in library. Try uploading an image to the library bucket.
         </div>
         <Button onClick={handleRefreshLibrary} variant="outline" className="flex items-center gap-2">
           <RefreshCw className="w-4 h-4" />
@@ -189,7 +201,10 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
       
       {validImages.length === 0 ? (
         <div className="text-center py-8 text-muted-foreground">
-          All images appear to be broken. Try syncing the library.
+          {images.length > 0 
+            ? "All images appear to be broken. Try syncing the library."
+            : "No valid images found. Upload images to the library bucket and sync."
+          }
         </div>
       ) : (
         <div className="flex-1 overflow-y-auto">
@@ -232,6 +247,7 @@ export const LibraryView = ({ onClose, autoSync = false }: LibraryViewProps) => 
                     alt={image.name}
                     className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
                     onError={() => {
+                      console.log('Image failed to load:', fileName);
                       setBrokenImages(prev => new Set(prev).add(image.id));
                     }}
                   />
