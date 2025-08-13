@@ -72,9 +72,13 @@ const ResizeHandles = ({ show, onResizeStart }: ResizeHandlesProps) => {
           transform,
           touchAction: 'none',  // Important for preventing scrolling during touch
         }}
-        onMouseDown={(e) => onResizeStart(e, direction)}
+        onMouseDown={(e) => {
+          e.stopPropagation(); // Prevent canvas from receiving the click
+          onResizeStart(e, direction);
+        }}
         onTouchStart={(e) => {
           e.preventDefault();
+          e.stopPropagation(); // Prevent canvas from receiving the touch event
           const touch = e.touches[0];
           
           // Create a more optimized synthetic event that includes only what's needed
