@@ -23,10 +23,7 @@ export const useElementResize = (element: DesignElement) => {
   const isMobileRef = useRef<boolean>(false);
   const resizeStarted = useRef<boolean>(false);
 
-  // Signal user interaction when resizing starts/stops
-  useEffect(() => {
-    setUserInteraction(isResizing);
-  }, [isResizing, setUserInteraction]);
+  // Don't signal user interaction for resize operations to avoid affecting canvas zoom
 
   const handleResizeStart = (e: React.MouseEvent, direction: string) => {
     e.stopPropagation();
