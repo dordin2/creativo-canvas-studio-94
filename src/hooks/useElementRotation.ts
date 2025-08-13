@@ -17,10 +17,7 @@ export const useElementRotation = (element: DesignElement, elementRef: React.Ref
   const lastMouseAngle = useRef(0);
   const rotationStarted = useRef(false);
 
-  // Signal user interaction when rotating starts/stops
-  useEffect(() => {
-    setUserInteraction(isRotating);
-  }, [isRotating, setUserInteraction]);
+  // Don't signal user interaction for rotation operations to avoid affecting canvas zoom
 
   const handleRotateStart = (e: React.MouseEvent) => {
     e.stopPropagation();
