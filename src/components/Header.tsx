@@ -23,7 +23,8 @@ const Header = () => {
     redo,
     canUndo,
     canRedo,
-    activeElement
+    activeElement,
+    isUserInteracting
   } = useDesignState();
   const {
     t,
@@ -94,7 +95,7 @@ const Header = () => {
     return null;
   };
 
-  // Render smart slider if an element is selected but NOT in interactive mode
+  // Render smart slider if an element is selected (keep visible even during resize)
   const renderSmartSlider = () => {
     if (activeElement && !isInteractiveMode && activeElement.size) {
       return <FloatingSmartSlider element={activeElement} className="mx-4" />;
