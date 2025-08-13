@@ -8,7 +8,8 @@ export const useElementResize = (element: DesignElement) => {
     updateElementWithoutHistory, 
     commitToHistory, 
     startTemporaryOperation,
-    setUserInteraction
+    setUserInteraction,
+    setResizeMode
   } = useDesignState();
   const [isResizing, setIsResizing] = useState(false);
   const [resizeDirection, setResizeDirection] = useState<string | null>(null);
@@ -31,6 +32,7 @@ export const useElementResize = (element: DesignElement) => {
     
     setIsResizing(true);
     setResizeDirection(direction);
+    setResizeMode(true); // Signal to context that we're resizing
     setStartPos({ x: e.clientX, y: e.clientY });
     
     const width = element.size?.width || 100;
@@ -257,6 +259,7 @@ export const useElementResize = (element: DesignElement) => {
       
       setIsResizing(false);
       setResizeDirection(null);
+      setResizeMode(false); // Signal to context that we're done resizing
       resizeStarted.current = false;
     };
 
@@ -289,7 +292,8 @@ export const useElementResize = (element: DesignElement) => {
     originalAspectRatio,
     updateElementWithoutHistory,
     commitToHistory,
-    startTemporaryOperation
+    startTemporaryOperation,
+    setResizeMode
   ]);
 
   return {

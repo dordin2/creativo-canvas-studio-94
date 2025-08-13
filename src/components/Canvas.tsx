@@ -23,7 +23,8 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
     isGameMode,
     isUserInteracting,
     userSetZoom,
-    setManualZoom
+    setManualZoom,
+    isResizing
   } = useDesignState();
   const containerRef = useRef<HTMLDivElement>(null);
   const FIXED_CANVAS_WIDTH = 1600;
@@ -162,7 +163,8 @@ const Canvas = ({ isFullscreen = false, isMobileView = false }: CanvasProps) => 
   };
   
   const handleCanvasClick = (e: React.MouseEvent) => {
-    if (e.target === containerRef.current && !isGameMode) {
+    // Don't deselect element if we're in resize mode or game mode
+    if (e.target === containerRef.current && !isGameMode && !isResizing) {
       setActiveElement(null);
     }
   };

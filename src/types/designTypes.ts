@@ -170,6 +170,7 @@ export interface DesignContextType {
   draggedInventoryItem: DesignElement | null;
   isUserInteracting: boolean;
   userSetZoom: boolean;
+  isResizing: boolean;
   toggleGameMode: () => void;
   toggleInventory: () => void;
   setCanvasRef: (ref: HTMLDivElement) => void;
@@ -202,6 +203,7 @@ export interface DesignContextType {
   resetHistory: (canvases: Canvas[]) => void;
   setUserInteraction: (interacting: boolean) => void;
   setManualZoom: (isManual: boolean) => void;
+  setResizeMode: (resizing: boolean) => void;
 }
 
 export const generateId = (): string => {

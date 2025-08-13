@@ -60,6 +60,7 @@ export const DesignProvider = ({
   // User interaction state for zoom control
   const [isUserInteracting, setIsUserInteracting] = useState<boolean>(false);
   const [userSetZoom, setUserSetZoom] = useState<boolean>(false);
+  const [isResizing, setIsResizing] = useState<boolean>(false);
   
   const { t } = useLanguage();
   const toast = useGameModeToast(isGameMode);
@@ -74,6 +75,10 @@ export const DesignProvider = ({
   
   const setManualZoom = useCallback((isManual: boolean) => {
     setUserSetZoom(isManual);
+  }, []);
+  
+  const setResizeMode = useCallback((resizing: boolean) => {
+    setIsResizing(resizing);
   }, []);
   
   const toggleGameMode = () => {
@@ -704,6 +709,7 @@ export const DesignProvider = ({
     draggedInventoryItem,
     isUserInteracting,
     userSetZoom,
+    isResizing,
     toggleGameMode,
     toggleInventory,
     setCanvasRef,
@@ -735,7 +741,8 @@ export const DesignProvider = ({
     setCanvases,
     resetHistory,
     setUserInteraction,
-    setManualZoom
+    setManualZoom,
+    setResizeMode
   };
   
   return (
