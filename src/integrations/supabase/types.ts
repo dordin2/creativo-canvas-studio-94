@@ -266,6 +266,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_auth_user_directly: {
+        Args: { p_email: string; p_phone: string }
+        Returns: string
+      }
       get_user_role: {
         Args: Record<PropertyKey, never>
         Returns: string
