@@ -79,7 +79,7 @@ const Header = () => {
   // Element settings button - only show if an element is selected and in interactive mode
   const renderElementSettingsButton = () => {
     if (activeElement && isInteractiveMode) {
-      return <Button variant="outline" className={`hover:bg-gray-50`} onClick={() => setIsElementPropertiesOpen(true)}>
+      return <Button variant="outline" className={`hover:bg-gray-800`} onClick={() => setIsElementPropertiesOpen(true)}>
           <Settings className="h-4 w-4 mr-2" />
           {language === 'en' ? 'Element Settings' : 'הגדרות אלמנט'}
         </Button>;
@@ -103,7 +103,7 @@ const Header = () => {
     return null;
   };
   if (isMobile) {
-    return <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
+    return <header className={`flex justify-between items-center py-2 px-4 border-b border-gray-800 bg-gray-900 shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
         <div className="flex items-center">
           <div className="font-bold text-lg bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
             creative room
@@ -117,7 +117,7 @@ const Header = () => {
           <InteractiveModeToggle hideInMobileHeader={true} />
           <Drawer>
             <DrawerTrigger asChild>
-              <Button variant="outline" size="icon" className="hover:bg-gray-50">
+              <Button variant="outline" size="icon" className="hover:bg-gray-800">
                 <Menu className="h-4 w-4" />
               </Button>
             </DrawerTrigger>
@@ -125,11 +125,11 @@ const Header = () => {
               <div className="space-y-4 mt-2">
                 <h3 className="font-medium text-lg">{t('app.tools')}</h3>
                 <div className="grid grid-cols-2 gap-2">
-                  <Button variant="outline" onClick={undo} disabled={!canUndo} className="justify-start hover:bg-gray-50">
+                  <Button variant="outline" onClick={undo} disabled={!canUndo} className="justify-start hover:bg-gray-800">
                     <Undo className="h-4 w-4 mr-2" />
                     {t('app.undo')}
                   </Button>
-                  <Button variant="outline" onClick={redo} disabled={!canRedo} className="justify-start hover:bg-gray-50">
+                  <Button variant="outline" onClick={redo} disabled={!canRedo} className="justify-start hover:bg-gray-800">
                     <Redo className="h-4 w-4 mr-2" />
                     {t('app.redo')}
                   </Button>
@@ -139,7 +139,7 @@ const Header = () => {
                 
                 <div className="pt-2">
                   <h3 className="font-medium mb-2">{language === 'he' ? 'שכבות' : 'Layers'}</h3>
-                  <div className="border rounded-md p-2 bg-gray-50">
+                  <div className="border rounded-md p-2 bg-gray-800">
                     <LayersList />
                   </div>
                 </div>
@@ -155,12 +155,12 @@ const Header = () => {
         {renderElementProperties()}
       </header>;
   }
-  return <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-200 bg-white shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
+  return <header className={`flex justify-between items-center py-3 px-6 border-b border-gray-800 bg-gray-900 shadow-sm ${language === 'he' ? 'rtl' : 'ltr'}`}>
       <div className="flex items-center gap-3">
         <div className="font-bold text-xl bg-gradient-to-r from-canvas-purple to-canvas-indigo bg-clip-text text-transparent">
           creative room
         </div>
-        <div className="h-6 w-px bg-gray-200 mx-1"></div>
+        <div className="h-6 w-px bg-gray-700 mx-1"></div>
         <LanguageSwitcher />
         {renderSmartSlider()}
         {renderElementSettingsButton()}
@@ -169,18 +169,18 @@ const Header = () => {
       <div className="flex items-center gap-4">
         <GameModeToggle />
         <InteractiveModeToggle />
-        <div className="h-6 w-px bg-gray-200"></div>
+        <div className="h-6 w-px bg-gray-700"></div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" onClick={undo} title={t('app.undo')} disabled={!canUndo} className="hover:bg-gray-50">
+          <Button variant="outline" size="icon" onClick={undo} title={t('app.undo')} disabled={!canUndo} className="hover:bg-gray-800">
             <Undo className="h-4 w-4" />
           </Button>
-          <Button variant="outline" size="icon" onClick={redo} title={t('app.redo')} disabled={!canRedo} className="hover:bg-gray-50">
+          <Button variant="outline" size="icon" onClick={redo} title={t('app.redo')} disabled={!canRedo} className="hover:bg-gray-800">
             <Redo className="h-4 w-4" />
           </Button>
-          <div className="w-px h-6 bg-gray-200 mx-1"></div>
+          <div className="w-px h-6 bg-gray-700 mx-1"></div>
           <Sheet>
             <SheetTrigger asChild>
-              <Button variant="outline" className="gap-2 hover:bg-gray-50">
+              <Button variant="outline" className="gap-2 hover:bg-gray-800">
                 <Layers className="h-4 w-4" />
                 <span>{language === 'he' ? 'שכבות' : 'Layers'}</span>
               </Button>

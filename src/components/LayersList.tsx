@@ -73,7 +73,7 @@ const LayersList = () => {
     // Create drag preview element if it doesn't exist
     if (!dragPreviewRef.current) {
       const preview = document.createElement('div');
-      preview.className = "fixed bg-white px-3 py-2 rounded-md shadow-lg border z-[9999] pointer-events-none items-center";
+      preview.className = "fixed bg-gray-800 text-white px-3 py-2 rounded-md shadow-lg border border-gray-700 z-[9999] pointer-events-none items-center";
       preview.style.display = 'none';
       preview.setAttribute('aria-hidden', 'true');
       document.body.appendChild(preview);
