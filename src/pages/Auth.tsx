@@ -103,11 +103,11 @@ const Auth = () => {
   };
   
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-950 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold text-blue-400 mb-2">CreativoCanvas</h1>
-          <p className="text-gray-300">Create interactive experiences</p>
+          <h1 className="text-4xl font-bold text-canvas-purple mb-2">CreativoCanvas</h1>
+          <p className="text-gray-600">Create interactive experiences</p>
         </div>
         
         <Tabs defaultValue="signin" className="w-full">
@@ -152,7 +152,7 @@ const Auth = () => {
                 <CardFooter>
                   <Button 
                     type="submit" 
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-canvas-purple hover:bg-canvas-purple/90"
                     disabled={loading}
                   >
                     <LogIn className="mr-2 h-4 w-4" />
@@ -208,7 +208,7 @@ const Auth = () => {
                 <CardFooter>
                   <Button 
                     type="submit" 
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-canvas-purple hover:bg-canvas-purple/90"
                     disabled={loading}
                   >
                     <UserPlus className="mr-2 h-4 w-4" />
@@ -244,7 +244,7 @@ const Auth = () => {
                 <CardFooter>
                   <Button 
                     type="submit" 
-                    className="w-full bg-blue-600 hover:bg-blue-700"
+                    className="w-full bg-canvas-purple hover:bg-canvas-purple/90"
                     disabled={loading}
                   >
                     <Gamepad className="mr-2 h-4 w-4" />

@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Folder, Clock, LogOut, CircleUser as UserCircle } from "lucide-react";
+import { Plus, Folder, Clock, LogOut, UserCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Database } from "@/types/database";
 import { LibraryMenuDialog } from "@/components/library/LibraryMenuDialog";
@@ -144,16 +144,16 @@ const Projects = () => {
   };
   
   return (
-    <div className="min-h-screen bg-gray-950">
+    <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto py-10 px-4">
         <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-blue-400">CreativoCanvas Projects</h1>
+          <h1 className="text-3xl font-bold text-canvas-purple">CreativoCanvas Projects</h1>
           <div className="flex items-center gap-3">
             {user ? (
               <>
                 <div className="flex items-center mr-4">
-                  <UserCircle className="h-5 w-5 mr-2 text-gray-300" />
-                  <span className="text-gray-200 font-medium">
+                  <UserCircle className="h-5 w-5 mr-2 text-gray-600" />
+                  <span className="text-gray-700 font-medium">
                     {profile?.display_name || user.email}
                   </span>
                 </div>
@@ -186,7 +186,7 @@ const Projects = () => {
             )}
             <Button 
               onClick={() => setNewProjectOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-canvas-purple hover:bg-canvas-purple/90"
             >
               <Plus className="mr-2 h-4 w-4" /> New Project
             </Button>
@@ -195,16 +195,16 @@ const Projects = () => {
         
         {isLoading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-12 h-12 border-4 border-canvas-purple border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : projects.length === 0 ? (
-          <div className="text-center py-16 bg-gray-900 rounded-lg shadow-sm border border-gray-800">
-            <Folder className="h-16 w-16 mx-auto text-gray-600 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-300 mb-2">No projects yet</h2>
-            <p className="text-gray-400 mb-6">Create your first project to get started</p>
+          <div className="text-center py-16 bg-white rounded-lg shadow-sm border border-gray-100">
+            <Folder className="h-16 w-16 mx-auto text-gray-300 mb-4" />
+            <h2 className="text-xl font-semibold text-gray-600 mb-2">No projects yet</h2>
+            <p className="text-gray-500 mb-6">Create your first project to get started</p>
             <Button 
               onClick={() => setNewProjectOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700"
+              className="bg-canvas-purple hover:bg-canvas-purple/90"
             >
               <Plus className="mr-2 h-4 w-4" /> Create New Project
             </Button>
@@ -214,13 +214,13 @@ const Projects = () => {
             {projects.map((project) => (
               <Card key={project.id} className="hover:shadow-md transition-shadow">
                 <CardHeader>
-                  <CardTitle className="text-xl text-blue-400">{project.name}</CardTitle>
+                  <CardTitle className="text-xl text-canvas-purple">{project.name}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   {project.description && (
-                    <p className="text-gray-400 mb-4">{project.description}</p>
+                    <p className="text-gray-500 mb-4">{project.description}</p>
                   )}
-                  <div className="flex items-center text-sm text-gray-500">
+                  <div className="flex items-center text-sm text-gray-400">
                     <Clock className="h-4 w-4 mr-1" />
                     <span>Updated: {formatDate(project.updated_at)}</span>
                   </div>

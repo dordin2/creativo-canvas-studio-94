@@ -23,7 +23,7 @@ const FloatingAddButton: React.FC<FloatingAddButtonProps> = ({ className }) => {
         title="הוסף אלמנט"
         onClick={handleButtonPress}
         className={cn(
-          "fixed z-40 bottom-8 right-8 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-colors duration-200 flex items-center justify-center w-14 h-14 border-4 border-gray-800 outline-none focus:ring-2 focus:ring-blue-500 touch-none",
+          "fixed z-40 bottom-8 right-8 bg-canvas-purple text-white rounded-full shadow-lg hover:bg-canvas-purple-dark transition-colors duration-200 flex items-center justify-center w-14 h-14 border-4 border-white outline-none focus:ring-2 focus:ring-canvas-purple-dark touch-none",
           className
         )}
         aria-label="Add element"
