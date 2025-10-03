@@ -6,7 +6,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { Plus, Folder, Clock, LogOut, UserCircle } from "lucide-react";
+import { Plus, Folder, Clock, LogOut, CircleUser as UserCircle } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { Database } from "@/types/database";
 import { LibraryMenuDialog } from "@/components/library/LibraryMenuDialog";
